@@ -1,0 +1,352 @@
+:root {
+    /* --- НОВАЯ ПАЛИТРА --- */
+    --bg-color: #101010; /* Глубокий темный фон */
+    --text-color: #e0e0e0; /* Светлый текст для контраста */
+    --accent-color: #A40000; /* Яркий розовый / фуксия */
+    --secondary-accent-color: #9A1D29; /* Глубокий красный */
+    --light-bg-color: #1a1a1a; /* Фон для карточек и модальных окон */
+    --border-color: #333333; /* Цвет для рамок */
+}
+* { box-sizing: border-box; cursor: none; }
+body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Helvetica Neue', sans-serif; margin: 0; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+.cursor { width: 30px; height: 30px; border: 2px solid var(--accent-color); border-radius: 50%; position: fixed; top: 0; left: 0; pointer-events: none; transform: translate(-50%, -50%); transition: width 0.3s, height 0.3s, border-width 0.3s, transform 0.1s ease-out; z-index: 9999; }
+.cursor.grow { width: 50px; height: 50px; border-width: 3px; }
+.header { position: fixed; width: 100%; padding: 20px 0; z-index: 100; transition: all 0.4s ease; }
+.header.scrolled { background-color: rgba(16, 16, 16, 0.7); backdrop-filter: blur(10px); padding: 15px 0; }
+.header.header-hidden { transform: translateY(-100%); }
+.header .container { display: flex; justify-content: space-between; align-items: center; }
+.logo { font-family: 'Cormorant Garamond', serif; text-transform: uppercase; display: flex; flex-direction: column; align-items: center; position: relative; padding-bottom: 10px; text-decoration: none; }
+.logo span { font-size: 1.8rem; letter-spacing: 4px; line-height: 1.2; }
+.logo span:first-child {
+    color: var(--accent-color); /* Используем ваш новый акцентный цвет */
+    /* Удаляем градиент и прозрачность, чтобы цвет применился напрямую */
+    -webkit-background-clip: unset;
+    -webkit-text-fill-color: unset;
+}
+.logo span:last-child { background-color: var(--accent-color); color: #ffffff; padding: 0 10px; border-radius: 3px; } /* Цвет текста изменен на белый */
+.logo::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 60%; height: 1px; background-color: var(--accent-color); }
+.navigation a { color: var(--text-color); text-decoration: none; margin-left: 30px; transition: color 0.3s ease; }
+.navigation a:hover { color: var(--accent-color); }
+
+/* --- ОБНОВЛЕННЫЙ HERO БЛОК --- */
+/* --- ОБНОВЛЕННЫЙ HERO БЛОК С РАЗМЫТИЕМ И ЗАТЕМНЕНИЕМ --- */
+.hero {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: sticky;
+    top: 0;
+    z-index: 0;
+    text-align: center;
+    /* !!! ВАЖНО: Замените 'ПУТЬ_К_ВАШЕМУ_ИЗОБРАЖЕНИЮ.jpg' на вашу ссылку !!! */
+    background-image: url('https://inde.io/wp-content/uploads/2025/08/ddee5ed520b03eee4d75014cde241ebf.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed; /* Добавлено для фиксации фона */
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.45); /* Немного более сильное затемнение */
+    backdrop-filter: blur(5px); /* Легкое размытие */
+    z-index: 1; /* Убедимся, что фильтр поверх фона */
+}
+
+/* Элементы внутри hero-content должны быть над фильтром */
+.hero-content {
+    position: relative;
+    z-index: 2; /* Поднимаем контент над слоем затемнения/размытия */
+}
+.hero-title { font-size: 6vw; font-weight: bold; text-align: center; overflow: hidden; line-height: 1.1; margin: 0; color: var(--accent-color); }
+.hero-title .word { display: block; }
+.hero-title .sub-word { font-size: 3vw; font-weight: normal; color: var(--text-color); }
+.hero-subtitle { font-size: 1.2rem; margin-top: 1rem; color: rgba(224, 224, 224, 0.9); }
+.hero-cta { margin-top: 2rem; display: flex; justify-content: center; gap: 1rem; }
+.btn { padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; transition: all 0.3s ease; border: 2px solid transparent; }
+.btn-primary { background-color: var(--accent-color); color: #ffffff; }
+.btn-primary:hover { background-color: transparent; border-color: var(--accent-color); color: var(--accent-color); }
+.btn-secondary { background-color: transparent; border-color: var(--accent-color); color: var(--accent-color); }
+.btn-secondary:hover { background-color: var(--accent-color); color: #ffffff; }
+.hero-title .letter { display: inline-block; opacity: 0; transform: translateY(100%); transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1); }
+.hero-title .letter.visible { opacity: 1; transform: translateY(0); }
+.scroll-down-indicator { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 20px; height: 30px; border: 2px solid #fff; border-radius: 50px; }
+.scroll-down-indicator::before { content: ''; position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 6px; height: 6px; background-color: #fff; border-radius: 50%; animation: bounce 2s infinite; }
+@keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translate(-50%, 0); } 40% { transform: translate(-50%, 10px); } 60% { transform: translate(-50%, 5px); } }
+.about-section {
+    padding: 100px 0;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    /* --- НОВЫЙ ПЛАВНЫЙ ПЕРЕХОД --- */
+    background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.4
+    ),    /* Начинаем с полупрозрачного черного (темнее, чем фильтр hero) */
+        var(--bg-color) 30%    /* Переходим к полному фоновому цвету сайта на 30% высоты секции */
+    );
+    /* Если вам нужен еще более плавный переход, можно начать с более прозрачного значения */
+    /* background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6), var(--bg-color) 30%); */
+}
+.about-section h2 { font-size: 3rem; margin-bottom: 2rem; color: var(--accent-color); }
+.about-section p { max-width: 800px; margin: 0 auto; font-size: 1.1rem; line-height: 1.8; }
+.gallery { padding: 100px 0; position: relative; z-index: 1; background-color: var(--bg-color); }
+.gallery::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 150px; background: linear-gradient(to bottom, var(--bg-color), transparent); z-index: 2; }
+.gallery h2 { text-align: center; font-size: 3rem; margin-bottom: 60px; position: relative; z-index: 1; }
+.gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; perspective: 1000px; position: relative; z-index: 1; }
+.gallery-item { position: relative; overflow: hidden; border-radius: 10px; transition: transform 0.5s ease; transform-style: preserve-3d; }
+.gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.5s ease; }
+.gallery-item:hover img { transform: scale(1.1); }
+.item-overlay { position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); color: #fff; transform: translateY(100%); opacity: 0; transition: all 0.5s ease; }
+.gallery-item:hover .item-overlay { transform: translateY(0); opacity: 1; }
+.item-overlay h3 { margin: 0; font-size: 1.5rem; }
+.footer { text-align: center; padding: 40px 20px; color: #555; background-color: var(--bg-color); position: relative; z-index: 1; }
+
+/* --- СТИЛИ ДЛЯ СТРАНИЦЫ МЕНЮ --- */
+.menu-page {
+    padding: 120px 0 60px;
+    position: relative;
+    z-index: 1;
+    /* --- НОВЫЙ ФОН МЕНЮ --- */
+    background-image: url('https://inde.io/wp-content/uploads/2025/08/ddee5ed520b03eee4d75014cde241ebf.jpg'); /* !!! ВАЖНО: ТА ЖЕ ССЫЛКА, ЧТО И НА ГЛАВНОЙ !!! */
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed; /* Для эффекта параллакса, если нужен */
+    min-height: 100vh; /* Убедимся, что фон занимает всю высоту */
+}
+
+/* --- Слой затемнения для фона меню --- */
+.menu-page::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85); /* Более сильное затемнение, чем на главной */
+    backdrop-filter: blur(4px); /* Можно оставить такое же размытие или чуть меньше */
+    z-index: -1; /* Помещаем под контент меню */
+}
+.menu-page h2 { text-align: center; font-size: 3rem; margin-bottom: 40px; color: var(--accent-color); }
+.category-filter { display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; margin-bottom: 50px; }
+.category-btn { background: transparent; border: 1px solid var(--border-color); color: var(--text-color); padding: 10px 20px; border-radius: 20px; font-size: 1rem; transition: all 0.3s ease; }
+.category-btn.active, .category-btn:hover { background-color: var(--accent-color); border-color: var(--accent-color); color: #ffffff; }
+.menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+.menu-item { background-color: var(--light-bg-color); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease, box-shadow 0.3s ease; border: 1px solid var(--border-color); }
+.menu-item.hidden { display: none; }
+.menu-item:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+.item-image { width: 100%; height: 220px; object-fit: cover; cursor: pointer; }
+.item-content { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; }
+.item-name { font-size: 1.5rem; margin: 0 0 10px; cursor: pointer; }
+.item-details { font-size: 0.9rem; color: #888; margin: 0 0 15px; }
+.item-description { font-size: 0.9rem; color: #aaa; margin: 0 0 15px; flex-grow: 1; }
+.item-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); margin: 0 -20px -20px; padding: 15px 20px; }
+.item-price { font-size: 1.2rem; font-weight: bold; color: var(--accent-color); }
+.item-price::after { content: ' KZT'; font-weight: normal; font-size: 0.9rem; }
+.btn-add-to-cart { font-size: 0.9rem; padding: 8px 15px; }
+.quantity-control { display: flex; align-items: center; }
+.quantity-btn { background-color: var(--accent-color); color: #ffffff; border: none; width: 30px; height: 30px; border-radius: 50%; font-size: 1.2rem; }
+.quantity-display { padding: 0 15px; font-size: 1.2rem; }
+
+/* --- ОБЩИЕ СТИЛИ ДЛЯ МОДАЛЬНЫХ ОКОН --- */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
+.modal-overlay.is-open { opacity: 1; visibility: visible; }
+.modal-content { background-color: var(--light-bg-color); border: 1px solid var(--border-color); padding: 30px; border-radius: 10px; position: relative; max-width: 500px; width: 90%; }
+.close-btn { position: absolute; top: 10px; right: 15px; background: none; border: none; color: var(--text-color); font-size: 2rem; cursor: none; }
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; margin-bottom: 8px; color: var(--accent-color); }
+.form-group input { width: 100%; padding: 10px; background-color: #111; border: 1px solid #444; border-radius: 5px; color: var(--text-color); font-size: 1rem; }
+.time-slots-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 10px; }
+.time-slot { padding: 10px; background-color: #222; border: 1px solid var(--accent-color); color: var(--accent-color); border-radius: 5px; text-align: center; transition: all 0.2s ease; }
+.time-slot:not(.disabled):hover { background-color: var(--accent-color); color: #ffffff; }
+.time-slot.selected { background-color: var(--accent-color); color: #ffffff; box-shadow: 0 0 10px var(--accent-color); }
+.time-slot.disabled { background-color: #333; color: #666; border-color: #444; pointer-events: none; }
+
+/* --- ДИЗАЙН КОРЗИНЫ --- */
+.cart-icon { position: relative; cursor: pointer; color: var(--text-color); transition: color 0.3s ease; }
+.cart-icon:hover { color: var(--accent-color); }
+.cart-counter { position: absolute; top: -8px; right: -10px; background-color: var(--accent-color); color: #ffffff; border-radius: 50%; width: 22px; height: 22px; font-size: 0.8rem; display: flex; justify-content: center; align-items: center; font-weight: bold; border: 2px solid var(--bg-color); transition: transform 0.2s ease; }
+.cart-counter.animate { transform: scale(1.3); }
+.cart-header { border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; }
+.cart-header h2 { margin: 0; font-size: 1.8rem; color: var(--accent-color); }
+.cart-items-list { max-height: 30vh; overflow-y: auto; padding-right: 10px; }
+.cart-item { display: flex; align-items: center; gap: 15px; padding: 15px 0; border-bottom: 1px solid var(--border-color); }
+.cart-item-img { width: 60px; height: 60px; object-fit: cover; border-radius: 5px; }
+.cart-item-details { flex-grow: 1; }
+.cart-item-details h4 { margin: 0 0 5px; font-size: 1.1rem; }
+.cart-item-details .item-price { font-size: 1rem; color: var(--accent-color); }
+.cart-item-controls { display: flex; align-items: center; }
+.cart-item-remove { background: none; border: none; color: #666; font-size: 1.2rem; margin-left: 15px; transition: color 0.3s ease; }
+.cart-item-remove:hover { color: var(--secondary-accent-color); }
+.cart-empty-message { text-align: center; padding: 40px 0; color: #888; }
+.cart-footer { border-top: 1px solid var(--border-color); padding-top: 20px; margin-top: 10px; }
+.cart-total { display: flex; justify-content: space-between; font-size: 1.5rem; margin-bottom: 30px; color: var(--accent-color); }
+.btn-order { width: 100%; }
+#clear-cart-btn {
+    width: 100%;
+    margin-bottom: 20px;
+    background-color: transparent;
+    border-color: #555;
+    color: #888;
+    font-weight: normal;
+}
+
+#clear-cart-btn:hover {
+    background-color: var(--secondary-accent-color); 
+    border-color: var(--secondary-accent-color);
+    color: var(--text-color);
+}
+
+/* --- СТИЛИ ДЛЯ МОДАЛЬНОГО ОКНА ДЕТАЛЕЙ --- */
+#details-modal .modal-content { max-width: 800px; }
+.details-content { display: grid; grid-template-columns: 1fr; gap: 20px; align-items: center; }
+.details-img { width: 100%; max-height: 40vh; object-fit: cover; border-radius: 10px; }
+.details-info h3 { font-size: 2rem; color: var(--accent-color); margin-top: 0; }
+.details-info .item-price::after { content: ' KZT'; }
+.details-info .item-controls { margin-top: 20px; }
+
+/* Адаптивность */
+@media (min-width: 768px) {
+    .details-content { grid-template-columns: 2fr 3fr; gap: 40px; }
+}
+@media (max-width: 768px) { .navigation { display: none; } .hero-title { font-size: 12vw; } .hero-title .sub-word { font-size: 6vw; } .cursor { display: none; } * { cursor: auto; } }
+/* Утилитарный класс для скрытия элементов */
+.hidden {
+    display: none !important;
+}
+/* --- СТИЛИ ДЛЯ БУРГЕР-МЕНЮ И МОБИЛЬНОЙ НАВИГАЦИИ --- */
+
+.burger-menu {
+    display: none; /* Скрываем на больших экранах */
+    width: 30px;
+    height: 20px;
+    position: relative;
+    cursor: pointer;
+    z-index: 1001; /* Поверх всего */
+}
+
+.burger-menu span {
+    display: block;
+    position: absolute;
+    height: 2px;
+    width: 100%;
+    background: var(--text-color);
+    border-radius: 2px;
+    left: 0;
+    transition: all 0.25s ease-in-out;
+}
+
+.burger-menu span:nth-child(1) { top: 0px; }
+.burger-menu span:nth-child(2) { top: 9px; }
+.burger-menu span:nth-child(3) { top: 18px; }
+
+/* Анимация крестика при открытии */
+.burger-menu.active span:nth-child(1) {
+    top: 9px;
+    transform: rotate(135deg);
+}
+.burger-menu.active span:nth-child(2) {
+    opacity: 0;
+    left: -30px;
+}
+.burger-menu.active span:nth-child(3) {
+    top: 9px;
+    transform: rotate(-135deg);
+}
+
+.mobile-nav {
+    display: none; /* Скрываем по умолчанию */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(16, 16, 16, 0.95);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    transform: translateY(-100%);
+    transition: transform 0.4s ease-in-out;
+}
+
+.mobile-nav.open {
+    transform: translateY(0);
+}
+
+.mobile-nav a {
+    color: var(--text-color);
+    text-decoration: none;
+    font-size: 2rem;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Анимация появления ссылок */
+.mobile-nav.open a {
+    opacity: 1;
+    transform: translateY(0);
+}
+.mobile-nav.open a:nth-child(1) { transition-delay: 0.2s; }
+.mobile-nav.open a:nth-child(2) { transition-delay: 0.3s; }
+.mobile-nav.open a:nth-child(3) { transition-delay: 0.4s; }
+.mobile-nav.open a:nth-child(4) { transition-delay: 0.5s; }
+
+/* Медиа-запрос: когда показывать бургер */
+@media (max-width: 768px) {
+    .navigation { display: none; } /* Скрываем обычную навигацию */
+    .burger-menu { display: block; } /* Показываем бургер */
+    .mobile-nav { display: flex; } /* Делаем мобильное меню видимым для JS */
+}
+.user-actions {
+    margin-left: 30px; /* Добавляем отступ слева */
+}
+/* Стили для ссылки "Войти / Регистрация" */
+.user-actions a {
+    color: var(--text-color); /* Задаем основной цвет текста */
+    text-decoration: none;    /* Убираем подчеркивание */
+    transition: color 0.3s ease; /* Добавляем плавный переход */
+    margin-left: 30px;        /* Добавляем отступ от корзины */
+}
+
+/* Эффект при наведении */
+.user-actions a:hover {
+    color: var(--accent-color); /* Меняем цвет на акцентный */
+}
+/* ДОБАВИТЬ В КОНЕЦ ФАЙЛА STYLE.CSS */
+
+.user-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.profile-icon svg {
+    display: block; /* Убирает лишний отступ под иконкой */
+    color: var(--text-color);
+    transition: color 0.3s ease;
+}
+
+.profile-icon:hover svg {
+    color: var(--accent-color);
+}
+
+.logout-link {
+    color: #999;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+}
+
+.logout-link:hover {
+    color: var(--secondary-accent-color);
+}

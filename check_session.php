@@ -1,0 +1,1 @@
+<?php http_response_code(410); header("Content-Type: text/plain; charset=utf-8"); exit("Эта версия страницы больше не используется.");

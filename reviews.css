@@ -1,0 +1,274 @@
+/* --- Обновленные и исправленные стили для страницы "Отзывы" --- */
+
+/* Общий заголовок для секций */
+.section-title {
+    text-align: center;
+    font-size: 3rem;
+    color: var(--accent-color);
+    margin-bottom: 60px;
+    font-family: 'Cormorant Garamond', serif; /* Указываем шрифт явно */
+}
+
+/* Hero секция */
+.hero-reviews {
+    height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    text-align: center;
+    background-image: url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+.hero-reviews::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 1;
+}
+.hero-reviews .hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+/* !!! ИСПРАВЛЕНИЕ: Главный заголовок делаем белым, а не красным !!! */
+.hero-reviews .hero-title .word:first-child {
+    color: #ffffff; /* Был var(--accent-color) */
+}
+
+
+/* Секция с рецензиями (статьи) */
+.press-section {
+    padding: 100px 0;
+    background-color: var(--bg-color);
+}
+.articles-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 40px;
+}
+@media (min-width: 992px) {
+    .articles-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 50px;
+    }
+}
+.article-card {
+    background-color: var(--light-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.article-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+.article-image {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+}
+.article-content {
+    padding: 30px;
+}
+.publication-tag {
+    display: inline-block;
+    background-color: rgba(164, 0, 0, 0.2); /* Сделаем фон тега полупрозрачным */
+    border: 1px solid var(--accent-color);
+    color: var(--accent-color);
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+.article-title {
+    font-size: 1.8rem;
+    margin: 0 0 10px 0;
+    color: var(--text-color);
+    font-family: 'Cormorant Garamond', serif;
+}
+.article-byline {
+    font-size: 0.9rem;
+    color: #999;
+    margin-bottom: 20px;
+    font-style: italic;
+}
+.article-excerpt p {
+    font-size: 1.05rem; /* Чуть крупнее для читаемости */
+    line-height: 1.9;  /* Больше "воздуха" */
+    color: #ccc;      /* Чуть светлее */
+}
+
+/* Секция с комментариями гостей (блоки) */
+.guest-reviews-section {
+    padding: 100px 0;
+    background-color: var(--bg-color);
+    border-top: 1px solid var(--border-color);
+}
+.guest-reviews-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+.review-card {
+    background-color: var(--light-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+}
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 15px;
+}
+.review-author {
+    font-style: normal;
+    color: var(--text-color);
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+.star-rating {
+    font-size: 1rem;
+    color: var(--accent-color);
+}
+.review-text {
+    font-size: 1.05rem; /* Чуть крупнее */
+    line-height: 1.8;  /* Больше "воздуха" */
+    color: #ccc;      /* Чуть светлее */
+    margin: 0;
+    flex-grow: 1;
+}
+
+/* Секция CTA */
+.cta-section {
+    padding: 100px 0;
+    text-align: center;
+    background-image: url('https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=1974&auto=format&fit=crop');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    position: relative;
+    z-index: 1;
+}
+.cta-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(16, 16, 16, 0.8);
+    z-index: -1;
+}
+.cta-section h2 {
+    font-size: 3rem;
+    color: var(--accent-color);
+    margin-bottom: 20px;
+    font-family: 'Cormorant Garamond', serif;
+}
+.cta-section p {
+    max-width: 600px;
+    margin: 0 auto 30px;
+    font-size: 1.1rem;
+    color: #bbb;
+}
+/* --- НОВЫЕ СТИЛИ для секции с комментариями гостей --- */
+
+.guest-reviews-section {
+    padding: 100px 0;
+    background-color: var(--bg-color);
+    border-top: 1px solid var(--border-color);
+}
+
+.guest-reviews-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 80px 40px; /* Увеличиваем вертикальный отступ */
+}
+
+@media (min-width: 992px) {
+    .guest-reviews-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.review-item {
+    text-align: center;
+}
+
+.review-frame {
+    position: relative;
+    padding: 80px 20px 30px 20px; /* Сверху больше места для фото */
+    border: 3px solid var(--accent-color);
+    border-radius: 10px;
+    background-color: var(--light-bg-color);
+    margin-bottom: 25px;
+}
+
+.review-photo {
+    position: absolute;
+    top: -60px; /* Выталкиваем фото наверх */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 5px solid var(--bg-color); /* Рамка в цвет фона для эффекта "выреза" */
+}
+
+.review-author-name {
+    font-size: 1.8rem;
+    font-family: 'Cormorant Garamond', serif;
+    color: var(--text-color);
+    margin: 0 0 15px;
+}
+
+.social-icons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.social-icons a {
+    color: #888;
+    transition: color 0.3s ease;
+}
+
+.social-icons a:hover {
+    color: var(--accent-color);
+}
+
+.social-icons svg {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.review-body {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #ccc;
+    max-width: 450px;
+    margin: 0 auto; /* Центрируем текст под блоком */
+}
+
+/* --- СТАРЫЕ СТИЛИ (удалите или закомментируйте их) --- */
+/* .review-card { ... }
+.review-header { ... }
+.review-author { ... }
+.star-rating { ... }
+.review-text { ... }
+*/

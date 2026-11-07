@@ -1,0 +1,190 @@
+/* --- Обновленные стили для страницы "О нас" --- */
+
+/* Hero секция с фоновым изображением */
+.hero-about {
+    height: 80vh;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #fff;
+    overflow: hidden;
+    /* !!! ИЗМЕНЕНИЕ ЗДЕСЬ: используем ваше фото !!! */
+    background-image: url('https://www.bestchoice.com.co/wp-content/uploads/2023/05/Blog-Estrategias-para-Restaurantes-Sitio-Web-Best-Choice-001-1024x569.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed; /* Для эффекта параллакса */
+}
+
+/* Затемнение поверх изображения */
+.hero-about::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.55);
+    z-index: 2;
+}
+
+.hero-about .hero-content {
+    position: relative;
+    z-index: 3;
+}
+
+/* Секция Философии */
+.philosophy-section {
+    padding: 100px 0;
+    background-color: var(--bg-color);
+}
+.philosophy-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 40px;
+    align-items: center;
+}
+@media (min-width: 992px) {
+    .philosophy-container { grid-template-columns: 1fr 1fr; gap: 60px; }
+}
+
+.philosophy-text h2 {
+    font-size: 2.8rem;
+    color: var(--accent-color);
+    margin-bottom: 25px;
+    font-family: 'Cormorant Garamond', serif;
+}
+.philosophy-text p {
+    font-size: 1.1rem;
+    line-height: 1.9;
+    color: #bbb;
+    margin-bottom: 20px;
+}
+.philosophy-image img {
+    width: 100%;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+/* Секция Таймлайн */
+.timeline-section {
+    padding: 100px 0;
+    background-color: var(--light-bg-color);
+    text-align: center;
+}
+.timeline-section h2 {
+    font-size: 3rem;
+    color: var(--accent-color);
+    margin-bottom: 80px;
+}
+.timeline {
+    position: relative;
+    max-width: 800px;
+    margin: 0 auto;
+}
+.timeline::after {
+    content: '';
+    position: absolute;
+    width: 4px;
+    background-color: var(--border-color);
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    margin-left: -2px;
+}
+.timeline-item {
+    padding: 10px 40px;
+    position: relative;
+    width: 50%;
+}
+.timeline-item:nth-child(odd) { left: 0; text-align: right; }
+.timeline-item:nth-child(even) { left: 50%; text-align: left; }
+
+.timeline-item::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background-color: var(--bg-color);
+    border: 4px solid var(--accent-color);
+    top: 20px;
+    border-radius: 50%;
+    z-index: 1;
+}
+.timeline-item:nth-child(odd)::after { right: -10px; }
+.timeline-item:nth-child(even)::after { left: -10px; }
+
+.timeline-content {
+    padding: 20px 30px;
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    position: relative;
+}
+.timeline-content h3 { font-size: 1.5rem; margin-bottom: 10px; }
+.timeline-content p { font-size: 1rem; color: #aaa; line-height: 1.6; }
+
+/* Секция Мастеров */
+.masters-section {
+    padding: 100px 0;
+    background-color: var(--bg-color);
+    text-align: center;
+}
+.masters-section h2 {
+    font-size: 3rem;
+    color: var(--accent-color);
+    margin-bottom: 60px;
+}
+.masters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+}
+.master-card {
+    background-color: var(--light-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.master-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+}
+.master-card img {
+    width: 100%;
+    height: 320px;
+    object-fit: cover;
+    object-position: top;
+}
+.master-info {
+    padding: 25px;
+}
+.master-info h4 {
+    font-size: 1.5rem;
+    margin: 0;
+}
+.master-info span {
+    display: block;
+    color: var(--accent-color);
+    margin: 5px 0 15px;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+.master-info p {
+    color: #aaa;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+/* Адаптация таймлайна для мобильных */
+@media (max-width: 768px) {
+    .timeline::after { left: 20px; }
+    .timeline-item { width: 100%; padding-left: 60px; padding-right: 15px; }
+    .timeline-item:nth-child(odd), .timeline-item:nth-child(even) {
+        left: 0;
+        text-align: left;
+    }
+    .timeline-item::after { left: 10px; }
+}

@@ -1,0 +1,197 @@
+/* --- СТИЛИ ДЛЯ СТРАНИЦЫ АВТОРИЗАЦИИ, АДАПТИРОВАННЫЕ ПОД СТИЛЬ "TOKYO PREMIUM" --- */
+
+/* Контейнер для всей страницы, который задает фон */
+.auth-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 140px 20px 80px;
+    position: relative;
+    z-index: 1;
+    /* Тот же фон, что и на странице меню */
+    background-image: url('https://inde.io/wp-content/uploads/2025/08/ddee5ed520b03eee4d75014cde241ebf.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+/* Слой затемнения и размытия для фона */
+.auth-page::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: -1;
+}
+
+/* Основная рамка формы */
+.frame {
+    width: 430px;
+    height: 575px;
+    /* !!! ГЛАВНОЕ ИЗМЕНЕНИЕ: ПОЛУПРОЗРАЧНОСТЬ И РАЗМЫТИЕ !!! */
+    background-color: rgba(26, 26, 26, 0.7); /* Прозрачный --light-bg-color */
+    backdrop-filter: blur(10px); /* Размытие фона под окном */
+    border: 1px solid var(--border-color);
+    margin: 0 auto;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    overflow: hidden;
+    transition: height .5s ease;
+}
+
+.frame-long { height: 615px; }
+.frame-short { height: 400px; }
+
+/* Навигация внутри формы (Вход / Регистрация) */
+.nav {
+    width: 100%;
+    height: 100px;
+    padding-top: 40px;
+    opacity: 1;
+    transition: all .5s ease;
+}
+.nav-up { transform: translateY(-100px); opacity: 0; }
+
+.nav .links {
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.nav li {
+    list-style-type: none;
+    font-size: 16px;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+/* Стили активной/неактивной вкладки (используем цвета с сайта) */
+.signin-active a, .signup-active a {
+    color: var(--accent-color);
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent-color);
+    padding-bottom: 10px;
+    transition: all .25s ease;
+}
+.signin-inactive a, .signup-inactive a {
+    color: #888;
+    text-decoration: none;
+    border-bottom: none;
+    transition: color .25s ease;
+}
+.signin-inactive a:hover, .signup-inactive a:hover {
+    color: var(--text-color);
+}
+
+.form-container-wrapper {
+    position: relative;
+    height: 375px;
+}
+
+/* Стили для самих форм */
+.form-signin, .form-signup {
+    width: 430px;
+    height: 375px;
+    font-size: 16px;
+    padding: 30px 37px;
+    transition: opacity .5s ease, transform .5s ease;
+    position: absolute;
+    top: 0;
+}
+.form-signin { left: 0; }
+.form-signin-left { transform: translateX(-430px); opacity: 0; }
+
+.form-signup { left: 430px; opacity: 0; }
+.form-signup-left { transform: translateX(-430px); opacity: 1; }
+.form-signup-down { top: 0px; opacity: 0; }
+
+/* Поля ввода (стили из style.css) */
+.form-styling {
+    width: 100%;
+    height: 45px;
+    padding: 10px 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    margin-bottom: 20px;
+    background: #111;
+    color: var(--text-color);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-styling:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    background: #181818;
+}
+
+label {
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: 13px;
+    padding-left: 5px;
+    padding-bottom: 10px;
+    color: #aaa;
+    display: block;
+}
+
+/* Кнопки (используем классы .btn и .btn-primary) */
+.btn-signup, .btn-signin {
+    width: 100%;
+    margin-top: 20px;
+}
+
+/* Ссылка "Забыли пароль" */
+.forgot {
+    width: 80%;
+    margin: -165px auto 0;
+    text-align: center;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-color);
+    transition: all 0.5s ease;
+    position: relative;
+}
+.forgot-left { transform: translateX(-430px); opacity: 0; }
+.forgot a {
+    color: #888;
+    font-weight: 400;
+    font-size: 13px;
+    text-decoration: none;
+}
+.forgot a:hover { color: var(--accent-color); }
+
+/* Сообщения об ошибках/успехе */
+.auth-message {
+    color: var(--accent-color);
+    font-size: 14px;
+    text-align: center;
+    min-height: 20px;
+    padding-bottom: 10px;
+}
+
+/* Экран успеха */
+.success {
+    width: 100%;
+    text-align: center;
+    position: absolute;
+    top: 40px;
+    left: 430px; /* Скрыт справа */
+    opacity: 0;
+    padding: 0 35px;
+    transition: all .8s .4s ease;
+}
+.success-left { transform: translateX(-430px); opacity: 1; }
+.successtext {
+    color: var(--text-color);
+    font-size: 16px;
+    font-weight: 400;
+    margin-top: 20px;
+}

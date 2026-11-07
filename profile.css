@@ -1,0 +1,101 @@
+/* Файл: profile.css */
+
+.profile-page {
+    padding: 140px 0 80px;
+    background-color: var(--bg-color);
+    min-height: 100vh;
+}
+
+.profile-page h1 {
+    font-family: 'Cormorant Garamond', serif;
+    color: var(--accent-color);
+    font-size: 3rem;
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.profile-section {
+    margin-bottom: 50px;
+}
+
+.profile-section h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.2rem;
+    color: var(--text-color);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 15px;
+    margin-bottom: 30px;
+}
+
+.card {
+    background-color: var(--light-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 25px;
+}
+
+.card p {
+    font-size: 1.1rem;
+    margin: 0 0 10px;
+}
+
+.card p strong {
+    color: var(--accent-color);
+}
+
+/* Стили для списков (брони и заказы) */
+.booking-card, .order-card-header {
+    background-color: var(--light-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.order-card .order-summary {
+    cursor: pointer;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.order-details {
+    display: none; /* Скрыто по умолчанию */
+    width: 100%;
+    padding: 20px;
+    margin-top: -15px; /* Чтобы примыкал к шапке заказа */
+    margin-bottom: 15px;
+    background-color: #141414; /* Чуть другой фон для содержимого */
+    border: 1px solid var(--border-color);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+}
+
+.order-details ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+.order-details li {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+.order-details li:last-child {
+    border-bottom: none;
+}
+
+.empty-list-message {
+    color: #888;
+    text-align: center;
+    padding: 20px;
+    background-color: var(--light-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}

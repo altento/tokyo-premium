@@ -1,0 +1,1 @@
+<?php header("Location: account.php",true,303); exit;
