@@ -27,7 +27,7 @@ INSERT OR IGNORE INTO settings(key,value) VALUES
 
 UPDATE settings SET value='Астана, улица Сакура, 17 · квартал Ханами' WHERE key='address' AND value='Астана · точное расположение подтвердим при бронировании';
 UPDATE settings SET value='+7 (7172) 55-18-26' WHERE key='phone' AND value='Связаться с командой можно через форму бронирования';
-UPDATE settings SET value='Вт–Вс · 12:00–23:00 · Понедельник — выходной' WHERE key='hours' AND value='Бронирование доступно через форму на сайте';
+UPDATE settings SET value='Ежедневно · 12:00–23:00' WHERE key='hours' AND value='Бронирование доступно через форму на сайте';
 UPDATE settings SET value='Tokyo Premium — японский ресторан и омакасе в Астане' WHERE key='meta_title' AND value='Tokyo Premium — японская кухня и искусство момента';
 UPDATE settings SET value='Ресторан японской кухни Tokyo Premium в Астане: сезонное меню, сет омакасе и внимательное гостеприимство. Бронируйте стол онлайн.' WHERE key='meta_description' AND value='Сезонная японская кухня, выверенная подача и внимание к каждому гостю. Изучите меню и оставьте заявку на столик.';
 UPDATE settings SET value='АСТАНА · ЯПОНСКАЯ КУХНЯ · С 2022 ГОДА' WHERE key='hero_eyebrow' AND value='ЯПОНСКАЯ КУХНЯ · РИТУАЛ ВКУСА';
