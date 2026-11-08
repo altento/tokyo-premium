@@ -25,6 +25,11 @@ foreach ($routes as $route => $filename) {
         $html
     );
     $html = preg_replace('/<a href="admin\.php">Управление сайтом<\/a>/', '', $html) ?? $html;
+    $html = str_replace(
+        ['Мы перезвоним и подготовим стол к выбранному времени.', 'После заявки команда подтвердит время и пожелания к вечеру.', 'Отзыв появится на сайте после проверки командой ресторана.'],
+        ['В этой публичной демоверсии заявка сохраняется только в вашем браузере.', 'Уведомление ресторану из статической версии не отправляется.', 'Отзыв останется в этом браузере и не будет опубликован.'],
+        $html
+    );
     $html = str_replace('<script src="luxury.js" defer></script>', '<script src="luxury.js" defer></script><script src="pages-demo.js" defer></script>', $html);
     if (file_put_contents($docs . '/' . $filename, $html) === false) {
         throw new RuntimeException('Cannot write ' . $filename);
