@@ -37,7 +37,7 @@ jobs:
           rm -f "$RESTAURANT_DB"
           php -S 127.0.0.1:8081 -t . > /tmp/tokyo-premium-smoke.log 2>&1 &
           server_pid=$!
-          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          trap 'result=$?; if [ "$result" -ne 0 ]; then cat /tmp/tokyo-premium-smoke.log; fi; kill "$server_pid" 2>/dev/null || true' EXIT
           for attempt in {1..30}; do
             if curl --fail --silent http://127.0.0.1:8081/ > /dev/null; then break; fi
             sleep 1
@@ -46,7 +46,8 @@ jobs:
           page=$(curl --fail --silent --cookie-jar "$cookies" 'http://127.0.0.1:8081/pages.php?page=booking')
           csrf=$(printf '%s' "$page" | sed -n 's/.*name="csrf" value="\([^"]*\)".*/\1/p')
           test -n "$csrf"
-          booking=$(curl --fail --silent --cookie "$cookies" --cookie-jar "$cookies" --data-urlencode "csrf=$csrf" --data-urlencode 'type=booking' --data-urlencode 'name=Demo Guest' --data-urlencode 'phone=+70000000000' --data-urlencode 'guests=2' --data-urlencode "date=$(date +%F)" --data-urlencode 'time=18:00' --data-urlencode 'zone=Суши-стойка' --data-urlencode 'table=4' --data-urlencode 'message=Smoke test' http://127.0.0.1:8081/api.php)
+          booking_date=$(TZ=Asia/Qyzylorda date +%F)
+          booking=$(curl --fail --silent --cookie "$cookies" --cookie-jar "$cookies" --data-urlencode "csrf=$csrf" --data-urlencode 'type=booking' --data-urlencode 'name=Demo Guest' --data-urlencode 'phone=+70000000000' --data-urlencode 'guests=2' --data-urlencode "date=$booking_date" --data-urlencode 'time=18:00' --data-urlencode 'zone=Суши-стойка' --data-urlencode 'table=4' --data-urlencode 'message=Smoke test' http://127.0.0.1:8081/api.php)
           printf '%s' "$booking" | grep -q '"ok":true'
           order=$(curl --fail --silent --cookie "$cookies" --cookie-jar "$cookies" --data-urlencode "csrf=$csrf" --data-urlencode 'type=order' --data-urlencode 'name=Demo Guest' --data-urlencode 'phone=+70000000000' --data-urlencode 'address=Test address 1' --data-urlencode 'fulfillment=pickup' --data-urlencode 'items=[{"id":1,"qty":2}]' http://127.0.0.1:8081/api.php)
           printf '%s' "$order" | grep -q '"ok":true'
