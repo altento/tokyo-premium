@@ -12,7 +12,8 @@ try {
  if($type==='booking'){
   $guests=filter_var($_POST['guests']??null,FILTER_VALIDATE_INT);$date=(string)($_POST['date']??'');$time=(string)($_POST['time']??'');$d=DateTime::createFromFormat('!Y-m-d',$date);$today=new DateTime('today');
   if(!$guests||$guests<1||$guests>12||!$d||$d<$today||$d>$today->modify('+365 days')||!preg_match('/^(12|13|14|17|18|19|20|21):00$/',$time)) answer(422,['ok'=>false,'message'=>'Проверьте дату, время и количество гостей.']);
-  $q=db()->prepare('INSERT INTO bookings(user_id,guest_name,phone,guest_count,booking_date,booking_time,message) VALUES(?,?,?,?,?,?,?)');$q->execute([$_SESSION['user_id']??null,$name,$phone,$guests,$date,$time,substr(trim((string)($_POST['message']??'')),0,240)]);
+  $zone=trim((string)($_POST['zone']??''));$table=trim((string)($_POST['table']??''));if($zone!==''&&!in_array($zone,['Основной зал','Суши-стойка','Камерная комната','Зал дегустации'],true)) answer(422,['ok'=>false,'message'=>'Выберите зону из списка.']);if($table!==''&&!preg_match('/^(?:[1-9]|1[0-2])$/',$table)) answer(422,['ok'=>false,'message'=>'Проверьте предпочтительный стол.']);
+  $q=db()->prepare('INSERT INTO bookings(user_id,guest_name,phone,guest_count,booking_date,booking_time,zone,preferred_table,message) VALUES(?,?,?,?,?,?,?,?,?)');$q->execute([$_SESSION['user_id']??null,$name,$phone,$guests,$date,$time,$zone,$table,substr(trim((string)($_POST['message']??'')),0,240)]);
   answer(201,['ok'=>true,'message'=>'Заявка принята. Команда подтвердит бронь по телефону.','id'=>(int)db()->lastInsertId()]);
  }
  if($type==='order'){
