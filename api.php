@@ -17,12 +17,12 @@ try {
   answer(201,['ok'=>true,'message'=>'Заявка принята. Команда подтвердит бронь по телефону.','id'=>(int)db()->lastInsertId()]);
  }
  if($type==='order'){
-  $address=trim((string)($_POST['address']??''));$items=json_decode((string)($_POST['items']??''),true);
-  if(strlen($address)<5||strlen($address)>180||!is_array($items)||count($items)<1||count($items)>30) answer(422,['ok'=>false,'message'=>'Укажите адрес и добавьте блюда в корзину.']);
+  $address=trim((string)($_POST['address']??''));$fulfillment=(string)($_POST['fulfillment']??'delivery');$items=json_decode((string)($_POST['items']??''),true);
+  if(strlen($address)<5||strlen($address)>180||!in_array($fulfillment,['delivery','pickup'],true)||!is_array($items)||count($items)<1||count($items)>30) answer(422,['ok'=>false,'message'=>'Укажите адрес и добавьте блюда в корзину.']);
   $pdo=db();$pdo->beginTransaction();$valid=[];$total=0;
   foreach($items as $item){$id=filter_var($item['id']??null,FILTER_VALIDATE_INT);$qty=filter_var($item['qty']??null,FILTER_VALIDATE_INT);if(!$id||!$qty||$qty<1||$qty>20) throw new DomainException('Некорректный состав заказа.');$q=$pdo->prepare('SELECT id,name,price FROM dishes WHERE id=? AND active=1');$q->execute([$id]);$dish=$q->fetch();if(!$dish) throw new DomainException('Одно из блюд больше недоступно. Обновите меню.');$line=(int)$dish['price']*$qty;$total+=$line;$valid[]=[$dish,$qty];}
   if($total<1||$total>500000) throw new DomainException('Проверьте сумму заказа.');
-  $q=$pdo->prepare('INSERT INTO orders(user_id,customer_name,phone,address,comment,total) VALUES(?,?,?,?,?,?)');$q->execute([$_SESSION['user_id']??null,$name,$phone,$address,substr(trim((string)($_POST['comment']??'')),0,300),$total]);$orderId=(int)$pdo->lastInsertId();$q=$pdo->prepare('INSERT INTO order_items(order_id,dish_id,item_name,price,quantity) VALUES(?,?,?,?,?)');foreach($valid as [$dish,$qty])$q->execute([$orderId,$dish['id'],$dish['name'],$dish['price'],$qty]);$pdo->commit();answer(201,['ok'=>true,'message'=>'Заказ №'.$orderId.' принят. Оплата не списывается: команда подтвердит детали по телефону.','id'=>$orderId]);
+  $q=$pdo->prepare('INSERT INTO orders(user_id,customer_name,phone,address,fulfillment,comment,total) VALUES(?,?,?,?,?,?,?)');$q->execute([$_SESSION['user_id']??null,$name,$phone,$address,$fulfillment,substr(trim((string)($_POST['comment']??'')),0,300),$total]);$orderId=(int)$pdo->lastInsertId();$q=$pdo->prepare('INSERT INTO order_items(order_id,dish_id,item_name,price,quantity) VALUES(?,?,?,?,?)');foreach($valid as [$dish,$qty])$q->execute([$orderId,$dish['id'],$dish['name'],$dish['price'],$qty]);$pdo->commit();answer(201,['ok'=>true,'message'=>'Заказ №'.$orderId.' принят. Оплата не списывается: команда подтвердит детали по телефону.','id'=>$orderId]);
  }
  if($type==='contact'){
   $email=trim((string)($_POST['email']??''));$subject=trim((string)($_POST['subject']??''));$message=trim((string)($_POST['message']??''));
