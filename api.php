@@ -23,6 +23,11 @@ try {
   if($total<1||$total>500000) throw new DomainException('Проверьте сумму заказа.');
   $q=$pdo->prepare('INSERT INTO orders(user_id,customer_name,phone,address,comment,total) VALUES(?,?,?,?,?,?)');$q->execute([$_SESSION['user_id']??null,$name,$phone,$address,substr(trim((string)($_POST['comment']??'')),0,300),$total]);$orderId=(int)$pdo->lastInsertId();$q=$pdo->prepare('INSERT INTO order_items(order_id,dish_id,item_name,price,quantity) VALUES(?,?,?,?,?)');foreach($valid as [$dish,$qty])$q->execute([$orderId,$dish['id'],$dish['name'],$dish['price'],$qty]);$pdo->commit();answer(201,['ok'=>true,'message'=>'Заказ №'.$orderId.' принят. Оплата не списывается: команда подтвердит детали по телефону.','id'=>$orderId]);
  }
+ if($type==='contact'){
+  $email=trim((string)($_POST['email']??''));$subject=trim((string)($_POST['subject']??''));$message=trim((string)($_POST['message']??''));
+  if(!filter_var($email,FILTER_VALIDATE_EMAIL)||strlen($email)>160||!in_array($subject,['Общий вопрос','Учебное бронирование','Учебное меню'],true)||strlen($message)<5||strlen($message)>1000) answer(422,['ok'=>false,'message'=>'Проверьте email, тему и сообщение (от 5 до 1000 символов).']);
+  $q=db()->prepare('INSERT INTO contact_messages(guest_name,email,subject,message) VALUES(?,?,?,?)');$q->execute([$name,$email,$subject,$message]);answer(201,['ok'=>true,'message'=>'Сообщение сохранено в учебной базе данных.']);
+ }
  if($type==='review'){
   $rating=filter_var($_POST['rating']??null,FILTER_VALIDATE_INT);$body=trim((string)($_POST['body']??''));if(!$rating||$rating<1||$rating>5||strlen($body)<20||strlen($body)>2000) answer(422,['ok'=>false,'message'=>'Оценка от 1 до 5, отзыв — от 20 до 1000 символов.']);$q=db()->prepare('INSERT INTO reviews(guest_name,rating,body) VALUES(?,?,?)');$q->execute([$name,$rating,$body]);answer(201,['ok'=>true,'message'=>'Спасибо. Отзыв появится после проверки.']);
  }
