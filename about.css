@@ -11,7 +11,7 @@
     color: #fff;
     overflow: hidden;
     /* !!! ИЗМЕНЕНИЕ ЗДЕСЬ: используем ваше фото !!! */
-    background-image: url('https://www.bestchoice.com.co/wp-content/uploads/2023/05/Blog-Estrategias-para-Restaurantes-Sitio-Web-Best-Choice-001-1024x569.jpg');
+    background-image: url('assets/generated/restaurant-interior.webp');
     background-size: cover;
     background-position: center;
     background-attachment: fixed; /* Для эффекта параллакса */

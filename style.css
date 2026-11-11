@@ -41,7 +41,7 @@ body { background-color: var(--bg-color); color: var(--text-color); font-family:
     z-index: 0;
     text-align: center;
     /* !!! ВАЖНО: Замените 'ПУТЬ_К_ВАШЕМУ_ИЗОБРАЖЕНИЮ.jpg' на вашу ссылку !!! */
-    background-image: url('https://inde.io/wp-content/uploads/2025/08/ddee5ed520b03eee4d75014cde241ebf.jpg');
+    background-image: url('assets/generated/restaurant-interior.webp');
     background-size: cover;
     background-position: center;
     background-attachment: fixed; /* Добавлено для фиксации фона */
@@ -114,7 +114,7 @@ body { background-color: var(--bg-color); color: var(--text-color); font-family:
     position: relative;
     z-index: 1;
     /* --- НОВЫЙ ФОН МЕНЮ --- */
-    background-image: url('https://inde.io/wp-content/uploads/2025/08/ddee5ed520b03eee4d75014cde241ebf.jpg'); /* !!! ВАЖНО: ТА ЖЕ ССЫЛКА, ЧТО И НА ГЛАВНОЙ !!! */
+    background-image: url('assets/generated/restaurant-interior.webp'); /* !!! ВАЖНО: ТА ЖЕ ССЫЛКА, ЧТО И НА ГЛАВНОЙ !!! */
     background-size: cover;
     background-position: center;
     background-attachment: fixed; /* Для эффекта параллакса, если нужен */
