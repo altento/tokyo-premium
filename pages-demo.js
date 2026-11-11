@@ -22,4 +22,4 @@ document.addEventListener('submit',event=>{
  localStorage.setItem(key,JSON.stringify(rows.slice(0,30)));
  status.textContent=type==='review'?'Спасибо. Отзыв сохранён в этом браузере и не публикуется.':type==='contact'?'Сообщение сохранено только в этом браузере. Оно не отправлено ресторану.':'Готово: демо-запись сохранена только в этом браузере. Это не подтверждённая бронь и не отправленный заказ.';
  status.className='form-status success';form.reset();document.dispatchEvent(new Event('tokyo-demo-data-updated'));
-});
+},true);
