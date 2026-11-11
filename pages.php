@@ -28,7 +28,7 @@ header_html($view);
   $id=filter_var($_GET['id']??null,FILTER_VALIDATE_INT); $q=db()->prepare('SELECT d.*,c.name category_name FROM dishes d JOIN categories c ON c.slug=d.category WHERE d.id=? AND d.active=1'); $q->execute([$id?:0]); $dish=$q->fetch();
   if(!$dish){http_response_code(404); ?>
 <section class="page-hero"><div class="kicker">Tokyo Premium</div><h1>Блюдо не найдено</h1><p>Вернитесь в меню, чтобы выбрать другую позицию.</p><a class="button" href="menu.php">Открыть меню ↗</a></section>
-<?php } else:
+<?php } else {
   $recommend=array_values(array_filter($all,fn($d)=>(int)$d['id']!==(int)$dish['id'])); $recommend=array_slice($recommend,0,4);
   ep_hero('旬','МЕНЮ · '.$dish['category_name'].' · '.$dish['weight'],$dish['name'],'Вкус, текстура и температура в точном равновесии.',$dish['description'],$dish['image_url'],'Демонстрационная фотография: '.$dish['name'],'В меню','menu.php','Узнать о сетах');
 ?>
@@ -37,7 +37,7 @@ header_html($view);
 <section class="section"><div class="editorial-note"><div class="kicker">Подача от шефа концепции</div><blockquote>Важен баланс: продукт, температура и пауза между первым ароматом и последним вкусом.</blockquote><p class="menu-note">Текст создан для учебной концепции и не является цитатой реального сотрудника.</p></div></section>
 <section class="section"><div class="editorial-heading"><div class="kicker">Состав и подача</div><h2>Что создаёт характер блюда</h2></div><div class="detail-ingredients"><article><span>01</span><h3>Основа</h3><p><?=e($dish['description'])?></p></article><article><span>02</span><h3>Текстура</h3><p>Контраст нежного, упругого и хрустящего раскрывает каждый компонент постепенно.</p></article><article><span>03</span><h3>Ритм</h3><p>Подавайте сразу после приготовления; точная подача здесь важнее спешки.</p></article></div></section>
 <section class="section dark"><div class="section-head"><div><div class="kicker">Продолжить знакомство</div><h2>Близкие по настроению</h2></div><a class="button secondary" href="menu.php">Все меню ↗</a></div><div class="dish-grid"><?php foreach($recommend as $d) ep_card($d); ?></div></section>
-<?php endif; ?>
+<?php } endif; ?>
 <?php elseif($view==='omakase'): ?>
 <?php ep_hero('お任せ','ВЫБОР ШЕФА · РИТУАЛ ВКУСА','Omakase','Вечер, который складывается в моменте.','Доверить выбор шефу — значит позволить сезону вести вас от первой лёгкой подачи к глубокому финалу.','https://images.unsplash.com/photo-1577219491135-ce391730fb2c?q=85&w=1800&auto=format&fit=crop','Шеф готовит дегустационное меню','Выбрать вечер','pages.php?page=booking','Открыть меню'); ?>
 <section class="section"><div class="intro-grid"><div class="editorial-note"><div class="kicker">お任せ · «полагаюсь на вас»</div><h2>Не список блюд, а последовательность открытий</h2><p>Состав учебного сета меняется по замыслу вечера: лёгкие закуски, рыба, нигири, тёплая подача и десерт. В реальном заведении состав и аллергенная информация требуют подтверждения.</p></div><div class="experience-steps"><?php foreach(['Начало · сезонный акцент','Сашими · чистый вкус','Нигири · точность риса','Тёплая подача · глубина','Финал · чай и десерт'] as $i=>$step): ?><article><span><?=sprintf('%02d',$i+1)?></span><h3><?=e($step)?></h3><p><?=['Небольшая закуска задаёт настроение.','Рыба подаётся с лаконичным сопровождением.','Порции раскрываются постепенно.','Тепло и аромат меняют темп дегустации.','Спокойная точка долгого вечера.'][$i]?></p></article><?php endforeach ?></div></div></section>
