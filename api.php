@@ -7,7 +7,7 @@ check_csrf();
 $type=(string)($_POST['type']??'');
 $name=trim((string)($_POST['name']??'')); $phone=trim((string)($_POST['phone']??''));
 if(!preg_match('/^[\p{L} .\'-]{2,80}$/u',$name)) answer(422,['ok'=>false,'message'=>'Укажите имя от 2 до 80 символов.']);
-if(!preg_match('/^[+0-9() \-]{7,30}$/',$phone)) answer(422,['ok'=>false,'message'=>'Проверьте номер телефона.']);
+if(in_array($type,['booking','order'],true) && !preg_match('/^[+0-9() \\-]{7,30}$/',$phone)) answer(422,['ok'=>false,'message'=>'Проверьте номер телефона.']);
 try {
  if($type==='booking'){
   $guests=filter_var($_POST['guests']??null,FILTER_VALIDATE_INT);$date=(string)($_POST['date']??'');$time=(string)($_POST['time']??'');$d=DateTime::createFromFormat('!Y-m-d',$date);$today=new DateTime('today');
