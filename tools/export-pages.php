@@ -43,4 +43,11 @@ HTML;
 $dishJson = json_encode(dishes(), JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP|JSON_UNESCAPED_UNICODE);
 $account = str_replace('</main>', '<script>window.DISHES='.$dishJson.';</script></main>', $account);
 file_put_contents($docs . '/account.html', $account);
-echo "Exported " . count($routes) . " static pages to $docs\n";
+$expected = array_values($routes);
+$expected[] = 'account.html';
+foreach (array_unique($expected) as $filename) {
+    $output = file_get_contents($docs . '/' . $filename);
+    if ($output === false || !str_contains($output, '<title>')) throw new RuntimeException('Invalid exported document: ' . $filename);
+    if (preg_match('/(?:href|src)="[^"]+\\.php(?:[?#"]|&amp;)/', $output)) throw new RuntimeException('PHP-only link left in static page: ' . $filename);
+}
+echo "Exported " . count(array_unique($expected)) . " static pages to $docs\n";
