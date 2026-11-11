@@ -49,11 +49,11 @@ jobs:
           booking_date=$(TZ=Asia/Qyzylorda date +%F)
           booking=$(curl --fail --silent --cookie "$cookies" --cookie-jar "$cookies" --data-urlencode "csrf=$csrf" --data-urlencode 'type=booking' --data-urlencode 'name=Demo Guest' --data-urlencode 'phone=+70000000000' --data-urlencode 'guests=2' --data-urlencode "date=$booking_date" --data-urlencode 'time=18:00' --data-urlencode 'zone=Суши-стойка' --data-urlencode 'table=4' --data-urlencode 'message=Smoke test' http://127.0.0.1:8081/api.php)
           printf '%s' "$booking" | grep -q '"ok":true'
-          order=$(curl --fail --silent --cookie "$cookies" --cookie-jar "$cookies" --data-urlencode "csrf=$csrf" --data-urlencode 'type=order' --data-urlencode 'name=Demo Guest' --data-urlencode 'phone=+70000000000' --data-urlencode 'address=Test address 1' --data-urlencode 'fulfillment=pickup' --data-urlencode 'items=[{"id":1,"qty":2}]' http://127.0.0.1:8081/api.php)
+          order=$(curl --fail --silent --cookie "$cookies" --cookie-jar "$cookies" --data-urlencode "csrf=$csrf" --data-urlencode 'type=order' --data-urlencode 'name=Demo Guest' --data-urlencode 'phone=+70000000000' --data-urlencode 'address=' --data-urlencode 'fulfillment=pickup' --data-urlencode 'items=[{"id":1,"qty":2}]' http://127.0.0.1:8081/api.php)
           printf '%s' "$order" | grep -q '"ok":true'
           contact=$(curl --fail --silent --cookie "$cookies" --cookie-jar "$cookies" --data-urlencode "csrf=$csrf" --data-urlencode 'type=contact' --data-urlencode 'name=Demo Guest' --data-urlencode 'email=demo@example.test' --data-urlencode 'subject=Общий вопрос' --data-urlencode 'message=Smoke test message' http://127.0.0.1:8081/api.php)
           printf '%s' "$contact" | grep -q '"ok":true'
-          review=$(curl --fail --silent --cookie "$cookies" --cookie-jar "$cookies" --data-urlencode "csrf=$csrf" --data-urlencode 'type=review' --data-urlencode 'name=Demo Guest' --data-urlencode 'rating=5' --data-urlencode 'body=This is a fictitious smoke test review.' http://127.0.0.1:8081/api.php)
+          review=$(curl --fail --silent --cookie "$cookies" --cookie-jar "$cookies" --data-urlencode "csrf=$csrf" --data-urlencode 'type=review' --data-urlencode 'name=Demo Guest' --data-urlencode 'rating=5' --data-urlencode 'theme=Кухня' --data-urlencode 'body=This is a fictitious smoke test review.' http://127.0.0.1:8081/api.php)
           printf '%s' "$review" | grep -q '"ok":true'
           admin=$(curl --fail --silent http://127.0.0.1:8081/admin.php)
           printf '%s' "$admin" | grep -q 'Вход в панель'
@@ -71,6 +71,11 @@ jobs:
             sleep 1
           done
           TOKYO_EXPORT_URL=http://127.0.0.1:8080 php tools/export-pages.php
+          test -s docs/premium.css
+          test -s docs/pages-demo.js
+          test -s docs/account.html
+          test -s docs/assets/food/03-nigiri-salmon.webp
+          grep -q 'не зашифровано' docs/account.html
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v3
         with:

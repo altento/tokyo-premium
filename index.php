@@ -1,7 +1,82 @@
-<?php require __DIR__.'/bootstrap.php'; page_start(); header_html('home'); $featured=dishes(true); ?>
-<main><section class="hero"><img class="hero-photo" src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=85&w=2200&auto=format&fit=crop" srcset="<?=e(image_srcset('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=85&w=2200&auto=format&fit=crop'))?>" sizes="100vw" width="2200" height="1467" alt="Интерьер ресторана в тёплом вечернем свете" fetchpriority="high"><div class="hero-copy"><div class="eyebrow"><?=e(setting('hero_eyebrow'))?></div><h1><?=e(setting('hero_title'))?> <span>旬 · сезонность</span></h1><p><?=e(setting('hero_text'))?></p><div class="button-row"><a class="button" href="menu.php">Открыть меню <b>↗</b></a><a class="button secondary" href="#booking">Выбрать вечер</a></div></div><div class="hero-mark">TOKYO PREMIUM · OMOTENASHI</div><div class="hero-caption">ТЕМП ВЕЧЕРА · ВАШ</div></section>
-<section class="section"><div class="intro-grid"><img class="intro-image reveal" src="https://images.unsplash.com/photo-1552566626-52f8b828add9?q=85&w=1300&auto=format&fit=crop" srcset="<?=e(image_srcset('https://images.unsplash.com/photo-1552566626-52f8b828add9?q=85&w=1300&auto=format&fit=crop'))?>" sizes="(max-width: 760px) 100vw, 50vw" width="1300" height="900" alt="Детали интерьера японского ресторана" loading="lazy" decoding="async"><div class="editorial-copy reveal"><div class="kicker">Философия гостеприимства</div><h2>Внимание к тому, что нельзя ускорить</h2><p class="japanese">おもてなし — забота, которая предшествует просьбе</p><p>Мы верим в спокойный ритм кухни: в точность ножа, чистоту продукта и момент, когда блюдо готово раскрыться. Здесь японская традиция встречается с современным взглядом на ужин.</p><a class="button" href="about.php">Узнать нашу философию ↗</a></div></div></section>
-<section class="section dark"><div class="section-head"><div><div class="kicker">Выбор шефа</div><h2>Вкус момента</h2></div><a class="button secondary" href="menu.php">Все меню ↗</a></div><div class="dish-grid"><?php foreach($featured as $i=>$d): ?><article class="dish-card reveal"><div class="dish-image-wrap"><img src="<?=e($d['image_url'])?>" srcset="<?=e(image_srcset($d['image_url']))?>" sizes="(max-width: 760px) 100vw, (max-width: 1100px) 50vw, 33vw" width="1200" height="800" alt="<?=e($d['name'])?>" loading="lazy" decoding="async"></div><div class="dish-meta"><small><?=e($d['category_name'])?> · <?=e($d['weight'])?></small><h3><a href="pages.php?page=dish&amp;id=<?=(int)$d['id']?>"><?=e($d['name'])?></a></h3><p><?=e($d['description'])?></p><div class="dish-bottom"><span class="dish-price"><?=number_format((int)$d['price'],0,'.',' ')?> ₸</span><button class="add-to-cart" data-id="<?= (int)$d['id']?>">Добавить +</button></div></div></article><?php endforeach ?></div><p class="menu-note">Все позиции и цены придуманы для учебной концепции Tokyo Premium.</p></section>
-<section class="section"><div class="button-row"><a class="button" href="pages.php?page=omakase">Открыть Omakase ↗</a><a class="button secondary" href="pages.php?page=gallery">Исследовать пространство ↗</a><a class="button secondary" href="pages.php?page=contacts">Контакты ↗</a></div></section><section class="section dark"><div class="story-band"><div class="story-number">一</div><div class="story-copy"><div class="kicker">Путь к простоте</div><h2>Когда детали говорят тихо</h2><p>Сезонное меню меняется вместе с природой. Мы оставляем место для паузы, позволяя вкусу, фактуре и подаче занять своё время.</p><a class="button secondary" href="about.php">Открыть философию ↗</a></div></div></section>
-<section class="booking" id="booking"><div><div class="kicker">Ваш стол ждёт своего вечера</div><h2>Пусть всё остальное подождёт</h2><p>Мы перезвоним и подготовим стол к выбранному времени.</p><p class="menu-note">После заявки команда подтвердит время и пожелания к вечеру.</p></div><form data-api="booking"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><div class="field"><label for="guest-name">Ваше имя</label><input required maxlength="80" id="guest-name" name="name" autocomplete="name"></div><div class="field"><label for="guest-phone">Телефон</label><input required maxlength="30" id="guest-phone" name="phone" autocomplete="tel"></div><div class="field"><label for="guest-count">Гостей</label><select id="guest-count" name="guests"><option>2</option><option>1</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select></div><div class="field"><label for="booking-date">Дата</label><input required type="date" id="booking-date" name="date" min="<?=date('Y-m-d')?>"></div><div class="field"><label for="booking-time">Время</label><select id="booking-time" name="time" required><?php foreach(['12:00','13:00','14:00','17:00','18:00','19:00','20:00','21:00'] as $t): ?><option><?=e($t)?></option><?php endforeach ?></select></div><div class="field full"><label for="booking-message">Пожелания</label><input id="booking-message" name="message" maxlength="240" placeholder="Особый повод, предпочтения по залу"></div><button class="button" type="submit">Отправить заявку ↗</button><div class="form-status" aria-live="polite"></div></form></section>
-</main><script>window.DISHES=<?=json_encode(dishes(),JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP|JSON_UNESCAPED_UNICODE)?>;</script><button class="cart-toggle" aria-label="Открыть корзину">Заказ <b>0</b></button><aside class="cart-panel" aria-label="Корзина" aria-hidden="true"><div class="cart-head"><h2>Ваш заказ</h2><button class="cart-close" aria-label="Закрыть корзину">×</button></div><div class="cart-lines"></div><div class="cart-total"><span>Итого</span><strong>0 ₸</strong></div><form data-api="order"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="items" value="[]"><div class="field"><label for="order-name">Имя</label><input id="order-name" required name="name" maxlength="80" autocomplete="name"></div><div class="field"><label for="order-phone">Телефон</label><input id="order-phone" type="tel" required name="phone" maxlength="30" autocomplete="tel"></div><div class="field"><label for="order-address">Адрес доставки</label><input id="order-address" required name="address" maxlength="180" autocomplete="street-address"></div><div class="field"><label for="order-comment">Комментарий</label><textarea id="order-comment" name="comment" maxlength="300"></textarea></div><button class="button" type="submit">Подтвердить заказ ↗</button><div class="form-status" aria-live="polite"></div></form></aside><?php footer_html(); ?>
+<?php
+require __DIR__.'/bootstrap.php';
+page_start('Tokyo Premium — японская кухня как искусство момента','Авторская японская кухня, сезонные вкусы и ритуал гостеприимства в вымышленном Tokyo Premium. Учебная концепция.');
+header_html('home');
+$featured=array_slice(dishes(true),0,4);
+?>
+<main class="home-premium">
+  <section class="home-hero" aria-labelledby="home-title">
+    <img class="home-hero-photo" src="assets/generated/home-hero-salmon-nigiri.webp" width="1672" height="944" fetchpriority="high" alt="Нигири с лососем на тёмной керамической тарелке в свете японских фонарей">
+    <div class="home-hero-shade" aria-hidden="true"></div>
+    <span class="home-kanji" lang="ja" aria-hidden="true">東京</span>
+    <div class="home-hero-copy">
+      <p class="eyebrow"><?=e(setting('hero_eyebrow'))?></p>
+      <h1 id="home-title">Вкус, которому<br><em>нужно время</em></h1>
+      <p class="home-hero-lead"><?=e(setting('hero_text'))?></p>
+      <div class="button-row">
+        <a class="button" href="menu.php">Открыть меню <span aria-hidden="true">↗</span></a>
+        <a class="button secondary" href="pages.php?page=booking">Выбрать вечер</a>
+      </div>
+    </div>
+    <p class="home-hero-note"><span>旬</span> сезонность · точность · omotenashi</p>
+    <a class="hero-scroll" href="#menu-selection" aria-label="Прокрутить к меню"><span></span> Листайте к истории вкуса</a>
+  </section>
+
+  <section class="home-values" aria-label="Принципы кухни">
+    <div><span class="value-mark" aria-hidden="true">一</span><span><strong>Сезонность</strong><small>ритм природы в меню</small></span></div>
+    <div><span class="value-mark" aria-hidden="true">和</span><span><strong>Гармония</strong><small>баланс вкуса и формы</small></span></div>
+    <div><span class="value-mark" aria-hidden="true">匠</span><span><strong>Мастерство</strong><small>точность каждого жеста</small></span></div>
+    <div><span class="value-mark" aria-hidden="true">心</span><span><strong>Забота</strong><small>японское omotenashi</small></span></div>
+  </section>
+
+  <section class="home-menu-section" id="menu-selection">
+    <div class="home-section-head">
+      <div><p class="kicker">Выбор шефа · сезонная коллекция</p><h2>Вкус начинается<br><em>с одного мгновения</em></h2></div>
+      <a class="text-link" href="menu.php">Все меню <span aria-hidden="true">↗</span></a>
+    </div>
+    <div class="home-dish-grid">
+      <?php foreach($featured as $i=>$d): ?>
+      <article class="home-dish-card reveal">
+        <a class="home-dish-photo" href="pages.php?page=dish&amp;id=<?=(int)$d['id']?>" aria-label="Подробнее: <?=e($d['name'])?>"><img src="<?=e($d['image_url'])?>" width="960" height="720" alt="<?=e($d['name'])?> — блюдо учебного меню" loading="lazy" decoding="async"></a>
+        <button class="favorite-btn" type="button" data-favorite="<?=(int)$d['id']?>" aria-label="Сохранить <?=e($d['name'])?> в избранное">♡</button>
+        <div class="home-dish-copy"><p class="dish-overline"><?=e($d['category_name'])?> <span>·</span> <?=e($d['weight'])?></p><h3><a href="pages.php?page=dish&amp;id=<?=(int)$d['id']?>"><?=e($d['name'])?></a></h3><p class="dish-description"><?=e($d['description'])?></p><div class="home-dish-bottom"><strong><?=number_format((int)$d['price'],0,'.',' ')?> ₸</strong><button class="add-to-cart" type="button" data-id="<?=(int)$d['id']?>" aria-label="Добавить <?=e($d['name'])?> в корзину"><span aria-hidden="true">+</span> Добавить</button></div></div>
+      </article>
+      <?php endforeach ?>
+    </div>
+    <p class="home-disclaimer">Учебное меню: названия, состав и цены придуманы для демонстрации проекта.</p>
+  </section>
+
+  <section class="home-philosophy">
+    <div class="philosophy-photo-wrap"><img src="assets/generated/chef-at-counter.webp" width="1448" height="1096" alt="Вымышленный шеф Tokyo Premium бережно формует нигири у суши-стойки" loading="lazy" decoding="async"><span class="photo-index">手仕事 · ремесло</span></div>
+    <div class="philosophy-copy"><p class="kicker">Философия Tokyo Premium</p><h2>Уважение к продукту.<br><em>Свобода для вкуса.</em></h2><p>Сезон задаёт направление, мастерство сохраняет чистоту вкуса, а пауза помогает заметить детали. Так устроена наша учебная история о японском столе.</p><p class="japanese-line" lang="ja">季節 · 技 · 心</p><a class="button secondary" href="about.php">Открыть философию <span aria-hidden="true">↗</span></a><span class="fictional-chef">Рэн Такахаси · вымышленный шеф-повар концепции</span></div>
+    <div class="enso" aria-hidden="true"><span>和</span></div>
+  </section>
+
+  <section class="home-space">
+    <div class="space-photo"><img src="assets/generated/restaurant-interior.webp" width="1672" height="944" alt="Вымышленный интерьер Tokyo Premium: ореховое дерево, тёплый свет и садовое окно" loading="lazy" decoding="async"></div>
+    <div class="space-copy"><p class="kicker">Пространство · тёплая тишина</p><h2>Вечер начинается<br><em>ещё до первой подачи</em></h2><p>Тёмный орех, мягкий свет бумажных фонарей и камерная суши-стойка создают спокойный ритм для долгого ужина.</p><a class="text-link" href="pages.php?page=gallery">Исследовать пространство <span aria-hidden="true">↗</span></a></div>
+    <span class="space-side-note" lang="ja" aria-hidden="true">間 · пространство</span>
+  </section>
+
+  <section class="home-omakase-strip">
+    <div class="omakase-seal" aria-hidden="true"><span>おまかせ</span><b>匠</b></div>
+    <div><p class="kicker">Omakase · доверьтесь выбору шефа</p><h2>История вкуса<br><em>в нескольких подачах</em></h2><p>Сезонный дегустационный маршрут — от лёгкого первого акцента до спокойного финала.</p><a class="button" href="pages.php?page=omakase">Узнать об Omakase <span aria-hidden="true">↗</span></a></div>
+    <div class="omakase-decoration" aria-hidden="true"><span>一</span><span>期</span><span>一</span><span>会</span></div>
+  </section>
+
+  <section class="home-review-note">
+    <p class="kicker">Истории гостей · демонстрационные примеры</p>
+    <blockquote>«В нигири слышно главное: свежесть рыбы, тёплый рис и точность прикосновения»</blockquote>
+    <p class="review-credit">Учебный отзыв · вымышленный персонаж</p>
+    <a class="text-link" href="reviews.php">Читать и оставить отзыв <span aria-hidden="true">↗</span></a>
+  </section>
+
+  <section class="home-booking" id="booking">
+    <div class="booking-intro"><p class="kicker">Оставьте место для вечера</p><h2>Ваш стол.<br><em>Ваш темп.</em></h2><p>В PHP-версии форма создаёт запрос на бронирование. На GitHub Pages данные останутся только в этом браузере.</p><span class="booking-jp" lang="ja" aria-hidden="true">今宵 · сегодня вечером</span></div>
+    <form class="home-booking-form" data-api="booking"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><div class="field"><label for="guest-name">Имя</label><input required maxlength="80" id="guest-name" name="name" autocomplete="name"></div><div class="field"><label for="guest-phone">Телефон</label><input required maxlength="30" id="guest-phone" name="phone" type="tel" autocomplete="tel"></div><div class="field"><label for="booking-date">Дата</label><input required type="date" id="booking-date" name="date" min="<?=date('Y-m-d')?>"></div><div class="field"><label for="booking-time">Время</label><select id="booking-time" name="time" required><?php foreach(['12:00','13:00','14:00','17:00','18:00','19:00','20:00','21:00'] as $t): ?><option value="<?=e($t)?>"><?=e($t)?></option><?php endforeach ?></select></div><div class="field"><label for="guest-count">Гостей</label><select id="guest-count" name="guests"><?php for($i=1;$i<=12;$i++): ?><option value="<?=$i?>" <?=$i===2?'selected':''?>><?=$i?> <?=$i===1?'гость':'гостя'?></option><?php endfor ?></select></div><div class="field"><label for="booking-zone-home">Зона</label><select id="booking-zone-home" name="zone"><option>Основной зал</option><option>Суши-стойка</option><option>Камерная комната</option></select></div><button class="button" type="submit">Отправить запрос <span aria-hidden="true">↗</span></button><p class="form-status" aria-live="polite"></p></form>
+  </section>
+</main>
+<script>window.DISHES=<?=json_encode(dishes(),JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP|JSON_UNESCAPED_UNICODE)?>;</script>
+<button class="cart-toggle" aria-label="Открыть корзину">Заказ <b>0</b></button>
+<aside class="cart-panel" aria-label="Корзина" aria-hidden="true"><div class="cart-head"><h2>Ваш заказ</h2><button class="cart-close" aria-label="Закрыть корзину">×</button></div><div class="cart-lines"></div><div class="cart-total"><span>Итого</span><strong>0 ₸</strong></div><form data-api="order"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="items" value="[]"><div class="field"><label for="order-name">Имя</label><input id="order-name" required name="name" maxlength="80" autocomplete="name"></div><div class="field"><label for="order-phone">Телефон</label><input id="order-phone" type="tel" required name="phone" maxlength="30" autocomplete="tel"></div><div class="field"><label for="order-address">Адрес доставки</label><input id="order-address" required name="address" maxlength="180" autocomplete="street-address"></div><div class="field"><label for="order-comment">Комментарий</label><textarea id="order-comment" name="comment" maxlength="300"></textarea></div><button class="button" type="submit">Сохранить демо-заказ ↗</button><div class="form-status" aria-live="polite"></div></form></aside>
+<?php footer_html(); ?>

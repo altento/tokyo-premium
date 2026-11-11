@@ -20,6 +20,9 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(tableInput)tableInput.value=button.dataset.tableSelect;
     if(tableStatus)tableStatus.textContent='Выбран предпочтительный стол №'+button.dataset.tableSelect+'. Доступность подтвердит ресторан.';
   }));
+  const fulfillment=$('#fulfillment'), addressField=$('#checkout-address'), addressWrap=$('#checkout-address-field');
+  function syncFulfillment(){if(!fulfillment||!addressField)return;const delivery=fulfillment.value!=='pickup';addressField.required=delivery;addressField.disabled=!delivery;if(addressWrap)addressWrap.hidden=!delivery;if(!delivery)addressField.value=''}
+  fulfillment?.addEventListener('change',syncFulfillment);syncFulfillment();
   const getCart=()=>{try{return JSON.parse(localStorage.getItem('tokyo-cart')||'[]')}catch{return[]}};
   const setCart=cart=>{localStorage.setItem('tokyo-cart',JSON.stringify(cart));document.dispatchEvent(new Event('tokyo-cart-updated'))};
   const esc=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

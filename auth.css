@@ -10,7 +10,7 @@
     position: relative;
     z-index: 1;
     /* Тот же фон, что и на странице меню */
-    background-image: url('https://inde.io/wp-content/uploads/2025/08/ddee5ed520b03eee4d75014cde241ebf.jpg');
+    background-image: url('assets/generated/restaurant-interior.webp');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
