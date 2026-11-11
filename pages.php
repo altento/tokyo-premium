@@ -11,7 +11,16 @@ function ep_heading(string $eyebrow,string $title,string $copy=''): void { ?><di
 function ep_card(array $d,string $label=''): void { ?>
 <article class="dish-card reveal"><a class="editorial-product-image" href="pages.php?page=dish&amp;id=<?= (int)$d['id']?>"><img src="<?=e($d['image_url'])?>" srcset="<?=e(image_srcset($d['image_url']))?>" sizes="(max-width:760px) 90vw, 30vw" width="1200" height="800" alt="<?=e($d['name'])?>" loading="lazy" decoding="async"></a><div class="dish-meta"><?php if($label): ?><small class="editorial-badge"><?=e($label)?></small><?php endif ?><small><?=e($d['category_name'])?> · <?=e($d['weight'])?></small><button class="favorite-btn" type="button" data-favorite="<?= (int)$d['id']?>" aria-label="Сохранить <?=e($d['name'])?> в избранное">♡</button><h3><a href="pages.php?page=dish&amp;id=<?= (int)$d['id']?>"><?=e($d['name'])?></a></h3><p><?=e($d['description'])?></p><div class="dish-bottom"><span class="dish-price"><?=ep_price((int)$d['price'])?> ₸</span><button class="add-to-cart" type="button" data-id="<?= (int)$d['id']?>">Добавить +</button></div></div></article>
 <?php }
-page_start();
+[$metaTitle,$metaDescription] = match($view) {
+ 'dish'=>['Блюдо — Tokyo Premium','Описание блюда учебного меню Tokyo Premium.'],
+ 'omakase'=>['Omakase — Tokyo Premium','Дегустационный вечер Omakase в учебной концепции Tokyo Premium.'],
+ 'gallery'=>['Пространство — Tokyo Premium','Галерея интерьера и атмосферы учебной концепции Tokyo Premium.'],
+ 'booking'=>['Бронирование — Tokyo Premium','Параметры тестовой заявки на визит в Tokyo Premium.'],
+ 'contacts'=>['Контакты — Tokyo Premium','Вымышленные контакты учебного проекта Tokyo Premium.'],
+ 'cart'=>['Корзина — Tokyo Premium','Демо-корзина с учебными блюдами Tokyo Premium.'],
+ default=>['Tokyo Premium','Страница учебной концепции японского ресторана.']
+};
+page_start($metaTitle,$metaDescription);
 header_html($view);
 ?>
 <main class="editorial-page">
