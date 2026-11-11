@@ -1,3 +1,19 @@
+# Final verification · 2026-11-12
+
+Published revision: `c3fe4b7a922efb511aa0cb315428451134f1e297`  
+GitHub Actions: [run 43104760849](https://github.com/altento/tokyo-premium/actions/runs/43104760849) · completed successfully  
+Public site: [altento.github.io/tokyo-premium](https://altento.github.io/tokyo-premium/)
+
+- The CI build passed PHP syntax checks, PHP + SQLite form/admin smoke checks, static export, and assertions for the exported stylesheet, browser-only scripts, profile privacy notice, and local WebP assets.
+- The static PHP export completed without PHP-only page links. It includes home, menu, 20 dish detail pages, Omakase, philosophy, gallery, booking, reviews, contacts, cart, and account.
+- Live browser check: home, menu, and profile loaded on GitHub Pages. Menu showed all 20 dishes; the menu used no externally hosted food photographs. Dish imagery is served from the repository’s optimized WebP assets.
+- Browser-only checkout was exercised locally: adding a dish, selecting pickup without an address, saving the order, and viewing its history in the profile all worked. The interface stated clearly that it neither charges payment nor sends the order.
+- The profile displays an explicit notice that browser storage is not encrypted and advises using fictitious details.
+- PHP booking, cart, review filtering, and date validation were checked against the local PHP + SQLite server. Unauthenticated administration remained behind the login screen.
+- The 11 supplied reference mockups are stored under `design-references/`; the public Pages artifact does not include those mockups.
+
+## Earlier verification history
+
 # QA report
 Date: 2026-11-12  
 Published revision: `215b84123ed501332191c7a33e60738af6d58454`  
