@@ -1,17 +1,42 @@
-# Implementation record
-Updated 2026-11-12
+# Tokyo Premium 2.0 implementation record
 
-## Existing foundation retained
-The site remains a PHP 8+ application backed by SQLite. The shared bootstrap builds navigation, metadata, database access, security headers, sessions and form tokens. GitHub Actions exports a browser-only site from this same app for Pages.
+Updated 2026-11-13
 
-## Completed scope
-1. Completed the public route set: home, menu, dish detail, Omakase, philosophy, gallery, booking, reviews, contacts, cart, and account.
-2. Linked menu dishes to individual details and connected all pages through shared navigation.
-3. Added gallery filters/lightbox, preferred table and zone selection, cart line editing, pickup/delivery choice, and browser-local profile sections.
-4. Added a SQLite contact-message inbox and booking seating preferences, including upgrades for existing SQLite files.
-5. Improved admin visibility for booking seating selections and contact message status management.
-6. Exported PHP routes to standalone Pages documents and rewrote internal links to static HTML destinations.
-7. Documented local PHP setup, admin setup, Pages behavior and Module 4 criteria in the README.
+## Foundation preserved
 
-## Technical decisions
-GitHub Pages cannot execute PHP or SQLite. The public demo intentionally stores submissions and account preferences in the browser only. It has no authentication, email delivery, live availability, or payment flow. The full local PHP app provides database-backed requests and admin functions. All business content is fictional educational material.
+The project remains the existing PHP 8+ application with SQLite. Public PHP routes, `bootstrap.php`, the admin area and the shared cart store remain in place. GitHub Pages is still generated from those routes by `tools/export-pages.php`. Database changes are additive and versioned in `app_migrations`.
+
+## Implemented modules
+
+- Shared motion styling, reduced-motion behavior and responsive editorial components.
+- Omakase course selector with five scenes; set builder with server-configured variants and shared-cart integration; rules-based “perfect evening” wizard.
+- SVG seating plan with zone/table preference. It never reports live availability; a change to date, time, guest count or zone clears the previous table preference.
+- Quick view for actual catalog records, search metadata, campaign/collection routes, server-validated promotion quotes, Secret Menu access checks and threshold gift options.
+- Loyalty tiers/ledger, completed-order event handling, optional birthday consent, referral association and non-financial certificate previews with rate limiting.
+- Marketing & Loyalty admin forms for campaigns, codes and collections behind existing admin session and CSRF protection.
+- Browser-local counterparts on Pages for supported presentation scenarios. These do not claim server delivery, authentication, payment, live availability or a redeemable certificate.
+- Secret Menu visibility is filtered server-side from public catalog/detail/collection/API routes; PHP unlocks are session-backed and rechecked during order quotes. The Pages preview payload is explicitly public demo content, not access control.
+- Promotion stacking, bonus-points promo eligibility and completed-order loyalty events are checked transactionally so a status cycle cannot award the same order repeatedly.
+
+## Verification order
+
+1. PHP syntax and isolated PHP/SQLite integrity tests.
+2. Cart-store unit tests.
+3. Browser regression for 11 route types, 20 dishes, cart/checkout/profile/navigation and responsive widths.
+4. `test:tokyo20` against PHP and static export, including offers, collection, Omakase, set builder, recommendation wizard, booking preference, gift preview, quick view and populated cart.
+5. Inspect captured screenshots before updating the evidence index.
+6. Verify a clean CI dependency install, static Pages export and published deployment after pushing the release branch.
+
+## Current verification record
+
+- PHP + SQLite integration suite: 95 assertions passed against an isolated database.
+- Cart state tests: 12 passed.
+- Browser suites passed for the 11 existing route types, 20 dish details (18 public plus two after an authorized Secret Menu unlock), Tokyo 2.0 interactions, reviews, cart states, responsive layouts and visual states.
+- Responsive checks covered 11 page types at widths 320, 360, 375, 390, 430, 768, 900, 1024 and 1440 px; 1920 px was included in the dedicated responsive run.
+- Static export generated 36 pages. Locked PHP dish routes are omitted; the Pages Secret Menu is a clearly bounded browser demo.
+- Local `npm ci` did not complete in this environment; browser tests used the already available pinned Playwright 1.65.0 runtime. CI's clean install remains the publication gate.
+- Screenshot evidence is stored in `project-docs/visual-qa/`. Screenshots were inspected for selected states; this is not a pixel-by-pixel comparison of every section against all 11 reference PNGs.
+
+## Boundaries
+
+The restaurant, prices, campaign defaults, guest examples and address are fictional school-project data. Only a completed server order event changes the PHP loyalty ledger. Pages stores supported demo data in the current browser's `localStorage`; it is not encrypted or synced with PHP. No external mail provider or payment gateway is configured, and a booking request is not a confirmed reservation.

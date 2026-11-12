@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '..');
-const evidence = path.join(root, 'project-docs', 'visual-qa');
+const evidence = path.resolve(process.env.TOKYO_EVIDENCE_DIR || path.join(root, 'project-docs', 'visual-qa'));
 const widths = [320, 360, 375, 390, 430, 768, 1024, 1440, 1920];
 const routes = [
   ['01-home', '/'], ['02-menu', '/menu.php'], ['03-dish', '/pages.php?page=dish&id=3'],

@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const evidence = path.resolve(__dirname, '..', 'project-docs', 'visual-qa');
+const evidence = path.resolve(process.env.TOKYO_EVIDENCE_DIR || path.join(__dirname, '..', 'project-docs', 'visual-qa'));
 
 async function screenshot(page, name) {
   const expectedWidth = /-desktop\.png$/.test(name) ? 1440 : 390;

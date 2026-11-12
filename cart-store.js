@@ -8,7 +8,9 @@
   const LEGACY_KEYS = ['tokyo-cart', 'cart'];
   const MAX_LINES = 30;
   const MAX_QTY = 20;
+  const MAX_CUSTOM_SETS = 3;
   let memoryCart = [];
+  let memoryCustomSets = [];
   let memoryFavorites = [];
   let memoryLockUntil = 0;
   let ownLock = '';
@@ -48,6 +50,46 @@
     return Array.from(merged, ([id, qty]) => ({ id, qty }));
   }
 
+  function normalizeCustomSets(value) {
+    if (!Array.isArray(value)) return [];
+    const known = catalog();
+    const sets = new Map();
+    let setSlots = MAX_CUSTOM_SETS;
+    for (const row of value) {
+      if (setSlots <= 0) break;
+      if (!row || typeof row !== 'object') continue;
+      const setType = String(row.setType ?? row.set_type ?? row.variant ?? 'signature').trim().slice(0, 32) || 'signature';
+      const items = normalizeCart(row.items);
+      if (items.length < 3 || items.length > 8 || items.some(item => item.qty > 4) || (known.size && items.some(item => !known.has(item.id)))) continue;
+      const hasQty = Object.prototype.hasOwnProperty.call(row, 'qty');
+      if (hasQty && (!Number.isSafeInteger(row.qty) || row.qty < 1)) continue;
+      const requestedQty = hasQty ? row.qty : 1;
+      const signature = items.slice().sort((a, b) => a.id - b.id).map(item => `${item.id}:${item.qty}`).join(',');
+      const key = `set:${setType}:${signature}`;
+      const current = sets.get(key);
+      const qty = Math.min(requestedQty, setSlots, MAX_CUSTOM_SETS - (current?.qty || 0));
+      if (qty < 1) continue;
+      sets.set(key, {
+        key,
+        setType,
+        name: String(row.name || 'Авторский сет').trim().slice(0, 80) || 'Авторский сет',
+        qty: (current?.qty || 0) + qty,
+        items
+      });
+      setSlots -= qty;
+    }
+    return Array.from(sets.values());
+  }
+
+  function normalizeState(value) {
+    if (Array.isArray(value)) return { items: normalizeCart(value), customSets: [] };
+    if (!value || typeof value !== 'object') return { items: [], customSets: [] };
+    return {
+      items: normalizeCart(value.items),
+      customSets: normalizeCustomSets(value.customSets ?? value.custom_sets)
+    };
+  }
+
   function parse(text) {
     if (text === null || text === undefined || text === '') return { found: false, value: [] };
     try { return { found: true, value: JSON.parse(text), corrupt: false }; }
@@ -63,13 +105,23 @@
     }).filter(Boolean);
   }
 
-  function emit(name) {
-    try { global.document && global.document.dispatchEvent(new global.CustomEvent(name)); } catch (_) { }
+  function emit(name, detail) {
+    try { global.document && global.document.dispatchEvent(new global.CustomEvent(name, { detail })); } catch (_) { }
   }
 
-  function writeCart(value) {
-    const clean = normalizeCart(value);
-    memoryCart = clean;
+  function emitCartUpdated() {
+    emit('tokyo-cart-updated', {
+      snapshot: snapshotAll(),
+      orderPayload: orderPayload(),
+      count: count(),
+      estimatedTotal: total()
+    });
+  }
+
+  function writeState(value) {
+    const clean = normalizeState(value);
+    memoryCart = clean.items;
+    memoryCustomSets = clean.customSets;
     clearCheckoutRequestKey();
     const store = storage();
     if (store) {
@@ -78,41 +130,52 @@
         LEGACY_KEYS.forEach(key => store.removeItem(key));
       } catch (_) { }
     }
-    emit('tokyo-cart-updated');
+    emitCartUpdated();
     return clean;
   }
 
-  function getCart() {
+  function getState() {
     const store = storage();
-    if (!store) return normalizeCart(memoryCart);
+    if (!store) return normalizeState({ items: memoryCart, customSets: memoryCustomSets });
     try {
       const canonical = parse(store.getItem(CART_KEY));
       if (canonical.found) {
-        const clean = normalizeCart(canonical.value);
+        const clean = normalizeState(canonical.value);
         if (canonical.corrupt || JSON.stringify(clean) !== JSON.stringify(canonical.value)) {
           try { store.setItem(CART_KEY, JSON.stringify(clean)); } catch (_) { }
         }
-        memoryCart = clean;
+        memoryCart = clean.items;
+        memoryCustomSets = clean.customSets;
         return clean;
       }
       for (const key of LEGACY_KEYS) {
         const old = parse(store.getItem(key));
         if (!old.found) continue;
-        const clean = normalizeCart(legacyItems(old.value));
-        writeCart(clean);
+        const clean = normalizeState(legacyItems(old.value));
+        writeState(clean);
         return clean;
       }
       memoryCart = [];
-      return [];
+      memoryCustomSets = [];
+      return { items: [], customSets: [] };
     } catch (_) {
-      return normalizeCart(memoryCart);
+      return normalizeState({ items: memoryCart, customSets: memoryCustomSets });
     }
+  }
+
+  function getCart() { return getState().items; }
+  function getCustomSets() { return getState().customSets; }
+  function writeCart(value) {
+    const state = getState();
+    if (value && !Array.isArray(value) && typeof value === 'object') return writeState(value);
+    return writeState({ items: value, customSets: state.customSets }).items;
   }
 
   function setQty(idValue, qtyValue) {
     const id = positiveId(idValue);
     if (!id || !Number.isSafeInteger(qtyValue) || qtyValue < 0) return false;
-    const items = getCart();
+    const state = getState();
+    const items = state.items;
     const index = items.findIndex(row => row.id === id);
     if (qtyValue === 0) {
       if (index >= 0) items.splice(index, 1);
@@ -124,7 +187,7 @@
       else if (items.length < MAX_LINES) items.push({ id, qty });
       else return false;
     }
-    writeCart(items);
+    writeState({ items, customSets: state.customSets });
     return true;
   }
 
@@ -145,7 +208,40 @@
     return setQty(id, Math.max(0, current.qty + delta));
   }
 
-  function clear() { writeCart([]); }
+  function addCustomSet(detail) {
+    if (!detail || typeof detail !== 'object') return false;
+    const item = normalizeCustomSets([{ ...detail, qty: detail.qty ?? 1 }])[0];
+    if (!item) return false;
+    const state = getState();
+    const existing = state.customSets.find(row => row.key === item.key);
+    const usedSetSlots = state.customSets.reduce((sum, row) => sum + row.qty, 0);
+    if (existing) {
+      const nextQty = existing.qty + item.qty;
+      if (usedSetSlots - existing.qty + nextQty > MAX_CUSTOM_SETS) return false;
+      existing.qty = nextQty;
+    } else if (state.items.length + state.customSets.length >= MAX_LINES || usedSetSlots + item.qty > MAX_CUSTOM_SETS) return false;
+    else state.customSets.push(item);
+    writeState(state);
+    return true;
+  }
+
+  function setCustomSetQty(key, qtyValue) {
+    if (typeof key !== 'string' || !key || !Number.isSafeInteger(qtyValue) || qtyValue < 0) return false;
+    const state = getState();
+    const index = state.customSets.findIndex(row => row.key === key);
+    if (index < 0) return false;
+    if (qtyValue === 0) state.customSets.splice(index, 1);
+    else {
+      const otherSetSlots = state.customSets.reduce((sum, row, rowIndex) => sum + (rowIndex === index ? 0 : row.qty), 0);
+      if (otherSetSlots + qtyValue > MAX_CUSTOM_SETS) return false;
+      state.customSets[index].qty = qtyValue;
+    }
+    writeState(state);
+    return true;
+  }
+
+  function removeCustomSet(key) { return setCustomSetQty(key, 0); }
+  function clear() { writeState({ items: [], customSets: [] }); }
 
   function getFavorites() {
     const store = storage();
@@ -235,7 +331,7 @@
   }
 
   function checkoutRequestKey() {
-    const fingerprint = JSON.stringify(getCart());
+    const fingerprint = JSON.stringify(orderPayload());
     const store = storage();
     if (store) {
       try {
@@ -258,7 +354,30 @@
     if (store) { try { store.removeItem(CHECKOUT_REQUEST_KEY); } catch (_) { } }
   }
 
-  function count() { return getCart().reduce((sum, row) => sum + row.qty, 0); }
+  function customSetSnapshot() {
+    const known = catalog();
+    return getCustomSets().flatMap(row => {
+      const unitPrice = row.items.reduce((sum, item) => sum + Number(known.get(item.id)?.price || 0) * item.qty, 0);
+      const lineTotal = unitPrice * row.qty;
+      if (!Number.isSafeInteger(unitPrice) || unitPrice < 0 || !Number.isSafeInteger(lineTotal)) return [];
+      return [{ ...row, variant: row.setType, unitPrice, lineTotal, priceIsEstimate: true }];
+    });
+  }
+  function orderPayload() {
+    return {
+      items: getCart(),
+      custom_sets: getCustomSets().flatMap(row => Array.from({ length: row.qty }, () => ({
+        variant: row.setType,
+        items: row.items.map(item => ({ id: item.id, qty: item.qty }))
+      })))
+    };
+  }
+  function snapshotAll() { return { items: snapshot(), customSets: customSetSnapshot() }; }
+  function count() {
+    const dishes = getCart().reduce((sum, row) => sum + row.qty, 0);
+    const setItems = customSetSnapshot().reduce((sum, row) => sum + row.items.reduce((n, item) => n + item.qty, 0) * row.qty, 0);
+    return dishes + setItems;
+  }
   function snapshot() {
     const known = catalog();
     return getCart().flatMap(row => {
@@ -270,24 +389,33 @@
     });
   }
   function total() {
-    return snapshot().reduce((sum, row) => sum + row.lineTotal, 0);
+    return snapshot().reduce((sum, row) => sum + row.lineTotal, 0)
+      + customSetSnapshot().reduce((sum, row) => sum + row.lineTotal, 0);
   }
 
   global.TokyoCart = Object.freeze({
-    key: CART_KEY, maxQty: MAX_QTY, get: getCart, set: writeCart, add, setQty, adjust, remove: id => setQty(id, 0),
-    clear, count, total, snapshot, getFavorites, setFavorites, toggleFavorite, beginCheckout, finishCheckout, checkoutRequestKey, clearCheckoutRequestKey,
+    key: CART_KEY, maxQty: MAX_QTY, maxCustomSets: MAX_CUSTOM_SETS, get: getCart, set: writeCart, add, setQty, adjust, remove: id => setQty(id, 0),
+    getCustomSets, addCustomSet, setCustomSetQty, adjustCustomSet: (key, delta) => { const row = getCustomSets().find(item => item.key === key); return row && Number.isSafeInteger(delta) && Math.abs(delta) === 1 ? setCustomSetQty(key, Math.max(0, row.qty + delta)) : false; }, removeCustomSet, customSetSnapshot, orderPayload,
+    clear, count, total, snapshot, snapshotAll, getFavorites, setFavorites, toggleFavorite, beginCheckout, finishCheckout, checkoutRequestKey, clearCheckoutRequestKey,
     catalog: () => Array.from(catalog().values())
   });
 
   global.addEventListener && global.addEventListener('storage', event => {
     if (event.key === CART_KEY || LEGACY_KEYS.includes(event.key)) {
-      memoryCart = normalizeCart(parse(event.newValue).value);
-      emit('tokyo-cart-updated');
+      const state = normalizeState(parse(event.newValue).value);
+      memoryCart = state.items;
+      memoryCustomSets = state.customSets;
+      clearCheckoutRequestKey();
+      emitCartUpdated();
     } else if (event.key === FAVORITES_KEY || event.key === 'tokyo-favorites') {
       memoryFavorites = [];
       getFavorites();
       emit('tokyo-favorites-updated');
     }
+  });
+
+  global.document && global.document.addEventListener('tokyo:custom-set:add', event => {
+    if (addCustomSet(event.detail)) event.preventDefault();
   });
 
   getCart();

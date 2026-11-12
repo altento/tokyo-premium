@@ -2,10 +2,32 @@
 require __DIR__.'/bootstrap.php';
 header('Content-Type: application/json; charset=utf-8');
 function answer(int $status,array $body): never {$json=json_encode($body,JSON_UNESCAPED_UNICODE);if($status===201&&!empty($GLOBALS['api_idempotency_token'])&&($GLOBALS['api_idempotency_type']??'')!=='order'){try{$q=db()->prepare('INSERT OR IGNORE INTO api_idempotency(token,response_json,response_status) VALUES(?,?,?)');$q->execute([$GLOBALS['api_idempotency_token'],$json,$status]);}catch(Throwable $ignored){error_log('Idempotency cache write failed: '.$ignored->getMessage());}}http_response_code($status);echo $json;exit;}
+if($_SERVER['REQUEST_METHOD']==='GET' && ($_GET['type']??'')==='offers'){
+ try{
+  $pdo=db();$userId=isset($_SESSION['user_id'])?(int)$_SESSION['user_id']:null;
+  $offers=array_map(static function(array $row):array{return ['id'=>(int)$row['id'],'slug'=>$row['slug'],'type'=>$row['campaign_type'],'title'=>$row['title'],'description'=>$row['description'],'image_url'=>$row['image_url'],'reward_type'=>$row['reward_type'],'reward_value'=>(int)$row['reward_value'],'minimum_subtotal'=>(int)$row['minimum_subtotal'],'maximum_discount'=>(int)$row['maximum_discount'],'starts_at'=>$row['starts_at'],'ends_at'=>$row['ends_at'],'starts_time'=>$row['starts_time'],'ends_time'=>$row['ends_time'],'timezone'=>$row['timezone'],'demo_only'=>(bool)$row['demo_only']];},commerce_public_offers($pdo,$userId));
+  $collections=commerce_public_collections($pdo);
+  foreach($collections as &$collection){$q=$pdo->prepare('SELECT d.id,d.name,d.description,d.price,d.image_url,d.category FROM seasonal_collection_items ci JOIN dishes d ON d.id=ci.dish_id AND d.active=1 WHERE ci.collection_id=? ORDER BY ci.sort_order,d.id');$q->execute([$collection['id']]);$collection['items']=commerce_filter_secret_menu_dishes($pdo,$q->fetchAll(),$userId,(string)($_SESSION['secret_menu_code']??''),!empty($_SESSION['admin_id']));}
+  unset($collection);
+  $variants=$pdo->query('SELECT slug,name,minimum_distinct_items,maximum_distinct_items,maximum_total_quantity,demo_only FROM custom_set_variants WHERE active=1 ORDER BY sort_order,slug')->fetchAll();
+  answer(200,['ok'=>true,'demo_only'=>true,'offers'=>$offers,'collections'=>$collections,'set_variants'=>$variants]);
+ }catch(Throwable $error){error_log($error->getMessage());answer(500,['ok'=>false,'message'=>'Не удалось загрузить предложения.']);}
+}
 if($_SERVER['REQUEST_METHOD']!=='POST') answer(405,['ok'=>false,'message'=>'Метод не поддерживается.']);
 check_csrf();
 $type=(string)($_POST['type']??'');
 $GLOBALS['api_idempotency_type']=$type;
+if($type==='secret_unlock'){
+ $code=trim((string)($_POST['code']??''));if($code===''||strlen($code)>80)answer(422,['ok'=>false,'message'=>'Код имеет неверный формат.']);
+ $userId=isset($_SESSION['user_id'])?(int)$_SESSION['user_id']:null;$adminId=isset($_SESSION['admin_id'])?(int)$_SESSION['admin_id']:null;
+ $items=commerce_secret_menu_dishes(db(),$userId,$code,$adminId>0);
+ if(!$items)answer(403,['ok'=>false,'message'=>'Секретное меню недоступно для этого кода или аккаунта.']);
+ // Keep this capability server-side so the unlocked catalog survives navigation.
+ // Every page and order request re-checks the code against currently active rules.
+ $_SESSION['secret_menu_code']=$code;
+ session_write_close();
+ answer(200,['ok'=>true,'demo_only'=>true,'items'=>$items]);
+}
 // Callers may provide a stable key to safely retry a request after a network timeout.
 $requestKey=(string)($_SERVER['HTTP_IDEMPOTENCY_KEY']??'');
 if($requestKey!==''){
@@ -15,13 +37,32 @@ if($requestKey!==''){
  if($cached){http_response_code((int)$cached['response_status']);echo $cached['response_json'];exit;}
  if($type==='order'){$q=db()->prepare('SELECT response_json,response_status FROM api_order_requests WHERE token=?');$q->execute([$GLOBALS['api_idempotency_token']]);$cached=$q->fetch();if($cached&&$cached['response_json']!==null){http_response_code((int)$cached['response_status']);echo $cached['response_json'];exit;}}
 }
-$sessionUserId=$_SESSION['user_id']??null;
+$sessionUserId=isset($_SESSION['user_id'])?(int)$_SESSION['user_id']:null;
+$sessionAdminId=isset($_SESSION['admin_id'])?(int)$_SESSION['admin_id']:null;
+$sessionSecretCode=(string)($_SESSION['secret_menu_code']??'');
 // Let SQLite serialize duplicate order requests rather than relying on the PHP session lock.
 if(session_status()===PHP_SESSION_ACTIVE)session_write_close();
 $name=trim((string)($_POST['name']??'')); $phone=trim((string)($_POST['phone']??''));
-if(!preg_match('/^[\p{L} .\'-]{2,80}$/u',$name)) answer(422,['ok'=>false,'message'=>'Укажите имя от 2 до 80 символов.']);
+if(!in_array($type,['offer_quote','secret_unlock','gift_preview'],true)&&!preg_match('/^[\p{L} .\'-]{2,80}$/u',$name)) answer(422,['ok'=>false,'message'=>'Укажите имя от 2 до 80 символов.']);
 if(in_array($type,['booking','order'],true) && !preg_match('/^[+0-9() \\-]{7,30}$/',$phone)) answer(422,['ok'=>false,'message'=>'Проверьте номер телефона.']);
 try {
+ if($type==='offer_quote'){
+  $items=json_decode((string)($_POST['items']??'[]'),true);$customSets=json_decode((string)($_POST['custom_sets']??'[]'),true);
+  if(!is_array($items)||!array_is_list($items)||!is_array($customSets)||!array_is_list($customSets))answer(422,['ok'=>false,'message'=>'Не удалось прочитать состав корзины.']);
+  $points=filter_var($_POST['points_to_redeem']??0,FILTER_VALIDATE_INT);if($points===false||$points<0)answer(422,['ok'=>false,'message'=>'Проверьте количество бонусов.']);
+  $giftId=isset($_POST['gift_dish_id'])&&$_POST['gift_dish_id']!==''?filter_var($_POST['gift_dish_id'],FILTER_VALIDATE_INT):null;if($giftId===false)answer(422,['ok'=>false,'message'=>'Проверьте выбранный подарок.']);
+  $quote=commerce_quote(db(),$items,$customSets,(string)($_POST['promo_code']??''),(string)($_POST['fulfillment']??'delivery'),$sessionUserId,commerce_actor_key($sessionUserId,session_id()),$giftId===null?null:(int)$giftId,(int)$points,(string)($_POST['secret_code']??$sessionSecretCode) ?: $sessionSecretCode,$sessionAdminId>0);
+  if(!$quote['ok'])answer(422,['ok'=>false,'message'=>$quote['message'],'errors'=>$quote['errors']??[]]);
+  answer(200,['ok'=>true,'demo_only'=>true,'subtotal'=>$quote['subtotal'],'discount_total'=>$quote['discount_total'],'delivery_fee'=>$quote['delivery_fee'],'total'=>$quote['total'],'promo_code'=>$quote['promo_code'],'points_to_redeem'=>$quote['points_to_redeem'],'points_discount'=>$quote['points_discount'],'requires_gift_choice'=>$quote['requires_gift_choice'],'gift_options'=>array_map(static fn(array $row):array=>['id'=>(int)$row['dish_id'],'name'=>$row['name'],'image_url'=>$row['image_url'],'price'=>(int)$row['price']],$quote['gift_options']),'gift_items'=>array_map(static fn(array $row):array=>['id'=>$row['dish']['id'],'name'=>$row['dish']['name'],'image_url'=>$row['dish']['image_url'],'quantity'=>$row['qty']],$quote['gift_items']),'adjustments'=>$quote['adjustments'],'promotion'=>$quote['promotion']]);
+ }
+ if($type==='gift_preview'){
+  $recipient=trim((string)($_POST['recipient_name']??''));$email=trim((string)($_POST['recipient_email']??''));
+  $amount=filter_var($_POST['amount']??null,FILTER_VALIDATE_INT);$theme=(string)($_POST['theme']??'');$greeting=(string)($_POST['greeting']??'');
+  if($amount===false)answer(422,['ok'=>false,'message'=>'Выберите доступный номинал сертификата.']);
+  $actor=commerce_actor_key($sessionUserId,session_id());
+  $preview=commerce_create_certificate_preview(db(),$sessionUserId,$actor,$recipient,$email,(int)$amount,$theme,$greeting);
+  answer(201,['ok'=>true,'demo_only'=>true,'payment_status'=>'unpaid','redeemable'=>false,'message'=>'Сохранён только демонстрационный макет. Сертификат не оплачен, не отправлен и не может быть погашен.','preview'=>$preview]);
+ }
  if($type==='booking'){
   $guests=filter_var($_POST['guests']??null,FILTER_VALIDATE_INT);$date=(string)($_POST['date']??'');$time=(string)($_POST['time']??'');$d=DateTime::createFromFormat('!Y-m-d',$date);$dateErrors=DateTime::getLastErrors();$today=new DateTime('today');
   if(!$guests||$guests<1||$guests>12||!$d||($dateErrors!==false&&($dateErrors['warning_count']||$dateErrors['error_count']))||$d->format('Y-m-d')!==$date||$d<$today||$d>$today->modify('+365 days')||!preg_match('/^(12|13|14|17|18|19|20|21):00$/',$time)) answer(422,['ok'=>false,'message'=>'Проверьте дату, время и количество гостей.']);
@@ -30,21 +71,19 @@ try {
   answer(201,['ok'=>true,'message'=>'Заявка сохранена в учебной базе данных. Стол не зарезервирован, уведомление ресторану не отправлялось.','id'=>(int)db()->lastInsertId()]);
  }
  if($type==='order'){
-  $address=trim((string)($_POST['address']??''));$fulfillment=(string)($_POST['fulfillment']??'delivery');$items=json_decode((string)($_POST['items']??''),true);
-  if(!in_array($fulfillment,['delivery','pickup'],true)||($fulfillment==='delivery'&&(strlen($address)<5||strlen($address)>180))||!is_array($items)||!array_is_list($items)||count($items)<1||count($items)>30) answer(422,['ok'=>false,'message'=>'Укажите адрес доставки и добавьте блюда в корзину.']);
-  if($fulfillment==='pickup') $address='';
-  $pdo=db();$idempotencyToken=(string)($GLOBALS['api_idempotency_token']??'');
+  $address=trim((string)($_POST['address']??''));$fulfillment=(string)($_POST['fulfillment']??'delivery');$items=json_decode((string)($_POST['items']??'[]'),true);$customSets=json_decode((string)($_POST['custom_sets']??'[]'),true);
+  if(!in_array($fulfillment,['delivery','pickup'],true)||($fulfillment==='delivery'&&(strlen($address)<5||strlen($address)>180))||!is_array($items)||!array_is_list($items)||!is_array($customSets)||!array_is_list($customSets)) answer(422,['ok'=>false,'message'=>'Укажите способ получения, состав заказа и адрес доставки.']);
+  $points=filter_var($_POST['points_to_redeem']??0,FILTER_VALIDATE_INT);if($points===false||$points<0)answer(422,['ok'=>false,'message'=>'Проверьте количество бонусов.']);
+  $giftId=isset($_POST['gift_dish_id'])&&$_POST['gift_dish_id']!==''?filter_var($_POST['gift_dish_id'],FILTER_VALIDATE_INT):null;if($giftId===false)answer(422,['ok'=>false,'message'=>'Проверьте выбранный подарок.']);
+  $pdo=db();$idempotencyToken=(string)($GLOBALS['api_idempotency_token']??'');$pdo->exec('BEGIN IMMEDIATE TRANSACTION');
   if($idempotencyToken!==''){
-   // Reserve the unique key under an immediate writer lock before any order side effect.
-   $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
    $reserve=$pdo->prepare('INSERT OR IGNORE INTO api_order_requests(token) VALUES(?)');$reserve->execute([$idempotencyToken]);
    if($reserve->rowCount()===0){$q=$pdo->prepare('SELECT response_json,response_status FROM api_order_requests WHERE token=?');$q->execute([$idempotencyToken]);$cached=$q->fetch();$pdo->commit();if($cached&&$cached['response_json']!==null){http_response_code((int)$cached['response_status']);echo $cached['response_json'];exit;}answer(409,['ok'=>false,'message'=>'Запрос с этим ключом ещё обрабатывается. Повторите попытку.']);}
-  }else{$pdo->beginTransaction();}
-  $valid=[];$total=0;$quantities=[];
-  foreach($items as $item){if(!is_array($item)||array_is_list($item))throw new DomainException('Некорректный состав заказа.');$id=filter_var($item['id']??null,FILTER_VALIDATE_INT);$qty=filter_var($item['qty']??null,FILTER_VALIDATE_INT);if($id===false||$id===null||$id<1||$qty===false||$qty===null||$qty<1||$qty>20) throw new DomainException('Некорректный состав заказа.');$quantities[$id]=($quantities[$id]??0)+$qty;if($quantities[$id]>20)throw new DomainException('Количество одной позиции не может превышать 20.');}
-  foreach($quantities as $id=>$qty){$q=$pdo->prepare('SELECT id,name,price FROM dishes WHERE id=? AND active=1');$q->execute([$id]);$dish=$q->fetch();if(!$dish) throw new DomainException('Одно из блюд больше недоступно. Обновите меню.');$line=(int)$dish['price']*$qty;$total+=$line;$valid[]=[$dish,$qty];}
-  if($total<1||$total>500000) throw new DomainException('Проверьте сумму заказа.');
-  $q=$pdo->prepare('INSERT INTO orders(user_id,customer_name,phone,address,fulfillment,comment,total) VALUES(?,?,?,?,?,?,?)');$q->execute([$sessionUserId,$name,$phone,$address,$fulfillment,substr(trim((string)($_POST['comment']??'')),0,300),$total]);$orderId=(int)$pdo->lastInsertId();$q=$pdo->prepare('INSERT INTO order_items(order_id,dish_id,item_name,price,quantity) VALUES(?,?,?,?,?)');foreach($valid as [$dish,$qty])$q->execute([$orderId,$dish['id'],$dish['name'],$dish['price'],$qty]);$response=['ok'=>true,'message'=>'Учебный заказ №'.$orderId.' сохранён в базе данных. Оплата не списывается, в ресторан он не передаётся.','id'=>$orderId];if($idempotencyToken!==''){$json=json_encode($response,JSON_UNESCAPED_UNICODE);$q=$pdo->prepare('UPDATE api_order_requests SET order_id=?,response_json=?,response_status=201 WHERE token=?');$q->execute([$orderId,$json,$idempotencyToken]);} $pdo->commit();answer(201,$response);
+  }
+  $input=['name'=>$name,'phone'=>$phone,'address'=>$address,'fulfillment'=>$fulfillment,'comment'=>(string)($_POST['comment']??''),'items'=>$items,'custom_sets'=>$customSets,'promo_code'=>(string)($_POST['promo_code']??''),'secret_code'=>(string)($_POST['secret_code']??$sessionSecretCode) ?: $sessionSecretCode,'is_admin'=>$sessionAdminId>0,'gift_dish_id'=>$giftId===null?null:(int)$giftId,'points_to_redeem'=>(int)$points];
+  $response=commerce_persist_order($pdo,$input,$sessionUserId,commerce_actor_key($sessionUserId,session_id()));
+  if($idempotencyToken!==''){$json=json_encode($response,JSON_UNESCAPED_UNICODE);$q=$pdo->prepare('UPDATE api_order_requests SET order_id=?,response_json=?,response_status=201 WHERE token=?');$q->execute([$response['id'],$json,$idempotencyToken]);}
+  $pdo->commit();answer(201,$response);
  }
  if($type==='contact'){
   $email=trim((string)($_POST['email']??''));$subject=trim((string)($_POST['subject']??''));$message=trim((string)($_POST['message']??''));

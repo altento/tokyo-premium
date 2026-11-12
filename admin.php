@@ -94,7 +94,10 @@ function admin_record_name(string $table, array $row): string
     return (string)($row['customer_name'] ?? $row['guest_name'] ?? $row['name'] ?? ('Запись №' . $row['id']));
 }
 
-if (method_exists($pdo, 'sqliteCreateFunction')) {
+if (method_exists($pdo, 'createFunction')) {
+    $pdo->createFunction('tp_unicode_lower', static fn($value): string => admin_lower((string)($value ?? '')), 1);
+} elseif (method_exists($pdo, 'sqliteCreateFunction')) {
+    // Compatibility with PHP versions before PDO SQLite exposed createFunction().
     $pdo->sqliteCreateFunction('tp_unicode_lower', static fn($value): string => admin_lower((string)($value ?? '')), 1);
 }
 
@@ -271,7 +274,7 @@ $notificationLabels = ['orders'=>'Новые заказы','bookings'=>'Новы
 ?>
 <main class="admin-shell admin-dashboard">
   <div class="admin-topline">
-    <div><div class="kicker">Tokyo Premium · управление</div><h1>Панель сайта</h1></div>
+    <div><div class="kicker">Tokyo Premium · управление</div><h1>Панель сайта</h1><a class="button secondary" href="admin-marketing.php">Offers &amp; Loyalty ↗</a></div>
     <form method="post">
       <input type="hidden" name="csrf" value="<?=e(csrf())?>">
       <input type="hidden" name="action" value="logout">
