@@ -1,5 +1,5 @@
 # Deployment notes
-Updated 2026-11-12
+Updated 2026-11-13
 
 ## Public preview
 - Repository: https://github.com/altento/tokyo-premium
@@ -18,3 +18,12 @@ GitHub Pages cannot run PHP. Supported static actions store demo values only in 
 
 ## Updating
 Push to `main` and wait for the Pages workflow to finish. Inspect the workflow summary, then open the public URL in a fresh browser session and check at least the home, menu, dish, booking, cart, contacts, and profile pages.
+
+## Latest verified publication
+
+- Main commit: d1bc5543d67ef04c8353d713eca1b0b3f7eea9e9
+- Workflow: [run 43312293771](https://github.com/altento/tokyo-premium/actions/runs/43312293771) — build and deploy both succeeded.
+- Public browser check: [Tokyo Premium Pages](https://altento.github.io/tokyo-premium/). Fifteen static routes returned HTTP 200; the Offers page assets loaded without console errors or warnings. At 320 px and 390 px, its heading stayed within the viewport with no horizontal overflow.
+- This verifies the published static demo. It does not make local browser storage durable or enable PHP, server authentication, payments, restaurant email, or live table availability.
+
+The latest verification record is in [testing-report.md](testing-report.md). A new pixel-by-pixel comparison of all 11 source references against current pages remains outstanding; existing screenshots and older gap notes do not constitute that acceptance claim.

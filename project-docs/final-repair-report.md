@@ -59,3 +59,11 @@
 ## Публикация и доказательства
 
 Изменения опубликованы в `main`, commit `6bef786f232c70f2d678abb5305168a8536f79d6`. GitHub Actions run [43176982457](https://github.com/altento/tokyo-premium/actions/runs/43176982457) завершился успешно: build и deploy прошли, включая все проверки, экспорт, browser regression и загрузку визуальных артефактов. После публикации публичная главная открыта в браузере с cache-busting URL; отображаются новые материалы и актуальный заголовок «Вкус, которому нужно время». Публичная ссылка: [altento.github.io/tokyo-premium](https://altento.github.io/tokyo-premium/).
+
+## Tokyo Premium 2.0 release verification — 13 November 2026
+
+The current release is on main at d1bc5543d67ef04c8353d713eca1b0b3f7eea9e9. GitHub Actions [run 43312293771](https://github.com/altento/tokyo-premium/actions/runs/43312293771) passed its build and deploy jobs. This run includes cart tests, 102 PHP/SQLite integration assertions, PHP syntax, smoke checks, static export, browser regression and visual-state capture.
+
+The published [GitHub Pages site](https://altento.github.io/tokyo-premium/) was opened after deployment. Browser checks returned HTTP 200 for 15 static routes; the Offers page images loaded, with zero browser console errors or warnings. At 320 px and 390 px the Offers heading fit and the page had no horizontal overflow. These checks establish successful publication and the tested route/mobile behavior, not full pixel fidelity across all design references.
+
+The broader Tokyo Premium 2.0 feature inventory and local/hosted QA results are documented in [final-modernization-report.md](final-modernization-report.md) and [testing-report.md](testing-report.md). The remaining visual limitation is a fresh pixel-by-pixel comparison of all 11 current pages against their source PNGs. The site remains an educational demo: contact data and offers are fictional; Pages data is local to the browser; no live payment, email delivery, inventory or table-availability service is connected.
