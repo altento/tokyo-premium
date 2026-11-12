@@ -226,6 +226,11 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .header-cart-link{min-width:44px;min-height:44px}
 .main-nav.open .mobile-nav-utilities .cart-toggle{display:none!important}
 
+/* Keep the long booking title on a deliberate line without hyphenating it. */
+.editorial-hero:has(> .editorial-hero-photo[src*="room-private-dining.webp"]) .editorial-hero-copy{max-width:min(760px,100%)}
+.editorial-hero:has(> .editorial-hero-photo[src*="room-private-dining.webp"]) h1{font-size:clamp(3rem,6.2vw,5.75rem);hyphens:none;overflow-wrap:normal}
+@media(max-width:600px){.editorial-hero:has(> .editorial-hero-photo[src*="room-private-dining.webp"]) .editorial-hero-copy{max-width:100%}.editorial-hero:has(> .editorial-hero-photo[src*="room-private-dining.webp"]) h1{font-size:clamp(1.9rem,9.2vw,3.35rem)}}
+
 /* Philosophy page: editorial chapter rhythm, portrait and sourcing story. */
 .about-hero{position:relative;min-height:430px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:76px max(7vw,calc((100vw - var(--page-width))/2));overflow:hidden;background:radial-gradient(ellipse at 80% 60%,#70201944,transparent 38%),linear-gradient(110deg,#0d0b09,#1b110d 64%,#100c09)}
 .about-hero:after{content:"";position:absolute;right:11%;top:12%;width:280px;height:280px;border:1px solid rgba(202,165,107,.2);border-radius:50%;box-shadow:0 0 0 24px rgba(202,165,107,.03),0 0 0 58px rgba(202,165,107,.025)}

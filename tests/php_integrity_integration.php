@@ -37,20 +37,34 @@ function request(string $path, array $fields = [], array $headers = []): array {
  return [(int)($m[1] ?? 0), (string)$body, $responseHeaders];
 }
 function parallelOrderRequests(array $fields, string $idempotencyKey, int $count): array {
- global $base, $cookie;
+ global $base, $cookie, $pdo;
  $body = http_build_query($fields);
  $sockets = [];
- for ($i = 0; $i < $count; $i++) {
-  $errno = 0; $error = '';
-  $socket = @stream_socket_client('tcp://' . parse_url($base, PHP_URL_HOST) . ':' . parse_url($base, PHP_URL_PORT), $errno, $error, 5, STREAM_CLIENT_CONNECT);
-  if (!$socket) throw new RuntimeException('Could not open concurrent request socket: ' . $error);
-  stream_set_timeout($socket, 15);
-  $headers = "POST /api.php HTTP/1.1\r\nHost: 127.0.0.1\r\nAccept: application/json\r\nConnection: close\r\nContent-Type: application/x-www-form-urlencoded\r\nIdempotency-Key: {$idempotencyKey}\r\nContent-Length: " . strlen($body) . "\r\n";
-  if ($cookie !== '') $headers .= 'Cookie: ' . $cookie . "\r\n";
-  $request = $headers . "\r\n" . $body;
-  $offset = 0;
-  while ($offset < strlen($request)) { $written = fwrite($socket, substr($request, $offset)); if ($written === false || $written === 0) throw new RuntimeException('Could not write concurrent request.'); $offset += $written; }
-  $sockets[] = $socket;
+ // Hold the SQLite writer lock while all HTTP requests are sent. With the four-worker
+ // CI server, requests then contend at BEGIN IMMEDIATE before one is allowed to commit.
+ // This makes the race reproducible instead of hoping fast connections overlap.
+ $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+ try {
+  for ($i = 0; $i < $count; $i++) {
+   $errno = 0; $error = '';
+   $socket = @stream_socket_client('tcp://' . parse_url($base, PHP_URL_HOST) . ':' . parse_url($base, PHP_URL_PORT), $errno, $error, 5, STREAM_CLIENT_CONNECT);
+   if (!$socket) throw new RuntimeException('Could not open concurrent request socket: ' . $error);
+   $sockets[] = $socket;
+   stream_set_timeout($socket, 15);
+   $headers = "POST /api.php HTTP/1.1\r\nHost: 127.0.0.1\r\nAccept: application/json\r\nConnection: close\r\nContent-Type: application/x-www-form-urlencoded\r\nIdempotency-Key: {$idempotencyKey}\r\nContent-Length: " . strlen($body) . "\r\n";
+   if ($cookie !== '') $headers .= 'Cookie: ' . $cookie . "\r\n";
+   $request = $headers . "\r\n" . $body;
+   $offset = 0;
+   while ($offset < strlen($request)) { $written = fwrite($socket, substr($request, $offset)); if ($written === false || $written === 0) throw new RuntimeException('Could not write concurrent request.'); $offset += $written; }
+  }
+  // Give the server workers time to reach the contested transaction boundary.
+  // Windows' built-in server is single-worker, so it exercises the serialized fallback.
+  if (PHP_OS_FAMILY !== 'Windows') usleep(200000);
+  $pdo->exec('COMMIT');
+ } catch (Throwable $ex) {
+  try { $pdo->exec('ROLLBACK'); } catch (Throwable $ignored) {}
+  foreach ($sockets as $socket) if (is_resource($socket)) fclose($socket);
+  throw $ex;
  }
  $responses = [];
  foreach ($sockets as $socket) {

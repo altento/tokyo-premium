@@ -16,7 +16,7 @@ const check = (condition, label) => { if (!condition) throw new Error(label); };
 const isRequired = locator => locator.evaluate(element => element.required);
 async function prepareVisual(page) {
   if (!page.__visualStyleAdded) {
-    await page.addStyleTag({ content: '.reveal,.reveal.visible{opacity:1!important;transform:none!important}' });
+    await page.addStyleTag({ content: 'html{scroll-behavior:auto!important}.site-header{position:relative!important;top:auto!important}.reveal,.reveal.visible{opacity:1!important;transform:none!important}' });
     page.__visualStyleAdded = true;
   }
   await page.evaluate(async () => {
@@ -24,8 +24,8 @@ async function prepareVisual(page) {
     images.forEach(image => { image.loading = 'eager'; });
     await Promise.all(images.map(image => image.decode().catch(() => null)));
   });
-  await page.evaluate(() => { document.documentElement.scrollTop = 0; document.body.scrollTop = 0; });
-  await page.waitForFunction(() => window.scrollY === 0);
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'auto' }));
+  await page.waitForFunction(() => window.scrollY === 0 && (!document.querySelector('.site-header') || Math.abs(document.querySelector('.site-header').getBoundingClientRect().top) < 1));
 }
 
 async function run(options = {}) {
@@ -265,6 +265,7 @@ async function run(options = {}) {
     await page.screenshot({ path: path.join(evidence, '06-space-filter-details-mobile.jpg'), fullPage: true, type: 'jpeg', quality: 70 });
     await page.locator('[data-gallery="all"]').click();
     await prepareVisual(page);
+    check(await page.locator('.zone-card img').evaluateAll(images => images.length === 4 && images.every(image => image.complete && image.naturalWidth > 0)), 'all four room cards, including the fourth room, have loaded photos before the mobile capture');
     await page.screenshot({ path: path.join(evidence, '06-space-mobile.jpg'), fullPage: true, type: 'jpeg', quality: 70 });
     await page.locator('.gallery-tile:visible').first().click();
     check(await page.locator('.image-lightbox').evaluate(dialog => dialog.open), 'gallery lightbox opens from a visible image');

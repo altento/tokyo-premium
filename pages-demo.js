@@ -63,7 +63,7 @@ document.addEventListener('submit', async event => {
       status.className = 'form-status error';
       return;
     }
-    rows.unshift({ name: data.name, rating: data.rating, text: data.body, date: new Date().toLocaleDateString('ru-RU') });
+    rows.unshift({ name: data.name, theme: data.theme || '', rating: data.rating, text: data.body, date: new Date().toLocaleDateString('ru-RU') });
   } else {
     rows.unshift({ name: data.name, email: data.email, subject: data.subject, message: data.message, date: new Date().toLocaleString('ru-RU') });
   }

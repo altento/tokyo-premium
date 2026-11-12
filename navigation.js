@@ -136,15 +136,6 @@
 
   const bookingForm = document.querySelector('.booking-form');
   if (bookingForm) {
-    const dateInput = bookingForm.querySelector('input[type="date"]');
-    if (dateInput) {
-      const localIsoDate = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-      const today = new Date();
-      const end = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      end.setDate(end.getDate() + 365);
-      dateInput.min = localIsoDate(today);
-      dateInput.max = localIsoDate(end);
-    }
     const tableInput = bookingForm.querySelector('[name="table"]');
     const tableStatus = document.querySelector('.table-selection');
     const tableButtons = [...document.querySelectorAll('[data-table-select]')];

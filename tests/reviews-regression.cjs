@@ -27,6 +27,7 @@ async function run(options = {}) {
     await page.locator('#local-reviews').waitFor({ state: 'visible' });
     assert.match(await page.locator('.review-form .form-status').innerText(), /сохранён в этом браузере/i);
     assert.equal(await page.locator('#local-reviews .local-review-card').count(), 1);
+    assert.equal(await page.locator('#local-reviews .local-review-meta span').innerText(), 'Омакасе', 'local review preserves its selected theme');
     assert.equal(await page.locator('#local-reviews img').count(), 0, 'local review content is text only, no injected image');
     assert.equal(await page.evaluate(() => window.__reviewXss || 0), 0, 'untrusted markup did not execute');
     assert.equal((await page.locator('#local-reviews .local-review-body').innerText()), hostileBody);

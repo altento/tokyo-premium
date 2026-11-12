@@ -4,12 +4,14 @@ const path = require('node:path');
 const evidence = path.resolve(__dirname, '..', 'project-docs', 'visual-qa');
 
 async function capture(page, name) {
+  await page.addStyleTag({ content: 'html{scroll-behavior:auto!important}.site-header{position:relative!important;top:auto!important}' });
   await page.evaluate(async () => {
     const images = [...document.images];
     images.forEach(image => { image.loading = 'eager'; });
     await Promise.all(images.map(image => image.decode().catch(() => null)));
   });
-  await page.evaluate(() => { document.documentElement.scrollTop = 0; document.body.scrollTop = 0; });
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'auto' }));
+  await page.waitForFunction(() => window.scrollY === 0 && (!document.querySelector('.site-header') || Math.abs(document.querySelector('.site-header').getBoundingClientRect().top) < 1));
   await page.screenshot({ path: path.join(evidence, name), fullPage: true, type: 'jpeg', quality: 78 });
 }
 

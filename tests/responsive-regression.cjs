@@ -52,12 +52,13 @@ async function run(options = {}) {
             const self = node.getBoundingClientRect();
             for (const rect of textRects) {
               if (rect.left < -1 || rect.right > innerWidth + 1) clipped.push({selector: node.tagName + (node.className ? '.' + String(node.className).split(' ').join('.') : ''), side:'viewport', text:node.textContent.trim().slice(0,60),left:rect.left,right:rect.right});
-              if (rect.left < self.left - 1 || rect.right > self.right + 1) clipped.push({selector:node.tagName + '.self',side:'element',text:node.textContent.trim().slice(0,60),left:rect.left,right:rect.right,boxLeft:self.left,boxRight:self.right});
+              if (rect.left < self.left - 1 || rect.right > self.right + 1 || rect.top < self.top - 1 || rect.bottom > self.bottom + 1) clipped.push({selector:node.tagName + '.self',side:'element',text:node.textContent.trim().slice(0,60),left:rect.left,right:rect.right,top:rect.top,bottom:rect.bottom,boxLeft:self.left,boxRight:self.right,boxTop:self.top,boxBottom:self.bottom});
               for (let parent=node.parentElement; parent && parent !== document.documentElement; parent=parent.parentElement) {
-                const css=getComputedStyle(parent), overflowX=css.overflowX;
-                if (!['hidden','clip','auto','scroll'].includes(overflowX)) continue;
-                const box=parent.getBoundingClientRect(), left=box.left+parent.clientLeft, right=left+parent.clientWidth;
-                if (rect.left < left - 1 || rect.right > right + 1) clipped.push({selector:node.tagName,side:'ancestor',text:node.textContent.trim().slice(0,60),left:rect.left,right:rect.right,clipLeft:left,clipRight:right,overflowX});
+                const css=getComputedStyle(parent), overflowX=css.overflowX, overflowY=css.overflowY;
+                const box=parent.getBoundingClientRect(), left=box.left+parent.clientLeft, right=left+parent.clientWidth, top=box.top+parent.clientTop, bottom=top+parent.clientHeight;
+                const clipsX=['hidden','clip','auto','scroll'].includes(overflowX) && (rect.left < left - 1 || rect.right > right + 1);
+                const clipsY=['hidden','clip','auto','scroll'].includes(overflowY) && (rect.top < top - 1 || rect.bottom > bottom + 1);
+                if (clipsX || clipsY) clipped.push({selector:node.tagName,side:'ancestor',text:node.textContent.trim().slice(0,60),left:rect.left,right:rect.right,top:rect.top,bottom:rect.bottom,clipLeft:left,clipRight:right,clipTop:top,clipBottom:bottom,overflowX,overflowY});
               }
             }
           }
@@ -96,6 +97,15 @@ async function run(options = {}) {
         check(geometry.cartMinHitTarget, `${name} cart tap target is under 44px at ${width}px`);
         check(!geometry.cartOverlapsMenu, `${name} cart overlaps mobile menu control at ${width}px`);
         check(!geometry.cartOverlapsBooking, `${name} cart overlaps booking CTA at ${width}px`);
+        if (name === '07-booking') {
+          const bookingHeading = await page.locator('.editorial-hero h1').evaluate(node => {
+            const range = document.createRange();
+            range.selectNodeContents(node);
+            return { lines: range.getClientRects().length, hyphens: getComputedStyle(node).hyphens };
+          });
+          check(bookingHeading.lines === 1, `booking title stays on one line at ${width}px (${bookingHeading.lines} lines)`);
+          check(bookingHeading.hyphens === 'none', `booking title does not split a word with a hyphen at ${width}px`);
+        }
         if (name === '03-dish' && width >= 900) {
           const gallery = await page.locator('.detail-visual').boundingBox();
           check(gallery && gallery.width >= width * .35, `dish hero image keeps editorial desktop width at ${width}px (got ${gallery?.width || 0})`);
@@ -106,6 +116,7 @@ async function run(options = {}) {
           check(await menu.getAttribute('aria-expanded')==='true', `${name} menu opens at ${width}px`);
           check(await page.locator('.main-nav.open .mobile-nav-utilities a[href*="cart"]').count()===0, `${name} duplicate mobile cart item at ${width}px`);
           check(await page.locator('.header-cart-link:visible').count()===1, `${name} cart stays available while menu is open at ${width}px`);
+          check(await page.locator('.cart-toggle:visible').count()===0, `${name} floating order control stays absent while menu is open at ${width}px`);
           if (name==='07-booking' && width===390) await page.screenshot({path:path.join(evidence,'07-mobile-menu-open-390.jpg'),type:'jpeg',quality:80,fullPage:false});
           await page.keyboard.press('Escape');
           check(await menu.getAttribute('aria-expanded')==='false', `${name} menu closes with Escape at ${width}px`);
@@ -123,8 +134,11 @@ async function run(options = {}) {
     }
 
     for (const fixed of ['2027-01-31T20:00:00.000Z','2027-03-01T19:00:00.000Z']) {
-      const futureContext=await browser.newContext({viewport:{width:390,height:844},timezoneId:'Asia/Qyzylorda'});
-      await futureContext.addInitScript(`(()=>{const at=${Date.parse(fixed)};const NativeDate=Date;class FrozenDate extends NativeDate{constructor(...args){super(...(args.length?args:[at]))}static now(){return at}}window.Date=FrozenDate})()`);
+      // Deliberately use a browser zone whose calendar day differs from the restaurant
+      // zone at this instant. The date bounds must follow Asia/Qyzylorda, not Date's
+      // browser-local getters (which previously overrode the shared helper).
+      const futureContext=await browser.newContext({viewport:{width:390,height:844},timezoneId:'UTC'});
+          await futureContext.addInitScript(`(()=>{const at=${Date.parse(fixed)};const NativeDate=Date;class FrozenDate extends NativeDate{constructor(...args){super(...(args.length?args:[at]))}static now(){return at}}window.Date=FrozenDate})()`);
       const futurePage=await futureContext.newPage();
       const expectedMin=fixed.startsWith('2027-01')?'2027-02-01':'2027-03-02';
       const expectedMax=fixed.startsWith('2027-01')?'2028-02-01':'2028-03-01';
@@ -174,7 +188,7 @@ async function run(options = {}) {
     await page.screenshot({path:path.join(evidence,'07-mobile-header-cart-390.jpg'),type:'jpeg',quality:80,fullPage:false});
     await page.locator('.header-cart-link').click();
     check(new URL(page.url()).searchParams.get('page')==='cart', 'header cart link opens the full cart page');
-    console.log(`PASS responsive regression: ${routes.length} page types × ${widths.length} widths; heading clipping, cart access, sticky header, keyboard menu and future booking dates.`);
+    console.log(`PASS responsive regression: ${routes.length} page types × ${widths.length} widths; heading clipping, cart access, sticky header, keyboard menu and restaurant-timezone booking dates across browser time zones.`);
   } finally { await browser.close(); }
 }
 
