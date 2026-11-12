@@ -18,9 +18,9 @@ The existing PHP 8 + SQLite application and its GitHub Pages exporter remain the
 
 ## Verification
 
-The 2026-11-13 local verification record is in [testing-report.md](testing-report.md). At this update, 12 cart-store tests, 95 isolated PHP/SQLite integration assertions, 11 route types, all 20 dish detail scenarios (18 public plus two unlocked Secret Menu entries), six viewport browser checks, 11×9 responsive checks, PHP and static Tokyo 2.0 flows, review XSS/persistence checks and the eight-state cart visual suite passed. New screenshots are indexed in [visual-qa/README.md](visual-qa/README.md).
+The 2026-11-13 local verification record is in [testing-report.md](testing-report.md). At this update, 12 cart-store tests, 101 isolated PHP/SQLite integration assertions (including six simultaneous clean-database initializers; the suite passed three consecutive runs after the worker initialization fix), 11 route types, all 20 dish detail scenarios (18 public plus two unlocked Secret Menu entries), six viewport browser checks, 11×9 responsive checks, PHP and static Tokyo 2.0 flows, review XSS/persistence checks and the eight-state cart visual suite passed. New screenshots are indexed in [visual-qa/README.md](visual-qa/README.md).
 
-The static exporter generated 36 HTML pages. It omits direct Secret Menu detail routes, clears stale generated dish pages, and exposes a clearly demo-only client payload for the static unlock preview. PHP and JavaScript syntax checks passed. These results describe the local checkout and do not imply that a new commit, CI run or Pages deployment has already completed.
+The static exporter generated 36 HTML pages. It omits direct Secret Menu detail routes, clears stale generated dish pages, and exposes a clearly demo-only client payload for the static unlock preview. PHP and JavaScript syntax checks passed. The first post-merge Actions run caught concurrent PHP workers racing through schema setup; initialization is now serialized and all local suites pass after the fix. The follow-up Actions run and Pages deployment remain pending.
 
 ## Product and infrastructure boundaries
 
@@ -36,4 +36,4 @@ Real browser screenshots were reviewed for the cart, new set builder, offers, st
 
 ## Release status
 
-Pending final git diff review and publication check. The repo and Pages URL are the existing public `altento/tokyo-premium` project; do not infer deployment success from the local test report.
+The initial feature PR was merged as `babb204d8ad164f6060218ed8190efa6de0c9fb8`. Its Pages workflow correctly stopped at the SQLite concurrency test. A follow-up fix and a cold-start race regression are prepared; deployment is not considered complete until the follow-up workflow passes and the public URL is verified.
