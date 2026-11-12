@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const evidence = path.resolve(process.env.TOKYO_EVIDENCE_DIR || path.join(root, 'project-docs', 'visual-qa'));
-const widths = [320, 360, 375, 390, 430, 768, 1024, 1440, 1920];
+const widths = [320, 360, 375, 390, 430, 768, 900, 901, 929, 981, 1024, 1025, 1440, 1920];
 const routes = [
   ['01-home', '/'], ['02-menu', '/menu.php'], ['03-dish', '/pages.php?page=dish&id=3'],
   ['04-omakase', '/pages.php?page=omakase'], ['05-philosophy', '/about.php'],
@@ -78,6 +78,9 @@ async function run(options = {}) {
             headerPosition: header ? getComputedStyle(header).position : '',
             cartCount:header?.querySelectorAll('.header-cart-link').length||0,
             visibleCart:!!visibleCart,
+            visibleCta:!!cta&&getComputedStyle(cta).display!=='none'&&cta.getClientRects().length>0,
+            visibleDesktopNav:[...document.querySelectorAll('#site-navigation>a')].some(el=>getComputedStyle(el).display!=='none'&&el.getClientRects().length>0),
+            visibleMenu:!!toggle&&getComputedStyle(toggle).display!=='none'&&toggle.getClientRects().length>0,
             cartRect:cartRect&&{left:cartRect.left,right:cartRect.right,top:cartRect.top,bottom:cartRect.bottom,width:cartRect.width,height:cartRect.height},
             cartFixed:cartStyle?.position==='fixed',
             visibleToggles:[...document.querySelectorAll('.cart-toggle')].filter(el=>{const s=getComputedStyle(el);return s.display!=='none'&&s.visibility!=='hidden'&&el.getClientRects().length}).length,
@@ -93,11 +96,18 @@ async function run(options = {}) {
         check(geometry.clipped.length === 0, `${name} text clipped at ${width}px: ${JSON.stringify(geometry.clipped.slice(0,3))}`);
         check(geometry.cartCount === 1, `${name} must have one header cart link at ${width}px`);
         check(geometry.visibleCart, `${name} header cart link is hidden at ${width}px`);
+        check(geometry.visibleMenu === (width <= 1024), `${name} mobile menu breakpoint is consistent at ${width}px`);
+        check(geometry.visibleCta === (width > 1024), `${name} booking CTA breakpoint is consistent at ${width}px`);
+        check(geometry.visibleDesktopNav === (width > 1024), `${name} primary navigation breakpoint is consistent at ${width}px`);
         check(!geometry.cartFixed, `${name} cart action must not float over content at ${width}px`);
         check(geometry.visibleToggles === 0, `${name} duplicate floating cart control at ${width}px`);
         check(geometry.cartMinHitTarget, `${name} cart tap target is under 44px at ${width}px`);
         check(!geometry.cartOverlapsMenu, `${name} cart overlaps mobile menu control at ${width}px`);
         check(!geometry.cartOverlapsBooking, `${name} cart overlaps booking CTA at ${width}px`);
+        if (name==='02-menu' && width===929) {
+          await page.evaluate(async()=>{const images=[...document.images];images.forEach(image=>image.loading='eager');await Promise.all(images.map(image=>image.decode().catch(()=>{})));});
+          await page.screenshot({path:path.join(evidence,'header-breakpoint-929.png'),type:'png',fullPage:false});
+        }
         if (name === '07-booking') {
           const bookingHeading = await page.locator('.editorial-hero h1').evaluate(node => {
             const range = document.createRange();
@@ -111,10 +121,15 @@ async function run(options = {}) {
           const gallery = await page.locator('.detail-visual').boundingBox();
           check(gallery && gallery.width >= width * .35, `dish hero image keeps editorial desktop width at ${width}px (got ${gallery?.width || 0})`);
         }
-        if (width <= 900) {
+        if (width <= 1024) {
           const menu=page.locator('.mobile-menu');
           await menu.focus(); await page.keyboard.press('Enter');
           check(await menu.getAttribute('aria-expanded')==='true', `${name} menu opens at ${width}px`);
+          check(await page.locator('.main-nav.open .mobile-nav-utilities a[href*="booking"]').isVisible(), `${name} booking remains reachable in mobile navigation at ${width}px`);
+          check(await page.locator('.main-nav.open .mobile-nav-utilities a[href*="account"]').isVisible(), `${name} account remains reachable in mobile navigation at ${width}px`);
+          if (name==='02-menu' && width===929) {
+            await page.screenshot({path:path.join(evidence,'header-breakpoint-929-menu-open.png'),type:'png',fullPage:false});
+          }
           check(await page.locator('.main-nav.open .mobile-nav-utilities a[href*="cart"]').count()===0, `${name} duplicate mobile cart item at ${width}px`);
           check(await page.locator('.header-cart-link:visible').count()===1, `${name} cart stays available while menu is open at ${width}px`);
           check(await page.locator('.cart-toggle:visible').count()===0, `${name} floating order control stays absent while menu is open at ${width}px`);
@@ -132,6 +147,32 @@ async function run(options = {}) {
       const sticky=await page.evaluate(()=>({top:document.querySelector('.site-header').getBoundingClientRect().top,cart:document.querySelector('.header-cart-link').getBoundingClientRect().top}));
       check(sticky.top >= -1 && sticky.top <= 1, `sticky header leaves viewport at ${width}px (${sticky.top})`);
       check(sticky.cart >= -1 && sticky.cart < 80, `header cart is unavailable after scroll at ${width}px (${sticky.cart})`);
+    }
+
+    // The GitHub Pages export shares the responsive header but has its own HTML
+    // and relative routes, so guard the breakpoint in both delivery modes.
+    for (const width of [929, 1024, 1025]) {
+      await page.setViewportSize({width, height:900});
+      const response=await navigateReady(base+'/docs/menu.html');
+      check(response?.status()===200, `static menu loads at ${width}px`);
+      const header=await page.evaluate(()=>{
+        const visible=el=>!!el&&getComputedStyle(el).display!=='none'&&el.getClientRects().length>0;
+        return {overflow:document.documentElement.scrollWidth>innerWidth+1,menu:visible(document.querySelector('.mobile-menu')),cta:visible(document.querySelector('.header-cta')),cart:visible(document.querySelector('.header-cart-link'))};
+      });
+      check(!header.overflow, `static menu has no horizontal overflow at ${width}px`);
+      check(header.menu===(width<=1024), `static menu navigation breakpoint is consistent at ${width}px`);
+      check(header.cta===(width>1024), `static booking CTA breakpoint is consistent at ${width}px`);
+      check(header.cart, `static header cart stays available at ${width}px`);
+      if (width<=1024) {
+        const menu=page.locator('.mobile-menu');
+        await menu.focus(); await page.keyboard.press('Enter');
+        check(await menu.getAttribute('aria-expanded')==='true', `static menu opens at ${width}px`);
+        check(await page.locator('#site-navigation a[href="booking.html"]:visible').count()===1, `static booking remains reachable at ${width}px`);
+        check(await page.locator('#site-navigation a[href="account.html"]:visible').count()===1, `static account remains reachable at ${width}px`);
+        check(await page.locator('.header-cart-link:visible').count()===1, `static cart stays available when menu opens at ${width}px`);
+        await page.keyboard.press('Escape');
+        check(await menu.getAttribute('aria-expanded')==='false', `static menu closes with Escape at ${width}px`);
+      }
     }
 
     for (const fixed of ['2027-01-31T20:00:00.000Z','2027-03-01T19:00:00.000Z']) {
@@ -189,7 +230,7 @@ async function run(options = {}) {
     await page.screenshot({path:path.join(evidence,'07-mobile-header-cart-390.jpg'),type:'jpeg',quality:80,fullPage:false});
     await page.locator('.header-cart-link').click();
     check(new URL(page.url()).searchParams.get('page')==='cart', 'header cart link opens the full cart page');
-    console.log(`PASS responsive regression: ${routes.length} page types × ${widths.length} widths; heading clipping, cart access, sticky header, keyboard menu and restaurant-timezone booking dates across browser time zones.`);
+    console.log(`PASS responsive regression: ${routes.length} PHP page types × ${widths.length} widths plus static Pages at 929/1024/1025px; heading clipping, cart access, tablet/mobile keyboard navigation and restaurant-timezone booking dates.`);
   } finally { await browser.close(); }
 }
 

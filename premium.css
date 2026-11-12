@@ -170,11 +170,13 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
   .home-dish-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.home-dish-photo{height:clamp(230px,32vw,380px)}
   .home-omakase-strip{grid-template-columns:130px minmax(0,1fr) 120px}.omakase-seal{width:120px;height:120px}
 }
-@media(max-width:900px){
+@media(max-width:1024px){
   .site-header{height:70px;padding-inline:20px}.main-nav,.header-actions,.header-cta{display:none}.mobile-menu{display:block}
   .main-nav.open{position:absolute;top:70px;left:0;right:0;display:flex;align-items:stretch;padding:15px 22px 24px;flex-direction:column;gap:2px;background:rgba(10,9,8,.985);border-bottom:1px solid var(--hairline);box-shadow:0 18px 32px #0008}
   .main-nav.open a{padding:13px 2px;border-bottom:1px solid rgba(202,165,107,.12);font-size:13px}
   .main-nav.open a:after{display:none}
+}
+@media(max-width:900px){
   .home-hero{height:min(720px,calc(100svh - 70px));min-height:600px}.home-hero-copy{width:min(610px,68vw);margin-left:6vw}
   .home-hero-photo{object-position:59% center}.home-hero-shade{background:linear-gradient(90deg,rgba(8,7,6,.95),rgba(8,7,6,.72) 45%,rgba(8,7,6,.22)),linear-gradient(0deg,rgba(9,8,7,.72),transparent 34%)}
   .home-values{padding-inline:24px;grid-template-columns:repeat(2,1fr);row-gap:17px}.home-values>div:nth-child(2){border:0}.home-values>div:nth-child(3){padding-left:0}
@@ -205,7 +207,7 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 /* Mobile navigation: keep utility routes available on every page. */
 .mobile-nav-utilities{display:none}
 :where(a,button,input,select,textarea,[tabindex]):focus-visible{outline:2px solid #f0d39e;outline-offset:4px}
-@media(max-width:900px){
+@media(max-width:1024px){
   body.nav-open{overflow:hidden;touch-action:none}
   .main-nav.open{z-index:100;max-height:calc(100dvh - 70px);overflow-y:auto;overscroll-behavior:contain}
   .mobile-nav-utilities{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-top:16px;margin-top:8px;border-top:1px solid var(--hairline)}
