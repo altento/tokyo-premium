@@ -33,7 +33,8 @@ async function run(options = {}) {
     assert.ok(await add.count() >= 3, 'menu exposes real product cards');
     await add.nth(0).click();
     await add.nth(0).click();
-    await add.nth(0).click();
+    await add.nth(1).click();
+    await add.nth(2).click();
     await page.goto(`${base}/docs/cart.html`, { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => document.querySelectorAll('#cart-page-items .cart-page-item').length === 3);
     await page.locator('[data-cart-step="1"]').first().click();
