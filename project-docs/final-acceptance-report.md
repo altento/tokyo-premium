@@ -103,3 +103,11 @@
 Текущая локальная проверка прошла: 12/12 cart-store тестов, 102 PHP/SQLite assertions, browser regression (11 типов страниц и 20 карточек), Tokyo 2.0 PHP + static, отзывы, 8 состояний корзины, 11×14 responsive и visual-state regression. Подробный список и новые скриншоты находятся в `project-docs/testing-report.md` и `project-docs/visual-qa/README.md`. Все 11 страниц не проходили новый pixel-by-pixel анализ, поэтому полное соответствие макетам не заявляется.
 
 Этот follow-up ещё требует post-merge CI и проверки свежей публичной версии; статус публикации будет обновлён после релизного workflow.
+
+## Latest release verification — 2026-11-13
+
+- PR [#14](https://github.com/altento/tokyo-premium/pull/14) merged to `main`; release commit: `64061e4ff3f4c8fb4029e6ba95e3a5cce58444b8`.
+- Hosted [Pages workflow #76](https://github.com/altento/tokyo-premium/actions/runs/43329426971) completed successfully, including PHP/SQLite integration, all browser regression jobs, static export and deployment.
+- Public cache-busted browser checks returned HTTP 200 on home, menu, Omakase, cart and account. Current menu rendered its 18 active catalog cards; Omakase rendered all five course stages and stage 2 showed the catalog-backed “Нигири с тунцом”; all images on these routes decoded. Desktop checks had no overflow; the menu at 390 px had no horizontal overflow. No browser console/page errors were recorded.
+- Full pixel-by-pixel comparison of all 11 approved PNGs is still incomplete. Focused visual checks cover the current menu at 1440/390/320 px, dish details, Omakase course 2 and a populated authenticated dashboard; see `visual-qa/README.md`.
+- Known limits remain: the public Pages experience is a local demo, no real payment or email delivery is configured, and the educational restaurant data are fictitious.
