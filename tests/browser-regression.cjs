@@ -282,10 +282,10 @@ async function run(options = {}) {
     check(await page.locator('[name="table"]').inputValue() === '' && await page.locator('[data-table-select="1"]').getAttribute('aria-pressed') === 'false', 'booking selection resets when visit date changes');
     await page.goto(base + '/pages.php?page=omakase');
     await page.locator('.tier-card-featured a').click();
-    check(await page.locator('#booking-format').inputValue() === 'Сезонный', 'PHP booking keeps the selected Omakase set');
+    check(await page.locator('#booking-format').inputValue() === 'Сезонный' && await page.evaluate(() => new URL(location.href).searchParams.get('format') === 'Сезонный'), 'PHP booking keeps the selected Omakase set in the shared format field');
     await page.goto(base + '/docs/omakase.html');
     await page.locator('.tier-card-featured a').click();
-    check(await page.locator('#booking-format').inputValue() === 'Сезонный', 'static booking keeps the selected Omakase set');
+    check(await page.locator('#booking-format').inputValue() === 'Сезонный' && await page.evaluate(() => new URL(location.href).searchParams.get('format') === 'Сезонный'), 'static booking keeps the selected Omakase set in the shared format field');
     for (const [name, route] of routes) {
       // Preserve the deliberate gallery-filter and paired static-account evidence above.
       if (name === '06-space' || name === '11-account') continue;

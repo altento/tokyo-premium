@@ -134,16 +134,6 @@
     });
   }
 
-  const tierCards = [...document.querySelectorAll('.experience-tiers .tier-card')];
-  if (tierCards.length) {
-    const ids = ['beginner', 'seasonal', 'premium'];
-    const staticSite = location.pathname.endsWith('.html');
-    tierCards.forEach((card, index) => {
-      const link = card.querySelector('a[href*="booking"]');
-      if (link) link.href = staticSite ? `booking.html?omakase=${ids[index]}` : `pages.php?page=booking&omakase=${ids[index]}`;
-    });
-  }
-
   const bookingForm = document.querySelector('.booking-form');
   if (bookingForm) {
     const dateInput = bookingForm.querySelector('input[type="date"]');
@@ -154,27 +144,6 @@
       end.setDate(end.getDate() + 365);
       dateInput.min = localIsoDate(today);
       dateInput.max = localIsoDate(end);
-    }
-    const choice = new URLSearchParams(location.search).get('omakase');
-    const omakaseOptions = { beginner: 'Начало · 6 подач', seasonal: 'Сезонный · 9 подач', premium: 'Премиальный · 12 подач' };
-    if (choice && omakaseOptions[choice]) {
-      let hidden = bookingForm.querySelector('[name="omakase"]');
-      if (!hidden) {
-        hidden = document.createElement('input');
-        hidden.type = 'hidden';
-        hidden.name = 'omakase';
-        bookingForm.append(hidden);
-      }
-      hidden.value = choice;
-      const note = document.createElement('p');
-      note.className = 'booking-choice-note';
-      note.textContent = `Вы выбрали Omakase: ${omakaseOptions[choice]}. Этот вариант будет добавлен к заявке.`;
-      bookingForm.querySelector('.school-note')?.after(note);
-      bookingForm.addEventListener('submit', () => {
-        const message = bookingForm.querySelector('[name="message"]');
-        const prefix = `Omakase: ${omakaseOptions[choice]}.`;
-        if (message && !message.value.startsWith(prefix)) message.value = `${prefix}${message.value ? ` ${message.value}` : ''}`;
-      }, true);
     }
     const tableInput = bookingForm.querySelector('[name="table"]');
     const tableStatus = document.querySelector('.table-selection');
