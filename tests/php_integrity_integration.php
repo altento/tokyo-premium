@@ -128,6 +128,12 @@ function freshTestDatabase(string $path): PDO {
  $connection->exec('PRAGMA foreign_keys=ON'); $connection->exec('PRAGMA busy_timeout=15000');
  return $connection;
 }
+function setTestOrderStatus(string $path, int $orderId, string $status): void {
+ commerce_set_order_status(freshTestDatabase($path), $orderId, $status);
+}
+function testLoyaltyBalance(string $path, int $userId): int {
+ return commerce_get_loyalty_balance(freshTestDatabase($path), $userId);
+}
 try {
  $ready = false;
  for ($i=0; $i<30; $i++) { [$status] = request('/admin.php'); if ($status === 200) { $ready = true; break; } usleep(100000); }
@@ -200,19 +206,19 @@ try {
  $profileOrder=$orderFields; $profileOrder['csrf']=tokenFrom($accountHtml); $profileOrder['name']='Demo QA';
  [$status,$profileOrderBody]=request('/api.php',$profileOrder,['Idempotency-Key'=>'integration-profile-order-0001']); $profileOrderResult=json_decode($profileOrderBody,true);
  check($status===201 && $profileOrderResult['ok'], 'authenticated profile order succeeds');
- $userLookup=$pdo->prepare('SELECT id FROM users WHERE email=?'); $userLookup->execute([$accountEmail]); $profileUserId=(int)$userLookup->fetchColumn(); $userLookup->closeCursor(); check($profileUserId>0&&commerce_get_loyalty_balance($pdo,$profileUserId)===0,'new order does not earn loyalty points before completion');
- commerce_set_order_status($pdo,(int)$profileOrderResult['id'],'completed'); $earnedBalance=commerce_get_loyalty_balance($pdo,$profileUserId); check($earnedBalance>0,'completed order earns server-configured loyalty points');
- commerce_set_order_status($pdo,(int)$profileOrderResult['id'],'preparing'); commerce_set_order_status($pdo,(int)$profileOrderResult['id'],'completed'); check(commerce_get_loyalty_balance($pdo,$profileUserId)===$earnedBalance,'re-entering completed without cancellation does not double-earn points');
+ $userLookup=$pdo->prepare('SELECT id FROM users WHERE email=?'); $userLookup->execute([$accountEmail]); $profileUserId=(int)$userLookup->fetchColumn(); $userLookup->closeCursor(); check($profileUserId>0&&testLoyaltyBalance($dbPath,$profileUserId)===0,'new order does not earn loyalty points before completion');
+ setTestOrderStatus($dbPath,(int)$profileOrderResult['id'],'completed'); $earnedBalance=testLoyaltyBalance($dbPath,$profileUserId); check($earnedBalance>0,'completed order earns server-configured loyalty points');
+ setTestOrderStatus($dbPath,(int)$profileOrderResult['id'],'preparing'); setTestOrderStatus($dbPath,(int)$profileOrderResult['id'],'completed'); check(testLoyaltyBalance($dbPath,$profileUserId)===$earnedBalance,'re-entering completed without cancellation does not double-earn points');
  $nonStackableQuote=commerce_quote($pdo,[['id'=>$dish,'qty'=>2]],[],'DEMO10','pickup',$profileUserId,commerce_actor_key($profileUserId,session_id()),null,1); check(!$nonStackableQuote['ok']&&str_contains($nonStackableQuote['message'],'нельзя сочетать'), 'non-stackable discount cannot combine with loyalty redemption');
  $bonusSlug='qa-bonus-'.bin2hex(random_bytes(4)); $q=$pdo->prepare("INSERT INTO promotion_campaigns(slug,campaign_type,title,description,reward_type,reward_value,minimum_subtotal,maximum_discount,active,stackable,demo_only) VALUES(?,'exclusive','QA bonus points','Integration-only offer','bonus_points',50,0,0,1,1,1)"); $q->execute([$bonusSlug]); $bonusCampaignId=(int)$pdo->lastInsertId(); $bonusCode='QA'.strtoupper(bin2hex(random_bytes(4))); $pdo->prepare('INSERT INTO promo_codes(code,campaign_id,active,maximum_uses,maximum_uses_per_user) VALUES(?,?,1,10,1)')->execute([$bonusCode,$bonusCampaignId]);
  $bonusQuote=commerce_quote($pdo,[['id'=>$dish,'qty'=>1]],[],$bonusCode,'pickup',$profileUserId,commerce_actor_key($profileUserId,session_id())); check($bonusQuote['ok']&&array_filter($bonusQuote['adjustments'],static fn(array $row):bool=>$row['type']==='bonus_points'&&(int)$row['amount']===50),'bonus-points promo quote discloses the points to be earned after completion');
- commerce_set_order_status($pdo,(int)$profileOrderResult['id'],'cancelled'); check(commerce_get_loyalty_balance($pdo,$profileUserId)===0,'cancelling a completed order reverses its earned balance');
- commerce_set_order_status($pdo,(int)$profileOrderResult['id'],'completed'); $restoredBalance=commerce_get_loyalty_balance($pdo,$profileUserId); check($restoredBalance===$earnedBalance,'restoring a cancelled order can re-earn points once');
- commerce_set_order_status($pdo,(int)$profileOrderResult['id'],'ready'); commerce_set_order_status($pdo,(int)$profileOrderResult['id'],'completed'); check(commerce_get_loyalty_balance($pdo,$profileUserId)===$restoredBalance,'restored completed order remains idempotent across later status toggles');
+ setTestOrderStatus($dbPath,(int)$profileOrderResult['id'],'cancelled'); check(testLoyaltyBalance($dbPath,$profileUserId)===0,'cancelling a completed order reverses its earned balance');
+ setTestOrderStatus($dbPath,(int)$profileOrderResult['id'],'completed'); $restoredBalance=testLoyaltyBalance($dbPath,$profileUserId); check($restoredBalance===$earnedBalance,'restoring a cancelled order can re-earn points once');
+ setTestOrderStatus($dbPath,(int)$profileOrderResult['id'],'ready'); setTestOrderStatus($dbPath,(int)$profileOrderResult['id'],'completed'); check(testLoyaltyBalance($dbPath,$profileUserId)===$restoredBalance,'restored completed order remains idempotent across later status toggles');
  $bonusOrder=$profileOrder; $bonusOrder['items']=json_encode([['id'=>$dish,'qty'=>1]]); $bonusOrder['promo_code']=$bonusCode; [$status,$bonusOrderBody]=request('/api.php',$bonusOrder,['Idempotency-Key'=>'integration-bonus-order-0001']); $bonusOrderResult=json_decode($bonusOrderBody,true); check($status===201&&$bonusOrderResult['ok'],'eligible signed-in guest can place an order using the bonus-points promo');
- commerce_set_order_status($pdo,(int)$bonusOrderResult['id'],'completed'); $afterBonusBalance=commerce_get_loyalty_balance($pdo,$profileUserId); check($afterBonusBalance===$restoredBalance+50+(int)floor((int)$pdo->query('SELECT price FROM dishes WHERE id='.$dish)->fetchColumn()*5/100),'completed promo order awards both base and advertised bonus points');
- commerce_set_order_status($pdo,(int)$bonusOrderResult['id'],'ready'); commerce_set_order_status($pdo,(int)$bonusOrderResult['id'],'completed'); check(commerce_get_loyalty_balance($pdo,$profileUserId)===$afterBonusBalance,'bonus-points promo is not re-awarded after a completed status toggle');
- commerce_set_order_status($pdo,(int)$bonusOrderResult['id'],'cancelled'); check(commerce_get_loyalty_balance($pdo,$profileUserId)===$restoredBalance,'cancelling the bonus-points order reverses base and campaign points');
+ setTestOrderStatus($dbPath,(int)$bonusOrderResult['id'],'completed'); $afterBonusBalance=testLoyaltyBalance($dbPath,$profileUserId); check($afterBonusBalance===$restoredBalance+50+(int)floor((int)$pdo->query('SELECT price FROM dishes WHERE id='.$dish)->fetchColumn()*5/100),'completed promo order awards both base and advertised bonus points');
+ setTestOrderStatus($dbPath,(int)$bonusOrderResult['id'],'ready'); setTestOrderStatus($dbPath,(int)$bonusOrderResult['id'],'completed'); check(testLoyaltyBalance($dbPath,$profileUserId)===$afterBonusBalance,'bonus-points promo is not re-awarded after a completed status toggle');
+ setTestOrderStatus($dbPath,(int)$bonusOrderResult['id'],'cancelled'); check(testLoyaltyBalance($dbPath,$profileUserId)===$restoredBalance,'cancelling the bonus-points order reverses base and campaign points');
  [$status,$history]=request('/account.php');
  check($status===200 && str_contains($history,'Тестовый ролл') && str_contains($history,'2 × 3 750') && str_contains($history,'Самовывоз'), 'profile history shows snapshot items, quantities, unit prices, line totals, and fulfillment');
  foreach ([0,21] as $qty) { $badOrder=$orderFields; $badOrder['items']=json_encode([['id'=>$dish,'qty'=>$qty]]); [$status]=request('/api.php',$badOrder); check($status===422, 'invalid quantity rejected: '.$qty); }
