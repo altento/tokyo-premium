@@ -55,10 +55,7 @@ if (PHP_OS_FAMILY !== 'Windows') putenv('PHP_CLI_SERVER_WORKERS=4');
 $serverCommand = [PHP_BINARY, '-d', 'extension_dir=' . ini_get('extension_dir')];
 if (PHP_OS_FAMILY === 'Windows') array_push($serverCommand, '-d', 'extension=php_sqlite3.dll', '-d', 'extension=php_pdo_sqlite.dll');
 array_push($serverCommand, '-S', '127.0.0.1:' . $port, '-t', dirname(__DIR__));
-$previousTrace = getenv('TOKYO_TEST_TRACE_ORDER');
-putenv('TOKYO_TEST_TRACE_ORDER=1');
 $server = proc_open($serverCommand, [0 => ['pipe','r'], 1 => ['file',$serverLog,'a'], 2 => ['file',$serverLog,'a']], $pipes, dirname(__DIR__), $env);
-if ($previousTrace === false) putenv('TOKYO_TEST_TRACE_ORDER'); else putenv('TOKYO_TEST_TRACE_ORDER=' . $previousTrace);
 if ($previousWorkers === false) putenv('PHP_CLI_SERVER_WORKERS'); else putenv('PHP_CLI_SERVER_WORKERS=' . $previousWorkers);
 if (!is_resource($server)) throw new RuntimeException('Could not start PHP test server.');
 $cookie = '';
@@ -126,6 +123,11 @@ function parallelOrderRequests(array $fields, string $idempotencyKey, int $count
  return $responses;
 }
 function tokenFrom(string $html): string { if (!preg_match('/name="csrf" value="([^"]+)"/', $html, $m)) throw new RuntimeException('CSRF token not found.'); return html_entity_decode($m[1], ENT_QUOTES); }
+function freshTestDatabase(string $path): PDO {
+ $connection = new PDO('sqlite:' . $path, null, null, [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
+ $connection->exec('PRAGMA foreign_keys=ON'); $connection->exec('PRAGMA busy_timeout=15000');
+ return $connection;
+}
 try {
  $ready = false;
  for ($i=0; $i<30; $i++) { [$status] = request('/admin.php'); if ($status === 200) { $ready = true; break; } usleep(100000); }
@@ -169,6 +171,10 @@ try {
  $pdo->exec("UPDATE promotion_campaigns SET stackable=1 WHERE slug='demo-privilege'"); $promoStackOnly=commerce_quote($pdo,[['id'=>$dish,'qty'=>2]],[],'DEMO10','pickup',null,commerce_actor_key(null,session_id())); check($promoStackOnly['ok']&&!$promoStackOnly['gift_items'],'both campaigns must allow stacking before a threshold gift is offered');
  $pdo->prepare('UPDATE promotion_campaigns SET stackable=1 WHERE id=?')->execute([$giftCampaignId]); $stackableGiftQuote=commerce_quote($pdo,[['id'=>$dish,'qty'=>2]],[],'DEMO10','pickup',null,commerce_actor_key(null,session_id())); check($stackableGiftQuote['ok']&&count($stackableGiftQuote['gift_items'])===1&&$stackableGiftQuote['discount_total']===750,'compatible campaigns can combine only when both explicitly allow stacking');
  $giftOrderFields=$orderFields; $giftOrderFields['promo_code']='DEMO10'; $giftOrderFields['gift_dish_id']='2'; [$status,$giftOrderBody]=request('/api.php',$giftOrderFields,['Idempotency-Key'=>'integration-gift-order-0001']); $giftOrder=json_decode($giftOrderBody,true); $giftDiscount=$giftOrder['discount_total']??null; check($status===201&&($giftOrder['ok']??false)&&is_numeric($giftDiscount)&&(float)$giftDiscount===750.0,'order persists a server-validated compatible promo and gift (HTTP '.$status.'; body '.substr((string)$giftOrderBody,0,500).')');
+ // Read committed state through a new handle rather than a long-lived test
+ // connection, which may retain a WAL snapshot from earlier quote assertions.
+ unset($q, $pdo);
+ $pdo = freshTestDatabase($dbPath);
  $stockQuery=$pdo->prepare('SELECT remaining_quantity FROM campaign_gift_options WHERE campaign_id=? AND dish_id=2'); $stockQuery->execute([$giftCampaignId]); check((int)$stockQuery->fetchColumn()===0,'gift stock decrements exactly once inside the committed order transaction'); $stockQuery->closeCursor(); $outOfStock=commerce_quote($pdo,[['id'=>$dish,'qty'=>2]],[],'','pickup',null,commerce_actor_key(null,session_id()),2); check(!$outOfStock['ok'],'gift cannot be selected after its stock is exhausted'); $pdo->exec("UPDATE promotion_campaigns SET stackable=0 WHERE slug='demo-privilege'");
  $savedCookie=$cookie; $cookie=''; [$status,$offersPage]=request('/offers.php'); check($status===200&&str_contains($offersPage,'data-tp-secret-unlock'),'unauthenticated guest can reach the Secret Menu access form'); $guestCsrf=tokenFrom($offersPage);
  [$status,$publicMenu]=request('/menu.php'); check($status===200&&!str_contains($publicMenu,'data-id="17"')&&!str_contains($publicMenu,'data-id="18"'),'locked Secret Menu positions are absent from public menu cards');
