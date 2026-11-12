@@ -1,0 +1,11 @@
+{
+  "name": "tokyo-premium-quality-assurance",
+  "private": true,
+  "scripts": {
+    "test:cart": "node --test tests/cart-store.test.cjs",
+    "test:browser": "node tests/browser-regression.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.65.0"
+  }
+}

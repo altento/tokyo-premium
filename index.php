@@ -6,7 +6,7 @@ $featured=array_slice(dishes(true),0,4);
 ?>
 <main class="home-premium">
   <section class="home-hero" aria-labelledby="home-title">
-    <img class="home-hero-photo" src="assets/generated/home-hero-salmon-nigiri.webp" width="1672" height="944" fetchpriority="high" alt="Нигири с лососем на тёмной керамической тарелке в свете японских фонарей">
+    <img class="home-hero-photo" src="assets/generated/home-hero-nigiri-v2.webp" width="1672" height="944" fetchpriority="high" alt="Нигири с лососем на тёмной керамической тарелке в свете японских фонарей">
     <div class="home-hero-shade" aria-hidden="true"></div>
     <span class="home-kanji" lang="ja" aria-hidden="true">東京</span>
     <div class="home-hero-copy">
@@ -77,6 +77,4 @@ $featured=array_slice(dishes(true),0,4);
   </section>
 </main>
 <script>window.DISHES=<?=json_encode(dishes(),JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP|JSON_UNESCAPED_UNICODE)?>;</script>
-<button class="cart-toggle" aria-label="Открыть корзину">Заказ <b>0</b></button>
-<aside class="cart-panel" aria-label="Корзина" aria-hidden="true"><div class="cart-head"><h2>Ваш заказ</h2><button class="cart-close" aria-label="Закрыть корзину">×</button></div><div class="cart-lines"></div><div class="cart-total"><span>Итого</span><strong>0 ₸</strong></div><form data-api="order"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="items" value="[]"><div class="field"><label for="order-name">Имя</label><input id="order-name" required name="name" maxlength="80" autocomplete="name"></div><div class="field"><label for="order-phone">Телефон</label><input id="order-phone" type="tel" required name="phone" maxlength="30" autocomplete="tel"></div><div class="field"><label for="order-address">Адрес доставки</label><input id="order-address" required name="address" maxlength="180" autocomplete="street-address"></div><div class="field"><label for="order-comment">Комментарий</label><textarea id="order-comment" name="comment" maxlength="300"></textarea></div><button class="button" type="submit">Сохранить демо-заказ ↗</button><div class="form-status" aria-live="polite"></div></form></aside>
 <?php footer_html(); ?>

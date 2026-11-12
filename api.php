@@ -1,10 +1,18 @@
 <?php
 require __DIR__.'/bootstrap.php';
 header('Content-Type: application/json; charset=utf-8');
-function answer(int $status,array $body): never {http_response_code($status);echo json_encode($body,JSON_UNESCAPED_UNICODE);exit;}
+function answer(int $status,array $body): never {$json=json_encode($body,JSON_UNESCAPED_UNICODE);if($status===201&&!empty($GLOBALS['api_idempotency_token'])){try{$q=db()->prepare('INSERT OR IGNORE INTO api_idempotency(token,response_json,response_status) VALUES(?,?,?)');$q->execute([$GLOBALS['api_idempotency_token'],$json,$status]);}catch(Throwable $ignored){error_log('Idempotency cache write failed: '.$ignored->getMessage());}}http_response_code($status);echo $json;exit;}
 if($_SERVER['REQUEST_METHOD']!=='POST') answer(405,['ok'=>false,'message'=>'Метод не поддерживается.']);
 check_csrf();
 $type=(string)($_POST['type']??'');
+// Callers may provide a stable key to safely retry a request after a network timeout.
+$requestKey=(string)($_SERVER['HTTP_IDEMPOTENCY_KEY']??'');
+if($requestKey!==''){
+ if(!preg_match('/^[A-Za-z0-9._:-]{16,128}$/',$requestKey))answer(422,['ok'=>false,'message'=>'Ключ повтора имеет неверный формат.']);
+ $GLOBALS['api_idempotency_token']=hash('sha256',session_id().'|'.$type.'|'.$requestKey);
+ $q=db()->prepare('SELECT response_json,response_status FROM api_idempotency WHERE token=?');$q->execute([$GLOBALS['api_idempotency_token']]);$cached=$q->fetch();
+ if($cached){http_response_code((int)$cached['response_status']);echo $cached['response_json'];exit;}
+}
 $name=trim((string)($_POST['name']??'')); $phone=trim((string)($_POST['phone']??''));
 if(!preg_match('/^[\p{L} .\'-]{2,80}$/u',$name)) answer(422,['ok'=>false,'message'=>'Укажите имя от 2 до 80 символов.']);
 if(in_array($type,['booking','order'],true) && !preg_match('/^[+0-9() \\-]{7,30}$/',$phone)) answer(422,['ok'=>false,'message'=>'Проверьте номер телефона.']);
@@ -18,10 +26,11 @@ try {
  }
  if($type==='order'){
   $address=trim((string)($_POST['address']??''));$fulfillment=(string)($_POST['fulfillment']??'delivery');$items=json_decode((string)($_POST['items']??''),true);
-  if(!in_array($fulfillment,['delivery','pickup'],true)||($fulfillment==='delivery'&&strlen($address)<5)||strlen($address)>180||!is_array($items)||count($items)<1||count($items)>30) answer(422,['ok'=>false,'message'=>'Укажите адрес доставки и добавьте блюда в корзину.']);
+  if(!in_array($fulfillment,['delivery','pickup'],true)||($fulfillment==='delivery'&&(strlen($address)<5||strlen($address)>180))||!is_array($items)||!array_is_list($items)||count($items)<1||count($items)>30) answer(422,['ok'=>false,'message'=>'Укажите адрес доставки и добавьте блюда в корзину.']);
   if($fulfillment==='pickup') $address='';
-  $pdo=db();$pdo->beginTransaction();$valid=[];$total=0;
-  foreach($items as $item){$id=filter_var($item['id']??null,FILTER_VALIDATE_INT);$qty=filter_var($item['qty']??null,FILTER_VALIDATE_INT);if(!$id||!$qty||$qty<1||$qty>20) throw new DomainException('Некорректный состав заказа.');$q=$pdo->prepare('SELECT id,name,price FROM dishes WHERE id=? AND active=1');$q->execute([$id]);$dish=$q->fetch();if(!$dish) throw new DomainException('Одно из блюд больше недоступно. Обновите меню.');$line=(int)$dish['price']*$qty;$total+=$line;$valid[]=[$dish,$qty];}
+  $pdo=db();$pdo->beginTransaction();$valid=[];$total=0;$quantities=[];
+  foreach($items as $item){if(!is_array($item)||array_is_list($item))throw new DomainException('Некорректный состав заказа.');$id=filter_var($item['id']??null,FILTER_VALIDATE_INT);$qty=filter_var($item['qty']??null,FILTER_VALIDATE_INT);if($id===false||$id===null||$id<1||$qty===false||$qty===null||$qty<1||$qty>20) throw new DomainException('Некорректный состав заказа.');$quantities[$id]=($quantities[$id]??0)+$qty;if($quantities[$id]>20)throw new DomainException('Количество одной позиции не может превышать 20.');}
+  foreach($quantities as $id=>$qty){$q=$pdo->prepare('SELECT id,name,price FROM dishes WHERE id=? AND active=1');$q->execute([$id]);$dish=$q->fetch();if(!$dish) throw new DomainException('Одно из блюд больше недоступно. Обновите меню.');$line=(int)$dish['price']*$qty;$total+=$line;$valid[]=[$dish,$qty];}
   if($total<1||$total>500000) throw new DomainException('Проверьте сумму заказа.');
   $q=$pdo->prepare('INSERT INTO orders(user_id,customer_name,phone,address,fulfillment,comment,total) VALUES(?,?,?,?,?,?,?)');$q->execute([$_SESSION['user_id']??null,$name,$phone,$address,$fulfillment,substr(trim((string)($_POST['comment']??'')),0,300),$total]);$orderId=(int)$pdo->lastInsertId();$q=$pdo->prepare('INSERT INTO order_items(order_id,dish_id,item_name,price,quantity) VALUES(?,?,?,?,?)');foreach($valid as [$dish,$qty])$q->execute([$orderId,$dish['id'],$dish['name'],$dish['price'],$qty]);$pdo->commit();answer(201,['ok'=>true,'message'=>'Учебный заказ №'.$orderId.' сохранён в базе данных. Оплата не списывается, в ресторан он не передаётся.','id'=>$orderId]);
  }

@@ -28,6 +28,19 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y php-cli php-sqlite3
+      - name: Set up Node.js for browser QA
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install browser test dependencies
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Test cart state module
+        run: npm run test:cart
+      - name: Run PHP and SQLite integrity checks
+        run: php tests/php_integrity_integration.php
       - name: Check PHP syntax
         run: find . -maxdepth 2 -type f -name '*.php' -print0 | xargs -0 -n1 php -l
       - name: Smoke test PHP forms and admin access
@@ -76,6 +89,26 @@ jobs:
           test -s docs/account.html
           test -s docs/assets/food/03-nigiri-salmon.webp
           grep -q 'не зашифровано' docs/account.html
+      - name: Run browser regression and visual QA
+        run: |
+          set -euo pipefail
+          export RESTAURANT_DB=/tmp/tokyo-premium-browser.sqlite
+          rm -f "$RESTAURANT_DB"
+          php -S 127.0.0.1:8090 -t . > /tmp/tokyo-premium-browser.log 2>&1 &
+          server_pid=$!
+          trap 'result=$?; if [ "$result" -ne 0 ]; then cat /tmp/tokyo-premium-browser.log; fi; kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8090/ > /dev/null; then break; fi
+            sleep 1
+          done
+          TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:browser
+      - name: Save visual QA screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tokyo-premium-visual-qa
+          path: project-docs/visual-qa/*.jpg
+          if-no-files-found: warn
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v3
         with:

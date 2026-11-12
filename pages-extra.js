@@ -23,13 +23,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   const fulfillment=$('#fulfillment'), addressField=$('#checkout-address'), addressWrap=$('#checkout-address-field');
   function syncFulfillment(){if(!fulfillment||!addressField)return;const delivery=fulfillment.value!=='pickup';addressField.required=delivery;addressField.disabled=!delivery;if(addressWrap)addressWrap.hidden=!delivery;if(!delivery)addressField.value=''}
   fulfillment?.addEventListener('change',syncFulfillment);syncFulfillment();
-  const getCart=()=>{try{return JSON.parse(localStorage.getItem('tokyo-cart')||'[]')}catch{return[]}};
-  const setCart=cart=>{localStorage.setItem('tokyo-cart',JSON.stringify(cart));document.dispatchEvent(new Event('tokyo-cart-updated'))};
   const esc=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function renderCart(){
     const container=$('#cart-page-items');if(!container)return;
-    const dishes=window.DISHES||[],cart=getCart().filter(item=>dishes.some(d=>Number(d.id)===Number(item.id)));
-    if(cart.length!==getCart().length)setCart(cart);
+    const store=window.TokyoCart;if(!store)return;
+    const dishes=store.catalog(),cart=store.get();
     let total=0;container.innerHTML='';
     cart.forEach(item=>{
       const dish=dishes.find(d=>Number(d.id)===Number(item.id));if(!dish)return;
@@ -44,11 +42,10 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   $('#cart-page-items')?.addEventListener('click',event=>{
     const button=event.target.closest('[data-cart-step],[data-cart-remove]');if(!button)return;
-    let cart=getCart(),id=Number(button.dataset.id||button.dataset.cartRemove),item=cart.find(x=>Number(x.id)===id);
-    if(button.hasAttribute('data-cart-remove'))cart=cart.filter(x=>Number(x.id)!==id);
-    else if(item){item.qty=Math.min(20,Math.max(0,Number(item.qty)+Number(button.dataset.cartStep)));if(!item.qty)cart=cart.filter(x=>Number(x.id)!==id)}
-    setCart(cart);renderCart();
+    const store=window.TokyoCart,id=Number(button.dataset.id||button.dataset.cartRemove);if(!store)return;
+    if(button.hasAttribute('data-cart-remove'))store.remove(id);
+    else store.adjust(id,Number(button.dataset.cartStep));
   });
-  $('#cart-clear')?.addEventListener('click',()=>{setCart([]);renderCart()});
+  $('#cart-clear')?.addEventListener('click',()=>window.TokyoCart?.clear());
   document.addEventListener('tokyo-cart-updated',renderCart);window.addEventListener('storage',renderCart);renderCart();
 });

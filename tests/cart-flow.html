@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tokyo cart flow harness</title></head>
+<body>
+  <header class="site-header">
+    <nav class="main-nav" id="site-navigation"><a href="#menu">Menu</a><div class="mobile-nav-utilities"><span class="mobile-cart-count">0</span></div></nav>
+    <div class="header-actions"><span class="header-cart-count">0</span><button class="cart-toggle" type="button">Order <b>0</b></button></div>
+    <button class="mobile-menu" type="button" aria-controls="site-navigation">Menu</button>
+  </header>
+  <main>
+    <section id="menu">
+      <button class="filter-btn active" data-category="all">All</button><button class="filter-btn" data-category="rolls">Rolls</button><button class="filter-btn" data-category="hot">Hot</button>
+      <select id="sort-menu"><option value="default">Default</option><option value="price-asc">Price ascending</option></select>
+      <button class="filter-btn" id="favorites-only">Favorites</button><input class="menu-search" type="search">
+      <div class="dish-grid">
+        <article class="dish-card" data-category="rolls" data-search="nigiri salmon"><button data-favorite="1">♡</button><h3>Nigiri</h3><button class="add-to-cart" data-id="1">Add</button></article>
+        <article class="dish-card" data-category="hot" data-search="ramen beef"><button data-favorite="2">♡</button><h3>Ramen</h3><button class="add-to-cart" data-id="2">Add</button></article>
+      </div><p class="empty-state" hidden>No menu items</p>
+    </section>
+    <section id="cart-page-items"></section><p id="cart-page-empty" hidden>Empty cart</p><strong id="cart-page-total">0</strong>
+    <button id="cart-clear" type="button">Clear cart</button>
+    <select id="fulfillment" name="fulfillment" form="checkout-form"><option value="delivery">Delivery</option><option value="pickup">Pickup</option></select>
+    <div id="checkout-address-field"><input id="checkout-address" name="address" form="checkout-form"></div>
+    <form id="checkout-form" data-api="order"><input name="name" required value="Demo Guest"><input name="phone" required value="+77001234567"><input type="hidden" name="items" value="[]"><button type="submit">Save order</button><p class="form-status" aria-live="polite"></p></form>
+    <section data-account-panel="history"><div id="demo-orders"></div><div id="demo-bookings"></div></section>
+    <section data-account-panel="favorites"><div id="demo-favorites"></div><p id="demo-favorites-empty" hidden></p></section>
+    <section data-account-panel="profile"><form data-local-form="profile"><input name="name"><input name="phone"></form></section>
+    <section data-account-panel="addresses"><form data-local-form="address"><input name="address"></form><div id="demo-addresses"></div></section>
+  </main>
+  <aside class="cart-panel" aria-label="Quick cart" aria-hidden="true"><div class="cart-head"><button class="cart-close" type="button">Close</button></div><div class="cart-lines"></div><div class="cart-total"><strong>0</strong></div><a class="cart-checkout-link" href="#cart-page-items">Full checkout</a></aside>
+  <div class="toast" role="status"></div>
+  <script>window.DISHES=[{id:1,name:'Nigiri',price:1200,category_name:'Sushi',category:'rolls',weight:'40 g',description:'Salmon',image_url:''},{id:2,name:'Ramen',price:4800,category_name:'Hot',category:'hot',weight:'500 g',description:'Beef',image_url:''}];</script>
+  <script src="../cart-store.js" defer></script><script src="../luxury.js" defer></script><script src="../pages-extra.js" defer></script><script src="../pages-demo.js" defer></script><script src="../account-demo.js" defer></script>
+</body></html>
