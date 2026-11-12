@@ -29,7 +29,7 @@ The project remains the existing PHP 8+ application with SQLite. Public PHP rout
 
 ## Current verification record
 
-- PHP + SQLite integration suite: 101 assertions passed against an isolated database; six simultaneous PHP processes first initialize a clean database, and the suite passed three consecutive runs.
+- PHP + SQLite integration suite: 102 assertions passed against an isolated database; six simultaneous PHP processes first initialize a clean database, WAL mode is verified, and the suite passed three consecutive runs.
 - Cart state tests: 12 passed.
 - Browser suites passed for the 11 existing route types, 20 dish details (18 public plus two after an authorized Secret Menu unlock), Tokyo 2.0 interactions, reviews, cart states, responsive layouts and visual states.
 - Responsive checks covered 11 page types at widths 320, 360, 375, 390, 430, 768, 900, 1024 and 1440 px; 1920 px was included in the dedicated responsive run.

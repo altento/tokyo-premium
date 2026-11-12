@@ -41,6 +41,7 @@ foreach ($initializers as [$worker, $workerPipes, $number]) {
 }
 require dirname(__DIR__) . '/bootstrap.php';
 $pdo = db();
+check(strtolower((string)$pdo->query('PRAGMA journal_mode')->fetchColumn()) === 'wal', 'SQLite uses WAL for concurrent read and order commits');
 $password = 'Integration-Only-' . bin2hex(random_bytes(8));
 $pdo->prepare('INSERT INTO admins(email,password_hash) VALUES(?,?)')->execute(['integration@example.test', password_hash($password, PASSWORD_DEFAULT)]);
 $port = random_int(21000, 45000);

@@ -42,6 +42,19 @@ function db(): PDO
         $connection->exec('PRAGMA foreign_keys=ON');
         $connection->exec('PRAGMA busy_timeout=15000');
 
+        // WAL lets short-lived readers coexist with order commits. Change the
+        // persistent journal mode while initialization is serialized and no
+        // application transaction has started yet.
+        $journalModeQuery = $connection->query('PRAGMA journal_mode');
+        $journalMode = strtolower((string)$journalModeQuery->fetchColumn());
+        $journalModeQuery->closeCursor();
+        if ($journalMode !== 'wal') {
+            $journalModeQuery = $connection->query('PRAGMA journal_mode=WAL');
+            $journalMode = strtolower((string)$journalModeQuery->fetchColumn());
+            $journalModeQuery->closeCursor();
+        }
+        if ($journalMode !== 'wal') error_log('SQLite WAL mode is unavailable; using ' . ($journalMode ?: 'default journal mode') . '.');
+
         // Workers starting after the first one can skip DDL after migration 5.
         $ready = false;
         try {

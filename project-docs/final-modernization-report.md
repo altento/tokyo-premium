@@ -18,9 +18,9 @@ The existing PHP 8 + SQLite application and its GitHub Pages exporter remain the
 
 ## Verification
 
-The 2026-11-13 local verification record is in [testing-report.md](testing-report.md). At this update, 12 cart-store tests, 101 isolated PHP/SQLite integration assertions (including six simultaneous clean-database initializers; the suite passed three consecutive runs after the worker initialization fix), 11 route types, all 20 dish detail scenarios (18 public plus two unlocked Secret Menu entries), six viewport browser checks, 11×9 responsive checks, PHP and static Tokyo 2.0 flows, review XSS/persistence checks and the eight-state cart visual suite passed. New screenshots are indexed in [visual-qa/README.md](visual-qa/README.md).
+The 2026-11-13 local verification record is in [testing-report.md](testing-report.md). At this update, 12 cart-store tests, 102 isolated PHP/SQLite integration assertions (including six simultaneous clean-database initializers and a WAL-mode assertion; the suite passed three consecutive runs after the worker and commit-lock fixes), 11 route types, all 20 dish detail scenarios (18 public plus two unlocked Secret Menu entries), six viewport browser checks, 11×9 responsive checks, PHP and static Tokyo 2.0 flows, review XSS/persistence checks and the eight-state cart visual suite passed. New screenshots are indexed in [visual-qa/README.md](visual-qa/README.md).
 
-The static exporter generated 36 HTML pages. It omits direct Secret Menu detail routes, clears stale generated dish pages, and exposes a clearly demo-only client payload for the static unlock preview. PHP and JavaScript syntax checks passed. The first post-merge Actions run caught concurrent PHP workers racing through schema setup; initialization is now serialized and all local suites pass after the fix. The follow-up Actions run and Pages deployment remain pending.
+The static exporter generated 36 HTML pages. It omits direct Secret Menu detail routes, clears stale generated dish pages, and exposes a clearly demo-only client payload for the static unlock preview. PHP and JavaScript syntax checks passed. The post-merge Actions runs exposed concurrent schema initialization and a commit lock in SQLite's default rollback journal. Initialization is now serialized and SQLite switches to WAL under the init lock. Local PHP/SQLite integration passes; the hosted workflow must verify the WAL change and finish deployment before Pages can be reported as current.
 
 ## Product and infrastructure boundaries
 
@@ -36,4 +36,4 @@ Real browser screenshots were reviewed for the cart, new set builder, offers, st
 
 ## Release status
 
-The initial feature PR was merged as `babb204d8ad164f6060218ed8190efa6de0c9fb8`. Its Pages workflow correctly stopped at the SQLite concurrency test. A follow-up fix and a cold-start race regression are prepared; deployment is not considered complete until the follow-up workflow passes and the public URL is verified.
+The initial feature PR was merged as `babb204d8ad164f6060218ed8190efa6de0c9fb8`. Follow-up PRs fixed worker startup and added cold-start coverage. The latest fix enables WAL to let concurrent readers coexist with order commits. Deployment remains unverified until the current workflow passes and the public URL is checked.
