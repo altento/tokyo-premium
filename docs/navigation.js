@@ -35,7 +35,9 @@
   const toggle = header?.querySelector('.mobile-menu');
   if (!header || !nav || !toggle) return;
 
-  const mobile = window.matchMedia('(max-width: 900px)');
+  // The full navigation no longer fits below 1025px (the booking CTA clips
+  // between tablet and mobile widths), so CSS and interaction share one cutoff.
+  const mobile = window.matchMedia('(max-width: 1024px)');
   let returnFocus = false;
 
   const mobileUtilities = nav.querySelector('.mobile-nav-utilities');

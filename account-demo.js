@@ -24,10 +24,32 @@ document.addEventListener('DOMContentLoaded',()=>{
    }).join(''):'<p class="menu-note">Пока заказов нет.</p>'
   }
   if(bookings){const rows=read('tokyo-demo-bookings');bookings.innerHTML=rows.length?rows.map(row=>'<article><div><strong>'+esc(row.date)+' · '+esc(row.time)+'</strong><p>'+esc(row.name)+' · гостей: '+esc(row.guests)+' · '+esc(row.zone||'Зона не выбрана')+(row.format?' · формат Omakase «'+esc(row.format)+'»':'')+(row.table?' · стол '+esc(row.table):'')+'</p></div></article>').join(''):'<p class="menu-note">Пока запросов на бронь нет.</p>'}
-  const favs=$('#demo-favorites'),empty=$('#demo-favorites-empty');
-  if(favs){const ids=window.TokyoCart?.getFavorites()||[],dishes=window.DISHES||[];const saved=ids.map(id=>dishes.find(d=>Number(d.id)===Number(id))).filter(Boolean);favs.innerHTML=saved.map(d=>'<article class="dish-card"><a class="editorial-product-image" href="dish-'+Number(d.id)+'.html"><img src="'+esc(d.image_url)+'" alt="" loading="lazy"></a><div class="dish-meta"><small>'+esc(d.category_name)+' · '+esc(d.weight)+'</small><button class="favorite-btn" type="button" data-favorite="'+Number(d.id)+'" aria-label="Убрать '+esc(d.name)+' из избранного">♥</button><h3>'+esc(d.name)+'</h3><p>'+esc(d.description)+'</p><div class="dish-bottom"><span class="dish-price">'+Number(d.price).toLocaleString('ru-RU')+' ₸</span><button class="add-to-cart" type="button" data-id="'+Number(d.id)+'">Добавить +</button></div></div></article>').join('');if(empty)empty.hidden=saved.length>0}
+  const favs=$('#demo-favorites'),phpFavs=$('#account-browser-favorites-list'),empty=$('#demo-favorites-empty'),phpEmpty=$('#account-browser-favorites-empty');
+  if(favs||phpFavs){
+   const ids=window.TokyoCart?.getFavorites()||[],dishes=window.DISHES||[];
+   const saved=ids.map(id=>dishes.find(d=>Number(d.id)===Number(id))).filter(Boolean);
+   const staticMode=Boolean($('.account-demo-page'));
+   const cards=saved.map(d=>'<article class="dish-card"><a class="editorial-product-image" href="'+(staticMode?'dish-'+Number(d.id)+'.html':'pages.php?page=dish&amp;id='+Number(d.id))+'"><img src="'+esc(d.image_url)+'" alt="" loading="lazy"></a><div class="dish-meta"><small>'+esc(d.category_name)+' · '+esc(d.weight)+'</small><button class="favorite-btn" type="button" data-favorite="'+Number(d.id)+'" aria-label="Убрать '+esc(d.name)+' из избранного">♥</button><h3>'+esc(d.name)+'</h3><p>'+esc(d.description)+'</p><div class="dish-bottom"><span class="dish-price">'+Number(d.price).toLocaleString('ru-RU')+' ₸</span><button class="add-to-cart" type="button" data-id="'+Number(d.id)+'">Добавить +</button></div></div></article>').join('');
+   if(favs){favs.innerHTML=cards;if(empty)empty.hidden=saved.length>0}
+   if(phpFavs){phpFavs.innerHTML=cards;if(phpEmpty)phpEmpty.hidden=saved.length>0}
+   const count=$('#account-favorite-count');if(count)count.textContent=String(saved.length);
+  }
   const addresses=$('#demo-addresses');if(addresses){const rows=read('tokyo-demo-addresses');addresses.innerHTML=rows.length?rows.map((v,i)=>'<article><div><strong>Адрес '+(i+1)+'</strong><p>'+esc(v)+'</p></div><button class="text-button" type="button" data-address-remove="'+i+'">Удалить</button></article>').join(''):'<p class="menu-note">Адресов пока нет.</p>'}
-  const profile=(()=>{try{return JSON.parse(localStorage.getItem('tokyo-demo-profile')||'{}')}catch{return{}}})();const pform=$('[data-local-form="profile"]');if(pform){pform.elements.name.value=profile.name||'';pform.elements.phone.value=profile.phone||''}const displayName=$('#demo-display-name');if(displayName)displayName.textContent=profile.name||'Ваш профиль';const stats={orders:read('tokyo-demo-orders').length,bookings:read('tokyo-demo-bookings').length,favorites:(window.TokyoCart?.getFavorites()||[]).length};$$('[data-account-stat]').forEach(node=>{node.textContent=String(stats[node.dataset.accountStat]??0)});
+  const pform=$('[data-local-form="profile"]'),displayName=$('#demo-display-name');
+  if(pform||displayName){const profile=(()=>{try{return JSON.parse(localStorage.getItem('tokyo-demo-profile')||'{}')}catch{return{}}})();if(pform){pform.elements.name.value=profile.name||'';pform.elements.phone.value=profile.phone||''}if(displayName)displayName.textContent=profile.name||'Ваш профиль'}
+  const statNodes=$$('[data-account-stat]');
+  if(statNodes.length){
+   const ordersCount=read('tokyo-demo-orders').length,bookingsCount=read('tokyo-demo-bookings').length,favoritesCount=window.TokyoCart?.getFavorites().length||0,addressesCount=read('tokyo-demo-addresses').length;
+   const stats={orders:ordersCount,bookings:bookingsCount,favorites:favoritesCount};
+   statNodes.forEach(node=>{node.textContent=String(stats[node.dataset.accountStat]??0)});
+   const tabCounts={history:ordersCount+bookingsCount,favorites:favoritesCount,addresses:addressesCount};
+   $$('[data-account-tab]').forEach(button=>{
+    const key=button.dataset.accountTab;if(!Object.prototype.hasOwnProperty.call(tabCounts,key))return;
+    let badge=$('.account-demo-tab-count',button);
+    if(!badge){badge=document.createElement('span');badge.className='account-demo-tab-count';badge.setAttribute('aria-hidden','true');button.append(badge)}
+    badge.textContent=String(tabCounts[key]);
+   });
+  }
  }
  $$('[data-account-tab]').forEach(button=>button.addEventListener('click',()=>{$$('[data-account-tab]').forEach(b=>{b.classList.toggle('active',b===button);b.setAttribute('aria-current',b===button?'page':'false')});$$('[data-account-panel]').forEach(panel=>panel.hidden=panel.dataset.accountPanel!==button.dataset.accountTab)}));
  $$('[data-account-quick-target]').forEach(button=>button.addEventListener('click',()=>document.querySelector('.account-demo-nav [data-account-tab="'+button.dataset.accountQuickTarget+'"]')?.click()));

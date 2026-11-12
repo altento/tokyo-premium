@@ -36,6 +36,14 @@ The PHP Secret Menu now hides targeted dishes from public catalog/detail/collect
 
 Real browser screenshots were reviewed for the cart, new set builder, offers, static account and narrow booking heading. Existing 11-page reference screenshots and prior gap notes remain available in `project-docs/visual-qa/` and `final-acceptance-report.md`. This cycle did not perform a new pixel-by-pixel comparison of every current route against all 11 reference PNGs; visual fidelity remains a review item rather than a claimed completed acceptance criterion.
 
+### Focused follow-up on 2026-11-13
+
+The menu, dish detail, Omakase and authenticated account were rechecked against their references and current browser output. The menu's second row was initially hidden until scroll and its action links overlapped; both were corrected and covered at 1440/390/320 px. Dish recommendations were made category-aware and visible without a reveal observer. Omakase scenes now bind to active catalog entries and show the selected entry's real demo image and data. The account now has a clearer dashboard hierarchy with server-owned history and explicitly browser-local favorites; authenticated desktop/mobile screenshots were captured.
+
+The focused regression suites and full local PHP/SQLite, responsive, cart, review, Tokyo 2.0, and visual-state suites passed. Exact commands, screenshot inventory and scope are in [testing-report.md](testing-report.md) and [visual-qa/README.md](visual-qa/README.md). This did not complete the requested pixel-by-pixel comparison of all 11 design references.
+
+The requested optional hero video was not created: the connected video workspace reported no available video models and zero credits. Existing optimized still photography remains the hero fallback; no video is simulated.
+
 ## Release status
 
 Tokyo Premium 2.0 and the SQLite concurrency fixes are on main at d1bc5543d67ef04c8353d713eca1b0b3f7eea9e9. Pages workflow run 43312293771 passed both build and deploy; the published site was checked at [altento.github.io/tokyo-premium](https://altento.github.io/tokyo-premium/). See testing-report.md and deployment.md for scope and evidence.

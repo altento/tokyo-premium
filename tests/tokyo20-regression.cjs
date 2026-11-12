@@ -26,8 +26,8 @@ async function run() {
   const browser = await chromium.launch({ headless: true });
   try {
     for (const mode of [
-      { name: 'php', base: phpBase, routes: { offers: '/offers.php', collection: '/collection.php?slug=autumn-in-kyoto', builder: '/set-builder.php', evening: '/perfect-evening.php', gift: '/gift-certificates.php', omakase: '/pages.php?page=omakase', booking: '/pages.php?page=booking', menu: '/menu.php', cart: '/pages.php?page=cart', account: '/account.php' } },
-      { name: 'static', base: staticBase, routes: { offers: '/offers.html', collection: '/collection-autumn-in-kyoto.html', builder: '/set-builder.html', evening: '/perfect-evening.html', gift: '/gift-certificates.html', omakase: '/omakase.html', booking: '/booking.html', menu: '/menu.html', cart: '/cart.html', account: '/account.html' } }
+      { name: 'php', base: phpBase, routes: { offers: '/offers.php', collection: '/collection.php?slug=autumn-in-kyoto', builder: '/set-builder.php', evening: '/perfect-evening.php', gift: '/gift-certificates.php', omakase: '/pages.php?page=omakase', dish: '/pages.php?page=dish&id=3', booking: '/pages.php?page=booking', menu: '/menu.php', cart: '/pages.php?page=cart', account: '/account.php' } },
+      { name: 'static', base: staticBase, routes: { offers: '/offers.html', collection: '/collection-autumn-in-kyoto.html', builder: '/set-builder.html', evening: '/perfect-evening.html', gift: '/gift-certificates.html', omakase: '/omakase.html', dish: '/dish-3.html', booking: '/booking.html', menu: '/menu.html', cart: '/cart.html', account: '/account.html' } }
     ]) {
       const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
       const page = await context.newPage();
@@ -106,14 +106,30 @@ async function run() {
 
       await page.goto(mode.base + mode.routes.omakase, { waitUntil: 'domcontentloaded' });
       check(await page.locator('[data-tp-course]').count() === 5, `${mode.name} Omakase has five interactive course stages`);
+      const firstCourse = page.locator('[data-tp-course-panel][data-step="1"]');
+      const firstCourseImage = firstCourse.locator('.tp20-course-photo img');
+      await firstCourseImage.evaluate(image => image.decode());
+      check(await firstCourseImage.evaluate(image => image.naturalWidth > 0), `${mode.name} Omakase first stage shows its catalog photo`);
+      check(!(await firstCourse.evaluate(panel => panel.classList.contains('reveal'))), `${mode.name} Omakase stage does not depend on scrolling to become visible`);
       await page.locator('[data-tp-course][data-step="2"]').click();
-      check(await page.locator('[data-tp-course-panel][data-step="2"]').isVisible(), `${mode.name} Omakase stage selector changes the story panel`);
+      const secondCourse = page.locator('[data-tp-course-panel][data-step="2"]');
+      check(await secondCourse.isVisible(), `${mode.name} Omakase stage selector changes the story panel`);
+      check(await secondCourse.locator('h3').innerText() === 'Нигири с тунцом', `${mode.name} Omakase stage uses the matching active catalog item`);
+      await secondCourse.locator('.tp20-course-photo img').evaluate(image => image.decode());
+      check(await secondCourse.locator('.tp20-course-photo img').evaluate(image => image.naturalWidth > 0), `${mode.name} selected Omakase stage loads its catalog photo`);
       await prepareVisual(page);
       await page.screenshot({ path: path.join(evidence, `12-${mode.name}-omakase-stage-2.jpg`), fullPage: true, type: 'jpeg', quality: 72 });
       await page.setViewportSize({ width: 390, height: 844 });
       await prepareVisual(page);
       await page.screenshot({ path: path.join(evidence, `12-${mode.name}-omakase-mobile.jpg`), fullPage: true, type: 'jpeg', quality: 72 });
       await page.setViewportSize({ width: 1440, height: 1000 });
+
+      await page.goto(mode.base + mode.routes.dish, { waitUntil: 'domcontentloaded' });
+      const relatedCards = page.locator('.dish-grid-related .dish-card');
+      check(await relatedCards.count() > 0, `${mode.name} dish detail has catalog-backed related cards`);
+      check(await relatedCards.first().evaluate(card => !card.classList.contains('reveal') && Number(getComputedStyle(card).opacity) >= .99), `${mode.name} related dish is visible without scroll-trigger state`);
+      await relatedCards.first().locator('img').evaluate(image => image.decode());
+      check(await relatedCards.first().locator('img').evaluate(image => image.naturalWidth > 0), `${mode.name} related dish photo loads`);
 
       await page.goto(mode.base + mode.routes.builder, { waitUntil: 'domcontentloaded' });
       check(await page.locator('[data-tp-set-dish]').count() >= 6, `${mode.name} set builder contains catalog dishes`);

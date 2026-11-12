@@ -474,3 +474,164 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
   .admin-record-top{align-items:flex-start}
 }
 @media(prefers-reduced-motion:reduce){.admin-notification{transition:none}.admin-notification:hover{transform:none}}
+
+/* Tokyo Premium account dashboard — scoped to account pages only. */
+.account-dashboard.account-shell{max-width:1400px;margin:clamp(24px,4vw,58px) auto;padding-inline:clamp(12px,2.4vw,34px)}
+.account-dashboard .account-dashboard-card{padding:clamp(18px,2.8vw,38px);border-radius:14px;background:radial-gradient(ellipse at 88% 0,rgba(111,43,24,.16),transparent 40%),linear-gradient(145deg,#171411,#0c0b09 72%);overflow:visible}
+.account-dashboard-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;padding-bottom:24px;border-bottom:1px solid var(--hairline)}
+.account-dashboard-identity{position:relative;min-width:0;padding-left:82px}
+.account-dashboard-identity:before{content:"TP";position:absolute;inset:2px auto auto 0;display:grid;width:62px;height:62px;place-items:center;border:1px solid rgba(211,177,112,.75);border-radius:50%;background:radial-gradient(circle at 35% 25%,rgba(204,158,83,.18),transparent 58%),#12100e;color:#e9cb91;font:500 1.05rem/1 'Playfair Display',Georgia,serif;letter-spacing:.08em;box-shadow:inset 0 0 0 5px rgba(202,165,107,.06)}
+.account-dashboard-identity .kicker{color:var(--gold);letter-spacing:.15em}
+.account-dashboard-identity h1{margin:.32em 0 .14em;font:500 clamp(2rem,4vw,3.35rem)/1.08 'Playfair Display',Georgia,serif;color:var(--ivory);overflow-wrap:anywhere}
+.account-dashboard-identity p{margin:0;color:#e1d3bd;overflow-wrap:anywhere}
+.account-dashboard-identity>small{display:block;margin-top:10px;color:var(--muted);line-height:1.5}
+.account-logout-form{flex:none}
+.account-dashboard-overview{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr);gap:16px;margin:20px 0}
+.account-dashboard-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.account-dashboard-metrics article{display:flex;min-width:0;min-height:104px;flex-direction:column;justify-content:center;padding:14px 18px;border:1px solid rgba(202,165,107,.23);border-radius:9px;background:linear-gradient(145deg,#15120f,#100e0c)}
+.account-dashboard-metrics article>span{color:#d3c5ae;font-size:.78rem;line-height:1.35}
+.account-dashboard-metrics article>strong{margin:5px 0 2px;color:#f1d5a0;font:500 clamp(1.3rem,2vw,1.75rem)/1.05 'Playfair Display',Georgia,serif;overflow-wrap:anywhere}
+.account-dashboard-metrics article>small{color:var(--muted);font-size:.68rem;line-height:1.4}
+.account-dashboard .account-dashboard-loyalty{min-height:0;justify-content:center;gap:4px;padding:clamp(18px,2.5vw,28px);border-radius:10px}
+.account-dashboard .account-dashboard-loyalty h2{margin:8px 0;font-size:clamp(1.8rem,3vw,2.4rem)}
+.account-tier-row{display:flex;align-items:baseline;justify-content:space-between;gap:14px;width:100%;flex-wrap:wrap}
+.account-tier-row>strong{color:#f1d5a0;font:500 1.15rem/1.2 'Playfair Display',Georgia,serif}
+.account-tier-row>strong small{font:500 .72rem/1.2 'Manrope',sans-serif}
+.account-dashboard .account-dashboard-loyalty>p{margin:4px 0 8px;font-size:.82rem}
+.account-dashboard .account-dashboard-loyalty .tp20-tier-progress{width:100%;height:7px;margin:7px 0}
+.account-dashboard .account-dashboard-loyalty .tp20-tier-progress span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#b71722,#d7ae68)}
+.account-dashboard .account-dashboard-loyalty>small{font-size:.7rem}
+.account-inline-link{color:#e8c98e;font-size:.76rem;text-decoration:underline;text-decoration-color:rgba(232,201,142,.35);text-underline-offset:3px}
+.account-dashboard .account-inline-link{align-self:flex-start;margin-top:7px}
+.account-dashboard-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:0 0 20px}
+.account-dashboard-actions a{display:flex;min-width:0;min-height:48px;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border:1px solid rgba(202,165,107,.27);border-radius:7px;background:linear-gradient(145deg,#16130f,#100e0c);color:var(--ivory);font-size:.78rem;transition:border-color .2s,background .2s}
+.account-dashboard-actions a:hover{border-color:rgba(202,165,107,.7);background:#1b1712}
+.account-dashboard-actions a span{color:#e8c98e}
+.account-dashboard-layout{display:grid;grid-template-columns:200px minmax(0,1fr);align-items:start;gap:14px}
+.account-dashboard-nav{position:sticky;top:96px;display:grid;gap:4px;padding:8px;border:1px solid rgba(202,165,107,.2);border-radius:9px;background:#100e0c}
+.account-dashboard-nav a{display:grid;grid-template-columns:27px minmax(0,1fr) auto;align-items:center;gap:8px;min-height:45px;padding:8px 10px;border-bottom:1px solid rgba(202,165,107,.11);color:#eadfcf;font-size:.77rem;transition:background .18s,color .18s}
+.account-dashboard-nav a:last-child{border-bottom:0}
+.account-dashboard-nav a:hover,.account-dashboard-nav a:focus-visible{background:rgba(183,23,34,.16);color:#fff}
+.account-dashboard-nav a>span{color:#d0aa6b;font-size:.65rem}
+.account-dashboard-nav a>small{color:#a99b87;font-size:.62rem;text-align:right}
+.account-dashboard-content{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(285px,.86fr);align-items:start;gap:14px}
+.account-dashboard-primary,.account-dashboard-aside{display:grid;align-content:start;gap:14px;min-width:0}
+.account-dashboard .account-dashboard-panel{min-width:0;margin:0;padding:clamp(16px,2vw,24px);border:1px solid rgba(202,165,107,.22);border-radius:9px;background:linear-gradient(145deg,#15120f,#100e0c);color:var(--ivory)}
+.account-dashboard-section-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:15px}
+.account-dashboard-section-heading .kicker{color:var(--gold);font-size:.62rem;letter-spacing:.12em}
+.account-dashboard-section-heading h2{margin:5px 0 0;color:var(--ivory);font:500 clamp(1.35rem,2.2vw,1.85rem)/1.12 'Playfair Display',Georgia,serif;overflow-wrap:anywhere}
+.account-dashboard-section-heading h2:after{content:"";display:block;width:36px;height:2px;margin-top:9px;background:linear-gradient(90deg,#ed2430,#a30e19)}
+.account-section-count{flex:none;color:#b9ab94;font-size:.65rem;white-space:nowrap}
+.account-dashboard .account-order-list{gap:9px}
+.account-dashboard .account-order-card{padding:14px 15px;border-radius:7px;background:rgba(255,255,255,.018)}
+.account-dashboard .account-order-heading{align-items:flex-start}
+.account-dashboard .account-order-heading>strong{font-size:1rem}
+.account-dashboard .account-order-meta{font-size:.75rem;line-height:1.55}
+.account-status-label{color:#d6be8c}
+.account-dashboard .order-item-details{margin-top:9px;color:#e7ddce}
+.account-dashboard .order-item-details summary{color:#d7b978;font-size:.74rem;cursor:pointer}
+.account-dashboard .order-item-details ul{margin:8px 0 0;font-size:.72rem;line-height:1.6}
+.account-empty-state{display:grid;justify-items:start;gap:12px;padding:8px 0 2px}
+.account-empty-state p,.account-empty-copy,.account-section-copy{margin:0;color:var(--muted);font-size:.78rem;line-height:1.6}
+.account-empty-state .button{min-height:40px;font-size:.73rem}
+.account-dashboard .booking-confirmation-notice{margin:0 0 12px;padding:10px 12px;font-size:.76rem}
+.account-browser-favorites-grid{display:grid;gap:8px}
+.account-dashboard .account-browser-favorites-grid .dish-card{display:grid;grid-template-columns:76px minmax(0,1fr);min-width:0;overflow:hidden;border-radius:7px;background:#100e0c}
+.account-browser-favorites-grid .editorial-product-image{min-height:100%;aspect-ratio:auto}
+.account-browser-favorites-grid .editorial-product-image img{width:100%;height:100%;min-height:110px;object-fit:cover}
+.account-browser-favorites-grid .dish-meta{position:relative;min-width:0;padding:10px 11px}
+.account-browser-favorites-grid .dish-meta>small{display:block;padding-right:26px;color:var(--muted);font-size:.62rem}
+.account-browser-favorites-grid .dish-meta h3{margin:5px 0;color:var(--ivory);font:500 .95rem/1.2 'Playfair Display',Georgia,serif}
+.account-browser-favorites-grid .dish-meta>p{margin:3px 0;color:#b7ab99;font-size:.65rem;line-height:1.4}
+.account-browser-favorites-grid .favorite-btn{position:absolute;top:7px;right:7px;width:25px;height:25px;font-size:.85rem}
+.account-browser-favorites-grid .dish-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
+.account-browser-favorites-grid .dish-price{font-size:.74rem}
+.account-browser-favorites-grid .add-to-cart{min-height:30px;padding:4px 8px;font-size:.64rem}
+.account-dashboard .account-browser-favorites-grid:empty{display:none}
+.account-dashboard .account-browser-favorites-grid:not(:empty)+.account-empty-copy{display:none}
+.account-dashboard .tp20-referral-code{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:13px 0;padding:11px;border:1px solid rgba(202,165,107,.25);border-radius:7px;background:#100e0c}
+.account-dashboard .tp20-referral-code>span{color:var(--muted);font-size:.68rem}
+.account-dashboard .tp20-referral-code>strong{color:#f0d39c;letter-spacing:.11em}
+.account-dashboard .tp20-referral-code .button{min-height:34px;margin-left:auto;padding-inline:10px;font-size:.68rem}
+.account-dashboard .account-referral-form{gap:10px}
+.account-dashboard .account-referral-form .button,.account-dashboard .tp20-account-form .button{min-height:39px;padding-inline:13px;font-size:.72rem}
+.account-dashboard .tp20-referral-history{margin-top:12px;padding-top:10px;border-top:1px solid rgba(202,165,107,.16)}
+.account-dashboard .tp20-referral-history>strong{font-size:.75rem}
+.account-dashboard .tp20-referral-history>p{color:var(--muted);font-size:.7rem}
+.account-dashboard .tp20-account-form{gap:11px}
+.account-dashboard .tp20-account-form label{font-size:.73rem}
+.account-dashboard .tp20-account-form input:not([type=checkbox]){min-height:40px}
+.account-dashboard .tp20-account-consent{font-size:.69rem;line-height:1.45}
+.account-ledger-details{padding:0!important}
+.account-ledger-details>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px;cursor:pointer;list-style:none}
+.account-ledger-details>summary::-webkit-details-marker{display:none}
+.account-ledger-details>summary>span:first-child{display:grid;gap:5px}
+.account-ledger-details>summary .kicker{color:var(--gold);font-size:.6rem;letter-spacing:.12em}
+.account-ledger-details>summary strong{color:var(--ivory);font:500 1.05rem/1.2 'Playfair Display',Georgia,serif}
+.account-ledger-details[open]>summary{border-bottom:1px solid rgba(202,165,107,.18)}
+.account-ledger-details>p,.account-ledger-details>.tp20-ledger-list{margin:14px 17px}
+.account-dashboard-note{margin:18px 4px 0;color:#a99c88;font-size:.68rem;line-height:1.5}
+
+/* The static account shares the hierarchy but all displayed records remain browser-local. */
+.account-demo-page .tp20-static-privilege{margin-block:18px;padding-block:0;gap:12px}
+.account-demo-page .tp20-static-privilege .tp20-loyalty-card{min-height:250px}
+.account-demo-page .tp20-referral-card{padding:clamp(18px,2.8vw,28px)}
+.account-demo-page .account-demo-layout{grid-template-columns:210px minmax(0,1fr);gap:14px}
+.account-demo-page .account-demo-nav{position:sticky;top:94px;align-content:start;gap:5px;padding:8px;border:1px solid rgba(202,165,107,.2);border-radius:9px;background:#100e0c}
+.account-demo-page .account-demo-nav button{min-height:46px;padding:9px 11px;border-radius:5px;font-size:.77rem}
+.account-demo-page .account-demo-nav button.active{border-color:var(--crimson);background:linear-gradient(110deg,#a7131d,#741018);color:#fff}
+.account-demo-page .account-demo-tab-count{margin-left:auto;color:#e5c887;font-size:.66rem}
+.account-demo-page .account-demo-panel{min-height:280px;padding:clamp(18px,2.5vw,28px);border-radius:9px}
+.account-demo-page .account-demo-panel h2{font:500 clamp(1.45rem,2.6vw,2rem)/1.15 'Playfair Display',Georgia,serif}
+.account-demo-page .account-demo-panel h2:after{content:"";display:block;width:36px;height:2px;margin-top:9px;background:linear-gradient(90deg,#ed2430,#a30e19)}
+.account-demo-page .account-list article{border-radius:7px;background:linear-gradient(110deg,#191410,#11100e)}
+
+@media(max-width:1100px){
+  .account-dashboard-content{grid-template-columns:minmax(0,1fr)}
+  .account-dashboard-aside{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .account-ledger-details{grid-column:1/-1}
+  .account-dashboard-layout{grid-template-columns:1fr}
+  .account-dashboard-nav{position:static;grid-template-columns:repeat(5,minmax(0,1fr))}
+  .account-dashboard-nav a{grid-template-columns:22px minmax(0,1fr);align-content:center;min-height:52px}
+  .account-dashboard-nav a>small{grid-column:2;text-align:left}
+  .account-demo-page .account-demo-layout{grid-template-columns:1fr}
+  .account-demo-page .account-demo-nav{position:static;grid-template-columns:repeat(5,minmax(0,1fr))}
+}
+@media(max-width:680px){
+  .account-dashboard.account-shell{margin:20px auto;padding-inline:10px}
+  .account-dashboard .account-dashboard-card{padding:17px 13px}
+  .account-dashboard-hero{align-items:flex-start}
+  .account-dashboard-identity{padding-left:60px}
+  .account-dashboard-identity:before{width:46px;height:46px;font-size:.84rem}
+  .account-dashboard-identity h1{font-size:clamp(1.75rem,8vw,2.45rem)}
+  .account-dashboard-identity>small{font-size:.68rem}
+  .account-logout-form .button{min-height:38px;padding-inline:10px;font-size:.68rem}
+  .account-dashboard-overview{grid-template-columns:1fr;margin:14px 0}
+  .account-dashboard-metrics{gap:7px}
+  .account-dashboard-metrics article{min-height:88px;padding:11px}
+  .account-dashboard-actions{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  .account-dashboard-actions a{min-height:43px;padding:8px 10px;font-size:.69rem}
+  .account-dashboard-nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:3px;padding:6px}
+  .account-dashboard-nav a{min-height:48px;padding:7px 8px;font-size:.69rem}
+  .account-dashboard-content{gap:9px}
+  .account-dashboard-primary,.account-dashboard-aside{gap:9px}
+  .account-dashboard-aside{grid-template-columns:1fr}
+  .account-dashboard .account-dashboard-panel{padding:14px}
+  .account-dashboard-section-heading{align-items:flex-start}
+  .account-dashboard-section-heading h2{font-size:1.38rem}
+  .account-dashboard-section-heading .kicker{font-size:.55rem}
+  .account-dashboard .account-order-card{padding:12px}
+  .account-dashboard .account-order-heading{flex-wrap:wrap;gap:7px}
+  .account-dashboard .booking-status-pill{font-size:.66rem}
+  .account-browser-favorites-grid .dish-card{grid-template-columns:66px minmax(0,1fr)}
+  .account-browser-favorites-grid .dish-meta>p{display:none}
+  .account-dashboard .tp20-referral-code .button{margin-left:0}
+  .account-ledger-details{grid-column:auto}
+  .account-demo-page .tp20-static-privilege .tp20-loyalty-card{min-height:0}
+  .account-demo-page .account-demo-nav{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .account-demo-page .account-demo-nav button{min-height:42px;font-size:.7rem}
+  .account-demo-page .account-demo-panel{min-height:0;padding:16px 13px}
+}
+@media(prefers-reduced-motion:reduce){
+  .account-dashboard-actions a,.account-dashboard-nav a,.account-demo-page .account-demo-nav button{transition:none}
+}
