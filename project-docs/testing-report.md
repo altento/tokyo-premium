@@ -17,7 +17,7 @@ Updated 2026-11-13
 | Responsive regression | Passed | 11 page types × 9 widths (320–1920 px), heading clipping checks, cart access, mobile menu keyboard/focus behavior and booking dates across browser time zones. |
 | Gallery/profile visual state | Passed | Default gallery and static profile desktop/mobile captures. |
 | Static export | Passed | Exporter generated 36 pages; locked Secret Menu detail routes are omitted, stale generated detail pages are removed, and the client-only preview payload is generated separately. No PHP/backend files are exported. |
-| Diff hygiene | Pending | The complete 133-file feature commit and subsequent CI-fix patches passed staged `git diff --cached --check`; the WAL follow-up will be checked before its PR is opened. |
+| Diff hygiene | Passed | Feature and SQLite follow-up patches passed staged diff checks; release-documentation changes are checked before commit. |
 
 The Playwright evidence suite writes to `TOKYO_EVIDENCE_DIR` when set; by default it writes into `project-docs/visual-qa/`. This keeps the checks reproducible in restricted workspaces without changing what CI captures. Secret Menu unlock desktop/mobile captures are included alongside the route and checkout states.
 
@@ -31,16 +31,22 @@ The final booking regression additionally checks both initial and selected-table
 
 Secret Menu visibility is enforced at the PHP query and order-validation layers. Anonymous visitors do not receive those dishes in the shared catalog, menu, details, set builder, recommendation wizard, seasonal collection page, or public offers API. A successful code unlock is recorded in the PHP session and rechecked against active campaign rules on subsequent pages and order quotes. Static GitHub Pages includes only a public browser-preview payload; it is intentionally not an authorization mechanism.
 
-## CI follow-up
+## Final CI and public-site verification (2026-11-13)
 
-The first GitHub Pages workflow run installed dependencies and passed cart tests, then found that multiple PHP workers could repeat schema initialization, producing `database is locked` before order handling. A per-database initialization lock and migration fast path fixed that race. The next workflow reached the gift-order commit and exposed a second lock: a reader could block commit under SQLite's default rollback journal. `db()` now switches the database to WAL while initialization is serialized. The regression suite starts six independent PHP processes against a clean database and asserts WAL mode; locally it passed three consecutive runs (102 assertions each). The full browser suite passed before the WAL-only change; the current hosted run must still verify it before Pages is considered deployed.
+The hosted [Pages workflow run 43312293771](https://github.com/altento/tokyo-premium/actions/runs/43312293771), for commit d1bc5543d67ef04c8353d713eca1b0b3f7eea9e9, completed successfully. Both build and deploy jobs passed. The build installed dependencies, ran cart and PHP/SQLite integrity checks, PHP syntax checks, form/admin smoke checks, exported the static demo, ran browser regression and visual QA, and uploaded the screenshot artifact.
 
-Local `npm ci` did not finish in this Windows environment; browser suites used the already cached, pinned Playwright 1.65.0 package. The hosted workflow did complete `npm ci` successfully before reaching the database failure.
+After deployment, the public Pages site was opened with a cache-busting URL. Browser fetch checks returned HTTP 200 for 15 routes: home, menu, Omakase, offers, philosophy, gallery, reviews, contacts, booking, Perfect Evening, set builder, account, cart, Autumn in Kyoto collection, and gift certificates. The Offers page and its images loaded without failed same-origin requests; the browser recorded zero console errors and zero warnings. At 320 px and 390 px viewport widths, the Offers heading remained inside the viewport and there was no horizontal overflow.
+
+The local PHP/SQLite integration suite passed 102 assertions in three consecutive runs. Hosted CI also passed the integration suite under its multi-worker test configuration. Cart, Tokyo 2.0, review, responsive, and visual-state Playwright suites passed in the hosted build.
+
+A fresh pixel-by-pixel comparison of every current page against all 11 source PNG references remains incomplete. Screenshots and older visual gap notes remain in visual-qa/ and final-acceptance-report.md. No pixel-perfect acceptance is claimed.
+
+Local npm ci did not finish in this Windows environment; local browser runs used the already cached, pinned Playwright 1.65.0 package. Hosted CI completed npm ci successfully.
 
 ## Not production-certified
 
 - No restaurant SMTP/provider credentials or email delivery adapter is configured; the admin notification center is in-app only.
-- There is no payment provider, live inventory, table availability service, or production restaurant backend. A booking request is not automatically confirmed.
+- No payment provider, live inventory, live table availability service, or production restaurant backend is configured. A booking request is not automatically confirmed.
 - GitHub Pages is a browser-local demonstration, not server authentication or durable shared storage.
 - User, menu, price, contact and offer seed values are fictional educational data.
-- The Pages deployment remains unverified until the current workflow completes successfully and the public URL is checked.
+- A new full pixel-by-pixel pass across all 11 design references remains outstanding.
