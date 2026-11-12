@@ -2,13 +2,17 @@
 declare(strict_types=1);
 date_default_timezone_set('Asia/Qyzylorda');
 $isHttps = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+$GLOBALS['tokyo_init_trace'] = getenv('TOKYO_TEST_TRACE_ORDER') === '1' && ($_SERVER['HTTP_IDEMPOTENCY_KEY'] ?? '') === 'integration-gift-order-0001';
+tokyo_init_trace('before-session-start');
 session_name('tokyo_session');
 session_set_cookie_params(['httponly'=>true,'secure'=>$isHttps,'samesite'=>'Lax','path'=>'/']);
 if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+tokyo_init_trace('after-session-start');
 require_once __DIR__.'/lib/commerce.php';
 header('X-Content-Type-Options: nosniff'); header('Referrer-Policy: strict-origin-when-cross-origin'); header('X-Frame-Options: DENY');
 function db(): PDO
 {
+    tokyo_init_trace('db-enter');
     static $pdo = null;
     if ($pdo instanceof PDO) return $pdo;
 
@@ -27,6 +31,7 @@ function db(): PDO
         if (is_resource($lock)) fclose($lock);
         throw new RuntimeException('Could not acquire the SQLite initialization lock.');
     }
+    tokyo_init_trace('db-lock-acquired');
 
     try {
         $dsn = 'sqlite:'.$file;
@@ -45,6 +50,7 @@ function db(): PDO
         } catch (Throwable) {
             $ready = false;
         }
+        tokyo_init_trace($ready ? 'db-ready' : 'db-migration-required');
 
         if (!$ready) {
             $schema = file_get_contents(__DIR__.'/schema.sql');
@@ -97,9 +103,14 @@ function db(): PDO
     } finally {
         flock($lock, LOCK_UN);
         fclose($lock);
+        tokyo_init_trace('db-lock-released');
     }
 
     return $pdo;
+}
+function tokyo_init_trace(string $stage): void
+{
+    if (!empty($GLOBALS['tokyo_init_trace'])) error_log('TOKYO INIT TRACE ' . $stage);
 }
 function e(?string $v): string { return htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8'); }
 function image_srcset(string $url): string { $parts=parse_url($url); if(!$parts||empty($parts['host'])||!in_array($parts['host'],['images.unsplash.com','plus.unsplash.com'],true)) return ''; parse_str($parts['query']??'', $query); $items=[]; foreach([480,768,1080,1440,2000] as $width){$query['w']=$width;$src=($parts['scheme']??'https').'://'.$parts['host'].($parts['path']??'').'?'.http_build_query($query,'','&',PHP_QUERY_RFC3986);$items[]=$src.' '.$width.'w';} return implode(', ',$items); }

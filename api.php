@@ -17,6 +17,7 @@ if($_SERVER['REQUEST_METHOD']!=='POST') answer(405,['ok'=>false,'message'=>'Ме
 check_csrf();
 $type=(string)($_POST['type']??'');
 $GLOBALS['api_idempotency_type']=$type;
+tokyo_init_trace('api-after-csrf');
 if($type==='secret_unlock'){
  $code=trim((string)($_POST['code']??''));if($code===''||strlen($code)>80)answer(422,['ok'=>false,'message'=>'Код имеет неверный формат.']);
  $userId=isset($_SESSION['user_id'])?(int)$_SESSION['user_id']:null;$adminId=isset($_SESSION['admin_id'])?(int)$_SESSION['admin_id']:null;
@@ -37,11 +38,13 @@ if($requestKey!==''){
  if($cached){http_response_code((int)$cached['response_status']);echo $cached['response_json'];exit;}
  if($type==='order'){$q=db()->prepare('SELECT response_json,response_status FROM api_order_requests WHERE token=?');$q->execute([$GLOBALS['api_idempotency_token']]);$cached=$q->fetch();if($cached&&$cached['response_json']!==null){http_response_code((int)$cached['response_status']);echo $cached['response_json'];exit;}}
 }
+tokyo_init_trace('api-after-idempotency-read');
 $sessionUserId=isset($_SESSION['user_id'])?(int)$_SESSION['user_id']:null;
 $sessionAdminId=isset($_SESSION['admin_id'])?(int)$_SESSION['admin_id']:null;
 $sessionSecretCode=(string)($_SESSION['secret_menu_code']??'');
 // Let SQLite serialize duplicate order requests rather than relying on the PHP session lock.
 if(session_status()===PHP_SESSION_ACTIVE)session_write_close();
+tokyo_init_trace('api-session-closed');
 $name=trim((string)($_POST['name']??'')); $phone=trim((string)($_POST['phone']??''));
 if(!in_array($type,['offer_quote','secret_unlock','gift_preview'],true)&&!preg_match('/^[\p{L} .\'-]{2,80}$/u',$name)) answer(422,['ok'=>false,'message'=>'Укажите имя от 2 до 80 символов.']);
 if(in_array($type,['booking','order'],true) && !preg_match('/^[+0-9() \\-]{7,30}$/',$phone)) answer(422,['ok'=>false,'message'=>'Проверьте номер телефона.']);
@@ -75,15 +78,17 @@ try {
   if(!in_array($fulfillment,['delivery','pickup'],true)||($fulfillment==='delivery'&&(strlen($address)<5||strlen($address)>180))||!is_array($items)||!array_is_list($items)||!is_array($customSets)||!array_is_list($customSets)) answer(422,['ok'=>false,'message'=>'Укажите способ получения, состав заказа и адрес доставки.']);
   $points=filter_var($_POST['points_to_redeem']??0,FILTER_VALIDATE_INT);if($points===false||$points<0)answer(422,['ok'=>false,'message'=>'Проверьте количество бонусов.']);
   $giftId=isset($_POST['gift_dish_id'])&&$_POST['gift_dish_id']!==''?filter_var($_POST['gift_dish_id'],FILTER_VALIDATE_INT):null;if($giftId===false)answer(422,['ok'=>false,'message'=>'Проверьте выбранный подарок.']);
-  $pdo=db();$idempotencyToken=(string)($GLOBALS['api_idempotency_token']??'');$pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+  $pdo=db();$idempotencyToken=(string)($GLOBALS['api_idempotency_token']??'');$pdo->exec('BEGIN IMMEDIATE TRANSACTION');tokyo_init_trace('order-transaction-begun');
   if($idempotencyToken!==''){
    $reserve=$pdo->prepare('INSERT OR IGNORE INTO api_order_requests(token) VALUES(?)');$reserve->execute([$idempotencyToken]);
    if($reserve->rowCount()===0){$q=$pdo->prepare('SELECT response_json,response_status FROM api_order_requests WHERE token=?');$q->execute([$idempotencyToken]);$cached=$q->fetch();$pdo->commit();if($cached&&$cached['response_json']!==null){http_response_code((int)$cached['response_status']);echo $cached['response_json'];exit;}answer(409,['ok'=>false,'message'=>'Запрос с этим ключом ещё обрабатывается. Повторите попытку.']);}
   }
   $input=['name'=>$name,'phone'=>$phone,'address'=>$address,'fulfillment'=>$fulfillment,'comment'=>(string)($_POST['comment']??''),'items'=>$items,'custom_sets'=>$customSets,'promo_code'=>(string)($_POST['promo_code']??''),'secret_code'=>(string)($_POST['secret_code']??$sessionSecretCode) ?: $sessionSecretCode,'is_admin'=>$sessionAdminId>0,'gift_dish_id'=>$giftId===null?null:(int)$giftId,'points_to_redeem'=>(int)$points];
+  tokyo_init_trace('order-before-persist');
   $response=commerce_persist_order($pdo,$input,$sessionUserId,commerce_actor_key($sessionUserId,session_id()));
+  tokyo_init_trace('order-after-persist');
   if($idempotencyToken!==''){$json=json_encode($response,JSON_UNESCAPED_UNICODE);$q=$pdo->prepare('UPDATE api_order_requests SET order_id=?,response_json=?,response_status=201 WHERE token=?');$q->execute([$response['id'],$json,$idempotencyToken]);}
-  $pdo->commit();answer(201,$response);
+  $pdo->commit();tokyo_init_trace('order-after-commit');answer(201,$response);
  }
  if($type==='contact'){
   $email=trim((string)($_POST['email']??''));$subject=trim((string)($_POST['subject']??''));$message=trim((string)($_POST['message']??''));
