@@ -18,5 +18,8 @@ Luxury Japanese dining through restrained contrast: lacquer charcoal, warm ivory
 - Respect `prefers-reduced-motion`. Keep controls semantic, labels visible, focus indicators intact, and modal dismissal available by Escape/clicking close.
 - Avoid animated effects that obscure content or delay the main task.
 
-## Photography
-Pages currently use remote Unsplash images with responsive source sets and lazy loading outside the hero. Captions and alt text identify editorial imagery as illustrative. The assets are not evidence of a real restaurant location, chef, guest, or menu item. Verify licensing and replace/host approved images before any commercial use.
+## Photography and motion assets
+
+Food and room photography is served from local WebP assets under `assets/food/` and `assets/generated/`. The original `tokyo-seasonal-omakase-v2.webp` image is a 1600×900 author-created editorial composition optimized to 148 KB. Offers and evening discovery use first-party imagery without requests to missing fallback URLs. Images describe the fictional school concept; they do not document a real restaurant, chef or served dish.
+
+Motion uses deferred JavaScript and short opacity/transform transitions. The SVG floor plan selects preferences only. No autoplay sound or video is used. `prefers-reduced-motion` disables reveal transforms and transition-heavy behavior.

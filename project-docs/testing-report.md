@@ -1,48 +1,40 @@
-# Final verification · 2026-11-12
+# Tokyo Premium 2.0 — verification record
 
-Published revision: `c3fe4b7a922efb511aa0cb315428451134f1e297`  
-GitHub Actions: [run 43104760849](https://github.com/altento/tokyo-premium/actions/runs/43104760849) · completed successfully  
-Public site: [altento.github.io/tokyo-premium](https://altento.github.io/tokyo-premium/)
+Updated 2026-11-13
 
-- The CI build passed PHP syntax checks, PHP + SQLite form/admin smoke checks, static export, and assertions for the exported stylesheet, browser-only scripts, profile privacy notice, and local WebP assets.
-- The static PHP export completed without PHP-only page links. It includes home, menu, 20 dish detail pages, Omakase, philosophy, gallery, booking, reviews, contacts, cart, and account.
-- Live browser check: home, menu, and profile loaded on GitHub Pages. Menu showed all 20 dishes; the menu used no externally hosted food photographs. Dish imagery is served from the repository’s optimized WebP assets.
-- Browser-only checkout was exercised locally: adding a dish, selecting pickup without an address, saving the order, and viewing its history in the profile all worked. The interface stated clearly that it neither charges payment nor sends the order.
-- The profile displays an explicit notice that browser storage is not encrypted and advises using fictitious details.
-- PHP booking, cart, review filtering, and date validation were checked against the local PHP + SQLite server. Unauthenticated administration remained behind the login screen.
-- The 11 supplied reference mockups are stored under `design-references/`; the public Pages artifact does not include those mockups.
+## Local verification completed
 
-## Earlier verification history
+| Check | Result | Evidence / scope |
+|---|---|---|
+| Cart store | Passed, 12/12 | Input sanitization, old-format migration, quantity limits, cross-tab state, checkout lock/retry key, custom-set bounds and clear/re-add behavior. |
+| PHP + SQLite integration | Passed, 95 assertions | Isolated database; order price authority, idempotent and concurrent same-key orders, rollback, booking date/status, admin search/notifications, campaign targets, loyalty/order history, and Secret Menu direct-route/API protection plus session unlock, including category targets. |
+| PHP syntax | Passed | All PHP application and support files linted with PHP 8.5. |
+| JavaScript syntax | Passed | Application JS and CJS regression files checked by Node. |
+| Core browser regression | Passed | 11 page types, all 20 dish details (18 public; 2 after a server-validated Secret Menu unlock), cart/checkout, tabs, favorites, navigation, menu filters and six viewport widths. |
+| Tokyo 2.0 browser regression | Passed in PHP and exported static mode | Offers/collection, Secret Menu unlock → cart, Omakase stage selection, set builder and shared cart, preference wizard, table-preference disclosure, certificate preview, quick view, profile demo labeling, and six viewport widths. Static-only Secret Menu data is explicitly client-side and cannot grant PHP access. |
+| Review demo | Passed | Save, browser persistence, clear, XSS payload displayed as text, public aggregate unchanged. |
+| Cart visual states | Passed | Empty/populated, desktop/mobile validation, pickup, delivery; three dishes and quantity two in the populated base scenario. |
+| Responsive regression | Passed | 11 page types × 9 widths (320–1920 px), heading clipping checks, cart access, mobile menu keyboard/focus behavior and booking dates across browser time zones. |
+| Gallery/profile visual state | Passed | Default gallery and static profile desktop/mobile captures. |
+| Static export | Passed | Exporter generated 36 pages; locked Secret Menu detail routes are omitted, stale generated detail pages are removed, and the client-only preview payload is generated separately. No PHP/backend files are exported. |
+| Diff hygiene | Passed before release | `git diff --check` reported no whitespace errors. |
 
-# QA report
-Date: 2026-11-12  
-Published revision: `215b84123ed501332191c7a33e60738af6d58454`  
-Workflow: [GitHub Actions run 43090875984](https://github.com/altento/tokyo-premium/actions/runs/43090875984)
+The Playwright evidence suite writes to `TOKYO_EVIDENCE_DIR` when set; by default it writes into `project-docs/visual-qa/`. This keeps the checks reproducible in restricted workspaces without changing what CI captures. Secret Menu unlock desktop/mobile captures are included alongside the route and checkout states.
 
-## Build and backend
-- PHP syntax check passed for repository PHP files.
-- GitHub Actions started the existing PHP+SQLite app, generated the Pages artifact, and published it successfully.
-- Integration smoke checks passed against a temporary SQLite database for booking, order, contact message, and review POSTs.
-- The booking smoke request persisted a zone and preferred table; the order used pickup and a database-priced dish.
-- Unauthenticated `/admin.php` returned the login page and did not expose the menu administration panel.
-- Static export validation confirmed every generated document has a title and has no remaining PHP-only links.
+## Visual inspection performed
 
-## Browser checks on the public Pages build
-- Checked all 11 page types: home, menu, one dish detail, Omakase, philosophy, gallery, booking, reviews, contacts, cart, and account. Each loaded a distinct title and primary heading.
-- No browser console errors on the inspected home/interactive pages. On home, 8 images were present and no loaded image had a failed natural size.
-- Responsive document width stayed within the viewport at 390, 768, and 1440 CSS pixels; no horizontal page overflow was observed.
-- Menu search returned the Ramen item; ascending price sort ordered the cheapest dishes first.
-- Cart add, quantity increment, total calculation, removal, and empty-state behavior passed. The test item was removed; cart returned to 0.
-- Booking table selection updated the selected state and helper text.
-- Gallery category filters changed the visible set; the lightbox opened and closed.
-- Mobile navigation expanded with its `aria-expanded` state; profile section buttons switched panels.
-- Desktop header spacing was corrected and verified: wordmark, navigation, and booking action occupy separate non-overlapping horizontal bounds at 1440 px.
+Full-page browser captures were inspected for the populated cart on desktop and mobile, the Tokyo set builder, offers, static account/Privilege, and the 320 px booking heading. The single active campaign card was changed from a narrow third-column card into a centered editorial feature. The set in the cart uses a collage of the actual selected dish photos; it does not invent a final dish image.
 
-## Accessibility and performance notes
-- Inputs have visible labels; interactive controls expose names and state in the browser accessibility tree.
-- Navigation, filter controls, cart buttons, lightbox close control, booking table selection, profile panels, and status regions were inspected during interaction checks.
-- The stylesheets include a `prefers-reduced-motion: reduce` override; motion is limited to reveal/hover/lightbox transitions. No autoplay media is used.
-- Responsive image `srcset`, lazy loading for non-hero images, and deferred JS are used. A full Lighthouse/Core Web Vitals lab run was not available in this browser session, so no numeric CWV score is claimed.
+The repository also contains route screenshots for the existing 11-page visual QA set and interaction captures. A fresh pixel-difference pass against every original design PNG was not completed in this cycle; refer to the older `final-acceptance-report.md` for earlier page-level findings. No claim of pixel-perfect matching is made.
 
-## Scope limit
-GitHub Pages is static. Its forms and account state stay in localStorage in the current browser and do not submit to the PHP backend. The CI POST checks exercise the local PHP+SQLite version. No real restaurant, live availability, payment, email delivery, or personal user record was involved in QA.
+The final booking regression additionally checks both initial and selected-table form messages, then changes date, time, guest count and zone in turn. Every change clears the preference; selecting again restores the confirmation copy in both the floorplan and booking form. The PHP and static selected-table captures were refreshed after that check.
+
+Secret Menu visibility is enforced at the PHP query and order-validation layers. Anonymous visitors do not receive those dishes in the shared catalog, menu, details, set builder, recommendation wizard, seasonal collection page, or public offers API. A successful code unlock is recorded in the PHP session and rechecked against active campaign rules on subsequent pages and order quotes. Static GitHub Pages includes only a public browser-preview payload; it is intentionally not an authorization mechanism.
+
+## Not production-certified
+
+- No restaurant SMTP/provider credentials or email delivery adapter is configured; the admin notification center is in-app only.
+- There is no payment provider, live inventory, table availability service, or production restaurant backend. A booking request is not automatically confirmed.
+- GitHub Pages is a browser-local demonstration, not server authentication or durable shared storage.
+- User, menu, price, contact and offer seed values are fictional educational data.
+- CI and public deployment status must be checked after the current commit is pushed; local green tests are not a claim about the hosted revision.

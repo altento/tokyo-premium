@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '..');
-const evidence = path.join(root, 'project-docs', 'visual-qa');
+const evidence = process.env.TOKYO_EVIDENCE_DIR || path.join(root, 'project-docs', 'visual-qa');
 const routes = [
   ['01-home', '/index.php'], ['02-menu', '/menu.php'], ['03-dish', '/pages.php?page=dish&id=3'],
   ['04-omakase', '/pages.php?page=omakase'], ['05-philosophy', '/about.php'],
@@ -14,6 +14,20 @@ const widths = [320, 390, 768, 1024, 1440, 1920];
 const failures = [];
 const check = (condition, label) => { if (!condition) throw new Error(label); };
 const isRequired = locator => locator.evaluate(element => element.required);
+async function addCustomSet(page) {
+  return page.evaluate(() => {
+    const event = new CustomEvent('tokyo:custom-set:add', {
+      bubbles: true,
+      cancelable: true,
+      detail: {
+        setType: 'signature', name: 'Tokyo Signature QA', estimatedTotal: 1,
+        items: [{ id: 1, qty: 1 }, { id: 2, qty: 1 }, { id: 3, qty: 1 }]
+      }
+    });
+    document.dispatchEvent(event);
+    return { handled: event.defaultPrevented, setCount: window.TokyoCart?.getCustomSets().length || 0 };
+  });
+}
 async function prepareVisual(page) {
   if (!page.__visualStyleAdded) {
     await page.addStyleTag({ content: 'html{scroll-behavior:auto!important}.site-header{position:relative!important;top:auto!important}.reveal,.reveal.visible{opacity:1!important;transform:none!important}' });
@@ -31,6 +45,7 @@ async function prepareVisual(page) {
 async function run(options = {}) {
   const { chromium } = options.chromium ? { chromium: options.chromium } : require('playwright');
   const base = options.base || process.env.TOKYO_BASE_URL || 'http://127.0.0.1:8090';
+  const staticBase = options.staticBase || process.env.TOKYO_STATIC_BASE_URL || `${base}/docs`;
   fs.mkdirSync(evidence, { recursive: true });
   const progress = stage => fs.appendFileSync(path.join(evidence, 'run.log'), `${new Date().toISOString()} ${stage}\n`);
   fs.writeFileSync(path.join(evidence, 'run.log'), '');
@@ -61,7 +76,14 @@ async function run(options = {}) {
       await page.setViewportSize({ width: 1440, height: 1000 });
       if (name === '03-dish') {
         const dishCount = await page.evaluate(() => window.DISHES?.length || 0);
-        check(dishCount === 20, `catalog has 20 dishes (got ${dishCount})`);
+        check(dishCount === 18, `public catalog hides two Secret Menu dishes until access is granted (got ${dishCount})`);
+        const offersPage = await page.goto(`${base}/offers.php`, { waitUntil: 'domcontentloaded' });
+        check(offersPage?.status() === 200, 'Secret Menu access page responds');
+        await page.locator('[data-tp-secret-unlock] [name="code"]').fill('SECRET');
+        await page.locator('[data-tp-secret-unlock] button[type="submit"]').click();
+        await page.waitForFunction(() => document.querySelector('[data-tp-secret-results] .dish-card'), null, { timeout: 10000 });
+        await page.goto(`${base}/menu.php`, { waitUntil: 'domcontentloaded' });
+        check(await page.evaluate(() => window.DISHES?.length || 0) === 20, 'server unlock grants the two Secret Menu dishes across pages');
         for (let id = 1; id <= 20; id++) {
           const detail = await page.goto(`${base}/pages.php?page=dish&id=${id}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
           check(detail?.status() === 200, `dish ${id} responds`);
@@ -114,6 +136,15 @@ async function run(options = {}) {
     // Quantity, removal, clear, add-after-clear, fulfillment and demo order.
     await page.goto(base + '/pages.php?page=cart');
     progress('cart page opened');
+    const customSetAdded = await addCustomSet(page);
+    check(customSetAdded.handled && customSetAdded.setCount === 1, 'custom set event is handled by the shared cart exactly once');
+    check(await page.locator('#cart-page-items .cart-page-custom-set').count() === 1, 'custom set is rendered in the full cart');
+    const setPayload = await page.locator('#checkout-form [name="custom_sets"]').inputValue();
+    check(JSON.parse(setPayload)[0].variant === 'signature' && JSON.parse(setPayload)[0].items.length === 3, 'checkout field uses the server custom set contract without browser price');
+    await page.locator('[data-custom-set-step="1"]').click();
+    check((await page.locator('#checkout-form [name="custom_sets"]').inputValue()).length > setPayload.length, 'custom set quantity updates canonical checkout payload');
+    await page.locator('[data-custom-set-remove]').click();
+    check(await page.locator('#cart-page-items .cart-page-custom-set').count() === 0, 'custom set can be removed independently');
     check(await page.locator('#cart-page-items .cart-page-item').count() === 2, 'two different dishes in cart');
     const before = await page.locator('#cart-page-total').innerText();
     await page.locator('[data-cart-step="1"]').first().click();
@@ -124,7 +155,9 @@ async function run(options = {}) {
     await page.locator('#cart-clear').click();
     check(await page.locator('#cart-page-empty').isVisible(), 'clear empties cart');
     await page.locator('.cart-recommendations .add-to-cart').first().click();
-    check(await page.locator('#cart-page-items .cart-page-item').count() === 1, 'add after clear does not restore old lines');
+    await addCustomSet(page);
+    check(await page.locator('#cart-page-items .cart-page-custom-set').count() === 1, 'custom set can be combined with a dish');
+    check(await page.locator('#cart-page-items .cart-page-item:not(.cart-page-custom-set)').count() === 1, 'add after clear does not restore old dish lines');
     await page.locator('#fulfillment').selectOption('pickup');
     check(await page.locator('#checkout-address').isDisabled(), 'pickup disables address');
     await page.locator('#checkout-name').fill('Гость QA');
@@ -168,17 +201,20 @@ async function run(options = {}) {
     check(await page.locator('body').innerText().then(text => text.includes('Гость QA') && text.includes('Состав заказа')), 'order shown in account history');
 
     // Favorites are event-delegated even after the profile cards are rendered.
-    await page.goto(base + '/menu.php');
+    await page.goto(staticBase + '/menu.html');
     await page.locator('[data-favorite]').first().click();
-    await page.goto(base + '/docs/account.html');
+    await page.goto(staticBase + '/account.html');
     await page.locator('[data-account-tab="favorites"]').click();
     check(await page.locator('#demo-favorites .add-to-cart').count() > 0, 'favorites are rendered');
     await page.locator('#demo-favorites .add-to-cart').first().click();
     check((await page.locator('.header-cart-count').innerText()).trim() === '1', 'add from dynamic favorites updates cart');
 
     // The static export keeps all order data local and supports repeat-order from history.
-    await page.goto(base + '/docs/cart.html');
+    await page.goto(staticBase + '/cart.html');
     await page.locator('.cart-recommendations .add-to-cart').first().click();
+    const staticCustomSet = await addCustomSet(page);
+    check(staticCustomSet.handled, 'static custom set event is handled by the same cart API');
+    check(await page.locator('#cart-page-items .cart-page-custom-set').count() === 1, 'static cart renders custom set lines');
     await page.locator('#fulfillment').selectOption('pickup');
     await page.locator('#checkout-name').fill('Демо-гость');
     await page.locator('#checkout-phone').fill('+77010000000');
@@ -208,16 +244,24 @@ async function run(options = {}) {
     check(!(await isRequired(page.locator('#checkout-address'))) && await page.locator('#checkout-address').inputValue() === '', 'static pickup clears address and required state');
     await page.locator('#fulfillment').selectOption('delivery');
     check(await page.locator('#checkout-address-field').isVisible() && await isRequired(page.locator('#checkout-address')), 'static delivery restores address validation');
-    await page.goto(base + '/docs/menu.html');
-    await page.goto(base + '/docs/cart.html');
+    await page.goto(staticBase + '/menu.html');
+    await page.goto(staticBase + '/cart.html');
     check(await page.locator('#cart-page-items .cart-page-item').count() === 1, 'static cart survives route change');
     await page.reload();
     check(await page.locator('#fulfillment').inputValue() === 'delivery' && await page.locator('#checkout-address').isVisible() && await isRequired(page.locator('#checkout-address')), 'static delivery state is consistent after reload');
     await page.locator('#cart-clear').click();
 
-    await page.goto(base + '/docs/account.html');
+    await page.goto(staticBase + '/account.html');
     await page.locator('[data-account-tab="history"]').click();
     check((await page.locator('#demo-orders').innerText()).includes('Составлен заказ снова') || await page.locator('#demo-orders .demo-order-items li').count() > 0, 'static profile shows order line snapshot');
+    check((await page.locator('#demo-orders').innerText()).includes('Tokyo Signature QA'), 'static order history retains custom set variant and name');
+    const customSetOrder = page.locator('#demo-orders .demo-order').filter({ hasText: 'Tokyo Signature QA' }).first();
+    const repeatButton = customSetOrder.locator('[data-repeat-order]');
+    if (await repeatButton.count()) {
+      await repeatButton.click();
+      check(await page.locator('#demo-repeat-status').innerText().then(text => text.includes('Состав добавлен')), 'repeat order restores saved set composition');
+      check(await page.evaluate(() => window.TokyoCart.getCustomSets().length) > 0, 'repeat order reconstructs custom set in the shared cart');
+    }
     await prepareVisual(page);
     await page.screenshot({ path: path.join(evidence, '11-account-desktop.jpg'), fullPage: true, type: 'jpeg', quality: 70 });
     await page.setViewportSize({ width: 390, height: 844 });
@@ -246,7 +290,7 @@ async function run(options = {}) {
     check(await page.locator('.dish-card:visible').evaluateAll((cards, category) => cards.every(card => card.dataset.category === category && card.textContent.toLocaleLowerCase('ru').includes('нигири')), matchingCategory), 'category and search filters combine');
     await page.locator('.menu-search').fill('');
     await page.locator('.menu-category-list [data-category="all"]').click();
-    await page.goto(base + '/docs/menu.html');
+    await page.goto(staticBase + '/menu.html');
     check(await page.locator('.dish-card:visible').count() === 6, 'static menu paginates catalog');
     await page.locator('#menu-pagination button[aria-label="Страница 2"]').click();
     check(await page.locator('.dish-card:visible').count() === 6, 'static menu pagination changes page');
@@ -277,14 +321,14 @@ async function run(options = {}) {
     await page.keyboard.press('Escape');
     check(await menuButton.getAttribute('aria-expanded') === 'false', 'Escape closes navigation');
     await page.goto(base + '/pages.php?page=booking');
-    await page.locator('[data-table-select]').first().click();
+    await page.locator('[data-tp-table]').first().click();
     const tomorrow = await page.evaluate(() => { const d=new Date();d.setDate(d.getDate()+1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; });
     await page.locator('.booking-form [name="date"]').fill(tomorrow);
-    check(await page.locator('[name="table"]').inputValue() === '' && await page.locator('[data-table-select="1"]').getAttribute('aria-pressed') === 'false', 'booking selection resets when visit date changes');
+    check(await page.locator('[name="table"]').inputValue() === '' && await page.locator('[data-tp-table="1"]').getAttribute('aria-pressed') === 'false', 'booking selection resets when visit date changes');
     await page.goto(base + '/pages.php?page=omakase');
     await page.locator('.tier-card-featured a').click();
     check(await page.locator('#booking-format').inputValue() === 'Сезонный' && await page.evaluate(() => new URL(location.href).searchParams.get('format') === 'Сезонный'), 'PHP booking keeps the selected Omakase set in the shared format field');
-    await page.goto(base + '/docs/omakase.html');
+    await page.goto(staticBase + '/omakase.html');
     await page.locator('.tier-card-featured a').click();
     check(await page.locator('#booking-format').inputValue() === 'Сезонный' && await page.evaluate(() => new URL(location.href).searchParams.get('format') === 'Сезонный'), 'static booking keeps the selected Omakase set in the shared format field');
     for (const [name, route] of routes) {
@@ -305,7 +349,7 @@ async function run(options = {}) {
       }
     }
     // Final paired screenshots use the same static account route and browser-local sample history.
-    await page.goto(base + '/docs/account.html', { waitUntil: 'domcontentloaded' });
+    await page.goto(staticBase + '/account.html', { waitUntil: 'domcontentloaded' });
     await page.locator('[data-account-tab="history"]').click();
     check(await page.locator('.account-demo-page').count() === 1, 'paired account evidence comes from the static demo');
     await page.setViewportSize({ width: 1440, height: 1000 });

@@ -2,6 +2,7 @@
 require __DIR__ . '/bootstrap.php';
 $pdo = db();
 $err = '';
+$profileNotice = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     check_csrf();
@@ -41,18 +42,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
         $err = 'Неверный email или пароль.';
+    } elseif ($action === 'profile-save' && !empty($_SESSION['user_id'])) {
+        $birthDate = trim((string)($_POST['birth_date'] ?? ''));
+        $consent = isset($_POST['birthday_offer_consent']) ? 1 : 0;
+        $validDate = true;
+        if ($birthDate !== '') {
+            $date = DateTimeImmutable::createFromFormat('!Y-m-d', $birthDate, commerce_timezone());
+            $dateErrors = DateTimeImmutable::getLastErrors();
+            $validDate = $date && $date->format('Y-m-d') === $birthDate && ($dateErrors === false || (!$dateErrors['warning_count'] && !$dateErrors['error_count'])) && $date <= new DateTimeImmutable('today', commerce_timezone()) && $date >= new DateTimeImmutable('1900-01-01', commerce_timezone());
+        }
+        if (!$validDate || ($consent && $birthDate === '')) {
+            $err = 'Укажите корректную дату рождения. Для персонального предложения требуется отдельное согласие.';
+        } else {
+            $stmt = $pdo->prepare('INSERT INTO user_profiles(user_id,birth_date,birthday_offer_consent,birthday_consent_at,updated_at) VALUES(?,?,?,?,CURRENT_TIMESTAMP) ON CONFLICT(user_id) DO UPDATE SET birth_date=excluded.birth_date,birthday_offer_consent=excluded.birthday_offer_consent,birthday_consent_at=excluded.birthday_consent_at,updated_at=CURRENT_TIMESTAMP');
+            $stmt->execute([(int)$_SESSION['user_id'], $birthDate ?: null, $consent, $consent ? date('Y-m-d H:i:s') : null]);
+            $profileNotice = 'Настройки персональных предложений сохранены.';
+        }
+    } elseif ($action === 'referral-attach' && !empty($_SESSION['user_id'])) {
+        try {
+            commerce_attach_referral($pdo, (int)$_SESSION['user_id'], (string)($_POST['referral_code'] ?? ''));
+            $profileNotice = 'Код приглашения сохранён. Вознаграждение появится только после подходящего завершённого заказа.';
+        } catch (DomainException $exception) { $err = $exception->getMessage(); }
     }
 }
 
 $user = null;
 $orders = [];
 $bookings = [];
+$profile = null;
+$tier = null;
+$loyaltyBalance = 0;
+$loyaltyEntries = [];
+$referralCode = '';
+$invitedUsers = [];
+$personalOffers = [];
+$loyaltySpent = 0;
+$nextTier = null;
+$tierProgress = 0;
 if (!empty($_SESSION['user_id'])) {
-    $query = $pdo->prepare('SELECT full_name,email,created_at FROM users WHERE id=?');
+    $query = $pdo->prepare('SELECT id,full_name,email,created_at FROM users WHERE id=?');
     $query->execute([$_SESSION['user_id']]);
     $user = $query->fetch();
 
     if ($user) {
+        $userId = (int)$user['id'];
+        $query = $pdo->prepare('SELECT birth_date,birthday_offer_consent,birthday_consent_at FROM user_profiles WHERE user_id=?');
+        $query->execute([$userId]); $profile = $query->fetch() ?: ['birth_date'=>'','birthday_offer_consent'=>0,'birthday_consent_at'=>null];
+        $tier = commerce_user_tier($pdo, $userId);
+        $loyaltyBalance = commerce_get_loyalty_balance($pdo, $userId);
+        $query = $pdo->prepare("SELECT COALESCE(SUM(total),0) FROM orders WHERE user_id=? AND status='completed'");
+        $query->execute([$userId]); $loyaltySpent = (int)$query->fetchColumn();
+        $query = $pdo->prepare('SELECT * FROM loyalty_tiers WHERE active=1 AND minimum_completed_spend>? ORDER BY minimum_completed_spend,sort_order LIMIT 1');
+        $query->execute([$loyaltySpent]); $nextTier = $query->fetch() ?: null;
+        if ($nextTier) {
+            $currentFloor = (int)($tier['minimum_completed_spend'] ?? 0);
+            $tierProgress = max(0, min(100, (int)round(($loyaltySpent - $currentFloor) * 100 / max(1, (int)$nextTier['minimum_completed_spend'] - $currentFloor))));
+        }
+        $query = $pdo->prepare('SELECT transaction_type,points,note,created_at FROM loyalty_ledger WHERE user_id=? ORDER BY id DESC LIMIT 12');
+        $query->execute([$userId]); $loyaltyEntries = $query->fetchAll();
+        $referralCode = commerce_referral_code_for_user($pdo, $userId);
+        $query = $pdo->prepare('SELECT r.code,r.status,r.created_at,u.full_name AS referred_name FROM referrals r LEFT JOIN users u ON u.id=r.referred_user_id WHERE r.inviter_user_id=? ORDER BY r.id DESC LIMIT 20');
+        $query->execute([$userId]); $invitedUsers = $query->fetchAll();
+        $query = $pdo->prepare('SELECT c.title,c.description,po.expires_at FROM personalized_offers po JOIN promotion_campaigns c ON c.id=po.campaign_id WHERE po.user_id=? AND po.used_order_id IS NULL AND (po.expires_at IS NULL OR po.expires_at>=CURRENT_TIMESTAMP) AND c.active=1 ORDER BY po.assigned_at DESC');
+        $query->execute([$userId]); $personalOffers = $query->fetchAll();
         $query = $pdo->prepare('SELECT id,total,status,fulfillment,created_at FROM orders WHERE user_id=? ORDER BY id DESC LIMIT 50');
         $query->execute([$_SESSION['user_id']]);
         $orders = $query->fetchAll();
@@ -116,6 +168,17 @@ header_html();
         <div><span class="kicker">Ваш профиль</span><h1>Здравствуйте, <?=e($user['full_name'])?></h1><p><?=e($user['email'])?></p></div>
         <form method="post"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="logout"><button class="button secondary">Выйти</button></form>
       </div>
+      <?php if ($err): ?><p class="form-status error" role="alert"><?=e($err)?></p><?php endif ?><?php if ($profileNotice): ?><p class="booking-confirmation-notice" role="status"><?=e($profileNotice)?></p><?php endif ?>
+      <section class="tp20-account-overview" aria-labelledby="tp20-privilege-title">
+        <div class="tp20-loyalty-card"><span class="kicker">TOKYO PRIVILEGE · ДЕМО-РЕЖИМ</span><h2 id="tp20-privilege-title"><?=e($tier['name']??'Уровень не присвоен')?></h2><p>Бонусный баланс рассчитывается по серверному журналу и не является денежной суммой.</p><strong><?=number_format($loyaltyBalance,0,'.',' ')?> баллов</strong><small>Завершённые заказы: <?=number_format($loyaltySpent,0,'.',' ')?> ₸</small><?php if($nextTier): ?><div class="tp20-tier-progress" role="progressbar" aria-label="Прогресс до уровня <?=e($nextTier['name'])?>" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<?=$tierProgress?>"><span style="width:<?=$tierProgress?>%"></span></div><small><?=$tierProgress?>% до уровня <?=e($nextTier['name'])?> · ещё <?=number_format(max(0,(int)$nextTier['minimum_completed_spend']-$loyaltySpent),0,'.',' ')?> ₸ завершённых заказов</small><?php else: ?><small>Достигнут высший активный уровень в настройках учебной программы.</small><?php endif ?></div>
+        <div class="tp20-account-quick"><a href="set-builder.php"><span>01</span><strong>Собрать сет</strong><i>↗</i></a><a href="perfect-evening.php"><span>02</span><strong>Подобрать вечер</strong><i>↗</i></a><a href="offers.php"><span>03</span><strong>Привилегии</strong><i>↗</i></a><a href="gift-certificates.php"><span>04</span><strong>Эскиз подарка</strong><i>↗</i></a></div>
+      </section>
+      <div class="tp20-account-grid">
+        <section class="account-section tp20-account-section" aria-labelledby="tp20-profile-settings"><div class="editorial-heading"><div class="kicker">PERSONAL SETTINGS</div><h2 id="tp20-profile-settings">Профиль и дата рождения</h2><p>Дата рождения необязательна. Согласие нужно только для персональных предложений и может быть отозвано здесь же.</p></div><form method="post" class="tp20-account-form"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="profile-save"><label>Дата рождения<input type="date" name="birth_date" value="<?=e((string)$profile['birth_date'])?>" max="<?=e(date('Y-m-d'))?>"></label><label class="tp20-account-consent"><input type="checkbox" name="birthday_offer_consent" value="1" <?=!empty($profile['birthday_offer_consent'])?'checked':''?>> Согласен получать персональные предложения ко дню рождения в учебной системе</label><button class="button secondary" type="submit">Сохранить настройки ↗</button></form></section>
+        <section class="account-section tp20-account-section" aria-labelledby="tp20-referral-title"><div class="editorial-heading"><div class="kicker">INVITE WITH CARE</div><h2 id="tp20-referral-title">Пригласить друга</h2><p>Код привязывается к новому аккаунту до его первого заказа. Награда начисляется только после квалифицирующего завершённого заказа.</p></div><div class="tp20-referral-code"><span>Ваш код</span><strong><?=e($referralCode)?></strong><button class="button secondary" type="button" data-copy-code="<?=e($referralCode)?>" data-label="Скопировать код">Скопировать</button></div><form method="post" class="tp20-account-form"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="referral-attach"><label>Код того, кто пригласил вас<input name="referral_code" maxlength="12" pattern="TP[A-Fa-f0-9]{10}" placeholder="TP0123ABCDEF" required></label><button class="button secondary" type="submit">Привязать код</button></form><div class="tp20-referral-history"><strong>Приглашения</strong><?php if(!$invitedUsers): ?><p>Пока нет привязанных приглашений.</p><?php else: ?><?php foreach($invitedUsers as $invite): ?><p><?=e($invite['referred_name']?:'Ожидает регистрации')?> · <?=e($invite['status'])?></p><?php endforeach ?><?php endif ?></div></section>
+      </div>
+      <section class="account-section tp20-account-section" aria-labelledby="tp20-loyalty-history"><div class="editorial-heading"><div class="kicker">LEDGER · VERIFIED EVENTS</div><h2 id="tp20-loyalty-history">История бонусов</h2><p>Записи журнала создаются при применённых серверных событиях; изменение статуса заказа вызывает начисление или обратную запись.</p></div><?php if(!$loyaltyEntries): ?><p>Операций пока нет. Бонусы не начисляются за неподтверждённые заказы.</p><?php else: ?><div class="tp20-ledger-list"><?php foreach($loyaltyEntries as $entry): ?><article><span><?=e($entry['transaction_type'])?> · <?=e($entry['created_at'])?></span><strong class="<?=((int)$entry['points']<0?'is-negative':'')?>"><?=((int)$entry['points']>0?'+':'')?><?= (int)$entry['points']?></strong><p><?=e($entry['note'])?></p></article><?php endforeach ?></div><?php endif ?></section>
+      <section class="account-section tp20-account-section" aria-labelledby="tp20-personal-offers"><div class="editorial-heading"><div class="kicker">INVITATIONS · PRIVATE</div><h2 id="tp20-personal-offers">Персональные предложения</h2></div><?php if(!$personalOffers): ?><p>Персональных предложений пока нет. Здесь появятся только адресно назначенные активные кампании.</p><?php else: ?><div class="tp20-offer-grid"><?php foreach($personalOffers as $offer): ?><article class="tp20-offer-card"><div class="tp20-offer-copy"><span class="kicker">PERSONAL INVITATION</span><h3><?=e($offer['title'])?></h3><p><?=e($offer['description'])?></p><?php if($offer['expires_at']): ?><small>Действует до <?=e($offer['expires_at'])?></small><?php endif ?></div></article><?php endforeach ?></div><?php endif ?></section>
       <section class="account-section" aria-labelledby="account-orders-title">
         <h2 id="account-orders-title">История заказов</h2>
         <?php if (!$orders): ?>

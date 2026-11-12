@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderCart() {
     if (!cart) return;
     const items = cart.get();
+    const customSets = cart.customSetSnapshot();
     const lines = panel ? $('.cart-lines', panel) : null;
     const count = cart.count();
     $$('.header-cart-count, .mobile-cart-count').forEach(badge => { badge.textContent = String(count); });
@@ -53,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     if (!lines) return;
     lines.replaceChildren();
-    if (items.length === 0) {
+    if (items.length === 0 && customSets.length === 0) {
       const empty = document.createElement('p');
       empty.className = 'empty-state';
       empty.textContent = 'Корзина пока пуста. Выберите блюдо в меню.';
@@ -82,6 +83,29 @@ document.addEventListener('DOMContentLoaded', () => {
       row.append(copy, controls);
       lines.append(row);
     }
+    const dishesById = new Map(cart.catalog().map(dish => [Number(dish.id), dish]));
+    for (const set of customSets) {
+      const row = document.createElement('article');
+      row.className = 'cart-line cart-custom-set-line';
+      const copy = document.createElement('div');
+      const name = document.createElement('strong');
+      name.textContent = set.name;
+      const details = document.createElement('small');
+      details.textContent = `Авторский сет · оценка ${set.unitPrice.toLocaleString('ru-RU')} ₸ за сет`;
+      const composition = document.createElement('small');
+      composition.textContent = set.items.map(item => `${dishesById.get(item.id)?.name || 'Блюдо'} × ${item.qty}`).join(' · ');
+      copy.append(name, details, composition);
+      const controls = document.createElement('div');
+      controls.className = 'cart-qty';
+      controls.append(
+        customSetAction('decrease', set.key, 'Уменьшить количество сета'),
+        Object.assign(document.createElement('span'), { textContent: String(set.qty) }),
+        customSetAction('increase', set.key, 'Увеличить количество сета'),
+        customSetAction('remove', set.key, `Удалить ${set.name}`)
+      );
+      row.append(copy, controls);
+      lines.append(row);
+    }
     const total = panel ? $('.cart-total strong', panel) : null;
     if (total) total.textContent = `${cart.total().toLocaleString('ru-RU')} ₸`;
   }
@@ -90,6 +114,15 @@ document.addEventListener('DOMContentLoaded', () => {
     button.type = 'button';
     button.dataset.cartAction = action;
     button.dataset.id = String(id);
+    button.setAttribute('aria-label', label);
+    button.textContent = action === 'decrease' ? '−' : action === 'increase' ? '+' : 'Удалить';
+    return button;
+  }
+  function customSetAction(action, key, label) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.cartAction = action;
+    button.dataset.customSetKey = key;
     button.setAttribute('aria-label', label);
     button.textContent = action === 'decrease' ? '−' : action === 'increase' ? '+' : 'Удалить';
     return button;
@@ -107,6 +140,13 @@ document.addEventListener('DOMContentLoaded', () => {
   panel?.addEventListener('click', event => {
     const button = event.target.closest('[data-cart-action]');
     if (!button || !cart) return;
+    const customSetKey = button.dataset.customSetKey;
+    if (customSetKey) {
+      if (button.dataset.cartAction === 'increase') cart.adjustCustomSet(customSetKey, 1);
+      else if (button.dataset.cartAction === 'decrease') cart.adjustCustomSet(customSetKey, -1);
+      else if (button.dataset.cartAction === 'remove') cart.removeCustomSet(customSetKey);
+      return;
+    }
     const id = Number(button.dataset.id);
     if (button.dataset.cartAction === 'increase') cart.adjust(id, 1);
     else if (button.dataset.cartAction === 'decrease') cart.adjust(id, -1);
@@ -266,8 +306,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const status = $('.form-status', form);
     const button = $('button[type="submit"]', form);
     if (form.dataset.submitting === 'true') return;
-    if (type === 'order' && !cart?.get().length) {
-      if (status) { status.textContent = 'Добавьте блюда в заказ перед оформлением.'; status.className = 'form-status error'; }
+    if (type === 'order' && !(cart?.get().length || cart?.getCustomSets().length)) {
+      if (status) { status.textContent = 'Добавьте блюда или соберите сет перед оформлением.'; status.className = 'form-status error'; }
       return;
     }
     if (type === 'order' && !(cart && await cart.beginCheckout())) {
@@ -280,7 +320,11 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const data = new FormData(form);
       data.set('type', type);
-      if (type === 'order' && cart) data.set('items', JSON.stringify(cart.get()));
+      if (type === 'order' && cart) {
+        const payload = cart.orderPayload();
+        data.set('items', JSON.stringify(payload.items));
+        data.set('custom_sets', JSON.stringify(payload.custom_sets));
+      }
       const headers = { 'X-CSRF-Token': data.get('csrf') || '' };
       if (type === 'order' && cart) headers['Idempotency-Key'] = cart.checkoutRequestKey();
       const response = await fetch('api.php', { method: 'POST', body: data, headers });
@@ -298,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } finally {
       if (type === 'order') cart?.finishCheckout();
       form.dataset.submitting = 'false';
-      if (button) button.disabled = type === 'order' ? !(cart?.get().length) : false;
+      if (button) button.disabled = type === 'order' ? !(cart?.get().length || cart?.getCustomSets().length) : false;
     }
   }));
 });

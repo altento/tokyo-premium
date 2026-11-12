@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" role="img" aria-labelledby="title desc">
+  <title id="title">Схема залов Tokyo Premium</title>
+  <desc id="desc">Декоративный план четырёх учебных зон и столиков. Выбор указывает пожелание и не проверяет доступность.</desc>
+  <defs>
+    <linearGradient id="floor" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#191611"/><stop offset="1" stop-color="#0d0d0c"/></linearGradient>
+    <pattern id="wood" width="16" height="16" patternUnits="userSpaceOnUse"><path d="M0 4h16M0 12h16" stroke="#b9935c" stroke-opacity=".07"/><path d="M4 0v16" stroke="#e6c27e" stroke-opacity=".025"/></pattern>
+    <radialGradient id="garden"><stop stop-color="#425039" stop-opacity=".5"/><stop offset="1" stop-color="#111810" stop-opacity=".9"/></radialGradient>
+  </defs>
+  <rect width="960" height="560" rx="24" fill="url(#floor)"/>
+  <rect x="12" y="12" width="936" height="536" rx="20" fill="url(#wood)" stroke="#b9935c" stroke-opacity=".3"/>
+  <path d="M490 38v484M38 292h440M510 256h410M510 416h410" fill="none" stroke="#c6a269" stroke-opacity=".26" stroke-width="3"/>
+
+  <g data-tp-zone="Основной зал" data-tp-photo="assets/generated/room-main-hall.webp" aria-label="Основной зал">
+    <rect class="tp-zone-fill" data-tp-zone-hit="" x="38" y="38" width="440" height="484" rx="18"/>
+    <text class="tp-floor-label" x="61" y="70">Основной зал</text>
+    <text class="tp-floor-note" x="61" y="91">предпочтение · учебная схема</text>
+    <path d="M65 118h384M65 273h384M66 310h384M66 492h384" stroke="#d0ad73" stroke-opacity=".12" stroke-width="1"/>
+    <g fill="url(#garden)" stroke="#697653" stroke-opacity=".7"><circle cx="80" cy="204" r="25"/><circle cx="434" cy="210" r="22"/><circle cx="270" cy="464" r="19"/></g>
+    <g fill="#d0a968" fill-opacity=".72"><circle cx="80" cy="204" r="4"/><circle cx="434" cy="210" r="4"/><circle cx="270" cy="464" r="4"/></g>
+  </g>
+
+  <g data-tp-zone="Суши-стойка" data-tp-photo="assets/generated/room-sushi-counter.webp" aria-label="Суши-стойка">
+    <rect class="tp-zone-fill" data-tp-zone-hit="" x="510" y="38" width="412" height="202" rx="18"/>
+    <text class="tp-floor-label" x="535" y="69">Суши-стойка</text>
+    <rect x="550" y="103" width="332" height="54" rx="13" fill="#31271a" stroke="#b9935c" stroke-opacity=".65"/>
+    <path d="M569 117h294M569 143h294" stroke="#e0c187" stroke-opacity=".24"/>
+    <text class="tp-floor-note" x="568" y="134">стойка шефа · иллюстративный план</text>
+  </g>
+
+  <g data-tp-zone="Камерная комната" data-tp-photo="assets/generated/room-private-dining.webp" aria-label="Камерная комната">
+    <rect class="tp-zone-fill" data-tp-zone-hit="" x="510" y="270" width="412" height="132" rx="18"/>
+    <text class="tp-floor-label" x="535" y="301">Камерная комната</text>
+    <path d="M528 319h376" stroke="#e0c187" stroke-opacity=".1"/>
+    <rect x="826" y="280" width="62" height="9" rx="4" fill="#8e2530" fill-opacity=".7"/>
+  </g>
+
+  <g data-tp-zone="Зал дегустации" data-tp-photo="assets/generated/room-garden-terrace.webp" aria-label="Зал дегустации">
+    <rect class="tp-zone-fill" data-tp-zone-hit="" x="510" y="432" width="412" height="90" rx="18"/>
+    <text class="tp-floor-label" x="535" y="464">Зал дегустации</text>
+    <text class="tp-floor-note" x="535" y="487">формат Omakase · доступность не проверяется</text>
+    <path d="M840 454c17 7 27 20 28 42m-40-44c9 13 12 27 10 44" fill="none" stroke="#c6a269" stroke-opacity=".4" stroke-width="2"/>
+  </g>
+
+  <g data-tp-table="1" data-tp-zone="Основной зал" data-capacity="2"><rect class="tp-seat-shape" x="128" y="130" width="74" height="54" rx="18"/><text class="tp-seat-number" x="165" y="157">01</text></g>
+  <g data-tp-table="2" data-tp-zone="Основной зал" data-capacity="4"><rect class="tp-seat-shape" x="282" y="130" width="74" height="54" rx="18"/><text class="tp-seat-number" x="319" y="157">02</text></g>
+  <g data-tp-table="3" data-tp-zone="Основной зал" data-capacity="2"><rect class="tp-seat-shape" x="128" y="214" width="74" height="54" rx="18"/><text class="tp-seat-number" x="165" y="241">03</text></g>
+  <g data-tp-table="4" data-tp-zone="Основной зал" data-capacity="4"><rect class="tp-seat-shape" x="282" y="214" width="74" height="54" rx="18"/><text class="tp-seat-number" x="319" y="241">04</text></g>
+  <g data-tp-table="5" data-tp-zone="Основной зал" data-capacity="4"><rect class="tp-seat-shape" x="128" y="344" width="74" height="54" rx="18"/><text class="tp-seat-number" x="165" y="371">05</text></g>
+  <g data-tp-table="6" data-tp-zone="Основной зал" data-capacity="2"><rect class="tp-seat-shape" x="282" y="344" width="74" height="54" rx="18"/><text class="tp-seat-number" x="319" y="371">06</text></g>
+
+  <g data-tp-table="7" data-tp-zone="Суши-стойка" data-capacity="1"><circle class="tp-seat-shape" cx="625" cy="199" r="18"/><text class="tp-seat-number" x="625" y="199">07</text></g>
+  <g data-tp-table="8" data-tp-zone="Суши-стойка" data-capacity="1"><circle class="tp-seat-shape" cx="716" cy="199" r="18"/><text class="tp-seat-number" x="716" y="199">08</text></g>
+  <g data-tp-table="9" data-tp-zone="Суши-стойка" data-capacity="1"><circle class="tp-seat-shape" cx="807" cy="199" r="18"/><text class="tp-seat-number" x="807" y="199">09</text></g>
+
+  <g data-tp-table="10" data-tp-zone="Камерная комната" data-capacity="4"><rect class="tp-seat-shape" x="603" y="325" width="74" height="52" rx="18"/><text class="tp-seat-number" x="640" y="351">10</text></g>
+  <g data-tp-table="11" data-tp-zone="Камерная комната" data-capacity="4"><rect class="tp-seat-shape" x="758" y="325" width="74" height="52" rx="18"/><text class="tp-seat-number" x="795" y="351">11</text></g>
+  <g data-tp-table="12" data-tp-zone="Зал дегустации" data-capacity="2"><rect class="tp-seat-shape" x="713" y="450" width="64" height="48" rx="16"/><text class="tp-seat-number" x="745" y="474">12</text></g>
+  <g data-tp-table="13" data-tp-zone="Зал дегустации" data-capacity="4"><rect class="tp-seat-shape" x="808" y="450" width="64" height="48" rx="16"/><text class="tp-seat-number" x="840" y="474">13</text></g>
+
+  <g fill="#ba9154" fill-opacity=".36"><path d="M62 460c13-14 24-14 37 0-13 14-24 14-37 0Zm332-264c12-13 23-13 36 0-13 13-24 13-36 0Z"/><circle cx="78" cy="470" r="3"/><circle cx="419" cy="204" r="3"/></g>
+</svg>

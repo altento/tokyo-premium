@@ -3,6 +3,9 @@ require __DIR__.'/bootstrap.php';
 page_start('Меню — Tokyo Premium','Японское меню Tokyo Premium в Астане: закуски, суши, сеты омакасе, горячие блюда и десерты.');
 header_html('menu');
 $all=dishes();
+$searchMetadata=[];
+$metadataQuery=db()->query("SELECT d.id, COALESCE(GROUP_CONCAT(DISTINCT i.name), '') AS ingredients, COALESCE((SELECT GROUP_CONCAT(t.tag, ' ') FROM dish_tags t WHERE t.dish_id=d.id), '') AS tags, COALESCE((SELECT GROUP_CONCAT(p.name, ' ') FROM dish_pairings dp JOIN dishes p ON p.id=dp.paired_dish_id AND p.active=1 WHERE dp.dish_id=d.id), '') AS pairings FROM dishes d LEFT JOIN dish_ingredients di ON di.dish_id=d.id LEFT JOIN ingredients i ON i.slug=di.ingredient_slug AND i.active=1 WHERE d.active=1 GROUP BY d.id");
+foreach($metadataQuery->fetchAll() as $row) $searchMetadata[(int)$row['id']]=strtolower(implode(' ',[$row['ingredients'],$row['tags'],$row['pairings']]));
 $cats=db()->query('SELECT slug,name FROM categories ORDER BY sort_order')->fetchAll();
 ?>
 <main class="menu-page">
@@ -22,12 +25,12 @@ $cats=db()->query('SELECT slug,name FROM categories ORDER BY sort_order')->fetch
         <div class="menu-toolbar"><label class="menu-sort"><span>Сортировка</span><select id="sort-menu" aria-label="Сортировка меню"><option value="default">Сначала по разделам</option><option value="price-asc">Цена: по возрастанию</option><option value="price-desc">Цена: по убыванию</option><option value="name">Название: А–Я</option></select></label><label class="menu-search-wrap"><span class="sr-only">Поиск блюд</span><input class="menu-search" type="search" aria-label="Поиск блюд" placeholder="⌕  Поиск по меню"></label></div>
         <div class="dish-grid">
           <?php foreach($all as $d): ?>
-          <article class="dish-card reveal" data-category="<?=e($d['category'])?>" data-search="<?=e(strtolower($d['name'].' '.$d['description'].' '.$d['category_name']))?>">
+          <article class="dish-card reveal" data-category="<?=e($d['category'])?>" data-search="<?=e(strtolower($d['name'].' '.$d['description'].' '.$d['category_name'].' '.($searchMetadata[(int)$d['id']]??'')))?>">
             <div class="dish-image-wrap"><img src="<?=e($d['image_url'])?>" srcset="<?=e(image_srcset($d['image_url']))?>" sizes="(max-width: 760px) 100vw, (max-width: 1100px) 50vw, 33vw" width="1200" height="800" alt="<?=e($d['name'])?>" loading="lazy" decoding="async"></div>
             <div class="dish-meta"><small><?=e($d['category_name'])?> · <?=e($d['weight'])?></small>
               <button class="favorite-btn" type="button" data-favorite="<?= (int)$d['id']?>" aria-label="Сохранить в избранное">♡</button>
               <h3><a href="pages.php?page=dish&amp;id=<?=(int)$d['id']?>"><?=e($d['name'])?></a></h3><p><?=e($d['description'])?></p>
-              <div class="dish-bottom"><a class="text-button" href="pages.php?page=dish&amp;id=<?=(int)$d['id']?>">Подробнее ↗</a><span class="dish-price"><?=number_format((int)$d['price'],0,'.',' ')?> ₸</span><button class="add-to-cart" type="button" data-id="<?= (int)$d['id']?>">Добавить +</button></div>
+              <div class="dish-bottom"><a class="text-button" href="pages.php?page=dish&amp;id=<?=(int)$d['id']?>">Подробнее ↗</a><button type="button" class="text-button" data-tp-quick-view data-dish-id="<?=(int)$d['id']?>">Быстрый просмотр</button><span class="dish-price"><?=number_format((int)$d['price'],0,'.',' ')?> ₸</span><button class="add-to-cart" type="button" data-id="<?= (int)$d['id']?>">Добавить +</button></div>
             </div>
           </article>
           <?php endforeach ?>
