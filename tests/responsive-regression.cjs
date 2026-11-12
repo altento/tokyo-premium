@@ -49,11 +49,12 @@ async function run(options = {}) {
             const range = document.createRange();
             range.selectNodeContents(node);
             const textRects = [...range.getClientRects()].filter(rect => rect.width || rect.height);
-            const self = node.getBoundingClientRect();
             for (const rect of textRects) {
               if (rect.left < -1 || rect.right > innerWidth + 1) clipped.push({selector: node.tagName + (node.className ? '.' + String(node.className).split(' ').join('.') : ''), side:'viewport', text:node.textContent.trim().slice(0,60),left:rect.left,right:rect.right});
-              if (rect.left < self.left - 1 || rect.right > self.right + 1 || rect.top < self.top - 1 || rect.bottom > self.bottom + 1) clipped.push({selector:node.tagName + '.self',side:'element',text:node.textContent.trim().slice(0,60),left:rect.left,right:rect.right,top:rect.top,bottom:rect.bottom,boxLeft:self.left,boxRight:self.right,boxTop:self.top,boxBottom:self.bottom});
-              for (let parent=node.parentElement; parent && parent !== document.documentElement; parent=parent.parentElement) {
+              // A font's glyph/run rectangle can extend past its element's line box
+              // without being hidden. Test actual clipping boxes (including the node
+              // itself) instead of treating every line-box overhang as invisible.
+              for (let parent=node; parent && parent !== document.documentElement; parent=parent.parentElement) {
                 const css=getComputedStyle(parent), overflowX=css.overflowX, overflowY=css.overflowY;
                 const box=parent.getBoundingClientRect(), left=box.left+parent.clientLeft, right=left+parent.clientWidth, top=box.top+parent.clientTop, bottom=top+parent.clientHeight;
                 const clipsX=['hidden','clip','auto','scroll'].includes(overflowX) && (rect.left < left - 1 || rect.right > right + 1);
@@ -194,3 +195,4 @@ async function run(options = {}) {
 
 module.exports = run;
 if (require.main === module) run().catch(error => { console.error(error); process.exitCode=1; });
+
