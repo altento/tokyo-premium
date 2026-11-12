@@ -233,10 +233,10 @@ async function run(options = {}) {
     const restored = await page.locator('.dish-grid .dish-card h3').allTextContents();
     check(restored.join('|') === sourceOrder.join('|'), 'default category sort restores original order');
     check(await page.locator('.dish-card:visible').count() === 6, 'menu paginates the catalog to six visible dishes');
-    await page.locator('#menu-pagination [data-page-go="2"]').click();
+    await page.locator('#menu-pagination button[aria-label="Страница 2"]').click();
     check(await page.locator('.dish-card:visible').count() === 6, 'menu pagination advances while preserving page size');
     check(await page.locator('#menu-pagination [aria-current="page"]').innerText() === '2', 'menu pagination exposes the active page accessibly');
-    await page.locator('#menu-pagination [data-page-go="4"]').click();
+    await page.locator('#menu-pagination button[aria-label="Страница 4"]').click();
     check(await page.locator('.dish-card:visible').count() === 2, 'last menu page shows the remaining catalog items');
     await page.locator('.menu-search').fill('нигири');
     check(await page.locator('.dish-card:visible').count() > 0, 'menu search matches dish names');
@@ -248,7 +248,7 @@ async function run(options = {}) {
     await page.locator('.menu-category-list [data-category="all"]').click();
     await page.goto(base + '/docs/menu.html');
     check(await page.locator('.dish-card:visible').count() === 6, 'static menu paginates catalog');
-    await page.locator('#menu-pagination [data-page-go="2"]').click();
+    await page.locator('#menu-pagination button[aria-label="Страница 2"]').click();
     check(await page.locator('.dish-card:visible').count() === 6, 'static menu pagination changes page');
     await page.locator('.menu-search').fill('матча');
     check(await page.locator('.dish-card:visible').count() > 0, 'static menu search matches demo catalog');
