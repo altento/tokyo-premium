@@ -46,4 +46,4 @@ The requested optional hero video was not created: the connected video workspace
 
 ## Release status
 
-Tokyo Premium 2.0 and the SQLite concurrency fixes are on main at d1bc5543d67ef04c8353d713eca1b0b3f7eea9e9. Pages workflow run 43312293771 passed both build and deploy; the published site was checked at [altento.github.io/tokyo-premium](https://altento.github.io/tokyo-premium/). See testing-report.md and deployment.md for scope and evidence.
+The latest menu, Omakase and account refinements are on main at `64061e4ff3f4c8fb4029e6ba95e3a5cce58444b8`. Pages workflow [43329426971](https://github.com/altento/tokyo-premium/actions/runs/43329426971) passed build, PHP/SQLite integrity, browser regression and deploy. The published [Tokyo Premium site](https://altento.github.io/tokyo-premium/) was checked with a revision cache-buster across home, menu, Omakase, cart and account; all checked routes returned HTTP 200 and no console/page errors were observed. The complete 11-reference pixel comparison remains open.
