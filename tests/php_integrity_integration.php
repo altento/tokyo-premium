@@ -36,6 +36,15 @@ function request(string $path, array $fields = [], array $headers = []): array {
  preg_match('/\s(\d{3})\s/', $responseHeaders[0] ?? '', $m);
  return [(int)($m[1] ?? 0), (string)$body, $responseHeaders];
 }
+function adminPost(array $fields): array {
+ [$postedStatus] = request('/admin.php', $fields);
+ if (in_array($postedStatus, [302,303], true)) {
+  [$status,$body,$headers] = request('/admin.php');
+  return [$status,$body,$headers,$postedStatus];
+ }
+ [$status,$body,$headers] = request('/admin.php', [], []);
+ return [$status,$body,$headers,$postedStatus];
+}
 function parallelOrderRequests(array $fields, string $idempotencyKey, int $count): array {
  global $base, $cookie, $pdo;
  $body = http_build_query($fields);
@@ -83,17 +92,20 @@ try {
  check($ready, 'PHP server starts');
  [$status,$html] = request('/admin.php'); check($status===200 && str_contains($html,'Вход в панель'), 'admin login page available'); $csrf=tokenFrom($html);
  [$status] = request('/admin.php',['csrf'=>$csrf,'action'=>'login','email'=>'integration@example.test','password'=>$password]); check($status===302, 'admin login succeeds');
- [$status,$html] = request('/admin.php'); check($status===200 && str_contains($html,'Панель сайта'), 'authenticated admin page loads'); $csrf=tokenFrom($html);
+ [$status,$html] = request('/admin.php'); check($status===200 && str_contains($html,'Панель сайта') && str_contains($html,'Поиск по панели') && str_contains($html,'Уведомления'), 'authenticated admin loads search and notification center'); $csrf=tokenFrom($html);
  $save=['csrf'=>$csrf,'action'=>'dish-save','category'=>'rolls','name'=>'Тестовый ролл','description'=>'Описание для проверки','weight'=>'200 г','price'=>'3450','image_url'=>'assets/food/01-philadelphia.webp','sort_order'=>'99','active'=>'on'];
- [$status,$html]=request('/admin.php',$save); check($status===200 && str_contains($html,'Блюдо сохранено'), 'dish create with existing local webp');
+ [$status,$html,$headers,$postStatus]=adminPost($save); check($status===200 && $postStatus===302 && str_contains($html,'Блюдо добавлено в меню'), 'dish create uses PRG and accepts an existing local webp');
  $dish=(int)$pdo->query("SELECT id FROM dishes WHERE name='Тестовый ролл'")->fetchColumn(); check($dish>0, 'created dish persisted');
+ $csrf=tokenFrom($html);
+ [$status,$html]=adminPost(['csrf'=>$csrf,'action'=>'admin-search','q'=>'тЕСТовый']);
+ check($status===200 && str_contains($html,'Тестовый ролл') && str_contains($html,'Результаты по запросу'), 'admin search finds Russian text regardless of case');
  $csrf=tokenFrom($html); $edit=$save; $edit['id']=(string)$dish; $edit['description']='Обновлённое описание'; $edit['price']='3750'; $edit['image_url']='https://images.unsplash.com/photo-1?auto=format&fit=crop&w=800'; $edit['active']='on';
- [$status,$html]=request('/admin.php',$edit); check(str_contains($html,'Блюдо сохранено'), 'dish edit accepts approved HTTPS image');
+ [$status,$html]=adminPost($edit); check(str_contains($html,'Изменения блюда сохранены'), 'dish edit accepts approved HTTPS image');
  $row=$pdo->query('SELECT description,price,image_url FROM dishes WHERE id='.$dish)->fetch(PDO::FETCH_ASSOC); check($row['description']==='Обновлённое описание' && (int)$row['price']===3750 && str_starts_with($row['image_url'],'https://images.unsplash.com/'), 'description, price, image update persisted');
  foreach (['/../bootstrap.php','//evil.example/x.webp','javascript:alert(1)','https://evil.example/x.webp','https://images.unsplash.com/../../x.webp'] as $bad) { $csrf=tokenFrom($html); $badSave=$edit; $badSave['csrf']=$csrf; $badSave['image_url']=$bad; [$status,$html]=request('/admin.php',$badSave); check(str_contains($html,'Проверьте название, категорию, цену и фото'), 'reject unsafe image: '.$bad); }
- $csrf=tokenFrom($html); $hide=$edit; $hide['csrf']=$csrf; unset($hide['active']); [$status,$html]=request('/admin.php',$hide); check(str_contains($html,'Блюдо сохранено'), 'dish can be hidden'); check((int)$pdo->query('SELECT active FROM dishes WHERE id='.$dish)->fetchColumn()===0, 'hidden flag persisted');
+ $csrf=tokenFrom($html); $hide=$edit; $hide['csrf']=$csrf; unset($hide['active']); [$status,$html]=adminPost($hide); check(str_contains($html,'Изменения блюда сохранены'), 'dish can be hidden'); check((int)$pdo->query('SELECT active FROM dishes WHERE id='.$dish)->fetchColumn()===0, 'hidden flag persisted');
  [$status,$json]=request('/api.php',['csrf'=>$csrf,'type'=>'order','name'=>'Тестовый гость','phone'=>'+77010000000','fulfillment'=>'pickup','items'=>json_encode([['id'=>$dish,'qty'=>1,'price'=>1]])]); check($status===422, 'hidden dish cannot be ordered');
- $csrf=tokenFrom($html); $edit['csrf']=$csrf; $edit['image_url']='assets/food/01-philadelphia.webp'; $edit['active']='on'; [$status,$html]=request('/admin.php',$edit); check(str_contains($html,'Блюдо сохранено'), 'dish can be reactivated'); $csrf=tokenFrom($html);
+ $csrf=tokenFrom($html); $edit['csrf']=$csrf; $edit['image_url']='assets/food/01-philadelphia.webp'; $edit['active']='on'; [$status,$html]=adminPost($edit); check(str_contains($html,'Изменения блюда сохранены'), 'dish can be reactivated'); $csrf=tokenFrom($html);
  $orderFields=['csrf'=>$csrf,'type'=>'order','name'=>'Тестовый гость','phone'=>'+77010000000','fulfillment'=>'pickup','items'=>json_encode([['id'=>$dish,'qty'=>2,'price'=>1]])];
  [$status,$body]=request('/api.php',$orderFields,['Idempotency-Key'=>'integration-order-key-0001']); $first=json_decode($body,true); check($status===201 && $first['ok'], 'valid pickup order succeeds with no address');
  [$status,$body2]=request('/api.php',$orderFields,['Idempotency-Key'=>'integration-order-key-0001']); $second=json_decode($body2,true); check($status===201 && $second['id']===$first['id'], 'same idempotency key replays original order');
@@ -123,8 +135,17 @@ try {
  $future=(new DateTimeImmutable('tomorrow'))->format('Y-m-d');
  $booking=['csrf'=>$csrf,'type'=>'booking','name'=>'Тестовый гость','phone'=>'+77010000000','guests'=>'2','date'=>'2026-02-31','time'=>'19:00','format'=>'Сезонный']; [$status]=request('/api.php',$booking); check($status===422, 'impossible booking date rejected');
  $booking['date']=$future; [$status,$body]=request('/api.php',$booking,['Idempotency-Key'=>'integration-booking-key-0001']); $book=json_decode($body,true); check($status===201 && $book['ok'] && str_contains($book['message'],'не зарезервирован'), 'valid booking is explicitly unconfirmed demo request'); check((string)$pdo->query('SELECT format FROM bookings WHERE id='.(int)$book['id'])->fetchColumn()==='Сезонный', 'selected Omakase format is saved with booking request');
+ [$status,$adminHtml]=request('/admin.php'); $adminCsrf=tokenFrom($adminHtml);
+ [$status,$adminHtml]=adminPost(['csrf'=>$adminCsrf,'action'=>'admin-search','q'=>'тЕСТовый гость']);
+ check($status===200 && str_contains($adminHtml,'Тестовый гость') && str_contains($adminHtml,'Новые брони'), 'admin search finds a booking and shows actionable notification counts');
  [$status,$body]=request('/api.php',$booking,['Idempotency-Key'=>'integration-booking-key-0001']); check($status===201 && json_decode($body,true)['id']===$book['id'], 'booking retry replays original request');
- $csrf=tokenFrom((request('/admin.php'))[1]); request('/admin.php',['csrf'=>$csrf,'action'=>'dish-delete','id'=>(string)$dish]); check((int)$pdo->query('SELECT COUNT(*) FROM dishes WHERE id='.$dish)->fetchColumn()===0, 'dish deleted'); check((int)$pdo->query('SELECT COUNT(*) FROM order_items WHERE order_id='.(int)$first['id'].' AND item_name="Тестовый ролл"')->fetchColumn()===1, 'order item snapshot survives dish deletion');
+  [$status,$adminHtml]=request('/admin.php'); $adminCsrf=tokenFrom($adminHtml);
+  [$status,$adminHtml]=adminPost(['csrf'=>$adminCsrf,'action'=>'status','table'=>'bookings','id'=>(string)$book['id'],'status'=>'confirmed']);
+  check($status===200 && str_contains($adminHtml,'Бронь подтверждена') && str_contains($adminHtml,'Статус обновлён в личном кабинете'), 'admin confirms a booking and shows a visible confirmation badge');
+  [$status,$history]=request('/account.php');
+  check($status===200 && str_contains($history,'Бронь подтверждена') && str_contains($history,'role="status"'), 'confirmed booking is clearly shown in the guest account');
+  [$status,$adminHtml]=request('/admin.php'); $csrf=tokenFrom($adminHtml);
+  adminPost(['csrf'=>$csrf,'action'=>'dish-delete','id'=>(string)$dish]); check((int)$pdo->query('SELECT COUNT(*) FROM dishes WHERE id='.$dish)->fetchColumn()===0, 'dish deleted'); check((int)$pdo->query('SELECT COUNT(*) FROM order_items WHERE order_id='.(int)$first['id'].' AND item_name="Тестовый ролл"')->fetchColumn()===1, 'order item snapshot survives dish deletion');
  echo 'Concurrent HTTP mode: ' . (PHP_OS_FAMILY==='Windows'?'client requests queued by single-worker PHP CLI server':'4-worker PHP CLI server') . "\n";
  echo "PASS: {$checks} integration assertions; isolated DB: {$dbPath}\n";
 } catch (Throwable $ex) {

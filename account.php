@@ -75,6 +75,13 @@ if (!empty($_SESSION['user_id'])) {
     }
 }
 
+$bookingStatusLabels = [
+    'new' => 'Ожидает подтверждения',
+    'confirmed' => 'Бронь подтверждена',
+    'completed' => 'Визит завершён',
+    'cancelled' => 'Бронирование отменено',
+];
+
 page_start('Личный кабинет — Tokyo Premium', 'Ваши заказы и бронирования Tokyo Premium.');
 header_html();
 ?>
@@ -130,14 +137,26 @@ header_html();
       </section>
       <section class="account-section" aria-labelledby="account-bookings-title">
         <h2 id="account-bookings-title">Бронирования</h2>
+        <?php if (count(array_filter($bookings, static fn(array $booking): bool => $booking['status'] === 'confirmed')) > 0): ?>
+          <p class="booking-confirmation-notice" role="status">✓ Бронь подтверждена. Проверьте дату и время визита ниже.</p>
+        <?php endif ?>
         <?php if (!$bookings): ?>
           <p>Ваши бронирования появятся здесь.</p>
         <?php else: ?>
           <div class="account-order-list">
             <?php foreach ($bookings as $booking): ?>
+              <?php $bookingStatus = (string)$booking['status']; $confirmed = $bookingStatus === 'confirmed'; ?>
               <article class="account-order-card">
-                <div class="account-order-heading"><strong><?=e($booking['booking_date'])?> · <?=e($booking['booking_time'])?></strong><span><?=e($booking['status'])?></span></div>
-                <p class="account-order-meta"><?= (int)$booking['guest_count']?> гостей<?= !empty($booking['format'])?' · Omakase «'.e($booking['format']).'»':'' ?> · заявка ожидает подтверждения</p>
+                <div class="account-order-heading">
+                  <strong><?=e($booking['booking_date'])?> · <?=e($booking['booking_time'])?></strong>
+                  <span class="booking-status-pill <?=$confirmed ? 'is-confirmed' : ''?>" <?=$confirmed ? 'role="status"' : ''?>><?=$confirmed ? '✓ ' : ''?><?=e($bookingStatusLabels[$bookingStatus] ?? $bookingStatus)?></span>
+                </div>
+                <p class="account-order-meta"><?= (int)$booking['guest_count']?> гостей<?= !empty($booking['format'])?' · Omakase «'.e($booking['format']).'»':'' ?>
+                  <?php if ($bookingStatus === 'new'): ?> · Заявка ожидает подтверждения
+                  <?php elseif ($confirmed): ?> · До встречи в Tokyo Premium
+                  <?php elseif ($bookingStatus === 'cancelled'): ?> · Свяжитесь с рестораном, если хотите выбрать другое время
+                  <?php endif ?>
+                </p>
               </article>
             <?php endforeach ?>
           </div>
