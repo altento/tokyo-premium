@@ -128,6 +128,10 @@ function freshTestDatabase(string $path): PDO {
  $connection->exec('PRAGMA foreign_keys=ON'); $connection->exec('PRAGMA busy_timeout=15000');
  return $connection;
 }
+function testDatabaseValue(string $path, string $sql, array $parameters=[]): mixed {
+ $connection=freshTestDatabase($path); $query=$connection->prepare($sql); $query->execute($parameters); $value=$query->fetchColumn(); $query->closeCursor();
+ return $value;
+}
 function setTestOrderStatus(string $path, int $orderId, string $status): void {
  commerce_set_order_status(freshTestDatabase($path), $orderId, $status);
 }
@@ -226,7 +230,7 @@ try {
  $badOrder=$orderFields; $badOrder['items']=json_encode([['id'=>999999,'qty'=>1]]); [$status]=request('/api.php',$badOrder); check($status===422, 'unknown dish rejected');
  $future=(new DateTimeImmutable('tomorrow'))->format('Y-m-d');
  $booking=['csrf'=>$csrf,'type'=>'booking','name'=>'Тестовый гость','phone'=>'+77010000000','guests'=>'2','date'=>'2026-02-31','time'=>'19:00','format'=>'Сезонный']; [$status]=request('/api.php',$booking); check($status===422, 'impossible booking date rejected');
- $booking['date']=$future; [$status,$body]=request('/api.php',$booking,['Idempotency-Key'=>'integration-booking-key-0001']); $book=json_decode($body,true); check($status===201 && $book['ok'] && str_contains($book['message'],'не зарезервирован'), 'valid booking is explicitly unconfirmed demo request'); check((string)$pdo->query('SELECT format FROM bookings WHERE id='.(int)$book['id'])->fetchColumn()==='Сезонный', 'selected Omakase format is saved with booking request');
+  $booking['date']=$future; [$status,$body]=request('/api.php',$booking,['Idempotency-Key'=>'integration-booking-key-0001']); $book=json_decode($body,true); check($status===201 && $book['ok'] && str_contains($book['message'],'не зарезервирован'), 'valid booking is explicitly unconfirmed demo request'); check((string)testDatabaseValue($dbPath,'SELECT format FROM bookings WHERE id=?',[(int)$book['id']])==='Сезонный', 'selected Omakase format is saved with booking request');
  [$status,$adminHtml]=request('/admin.php'); $adminCsrf=tokenFrom($adminHtml);
  [$status,$adminHtml]=adminPost(['csrf'=>$adminCsrf,'action'=>'admin-search','q'=>'тЕСТовый гость']);
  check($status===200 && str_contains($adminHtml,'Тестовый гость') && str_contains($adminHtml,'Новые брони'), 'admin search finds a booking and shows actionable notification counts');
@@ -241,16 +245,16 @@ try {
   $campaignSlug='qa-target-'.bin2hex(random_bytes(4));
   $campaignFields=['csrf'=>$marketingCsrf,'action'=>'campaign-save','slug'=>$campaignSlug,'campaign_type'=>'exclusive','reward_type'=>'percent','title'=>'Проверка целей QA','description'=>'Проверка ограничений кампании.','reward_value'=>'10','gift_dish_id'=>'','gift_quantity'=>'0','minimum_subtotal'=>'0','maximum_discount'=>'1000','starts_at'=>'','ends_at'=>'','starts_time'=>'','ends_time'=>'','image_url'=>'assets/generated/room-main-hall.webp','required_tier'=>'','sort_order'=>'50','active'=>'on','target_include'=>'category:rolls','target_exclude'=>'dish:1'];
   [$status,$campaignResponse]=request('/admin-marketing.php',$campaignFields); check($status===200 && str_contains($campaignResponse,'Кампания создана как учебная демонстрация'), 'campaign create accepts validated target rules');
-  $campaignQuery=$pdo->prepare('SELECT id FROM promotion_campaigns WHERE slug=?'); $campaignQuery->execute([$campaignSlug]); $targetCampaignId=(int)$campaignQuery->fetchColumn(); $campaignQuery->closeCursor();
-  $targets=commerce_campaign_targets($pdo,$targetCampaignId); check(count($targets)===2, 'campaign target include and exclusion persist transactionally');
+  $targetCampaignId=(int)testDatabaseValue($dbPath,'SELECT id FROM promotion_campaigns WHERE slug=?',[$campaignSlug]);
+  $targetPdo=freshTestDatabase($dbPath); $targets=commerce_campaign_targets($targetPdo,$targetCampaignId); check(count($targets)===2, 'campaign target include and exclusion persist transactionally');
   check(commerce_item_is_targeted(['dish'=>['id'=>$dish,'category'=>'rolls']],$targets), 'included category allows matching catalog item');
   check(!commerce_item_is_targeted(['dish'=>['id'=>1,'category'=>'rolls']],$targets), 'excluded dish overrides an included category');
   [$status,$marketingHtml]=request('/admin-marketing.php'); $marketingCsrf=tokenFrom($marketingHtml);
   $invalidTargets=$campaignFields; $invalidTargets['csrf']=$marketingCsrf; $invalidTargets['id']=(string)$targetCampaignId; $invalidTargets['target_include']='dish:999999';
   [$status,$invalidCampaignHtml]=request('/admin-marketing.php',$invalidTargets); check($status===200 && str_contains($invalidCampaignHtml,'Цель кампании не найдена'), 'unknown campaign targets are rejected by server validation');
-  check(count(commerce_campaign_targets($pdo,$targetCampaignId))===2, 'invalid target update leaves existing campaign rules unchanged');
+  check(count(commerce_campaign_targets(freshTestDatabase($dbPath),$targetCampaignId))===2, 'invalid target update leaves existing campaign rules unchanged');
   [$status,$adminHtml]=request('/admin.php'); $csrf=tokenFrom($adminHtml);
-  adminPost(['csrf'=>$csrf,'action'=>'dish-delete','id'=>(string)$dish]); check((int)$pdo->query('SELECT COUNT(*) FROM dishes WHERE id='.$dish)->fetchColumn()===0, 'dish deleted'); check((int)$pdo->query('SELECT COUNT(*) FROM order_items WHERE order_id='.(int)$first['id'].' AND item_name="Тестовый ролл"')->fetchColumn()===1, 'order item snapshot survives dish deletion');
+  adminPost(['csrf'=>$csrf,'action'=>'dish-delete','id'=>(string)$dish]); check((int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM dishes WHERE id=?',[$dish])===0, 'dish deleted'); check((int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM order_items WHERE order_id=? AND item_name=?',[(int)$first['id'],'Тестовый ролл'])===1, 'order item snapshot survives dish deletion');
  echo 'Concurrent HTTP mode: ' . (PHP_OS_FAMILY==='Windows'?'client requests queued by single-worker PHP CLI server':'4-worker PHP CLI server') . "\n";
  echo "PASS: {$checks} integration assertions; isolated DB: {$dbPath}\n";
 } catch (Throwable $ex) {
