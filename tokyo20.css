@@ -289,6 +289,11 @@
 .tp20-course-story dt { color:var(--tp20-gold); font-size:.76rem; }
 .tp20-course-story dd { margin:0; color:#e1d5c3; line-height:1.5; }
 .tp20-course-story .tp20-course-note { padding-left:14px; border-left:2px solid #9d1722; font-size:.82rem; }
+.tp20-page .dish-grid-related { grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr)); max-width:1080px; }
+.tp20-course-tabs button { position:relative; }
+.tp20-course-tabs button[aria-selected=true]::after { position:absolute; right:14px; bottom:0; left:14px; height:2px; background:linear-gradient(90deg,#9d1220,#e6c17d); content:""; }
+.tp20-course-panel:not([hidden]) .tp20-course-photo img { animation:tp20-course-image-in .65s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes tp20-course-image-in { from { opacity:.55; transform:scale(1.035); } to { opacity:1; transform:scale(1); } }
 .tp20-floorplan-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(230px,.42fr); gap:16px; align-items:stretch; margin-top:20px; }
 [data-tp-floorplan] { min-width:0; overflow:hidden; border:1px solid var(--tp20-line); border-radius:12px; background:#0c0b09; }
 .tp-seat-plan { display:block; width:100%; height:auto; }
@@ -392,6 +397,7 @@
 @media(max-width:900px) { .tp20-course-panel,.tp20-floorplan-layout,.tp-set-layout,.tp20-code-vault { grid-template-columns:1fr; } .tp20-course-photo,.tp20-course-photo img { min-height:310px; max-height:480px; } .tp-set-selection { position:static; } .tp20-static-privilege { grid-template-columns:1fr; } .tp20-code-list { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:700px) { .tp20-offer-grid > .tp20-offer-card:only-child { grid-template-columns:1fr; } .tp20-offer-grid > .tp20-offer-card:only-child .tp20-offer-image img { min-height:0; aspect-ratio:1.6; } }
 @media(max-width:600px) { .tp20-course-heading { grid-template-columns:1fr; gap:8px; } .tp20-course-progress { width:100%; } .tp20-course-tabs button { flex:0 0 auto; } .tp20-course-photo,.tp20-course-photo img { min-height:240px; } .tp20-course-story dl>div { grid-template-columns:1fr; gap:4px; } .tp-set-catalog,.tp-evening-dishes,.tp20-code-list { grid-template-columns:1fr; } .tp-set-dish-card { grid-template-columns:110px minmax(0,1fr); } .tp-set-dish-card>img { min-height:160px; } .tp-recommendation-card { grid-template-columns:82px minmax(0,1fr); } .tp-recommendation-card img { width:82px; height:90px; } .tp20-checkout-quote .tp20-inline-form { grid-template-columns:1fr; } .tp20-evening-note { align-items:flex-start; flex-direction:column; gap:10px; } .tp20-course-story,.tp20-wizard { padding:20px; } .image-lightbox { padding:50px 12px; } }
+@media(prefers-reduced-motion:reduce) { .tp20-course-panel:not([hidden]) .tp20-course-photo img { animation:none; } }
 @media(max-width:900px) { .tp20-admin-metrics { grid-template-columns:repeat(3,minmax(0,1fr)); } .tp20-admin-fields { grid-template-columns:repeat(2,minmax(0,1fr)); } .tp20-account-overview { grid-template-columns:1fr; } }
 @media(max-width:600px) { .tp20-admin-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } .tp20-admin-fields, .tp20-account-grid, .tp20-ledger-list { grid-template-columns:1fr; } .tp20-admin-details ul { columns:1; } .tp20-referral-code strong { margin-right:0; } }
 
