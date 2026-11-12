@@ -184,7 +184,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const category = $('.filter-btn.active[data-category]')?.dataset.category || 'all';
     const query = (search?.value || '').toLocaleLowerCase('ru');
     const favoriteIds = new Set(cart?.getFavorites() || []);
-    $$('.dish-card[data-category]').forEach(card => {
+    const cards = $$('.dish-card[data-category]');
+    cards.forEach(card => {
       const id = Number(card.querySelector('[data-favorite]')?.dataset.favorite || card.querySelector('.add-to-cart')?.dataset.id);
       const text = (card.dataset.search || card.textContent).toLocaleLowerCase('ru');
       const show = (category === 'all' || card.dataset.category === category)
@@ -195,7 +196,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const visible = matches.length;
     const pages = menuPagination ? Math.max(1, Math.ceil(visible / menuPageSize)) : 1;
     if (menuPage > pages) menuPage = pages;
-    matches.forEach((card, index) => { card.hidden = menuPagination && (index < (menuPage - 1) * menuPageSize || index >= menuPage * menuPageSize); });
+    const matchIndex = new Map(matches.map((card, index) => [card, index]));
+    cards.forEach(card => {
+      const index = matchIndex.get(card);
+      card.hidden = index === undefined || (Boolean(menuPagination) && (index < (menuPage - 1) * menuPageSize || index >= menuPage * menuPageSize));
+    });
     if (menuPagination) {
       menuPagination.replaceChildren();
       menuPagination.hidden = pages < 2;

@@ -240,7 +240,7 @@ async function run(options = {}) {
     check(await page.locator('.dish-card:visible').count() === 2, 'last menu page shows the remaining catalog items');
     await page.locator('.menu-search').fill('нигири');
     check(await page.locator('.dish-card:visible').count() > 0, 'menu search matches dish names');
-    check(await page.locator('.dish-card:visible').evaluateAll(cards => cards.every(card => card.textContent.toLocaleLowerCase('ru').includes('нигири'))), 'menu search removes non-matching dishes');
+    check(await page.locator('.dish-card:visible').evaluateAll(cards => cards.every(card => (card.dataset.search || card.textContent).toLocaleLowerCase('ru').includes('нигири'))), 'menu search removes non-matching dishes, including cards left from the previous page');
     const matchingCategory = await page.locator('.dish-card:visible').first().getAttribute('data-category');
     await page.locator(`.menu-category-list [data-category="${matchingCategory}"]`).click();
     check(await page.locator('.dish-card:visible').evaluateAll((cards, category) => cards.every(card => card.dataset.category === category && card.textContent.toLocaleLowerCase('ru').includes('нигири')), matchingCategory), 'category and search filters combine');
@@ -252,6 +252,7 @@ async function run(options = {}) {
     check(await page.locator('.dish-card:visible').count() === 6, 'static menu pagination changes page');
     await page.locator('.menu-search').fill('матча');
     check(await page.locator('.dish-card:visible').count() > 0, 'static menu search matches demo catalog');
+    check(await page.locator('.dish-card:visible').evaluateAll(cards => cards.every(card => (card.dataset.search || card.textContent).toLocaleLowerCase('ru').includes('матча'))), 'static menu search hides stale cards from the previous page');
     await page.locator('.menu-search').fill('');
 
     // Gallery filters only the gallery, and mobile menu works with Escape/focus return.
