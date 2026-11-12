@@ -32,7 +32,6 @@ async function run(options = {}) {
     const add = page.locator('.dish-card .add-to-cart');
     assert.ok(await add.count() >= 3, 'menu exposes real product cards');
     await add.nth(0).click();
-    await add.nth(0).click();
     await add.nth(1).click();
     await add.nth(2).click();
     await page.goto(`${base}/docs/cart.html`, { waitUntil: 'domcontentloaded' });
