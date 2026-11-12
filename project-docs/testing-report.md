@@ -41,9 +41,24 @@ After deployment, the public Pages site was opened with a cache-busting URL. Bro
 
 The local PHP/SQLite integration suite passed 102 assertions in three consecutive runs. Hosted CI also passed the integration suite under its multi-worker test configuration. Cart, Tokyo 2.0, review, responsive, and visual-state Playwright suites passed in the hosted build.
 
+The intermediate-width header correction was merged as `9599f3c4996e1eeb43948a1dba80c3bc62f06e29`. Follow-up [Pages workflow run 43320764592](https://github.com/altento/tokyo-premium/actions/runs/43320764592) completed with both build and deploy successful, including the expanded responsive regression. A fresh Playwright check of the deployed menu returned HTTP 200 at 929 px and 1025 px: 929 px had no horizontal overflow, retained the header cart, exposed booking and account links in the keyboard-operable menu, and closed on Escape; 1025 px restored the desktop navigation and booking CTA with no overflow. No failed same-origin requests or console errors were observed.
+
 A fresh pixel-by-pixel comparison of every current page against all 11 source PNG references remains incomplete. Screenshots and older visual gap notes remain in visual-qa/ and final-acceptance-report.md. No pixel-perfect acceptance is claimed.
 
-Local `npm ci` and the pinned Playwright 1.65.0 Chromium installation completed successfully in this Windows environment. The responsive regression passed locally against PHP and the freshly exported Pages build after the intermediate-width header fix. Hosted CI previously completed the full suite; the current code change still awaits its post-merge workflow and deployment check.
+Local `npm ci` and the pinned Playwright 1.65.0 Chromium installation completed successfully in this Windows environment. The responsive regression passed locally against PHP and the freshly exported Pages build after the intermediate-width header fix. The post-merge CI and public deployment check are complete for commit `9599f3c`.
+
+## Follow-up visual and dashboard pass (2026-11-13)
+
+The latest local pass reproduced and fixed three presentation defects against the current PHP routes and static export:
+
+- Menu pagination now shows all six cards on the current page immediately. At 1440 px it forms a 3×2 grid, at 390 px a 2×3 grid, and at 320 px a single column. Favorite controls sit on the photo; “Подробнее” and quick view have separate hit areas. The dedicated menu check loaded all six photos after normal lazy loading and found no hidden rows, overlap, overflow or console errors.
+- Dish detail recommendations now prefer active items in the same category. Recommendation cards no longer depend on the scroll reveal observer, so they appear in a full-page capture and on a fast first visit.
+- Omakase stages now use active catalog records and their real demo descriptions, photos, portions and prices. Stage 2 switches to the matching tuna nigiri entry and its image. The selected package still transfers to the booking form. The first stage and recommendations no longer depend on scroll-only reveal behavior.
+- PHP and static account captures were reviewed. The authenticated PHP dashboard now prioritizes account-owned orders/bookings, separately labeled browser-local favorites, Tokyo Privilege balance, referrals and settings. Query inspection confirmed user scoping for orders, order items, bookings, profile, loyalty, referrals and personal offers. An authenticated mobile capture includes saved demo orders and a local favorite; the anonymous login/register state remains separate.
+
+Local checks against the current source and a freshly generated 36-page static export passed: `test:cart` (12/12), `test:browser` (11 routes, 20 dish details, cart and account flows, including authenticated populated desktop/mobile dashboard captures), `test:tokyo20` (PHP + static; now checks catalog photos and visible recommendations), `test:reviews`, `test:cart-visual` (8 states), `test:responsive` (11 route types × 14 widths plus static header breakpoints), `test:visual-states`, and 102 PHP/SQLite integration assertions. `menu-visual-regression.cjs`, PHP lint for changed routes, JavaScript syntax checks and `git diff --check` passed.
+
+New evidence is indexed in `visual-qa/README.md`: menu 1440/390/320 initial states, dish detail desktop/mobile, Omakase desktop/mobile and stage 2 in PHP/static modes, and authenticated populated account desktop/mobile. The complete pixel-by-pixel comparison of every current page against all 11 original PNGs remains incomplete; these focused fixes do not establish full visual acceptance. The updated source has not yet been merged or redeployed at the time of this local record.
 
 ## Not production-certified
 

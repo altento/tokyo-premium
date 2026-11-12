@@ -200,8 +200,24 @@ async function run(options = {}) {
     await page.goto(base + '/account.php');
     check(await page.locator('body').innerText().then(text => text.includes('Гость QA') && text.includes('Состав заказа')), 'order shown in account history');
 
+    // Capture a populated authenticated dashboard on desktop and mobile, rather
+    // than treating the anonymous login form as the account's only visual state.
+    await page.goto(base + '/menu.php');
+    await page.locator('.dish-card [data-favorite]').first().click();
+    await page.goto(base + '/account.php');
+    check(await page.locator('#account-orders .account-order-card').count() > 0, 'authenticated account dashboard shows its saved order');
+    check(await page.locator('#account-browser-favorites-list .dish-card').count() > 0, 'authenticated dashboard renders browser-local favorites separately');
+    const firstOrderDetails = page.locator('#account-orders .account-order-card details').first();
+    if (await firstOrderDetails.count()) await firstOrderDetails.locator('summary').click();
+    await page.screenshot({ path: path.join(evidence, '11-account-populated-desktop.jpg'), fullPage: true, type: 'jpeg', quality: 72 });
+    await page.setViewportSize({ width: 390, height: 844 });
+    check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'authenticated account dashboard has no mobile horizontal overflow');
+    await page.screenshot({ path: path.join(evidence, '11-account-populated-mobile.jpg'), fullPage: true, type: 'jpeg', quality: 72 });
+    await page.setViewportSize({ width: 1440, height: 1000 });
+
     // Favorites are event-delegated even after the profile cards are rendered.
     await page.goto(staticBase + '/menu.html');
+    await page.evaluate(() => window.TokyoCart?.setFavorites([]));
     await page.locator('[data-favorite]').first().click();
     await page.goto(staticBase + '/account.html');
     await page.locator('[data-account-tab="favorites"]').click();

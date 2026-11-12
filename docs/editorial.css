@@ -42,6 +42,29 @@
 @media(max-width:600px){.editorial-hero{min-height:630px;align-items:end;padding:130px 22px 54px}.editorial-kanji{left:auto;right:18px;top:16%;font-size:1rem}.editorial-hero h1{font-size:clamp(2.8rem,15vw,4.8rem)}.editorial-hero-copy>p:not(.editorial-sub){font-size:.93rem}.experience-tiers,.detail-ingredients,.booking-benefits,.contact-footnotes{grid-template-columns:1fr}.image-story{grid-template-columns:1fr}.image-story>img{height:300px}.zone-grid{grid-template-columns:1fr}.gallery-toolbar{align-items:start}.gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:160px;gap:9px}.gallery-tile:nth-child(3n+1){grid-row:span 1}.gallery-tile:nth-child(4n+1){grid-row:span 2}.booking-form,.contact-form,.account-demo-form{grid-template-columns:1fr}.booking-form .field,.contact-form .field,.booking-form .full,.contact-form .full,.account-demo-form .field,.account-demo-form .full{grid-column:1}.table-map{gap:8px;padding:14px}.contact-facts{grid-template-columns:1fr}.cart-page-item{grid-template-columns:84px 1fr;gap:12px}.cart-page-item img{width:84px;height:90px}.cart-page-item .line-price{grid-column:2}.cart-page-item .cart-page-controls{flex-wrap:wrap}.cart-recommendations{grid-template-columns:1fr}.account-demo-nav{grid-template-columns:repeat(2,1fr)}.account-list article{display:block}.editorial-page .section{padding-block:56px}}
 @media(prefers-reduced-motion:reduce){.editorial-page *,.editorial-page *::before,.editorial-page *::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
 
+/* Menu cards are catalog content, not scroll-only decoration: render every
+   item in the current page immediately so full-page captures and fast readers
+   never see an empty second row while IntersectionObserver is still waiting. */
+.menu-page .dish-card{display:flex;flex-direction:column;min-width:0;height:100%}
+.menu-page .dish-card[hidden]{display:none}
+.menu-page .dish-image-wrap{overflow:hidden;aspect-ratio:1.38;background:#14110e}
+.menu-page .dish-image-wrap img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .55s cubic-bezier(.2,.7,.2,1)}
+.menu-page .dish-card:hover .dish-image-wrap img{transform:scale(1.035)}
+.menu-page .dish-image-wrap .favorite-btn{position:absolute;z-index:1;top:12px;right:12px;display:grid;place-items:center;width:40px;height:40px;padding:0;border:1px solid var(--jp-line);border-radius:50%;background:rgba(10,9,8,.78);color:var(--jp-cream);font-size:1.25rem;line-height:1;cursor:pointer;transition:color .2s,background .2s,border-color .2s,transform .2s}
+.menu-page .dish-image-wrap .favorite-btn:hover,.menu-page .dish-image-wrap .favorite-btn[aria-pressed=true]{background:var(--jp-red);border-color:var(--jp-gold);color:#fff;transform:scale(1.06)}
+.menu-page .dish-card .dish-meta{display:flex;flex:1;flex-direction:column;min-height:0}
+.menu-page .dish-card .dish-meta p{flex:0 0 auto}
+.menu-page .dish-card .dish-bottom{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"links links" "price add";align-items:center;gap:10px 12px;margin-top:auto}
+.menu-page .dish-card .dish-bottom>.menu-card-links{grid-area:links;display:flex;flex-wrap:wrap;align-items:center;column-gap:16px;row-gap:7px;min-width:0}
+.menu-page .dish-card .dish-bottom>.menu-card-links>.text-button{grid-row:auto;grid-column:auto;padding:0;border:0;background:transparent;color:#d6c5a8;text-align:left;font-size:.7rem;line-height:1.3;white-space:nowrap}
+.menu-page .dish-card .dish-bottom>.menu-card-links>button.text-button{cursor:pointer}
+.menu-page .dish-card .dish-bottom>.dish-price{grid-area:price;grid-row:auto;grid-column:auto;align-self:end}
+.menu-page .dish-card .dish-bottom>.add-to-cart{grid-area:add;grid-row:auto;grid-column:auto;min-height:42px;padding:8px 13px;white-space:nowrap}
+@media(max-width:700px){
+  .menu-page .dish-card .dish-bottom{grid-template-columns:minmax(0,1fr);grid-template-areas:"links" "price" "add";gap:9px}
+  .menu-page .dish-card .dish-bottom>.add-to-cart{width:100%}
+}
+
 /* Keep long Russian titles and editorial captions inside their visible boxes. */
 .editorial-hero-copy{min-width:0;max-width:min(590px,100%)}
 .editorial-hero h1,.detail-title h1,.about-hero h1,.page-hero h1{max-width:100%;line-height:1.04;hyphens:auto;overflow-wrap:anywhere;word-break:normal}

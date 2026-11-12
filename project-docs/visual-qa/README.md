@@ -18,3 +18,14 @@ GitHub Actions uploads the JPEG and PNG evidence as `tokyo-premium-visual-qa`. T
 `12-php-secret-menu-unlocked-*` and `12-static-secret-menu-unlocked-*` show the interactive unlock state. In PHP, this follows a server-validated code and the cart reuses the shared catalog. Static screenshots show only a client-side preview; the data is public and does not grant server access.
 
 The cart suite's `cart-*.png` captures contain empty and populated desktop/mobile states, validation errors, pickup and delivery. The static counterpart is prefixed `static-`. Re-run into a temporary output directory with `TOKYO_EVIDENCE_DIR` to avoid overwriting checked-in captures. These files are automated regression evidence; only the cart, set builder, offers, static account, booking heading, and booking-table selected states were visually spot-checked in the latest local pass. See `project-docs/testing-report.md` for the verification limits.
+
+## 2026-11-13 focused visual remediation
+
+The following current-source screenshots were reviewed after fixing initial-render defects in the catalog, dish detail, Omakase and account:
+
+- `tokyo-menu-1440-initial.png`, `tokyo-menu-390-initial.png`, `tokyo-menu-320-initial.png`: all six items on the current menu page are visible before scrolling; action links and favorite controls do not overlap.
+- `03-dish-current-desktop.jpg` and `03-dish-current-mobile.jpg`: active same-category recommendations appear with their catalog photos.
+- `04-omakase-current-desktop.jpg` and `04-omakase-current-mobile.jpg`: first course image and catalog-backed story are present. `04-omakase-stage-2-php-desktop.jpg` and `04-omakase-stage-2-static-desktop.jpg` show the selected second course in each delivery mode.
+- `11-account-populated-desktop.jpg` and `11-account-populated-mobile.jpg`: authenticated synthetic QA account with two saved demo orders (composition expanded) and one browser-local favorite. The existing `11-account-mobile.jpg` remains the anonymous login/register state.
+
+The focused captures are paired with automated checks in `tests/menu-visual-regression.cjs`, `tests/tokyo20-regression.cjs`, and `tests/browser-regression.cjs`. The menu check covers 1440, 390 and 320 px; the account check captures real authenticated data separately from the static browser-local profile. This is a focused re-review of four affected page types, not a new pixel-by-pixel comparison of all 11 source designs.

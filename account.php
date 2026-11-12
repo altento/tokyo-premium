@@ -133,18 +133,25 @@ $bookingStatusLabels = [
     'completed' => 'Визит завершён',
     'cancelled' => 'Бронирование отменено',
 ];
+$orderStatusLabels = [
+    'new' => 'Записан · учебный заказ',
+    'processing' => 'В обработке',
+    'completed' => 'Завершён',
+    'cancelled' => 'Отменён',
+];
+$orderCount = count($orders);
+$bookingCount = count($bookings);
 
 page_start('Личный кабинет — Tokyo Premium', 'Ваши заказы и бронирования Tokyo Premium.');
 header_html();
 ?>
-<main class="admin-shell account-shell">
-  <section class="admin-card account-card">
-    <div class="kicker">Tokyo Premium · личное пространство</div>
+<main class="admin-shell account-shell account-dashboard">
+  <section class="admin-card account-card account-dashboard-card">
     <?php if (!$user): ?>
       <h1>Личный кабинет</h1>
       <p>Сохраняйте историю заказов и бронирований в одном месте.</p>
       <?php if ($err): ?><p class="form-status error"><?=e($err)?></p><?php endif ?>
-      <div class="intro-grid account-auth-grid">
+      <div class="intro-grid account-auth-grid account-dashboard-auth">
         <form method="post" class="admin-form">
           <h2>Войти</h2>
           <input type="hidden" name="csrf" value="<?=e(csrf())?>">
@@ -164,68 +171,155 @@ header_html();
         </form>
       </div>
     <?php else: ?>
-      <div class="account-welcome">
-        <div><span class="kicker">Ваш профиль</span><h1>Здравствуйте, <?=e($user['full_name'])?></h1><p><?=e($user['email'])?></p></div>
-        <form method="post"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="logout"><button class="button secondary">Выйти</button></form>
-      </div>
-      <?php if ($err): ?><p class="form-status error" role="alert"><?=e($err)?></p><?php endif ?><?php if ($profileNotice): ?><p class="booking-confirmation-notice" role="status"><?=e($profileNotice)?></p><?php endif ?>
-      <section class="tp20-account-overview" aria-labelledby="tp20-privilege-title">
-        <div class="tp20-loyalty-card"><span class="kicker">TOKYO PRIVILEGE · ДЕМО-РЕЖИМ</span><h2 id="tp20-privilege-title"><?=e($tier['name']??'Уровень не присвоен')?></h2><p>Бонусный баланс рассчитывается по серверному журналу и не является денежной суммой.</p><strong><?=number_format($loyaltyBalance,0,'.',' ')?> баллов</strong><small>Завершённые заказы: <?=number_format($loyaltySpent,0,'.',' ')?> ₸</small><?php if($nextTier): ?><div class="tp20-tier-progress" role="progressbar" aria-label="Прогресс до уровня <?=e($nextTier['name'])?>" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<?=$tierProgress?>"><span style="width:<?=$tierProgress?>%"></span></div><small><?=$tierProgress?>% до уровня <?=e($nextTier['name'])?> · ещё <?=number_format(max(0,(int)$nextTier['minimum_completed_spend']-$loyaltySpent),0,'.',' ')?> ₸ завершённых заказов</small><?php else: ?><small>Достигнут высший активный уровень в настройках учебной программы.</small><?php endif ?></div>
-        <div class="tp20-account-quick"><a href="set-builder.php"><span>01</span><strong>Собрать сет</strong><i>↗</i></a><a href="perfect-evening.php"><span>02</span><strong>Подобрать вечер</strong><i>↗</i></a><a href="offers.php"><span>03</span><strong>Привилегии</strong><i>↗</i></a><a href="gift-certificates.php"><span>04</span><strong>Эскиз подарка</strong><i>↗</i></a></div>
+      <header class="account-dashboard-hero">
+        <div class="account-dashboard-identity">
+          <span class="kicker">Tokyo Premium · личное пространство</span>
+          <h1>Здравствуйте, <?=e($user['full_name'])?></h1>
+          <p><?=e($user['email'])?></p>
+          <small>Участник с <?=e(substr((string)$user['created_at'], 0, 10))?> · история и бонусы видны только после входа в этот аккаунт.</small>
+        </div>
+        <form method="post" class="account-logout-form">
+          <input type="hidden" name="csrf" value="<?=e(csrf())?>">
+          <input type="hidden" name="action" value="logout">
+          <button class="button secondary" type="submit">Выйти</button>
+        </form>
+      </header>
+      <?php if ($err): ?><p class="form-status error" role="alert"><?=e($err)?></p><?php endif ?>
+      <?php if ($profileNotice): ?><p class="booking-confirmation-notice" role="status"><?=e($profileNotice)?></p><?php endif ?>
+
+      <section class="account-dashboard-overview" aria-label="Краткая сводка аккаунта">
+        <div class="account-dashboard-metrics">
+          <article><span>История заказов</span><strong><?=number_format($orderCount,0,'.',' ')?></strong><small>серверные записи</small></article>
+          <article><span>Бронирования</span><strong><?=number_format($bookingCount,0,'.',' ')?></strong><small>запросы этого аккаунта</small></article>
+          <article><span>Tokyo Privilege</span><strong><?=number_format($loyaltyBalance,0,'.',' ')?></strong><small>учебных баллов · не деньги</small></article>
+          <article><span>Завершённые заказы</span><strong><?=number_format($loyaltySpent,0,'.',' ')?></strong><small>₸ в учебном журнале</small></article>
+        </div>
+        <div class="account-dashboard-loyalty tp20-loyalty-card" id="account-loyalty">
+          <span class="kicker">TOKYO PRIVILEGE · УЧЕБНАЯ ПРОГРАММА</span>
+          <div class="account-tier-row"><h2><?=e($tier['name']??'Уровень не присвоен')?></h2><strong><?=number_format($loyaltyBalance,0,'.',' ')?> <small>баллов</small></strong></div>
+          <p>Баланс складывается из серверного журнала завершённых заказов и не имеет денежной стоимости.</p>
+          <?php if ($nextTier): ?>
+            <div class="tp20-tier-progress" role="progressbar" aria-label="Прогресс до уровня <?=e($nextTier['name'])?>" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<?=$tierProgress?>"><span style="width:<?=$tierProgress?>%"></span></div>
+            <small><?=$tierProgress?>% до уровня <?=e($nextTier['name'])?> · ещё <?=number_format(max(0,(int)$nextTier['minimum_completed_spend']-$loyaltySpent),0,'.',' ')?> ₸ завершённых заказов</small>
+          <?php else: ?>
+            <small>Прогресс определяется активными правилами учебной программы.</small>
+          <?php endif ?>
+          <a class="account-inline-link" href="offers.php">Условия привилегий ↗</a>
+        </div>
       </section>
-      <div class="tp20-account-grid">
-        <section class="account-section tp20-account-section" aria-labelledby="tp20-profile-settings"><div class="editorial-heading"><div class="kicker">PERSONAL SETTINGS</div><h2 id="tp20-profile-settings">Профиль и дата рождения</h2><p>Дата рождения необязательна. Согласие нужно только для персональных предложений и может быть отозвано здесь же.</p></div><form method="post" class="tp20-account-form"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="profile-save"><label>Дата рождения<input type="date" name="birth_date" value="<?=e((string)$profile['birth_date'])?>" max="<?=e(date('Y-m-d'))?>"></label><label class="tp20-account-consent"><input type="checkbox" name="birthday_offer_consent" value="1" <?=!empty($profile['birthday_offer_consent'])?'checked':''?>> Согласен получать персональные предложения ко дню рождения в учебной системе</label><button class="button secondary" type="submit">Сохранить настройки ↗</button></form></section>
-        <section class="account-section tp20-account-section" aria-labelledby="tp20-referral-title"><div class="editorial-heading"><div class="kicker">INVITE WITH CARE</div><h2 id="tp20-referral-title">Пригласить друга</h2><p>Код привязывается к новому аккаунту до его первого заказа. Награда начисляется только после квалифицирующего завершённого заказа.</p></div><div class="tp20-referral-code"><span>Ваш код</span><strong><?=e($referralCode)?></strong><button class="button secondary" type="button" data-copy-code="<?=e($referralCode)?>" data-label="Скопировать код">Скопировать</button></div><form method="post" class="tp20-account-form"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="referral-attach"><label>Код того, кто пригласил вас<input name="referral_code" maxlength="12" pattern="TP[A-Fa-f0-9]{10}" placeholder="TP0123ABCDEF" required></label><button class="button secondary" type="submit">Привязать код</button></form><div class="tp20-referral-history"><strong>Приглашения</strong><?php if(!$invitedUsers): ?><p>Пока нет привязанных приглашений.</p><?php else: ?><?php foreach($invitedUsers as $invite): ?><p><?=e($invite['referred_name']?:'Ожидает регистрации')?> · <?=e($invite['status'])?></p><?php endforeach ?><?php endif ?></div></section>
+
+      <div class="account-dashboard-actions" aria-label="Быстрые действия">
+        <a href="menu.php">Открыть меню <span>↗</span></a>
+        <a href="set-builder.php">Собрать сет <span>↗</span></a>
+        <a href="pages.php?page=booking">Выбрать вечер <span>↗</span></a>
+        <a href="offers.php">Смотреть привилегии <span>↗</span></a>
       </div>
-      <section class="account-section tp20-account-section" aria-labelledby="tp20-loyalty-history"><div class="editorial-heading"><div class="kicker">LEDGER · VERIFIED EVENTS</div><h2 id="tp20-loyalty-history">История бонусов</h2><p>Записи журнала создаются при применённых серверных событиях; изменение статуса заказа вызывает начисление или обратную запись.</p></div><?php if(!$loyaltyEntries): ?><p>Операций пока нет. Бонусы не начисляются за неподтверждённые заказы.</p><?php else: ?><div class="tp20-ledger-list"><?php foreach($loyaltyEntries as $entry): ?><article><span><?=e($entry['transaction_type'])?> · <?=e($entry['created_at'])?></span><strong class="<?=((int)$entry['points']<0?'is-negative':'')?>"><?=((int)$entry['points']>0?'+':'')?><?= (int)$entry['points']?></strong><p><?=e($entry['note'])?></p></article><?php endforeach ?></div><?php endif ?></section>
-      <section class="account-section tp20-account-section" aria-labelledby="tp20-personal-offers"><div class="editorial-heading"><div class="kicker">INVITATIONS · PRIVATE</div><h2 id="tp20-personal-offers">Персональные предложения</h2></div><?php if(!$personalOffers): ?><p>Персональных предложений пока нет. Здесь появятся только адресно назначенные активные кампании.</p><?php else: ?><div class="tp20-offer-grid"><?php foreach($personalOffers as $offer): ?><article class="tp20-offer-card"><div class="tp20-offer-copy"><span class="kicker">PERSONAL INVITATION</span><h3><?=e($offer['title'])?></h3><p><?=e($offer['description'])?></p><?php if($offer['expires_at']): ?><small>Действует до <?=e($offer['expires_at'])?></small><?php endif ?></div></article><?php endforeach ?></div><?php endif ?></section>
-      <section class="account-section" aria-labelledby="account-orders-title">
-        <h2 id="account-orders-title">История заказов</h2>
-        <?php if (!$orders): ?>
-          <p>Заказы, оформленные после входа в аккаунт, появятся здесь.</p>
-        <?php else: ?>
-          <div class="account-order-list">
-            <?php foreach ($orders as $order): ?>
-              <article class="account-order-card">
-                <div class="account-order-heading"><span>Заказ №<?= (int)$order['id']?></span><strong><?=number_format((int)$order['total'],0,'.',' ')?> ₸</strong></div>
-                <p class="account-order-meta"><?=$order['fulfillment']==='pickup'?'Самовывоз':'Доставка'?> · <?=e($order['status'])?> · <?=e($order['created_at'])?></p>
-                <details class="order-item-details">
-                  <summary>Состав заказа · <?=count($order['items'])?> <?=count($order['items'])===1?'позиция':'позиций'?></summary>
-                  <ul><?php foreach ($order['items'] as $item): ?><li><?=e($item['item_name'])?> · <?= (int)$item['quantity']?> × <?=number_format((int)$item['price'],0,'.',' ')?> ₸ = <?=number_format((int)$item['price']*(int)$item['quantity'],0,'.',' ')?> ₸</li><?php endforeach ?></ul>
-                </details>
-              </article>
-            <?php endforeach ?>
-          </div>
-        <?php endif ?>
-      </section>
-      <section class="account-section" aria-labelledby="account-bookings-title">
-        <h2 id="account-bookings-title">Бронирования</h2>
-        <?php if (count(array_filter($bookings, static fn(array $booking): bool => $booking['status'] === 'confirmed')) > 0): ?>
-          <p class="booking-confirmation-notice" role="status">✓ Бронь подтверждена. Проверьте дату и время визита ниже.</p>
-        <?php endif ?>
-        <?php if (!$bookings): ?>
-          <p>Ваши бронирования появятся здесь.</p>
-        <?php else: ?>
-          <div class="account-order-list">
-            <?php foreach ($bookings as $booking): ?>
-              <?php $bookingStatus = (string)$booking['status']; $confirmed = $bookingStatus === 'confirmed'; ?>
-              <article class="account-order-card">
-                <div class="account-order-heading">
-                  <strong><?=e($booking['booking_date'])?> · <?=e($booking['booking_time'])?></strong>
-                  <span class="booking-status-pill <?=$confirmed ? 'is-confirmed' : ''?>" <?=$confirmed ? 'role="status"' : ''?>><?=$confirmed ? '✓ ' : ''?><?=e($bookingStatusLabels[$bookingStatus] ?? $bookingStatus)?></span>
+
+      <div class="account-dashboard-layout">
+        <nav class="account-dashboard-nav" aria-label="Разделы личного кабинета">
+          <a href="#account-orders"><span>01</span>Мои заказы<small><?=$orderCount?></small></a>
+          <a href="#account-bookings"><span>02</span>Бронирования<small><?=$bookingCount?></small></a>
+          <a href="#account-browser-favorites"><span>03</span>Избранное<small>в браузере</small></a>
+          <a href="#account-referrals"><span>04</span>Приглашения</a>
+          <a href="#account-settings"><span>05</span>Настройки</a>
+        </nav>
+        <div class="account-dashboard-content">
+          <div class="account-dashboard-primary">
+            <section id="account-orders" class="account-section account-dashboard-panel" aria-labelledby="account-orders-title">
+              <div class="account-dashboard-section-heading"><div><span class="kicker">ИСТОРИЯ · ТОЛЬКО ВАШ АККАУНТ</span><h2 id="account-orders-title">Мои заказы</h2></div><span class="account-section-count"><?=$orderCount?> записей</span></div>
+              <?php if (!$orders): ?>
+                <div class="account-empty-state"><p>Заказы, оформленные после входа в аккаунт, появятся здесь.</p><a class="button secondary" href="menu.php">Перейти к меню ↗</a></div>
+              <?php else: ?>
+                <div class="account-order-list">
+                  <?php foreach ($orders as $order): $orderStatus = (string)$order['status']; ?>
+                    <article class="account-order-card">
+                      <div class="account-order-heading"><span>Заказ №<?= (int)$order['id']?></span><strong><?=number_format((int)$order['total'],0,'.',' ')?> ₸</strong></div>
+                      <p class="account-order-meta"><span class="account-status-label"><?=e($orderStatusLabels[$orderStatus] ?? $orderStatus)?></span> · <?=$order['fulfillment']==='pickup'?'Самовывоз':'Доставка'?> · <?=e($order['created_at'])?></p>
+                      <details class="order-item-details">
+                        <summary>Состав заказа · <?=count($order['items'])?> <?=count($order['items'])===1?'позиция':'позиций'?></summary>
+                        <ul><?php foreach ($order['items'] as $item): ?><li><?=e($item['item_name'])?> · <?= (int)$item['quantity']?> × <?=number_format((int)$item['price'],0,'.',' ')?> ₸ = <?=number_format((int)$item['price']*(int)$item['quantity'],0,'.',' ')?> ₸</li><?php endforeach ?></ul>
+                      </details>
+                    </article>
+                  <?php endforeach ?>
                 </div>
-                <p class="account-order-meta"><?= (int)$booking['guest_count']?> гостей<?= !empty($booking['format'])?' · Omakase «'.e($booking['format']).'»':'' ?>
-                  <?php if ($bookingStatus === 'new'): ?> · Заявка ожидает подтверждения
-                  <?php elseif ($confirmed): ?> · До встречи в Tokyo Premium
-                  <?php elseif ($bookingStatus === 'cancelled'): ?> · Свяжитесь с рестораном, если хотите выбрать другое время
-                  <?php endif ?>
-                </p>
-              </article>
-            <?php endforeach ?>
+              <?php endif ?>
+            </section>
+
+            <section id="account-bookings" class="account-section account-dashboard-panel" aria-labelledby="account-bookings-title">
+              <div class="account-dashboard-section-heading"><div><span class="kicker">ЗАПРОСЫ · СТАТУС ИЗ БАЗЫ</span><h2 id="account-bookings-title">Мои бронирования</h2></div><span class="account-section-count"><?=$bookingCount?> записей</span></div>
+              <?php if (count(array_filter($bookings, static fn(array $booking): bool => $booking['status'] === 'confirmed')) > 0): ?>
+                <p class="booking-confirmation-notice" role="status">✓ Бронь подтверждена рестораном. Проверьте дату и время визита ниже.</p>
+              <?php endif ?>
+              <?php if (!$bookings): ?>
+                <div class="account-empty-state"><p>Запросов на бронирование пока нет.</p><a class="button secondary" href="pages.php?page=booking">Выбрать дату и зону ↗</a></div>
+              <?php else: ?>
+                <div class="account-order-list">
+                  <?php foreach ($bookings as $booking): ?>
+                    <?php $bookingStatus = (string)$booking['status']; $confirmed = $bookingStatus === 'confirmed'; ?>
+                    <article class="account-order-card">
+                      <div class="account-order-heading">
+                        <strong><?=e($booking['booking_date'])?> · <?=e($booking['booking_time'])?></strong>
+                        <span class="booking-status-pill <?=$confirmed ? 'is-confirmed' : ''?>" <?=$confirmed ? 'role="status"' : ''?>><?=$confirmed ? '✓ ' : ''?><?=e($bookingStatusLabels[$bookingStatus] ?? $bookingStatus)?></span>
+                      </div>
+                      <p class="account-order-meta"><?= (int)$booking['guest_count']?> гостей<?= !empty($booking['format'])?' · Omakase «'.e($booking['format']).'»':'' ?>
+                        <?php if ($bookingStatus === 'new'): ?> · Заявка ожидает подтверждения
+                        <?php elseif ($confirmed): ?> · До встречи в Tokyo Premium
+                        <?php elseif ($bookingStatus === 'cancelled'): ?> · Свяжитесь с рестораном, если хотите выбрать другое время
+                        <?php endif ?>
+                      </p>
+                    </article>
+                  <?php endforeach ?>
+                </div>
+              <?php endif ?>
+            </section>
           </div>
-        <?php endif ?>
-      </section>
+
+          <aside class="account-dashboard-aside">
+            <section id="account-browser-favorites" class="account-section account-dashboard-panel account-browser-favorites" aria-labelledby="account-browser-favorites-title" data-account-browser-favorites>
+              <div class="account-dashboard-section-heading"><div><span class="kicker">ИЗБРАННОЕ · ЭТОТ БРАУЗЕР</span><h2 id="account-browser-favorites-title">Сохранённые блюда</h2></div><a class="account-inline-link" href="menu.php">Меню ↗</a></div>
+              <p class="account-local-note">Избранное хранится локально в этом браузере и не привязывается к серверному аккаунту.</p>
+              <div id="account-browser-favorites-list" class="account-browser-favorites-grid" aria-live="polite"></div>
+              <p id="account-browser-favorites-empty" class="account-empty-copy">Здесь появятся блюда, сохранённые сердцем в меню.</p>
+            </section>
+
+            <section class="account-section account-dashboard-panel" aria-labelledby="tp20-personal-offers">
+              <div class="account-dashboard-section-heading"><div><span class="kicker">PRIVATE INVITATIONS</span><h2 id="tp20-personal-offers">Персональные предложения</h2></div></div>
+              <?php if (!$personalOffers): ?>
+                <p class="account-section-copy">Персональных предложений пока нет. Здесь появятся только адресно назначенные действующие кампании.</p>
+              <?php else: ?>
+                <div class="tp20-offer-grid"><?php foreach ($personalOffers as $offer): ?><article class="tp20-offer-card"><div class="tp20-offer-copy"><span class="kicker">PERSONAL INVITATION</span><h3><?=e($offer['title'])?></h3><p><?=e($offer['description'])?></p><?php if ($offer['expires_at']): ?><small>Действует до <?=e($offer['expires_at'])?></small><?php endif ?></div></article><?php endforeach ?></div>
+              <?php endif ?>
+            </section>
+
+            <section id="account-referrals" class="account-section account-dashboard-panel" aria-labelledby="tp20-referral-title">
+              <div class="account-dashboard-section-heading"><div><span class="kicker">TOKYO PRIVILEGE · ПРИГЛАШЕНИЯ</span><h2 id="tp20-referral-title">Пригласить друга</h2></div></div>
+              <p class="account-section-copy">Награда начисляется только после подходящего завершённого заказа. Код не создаёт денежного вознаграждения.</p>
+              <div class="tp20-referral-code"><span>Ваш код</span><strong><?=e($referralCode)?></strong><button class="button secondary" type="button" data-copy-code="<?=e($referralCode)?>" data-label="Скопировать код">Скопировать</button></div>
+              <form method="post" class="tp20-account-form account-referral-form"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="referral-attach"><label>Код того, кто пригласил вас<input name="referral_code" maxlength="12" pattern="TP[A-Fa-f0-9]{10}" placeholder="TP0123ABCDEF" required></label><button class="button secondary" type="submit">Привязать код</button></form>
+              <div class="tp20-referral-history"><strong>Приглашения</strong><?php if (!$invitedUsers): ?><p>Пока нет привязанных приглашений.</p><?php else: ?><?php foreach ($invitedUsers as $invite): ?><p><?=e($invite['referred_name']?:'Ожидает регистрации')?> · <?=e($invite['status'])?></p><?php endforeach ?><?php endif ?></div>
+            </section>
+
+            <section id="account-settings" class="account-section account-dashboard-panel" aria-labelledby="tp20-profile-settings">
+              <div class="account-dashboard-section-heading"><div><span class="kicker">PRIVACY & SETTINGS</span><h2 id="tp20-profile-settings">Настройки профиля</h2></div></div>
+              <p class="account-section-copy">Дата рождения необязательна. Согласие на персональные предложения можно отозвать, сняв отметку.</p>
+              <form method="post" class="tp20-account-form"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="profile-save"><label>Дата рождения<input type="date" name="birth_date" value="<?=e((string)$profile['birth_date'])?>" max="<?=e(date('Y-m-d'))?>"></label><label class="tp20-account-consent"><input type="checkbox" name="birthday_offer_consent" value="1" <?=!empty($profile['birthday_offer_consent'])?'checked':''?>> Даю отдельное согласие на предложения ко дню рождения в учебной системе</label><button class="button secondary" type="submit">Сохранить настройки ↗</button></form>
+            </section>
+
+            <details class="account-section account-dashboard-panel account-ledger-details" id="account-ledger">
+              <summary><span><span class="kicker">VERIFIED EVENTS</span><strong>История бонусов</strong></span><span class="account-section-count"><?=count($loyaltyEntries)?> операций</span></summary>
+              <p class="account-section-copy">Записи создаются только серверными событиями. За неподтверждённые заказы баллы не начисляются.</p>
+              <?php if (!$loyaltyEntries): ?>
+                <p class="account-empty-copy">Операций пока нет.</p>
+              <?php else: ?>
+                <div class="tp20-ledger-list"><?php foreach ($loyaltyEntries as $entry): ?><article><span><?=e($entry['transaction_type'])?> · <?=e($entry['created_at'])?></span><strong class="<?=((int)$entry['points']<0?'is-negative':'')?>"><?=((int)$entry['points']>0?'+':'')?><?= (int)$entry['points']?></strong><p><?=e($entry['note'])?></p></article><?php endforeach ?></div>
+              <?php endif ?>
+            </details>
+          </aside>
+        </div>
+      </div>
+      <div class="account-dashboard-note">Учебный сценарий: заказ в базе не означает оплату или передачу ресторану. Контактные и ресторанные данные вымышлены.</div>
     <?php endif ?>
   </section>
 </main>
+<?php if ($user): ?><script src="account-demo.js" defer></script><?php endif ?>
 <?php footer_html(); ?>
