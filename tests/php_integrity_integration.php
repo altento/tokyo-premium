@@ -28,7 +28,7 @@ function request(string $path, array $fields = [], array $headers = []): array {
  $headerLines = ['Accept: text/html,application/json'];
  if ($cookie !== '') $headerLines[] = 'Cookie: ' . $cookie;
  foreach ($headers as $k => $v) $headerLines[] = $k . ': ' . $v;
- $options = ['http' => ['method' => $fields ? 'POST' : 'GET', 'ignore_errors' => true, 'header' => implode("\r\n", $headerLines), 'content' => $fields ? http_build_query($fields) : '', 'timeout' => 15]];
+ $options = ['http' => ['method' => $fields ? 'POST' : 'GET', 'ignore_errors' => true, 'follow_location' => 0, 'max_redirects' => 0, 'header' => implode("\r\n", $headerLines), 'content' => $fields ? http_build_query($fields) : '', 'timeout' => 15]];
  if ($fields) $options['http']['header'] .= "\r\nContent-Type: application/x-www-form-urlencoded";
  $body = @file_get_contents($base . $path, false, stream_context_create($options));
  $responseHeaders = $http_response_header ?? [];
