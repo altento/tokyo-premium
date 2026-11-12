@@ -41,3 +41,20 @@
 @media(max-width:900px){.editorial-hero{min-height:650px;padding-inline:7vw}.editorial-hero-shade{background:linear-gradient(90deg,rgba(10,10,9,.94),rgba(10,10,9,.58) 64%,rgba(10,10,9,.22)),linear-gradient(0deg,rgba(10,10,9,.7),transparent 45%)}.zone-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.booking-layout,.contact-overview,.detail-feature{grid-template-columns:1fr}.cart-layout{grid-template-columns:1fr}.cart-checkout{position:static}.cart-recommendations{grid-template-columns:repeat(2,minmax(0,1fr))}.account-demo-layout{grid-template-columns:1fr}.account-demo-nav{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:600px){.editorial-hero{min-height:630px;align-items:end;padding:130px 22px 54px}.editorial-kanji{left:auto;right:18px;top:16%;font-size:1rem}.editorial-hero h1{font-size:clamp(2.8rem,15vw,4.8rem)}.editorial-hero-copy>p:not(.editorial-sub){font-size:.93rem}.experience-tiers,.detail-ingredients,.booking-benefits,.contact-footnotes{grid-template-columns:1fr}.image-story{grid-template-columns:1fr}.image-story>img{height:300px}.zone-grid{grid-template-columns:1fr}.gallery-toolbar{align-items:start}.gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:160px;gap:9px}.gallery-tile:nth-child(3n+1){grid-row:span 1}.gallery-tile:nth-child(4n+1){grid-row:span 2}.booking-form,.contact-form,.account-demo-form{grid-template-columns:1fr}.booking-form .field,.contact-form .field,.booking-form .full,.contact-form .full,.account-demo-form .field,.account-demo-form .full{grid-column:1}.table-map{gap:8px;padding:14px}.contact-facts{grid-template-columns:1fr}.cart-page-item{grid-template-columns:84px 1fr;gap:12px}.cart-page-item img{width:84px;height:90px}.cart-page-item .line-price{grid-column:2}.cart-page-item .cart-page-controls{flex-wrap:wrap}.cart-recommendations{grid-template-columns:1fr}.account-demo-nav{grid-template-columns:repeat(2,1fr)}.account-list article{display:block}.editorial-page .section{padding-block:56px}}
 @media(prefers-reduced-motion:reduce){.editorial-page *,.editorial-page *::before,.editorial-page *::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
+
+/* Keep long Russian titles and editorial captions inside their visible boxes. */
+.editorial-hero-copy{min-width:0;max-width:min(590px,100%)}
+.editorial-hero h1,.detail-title h1,.about-hero h1,.page-hero h1{max-width:100%;line-height:1.04;hyphens:auto;overflow-wrap:anywhere;word-break:normal}
+.editorial-hero .school-note{max-width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.55}
+@media(max-width:600px){
+  .editorial-hero{padding-inline:clamp(18px,5.6vw,24px)}
+  .editorial-hero-copy{width:100%;max-width:100%}
+  .editorial-hero h1{font-size:clamp(1.9rem,9.4vw,3.35rem);line-height:1.04;letter-spacing:-.025em}
+  .editorial-hero .editorial-sub{font-size:clamp(1.05rem,5.4vw,1.42rem);line-height:1.25;overflow-wrap:anywhere}
+  .editorial-hero-copy>p:not(.editorial-sub){max-width:100%;font-size:clamp(.86rem,3.9vw,.94rem);line-height:1.58;overflow-wrap:anywhere}
+  .editorial-hero .school-note{font-size:clamp(.56rem,2.65vw,.66rem);letter-spacing:.055em}
+  .about-hero h1{font-size:clamp(2rem,9vw,3.25rem);line-height:1.06;letter-spacing:-.025em}
+  .detail-title{min-width:0;overflow:visible}
+  .detail-title h1{font-size:clamp(2rem,9.2vw,3.45rem);line-height:1.05;letter-spacing:-.02em}
+  .account-card>h1,.account-welcome h1{max-width:100%;overflow-wrap:anywhere}
+}

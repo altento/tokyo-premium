@@ -1,4 +1,35 @@
 (() => {
+  const restaurantTimeZone = 'Asia/Qyzylorda';
+  const isoDate = (year, month, day) => `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  function restaurantDateBounds(instant = new Date()) {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: restaurantTimeZone, year: 'numeric', month: '2-digit', day: '2-digit'
+    }).formatToParts(instant);
+    const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+    const today = new Date(Date.UTC(Number(values.year), Number(values.month) - 1, Number(values.day)));
+    const latest = new Date(today);
+    latest.setUTCDate(latest.getUTCDate() + 365);
+    return {
+      min: isoDate(today.getUTCFullYear(), today.getUTCMonth() + 1, today.getUTCDate()),
+      max: isoDate(latest.getUTCFullYear(), latest.getUTCMonth() + 1, latest.getUTCDate())
+    };
+  }
+  function updateBookingDateLimits() {
+    const bounds = restaurantDateBounds();
+    document.querySelectorAll('.home-booking-form input[type="date"], .booking-form input[type="date"]').forEach(input => {
+      input.min = bounds.min;
+      input.max = bounds.max;
+      input.dataset.restaurantTimeZone = restaurantTimeZone;
+      input.setCustomValidity(input.value && input.value < bounds.min ? 'Выберите сегодняшнюю или будущую дату.' : '');
+      if (input.value && input.value < bounds.min) input.setAttribute('aria-invalid', 'true');
+      else input.removeAttribute('aria-invalid');
+    });
+  }
+  window.TokyoPremiumBookingDates = { bounds: restaurantDateBounds, update: updateBookingDateLimits, timeZone: restaurantTimeZone };
+  updateBookingDateLimits();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) updateBookingDateLimits(); });
+  window.addEventListener('pageshow', updateBookingDateLimits);
+
   const header = document.querySelector('.site-header');
   const nav = document.querySelector('#site-navigation');
   const toggle = header?.querySelector('.mobile-menu');
@@ -7,26 +38,10 @@
   const mobile = window.matchMedia('(max-width: 900px)');
   let returnFocus = false;
 
-  const makeCartToggle = () => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'cart-toggle';
-    button.setAttribute('aria-label', 'Открыть быстрый просмотр заказа, позиций: 0');
-    button.innerHTML = 'Заказ <b>0</b>';
-    return button;
-  };
-  const headerActions = header.querySelector('.header-actions');
-  if (headerActions && !headerActions.querySelector('.cart-toggle')) headerActions.append(makeCartToggle());
   const mobileUtilities = nav.querySelector('.mobile-nav-utilities');
-  if (mobileUtilities && !mobileUtilities.querySelector('.cart-toggle')) mobileUtilities.append(makeCartToggle());
-  if (!document.querySelector('.cart-panel')) {
-    const panel = document.createElement('aside');
-    panel.className = 'cart-panel';
-    panel.setAttribute('aria-label', 'Быстрый просмотр заказа');
-    panel.setAttribute('aria-hidden', 'true');
-    panel.innerHTML = '<div class="cart-head"><h2>Ваш заказ</h2><button class="cart-close" type="button" aria-label="Закрыть быстрый просмотр заказа">×</button></div><div class="cart-lines" aria-live="polite"></div><div class="cart-total"><span>Итого</span><strong>0 ₸</strong></div><a class="button cart-checkout-link" href="'+(location.pathname.endsWith('.html')?'cart.html':'pages.php?page=cart')+'">Перейти к оформлению ↗</a>';
-    document.body.append(panel);
-  }
+  // The header cart link is the single cart entry point. The duplicate menu link
+  // is removed while JS is active; it remains available as a no-JS fallback.
+  mobileUtilities?.querySelector('a[href*="cart"]')?.remove();
 
   function setOpen(open, { focus = false, restore = false } = {}) {
     if (!mobile.matches) open = false;
@@ -43,14 +58,6 @@
   }
 
   setOpen(false);
-
-  const cartCount = document.querySelector('.header-cart-count');
-  const mobileCartCount = document.querySelector('.mobile-cart-count');
-  if (cartCount && mobileCartCount) {
-    const syncCartCount = () => { mobileCartCount.textContent = cartCount.textContent || '0'; };
-    syncCartCount();
-    new MutationObserver(syncCartCount).observe(cartCount, { childList: true, characterData: true, subtree: true });
-  }
 
   // Capture this click before the legacy handler in luxury.js so the menu only toggles once.
   toggle.addEventListener('click', event => {

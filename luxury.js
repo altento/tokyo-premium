@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderCart() {
     if (!cart) return;
     const items = cart.get();
-    const lines = $('.cart-lines', panel);
+    const lines = panel ? $('.cart-lines', panel) : null;
     const count = cart.count();
     $$('.header-cart-count, .mobile-cart-count').forEach(badge => { badge.textContent = String(count); });
     cartToggles.forEach(cartToggle => {
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
       row.append(copy, controls);
       lines.append(row);
     }
-    const total = $('.cart-total strong', panel);
+    const total = panel ? $('.cart-total strong', panel) : null;
     if (total) total.textContent = `${cart.total().toLocaleString('ru-RU')} ₸`;
   }
   function cartAction(action, id, label) {
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
     panel.setAttribute('aria-hidden', 'false');
     $('.cart-close', panel)?.focus();
   }));
-  $('.cart-close', panel)?.addEventListener('click', closeCart);
+  if (panel) $('.cart-close', panel)?.addEventListener('click', closeCart);
   panel?.addEventListener('click', event => {
     const button = event.target.closest('[data-cart-action]');
     if (!button || !cart) return;
@@ -164,7 +164,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const search = $('.menu-search[type="search"]');
   const sort = $('#sort-menu');
   const favoriteOnly = $('#favorites-only');
+  const menuPagination = $('#menu-pagination');
   const originalDishOrder = new Map($$('.dish-card[data-category]').map((card, index) => [card, index]));
+  let menuPage = 1;
+  const menuPageSize = 6;
   function renderFavorites() {
     if (!cart) return;
     const ids = cart.getFavorites();
@@ -175,8 +178,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     filterMenu();
   }
-  function filterMenu() {
-    let visible = 0;
+  function filterMenu(resetPage = true) {
+    if (resetPage) menuPage = 1;
+    const matches = [];
     const category = $('.filter-btn.active[data-category]')?.dataset.category || 'all';
     const query = (search?.value || '').toLocaleLowerCase('ru');
     const favoriteIds = new Set(cart?.getFavorites() || []);
@@ -186,15 +190,45 @@ document.addEventListener('DOMContentLoaded', () => {
       const show = (category === 'all' || card.dataset.category === category)
         && text.includes(query)
         && (!favoriteOnly?.classList.contains('active') || favoriteIds.has(id));
-      card.hidden = !show;
-      if (show) visible++;
+      if (show) matches.push(card);
     });
+    const visible = matches.length;
+    const pages = menuPagination ? Math.max(1, Math.ceil(visible / menuPageSize)) : 1;
+    if (menuPage > pages) menuPage = pages;
+    matches.forEach((card, index) => { card.hidden = menuPagination && (index < (menuPage - 1) * menuPageSize || index >= menuPage * menuPageSize); });
+    if (menuPagination) {
+      menuPagination.replaceChildren();
+      menuPagination.hidden = pages < 2;
+      if (pages > 1) {
+        const addPage = (label, page, aria, active = false) => {
+          const button = document.createElement('button');
+          button.type = 'button'; button.className = 'menu-page-button' + (active ? ' active' : '');
+          button.dataset.pageGo = String(page); button.textContent = label; button.setAttribute('aria-label', aria);
+          if (active) button.setAttribute('aria-current', 'page');
+          menuPagination.append(button);
+        };
+        addPage('‹', Math.max(1, menuPage - 1), 'Предыдущая страница');
+        for (let page = 1; page <= pages; page++) addPage(String(page), page, 'Страница ' + page, page === menuPage);
+        addPage('›', Math.min(pages, menuPage + 1), 'Следующая страница');
+      }
+    }
     const empty = $('.empty-state');
     if (empty && (categoryButtons.length || search || favoriteOnly)) empty.hidden = visible > 0;
   }
   categoryButtons.forEach(button => button.addEventListener('click', () => {
     categoryButtons.forEach(item => item.classList.toggle('active', item === button));
     filterMenu();
+  }));
+  menuPagination?.addEventListener('click', event => {
+    const button = event.target.closest('[data-page-go]');
+    if (!button) return;
+    menuPage = Number(button.dataset.pageGo) || 1;
+    filterMenu(false);
+    $('#menu-catalog')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  });
+  $$('[data-category-link]').forEach(link => link.addEventListener('click', () => {
+    const button = categoryButtons.find(item => item.dataset.category === link.dataset.categoryLink);
+    button?.click();
   }));
   search?.addEventListener('input', filterMenu);
   favoriteOnly?.addEventListener('click', () => { favoriteOnly.classList.toggle('active'); filterMenu(); });
@@ -250,7 +284,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (type === 'order') {
         cart.clearCheckoutRequestKey();
         cart.clear();
-        form.reset();
+        if (window.TokyoCheckout) window.TokyoCheckout.reset(form);
+        else form.reset();
       } else if (type === 'booking' || type === 'review') form.reset();
       if (status) { status.textContent = result.message; status.className = 'form-status success'; }
     } catch (error) {
@@ -258,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } finally {
       if (type === 'order') cart?.finishCheckout();
       form.dataset.submitting = 'false';
-      if (button) button.disabled = false;
+      if (button) button.disabled = type === 'order' ? !(cart?.get().length) : false;
     }
   }));
 });

@@ -5,9 +5,18 @@ CREATE TABLE IF NOT EXISTS dishes (id INTEGER PRIMARY KEY AUTOINCREMENT, categor
 CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE COLLATE NOCASE, full_name TEXT NOT NULL, password_hash TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE IF NOT EXISTS orders (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER REFERENCES users(id) ON DELETE SET NULL, customer_name TEXT NOT NULL, phone TEXT NOT NULL, address TEXT NOT NULL DEFAULT '', fulfillment TEXT NOT NULL DEFAULT 'delivery' CHECK(fulfillment IN ('delivery','pickup')), comment TEXT NOT NULL DEFAULT '', total INTEGER NOT NULL CHECK(total >= 0), status TEXT NOT NULL DEFAULT 'new' CHECK(status IN ('new','confirmed','preparing','ready','completed','cancelled')), created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE IF NOT EXISTS order_items (id INTEGER PRIMARY KEY AUTOINCREMENT, order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE, dish_id INTEGER REFERENCES dishes(id) ON DELETE SET NULL, item_name TEXT NOT NULL, price INTEGER NOT NULL, quantity INTEGER NOT NULL CHECK(quantity > 0));
-CREATE TABLE IF NOT EXISTS bookings (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER REFERENCES users(id) ON DELETE SET NULL, guest_name TEXT NOT NULL, phone TEXT NOT NULL, guest_count INTEGER NOT NULL CHECK(guest_count BETWEEN 1 AND 12), booking_date TEXT NOT NULL, booking_time TEXT NOT NULL, zone TEXT NOT NULL DEFAULT '', preferred_table TEXT NOT NULL DEFAULT '', message TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'new' CHECK(status IN ('new','confirmed','completed','cancelled')), created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE IF NOT EXISTS bookings (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER REFERENCES users(id) ON DELETE SET NULL, guest_name TEXT NOT NULL, phone TEXT NOT NULL, guest_count INTEGER NOT NULL CHECK(guest_count BETWEEN 1 AND 12), booking_date TEXT NOT NULL, booking_time TEXT NOT NULL, zone TEXT NOT NULL DEFAULT '', preferred_table TEXT NOT NULL DEFAULT '', format TEXT NOT NULL DEFAULT '', message TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'new' CHECK(status IN ('new','confirmed','completed','cancelled')), created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE IF NOT EXISTS admins (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE COLLATE NOCASE, password_hash TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE IF NOT EXISTS reviews (id INTEGER PRIMARY KEY AUTOINCREMENT, guest_name TEXT NOT NULL, rating INTEGER NOT NULL CHECK(rating BETWEEN 1 AND 5), body TEXT NOT NULL, theme TEXT NOT NULL DEFAULT 'Кухня', status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','published','hidden')), created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE IF NOT EXISTS app_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE IF NOT EXISTS contact_messages (id INTEGER PRIMARY KEY AUTOINCREMENT, guest_name TEXT NOT NULL, email TEXT NOT NULL, subject TEXT NOT NULL, message TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'new' CHECK(status IN ('new','read','archived')), created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE IF NOT EXISTS api_idempotency (token TEXT PRIMARY KEY, response_json TEXT NOT NULL, response_status INTEGER NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
+-- Order key reservation, order, items and replay response are written in one transaction.
+CREATE TABLE IF NOT EXISTS api_order_requests (
+ token TEXT PRIMARY KEY,
+ order_id INTEGER UNIQUE REFERENCES orders(id) ON DELETE SET NULL,
+ response_json TEXT,
+ response_status INTEGER,
+ created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ CHECK ((response_json IS NULL AND response_status IS NULL) OR (response_json IS NOT NULL AND response_status IS NOT NULL))
+);

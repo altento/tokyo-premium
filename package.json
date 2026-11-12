@@ -3,7 +3,11 @@
   "private": true,
   "scripts": {
     "test:cart": "node --test tests/cart-store.test.cjs",
-    "test:browser": "node tests/browser-regression.cjs"
+    "test:browser": "node tests/browser-regression.cjs",
+    "test:reviews": "node tests/reviews-regression.cjs",
+    "test:cart-visual": "node tests/cart-visual-regression.cjs",
+    "test:responsive": "node tests/responsive-regression.cjs",
+    "test:visual-states": "node tests/visual-state-regression.cjs"
   },
   "devDependencies": {
     "playwright": "1.65.0"

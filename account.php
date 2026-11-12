@@ -67,7 +67,7 @@ if (!empty($_SESSION['user_id'])) {
             unset($order);
         }
 
-        $query = $pdo->prepare('SELECT booking_date,booking_time,guest_count,status FROM bookings WHERE user_id=? ORDER BY booking_date DESC LIMIT 50');
+        $query = $pdo->prepare('SELECT booking_date,booking_time,guest_count,status,format FROM bookings WHERE user_id=? ORDER BY booking_date DESC LIMIT 50');
         $query->execute([$_SESSION['user_id']]);
         $bookings = $query->fetchAll();
     } else {
@@ -137,7 +137,7 @@ header_html();
             <?php foreach ($bookings as $booking): ?>
               <article class="account-order-card">
                 <div class="account-order-heading"><strong><?=e($booking['booking_date'])?> · <?=e($booking['booking_time'])?></strong><span><?=e($booking['status'])?></span></div>
-                <p class="account-order-meta"><?= (int)$booking['guest_count']?> гостей · заявка ожидает подтверждения</p>
+                <p class="account-order-meta"><?= (int)$booking['guest_count']?> гостей<?= !empty($booking['format'])?' · Omakase «'.e($booking['format']).'»':'' ?> · заявка ожидает подтверждения</p>
               </article>
             <?php endforeach ?>
           </div>

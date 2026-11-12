@@ -102,12 +102,18 @@ jobs:
             sleep 1
           done
           TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:browser
+          TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:reviews
+          TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:cart-visual
+          TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:responsive
+          TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:visual-states
       - name: Save visual QA screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: tokyo-premium-visual-qa
-          path: project-docs/visual-qa/*.jpg
+          path: |
+            project-docs/visual-qa/*.jpg
+            project-docs/visual-qa/*.png
           if-no-files-found: warn
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v3

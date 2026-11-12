@@ -2,7 +2,8 @@
 require __DIR__.'/bootstrap.php';
 page_start('Tokyo Premium — японская кухня как искусство момента','Авторская японская кухня, сезонные вкусы и ритуал гостеприимства в вымышленном Tokyo Premium. Учебная концепция.');
 header_html('home');
-$featured=array_slice(dishes(true),0,4);
+$featured=[];$featuredImages=[];
+foreach(array_merge(dishes(true),dishes()) as $dish){$image=trim((string)$dish['image_url']);if($image===''||isset($featuredImages[$image]))continue;$featuredImages[$image]=true;$featured[]=$dish;if(count($featured)===4)break;}
 ?>
 <main class="home-premium">
   <section class="home-hero" aria-labelledby="home-title">

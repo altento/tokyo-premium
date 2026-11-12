@@ -52,7 +52,7 @@ PHP-версия сохраняет меню, пользователей, зак
 
 [Открыть сайт](https://altento.github.io/tokyo-premium/) · [Репозиторий](https://github.com/altento/tokyo-premium)
 
-После push в `main` GitHub Actions проверяет синтаксис PHP, выполняет smoke-тесты форм и закрытого входа в админку на временной SQLite-базе, экспортирует страницы в каталог `docs` и публикует его через GitHub Pages. Последний ручной QA и границы проверки описаны в `project-docs/testing-report.md`. Pages — статический хостинг: на публичной версии нет PHP, SQLite, серверной авторизации, административной панели, отправки email и реальной оплаты. В этой версии заявки, корзина, профиль, отзывы и контакты хранятся только в `localStorage` текущего браузера; заказ или бронь не отправляются и не считаются подтверждёнными. Публичная сборка не публикует базу данных.
+После push в `main` GitHub Actions проверяет PHP/SQLite, админку и формы, тестирует корзину, отзывы, checkout, адаптивность и визуальные состояния браузером, затем экспортирует каталог `docs` и публикует его через GitHub Pages. Полный список проверок, скриншоты и ограничения описаны в `project-docs/final-acceptance-report.md`. Pages — статический хостинг: на публичной версии нет PHP, SQLite, серверной авторизации, административной панели, отправки email и реальной оплаты. В этой версии заявки, корзина, профиль, отзывы и контакты хранятся только в `localStorage` текущего браузера; заказ или бронь не отправляются и не считаются подтверждёнными. Публичная сборка не публикует базу данных.
 
 ## Качество, изображения и редактирование
 
@@ -67,6 +67,10 @@ npx playwright install chromium
 php tests/php_integrity_integration.php
 RESTAURANT_DB=/tmp/tokyo-browser.sqlite php -S 127.0.0.1:8090 -t .
 TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:browser
+TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:reviews
+TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:cart-visual
+TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:responsive
+TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:visual-states
 ```
 
-Браузерный прогон создаёт полностраничные desktop/mobile JPEG-снимки в `project-docs/visual-qa/`. CI сохраняет их как Actions artifact `tokyo-premium-visual-qa`.
+Браузерный прогон проверяет 11 типов страниц, все 20 карточек блюд, пользовательские сценарии и целевые ширины от 320 до 1920 px. Скриншоты desktop/mobile и состояния корзины хранятся в `project-docs/visual-qa/`; CI сохраняет их как Actions artifact `tokyo-premium-visual-qa`.

@@ -21,13 +21,52 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(tableStatus)tableStatus.textContent='Выбран предпочтительный стол №'+button.dataset.tableSelect+'. Доступность подтвердит ресторан.';
   }));
   const fulfillment=$('#fulfillment'), addressField=$('#checkout-address'), addressWrap=$('#checkout-address-field');
-  function syncFulfillment(){if(!fulfillment||!addressField)return;const delivery=fulfillment.value!=='pickup';addressField.required=delivery;addressField.disabled=!delivery;if(addressWrap)addressWrap.hidden=!delivery;if(!delivery)addressField.value=''}
-  fulfillment?.addEventListener('change',syncFulfillment);syncFulfillment();
+  const checkoutForm=$('#checkout-form');
+  function syncFulfillment(){
+    if(!fulfillment||!addressField)return;
+    const delivery=fulfillment.value!=='pickup';
+    addressField.required=delivery;
+    addressField.disabled=!delivery;
+    addressField.setCustomValidity('');
+    addressField.removeAttribute('aria-invalid');
+    if(addressWrap)addressWrap.hidden=!delivery;
+    if(!delivery)addressField.value='';
+  }
+  function resetCheckout(form=checkoutForm){
+    if(!form||form!==checkoutForm)return;
+    form.reset();
+    // reset() restores the select's default but does not dispatch `change`.
+    // Recompute every dependent field immediately after the browser reset.
+    syncFulfillment();
+    form.classList.remove('was-validated');
+    form.querySelectorAll('[aria-invalid="true"]').forEach(field=>field.removeAttribute('aria-invalid'));
+    const submit=form.querySelector('button[type="submit"]');
+    if(submit)submit.disabled=form.dataset.api==='order'&&!(window.TokyoCart?.get().length);
+  }
+  function clearCheckoutStatus(){
+    const status=checkoutForm?.querySelector('.form-status');
+    if(status){status.textContent='';status.className='form-status';}
+  }
+  fulfillment?.addEventListener('change',()=>{syncFulfillment();clearCheckoutStatus()});
+  checkoutForm?.addEventListener('input',clearCheckoutStatus);
+  checkoutForm?.addEventListener('change',clearCheckoutStatus);
+  addressField?.addEventListener('input',clearCheckoutStatus);
+  document.addEventListener('tokyo-cart-updated',clearCheckoutStatus);
+  checkoutForm?.addEventListener('reset',()=>queueMicrotask(syncFulfillment));
+  window.TokyoCheckout=Object.freeze({syncFulfillment,reset:resetCheckout});
+  syncFulfillment();
   const esc=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const recommendationContainer=$('.cart-recommendations');
+  const allRecommendations=recommendationContainer?$$('.dish-card',recommendationContainer):[];
   function renderCart(){
     const container=$('#cart-page-items');if(!container)return;
     const store=window.TokyoCart;if(!store)return;
     const dishes=store.catalog(),cart=store.get();
+    const cartIds=new Set(cart.map(item=>Number(item.id)));
+    if(recommendationContainer){
+      const suggestions=allRecommendations.filter(card=>{const id=Number(card.querySelector('.add-to-cart')?.dataset.id);return id>0&&!cartIds.has(id)}).slice(0,3);
+      recommendationContainer.replaceChildren(...suggestions);
+    }
     let total=0;container.innerHTML='';
     cart.forEach(item=>{
       const dish=dishes.find(d=>Number(d.id)===Number(item.id));if(!dish)return;

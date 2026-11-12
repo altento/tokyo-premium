@@ -1,3 +1,4 @@
+@import url("luxury-refinements.css");
 :root{
   --lacquer:#0b0a09;--charcoal:#11100e;--walnut:#20150f;--panel:#171310;
   --ivory:#f4e8d1;--muted:#b8aa92;--gold:#caa56b;--bronze:#785d3c;
@@ -7,7 +8,7 @@
 html{background:var(--lacquer);scroll-behavior:smooth;scroll-padding-top:90px}
 body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,Arial,sans-serif}
 ::selection{background:var(--crimson);color:#fff}
-.site-header{height:76px;padding:0 clamp(20px,4vw,64px);gap:clamp(16px,2vw,32px);background:rgba(10,9,8,.97);border-bottom:1px solid rgba(202,165,107,.2);backdrop-filter:blur(16px)}
+.site-header{height:76px;padding:0 clamp(20px,4vw,64px);gap:clamp(16px,2vw,32px);background:rgba(10,9,8,.97);border-bottom:1px solid rgba(202,165,107,.2);backdrop-filter:blur(16px);position:sticky;inset-block-start:0;z-index:50}
 .wordmark{gap:11px;flex:none;color:var(--ivory);letter-spacing:.16em}
 .brand-emblem{width:46px;height:46px;display:grid;place-items:center;border-radius:50%;background:linear-gradient(145deg,#dc1e29,#8e0711);box-shadow:0 4px 20px #a80b1740}
 .brand-emblem svg{width:38px;height:38px;stroke:#190b08;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -25,6 +26,7 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .header-icon svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;transition:color .2s,transform .2s}
 .header-icon:hover svg{color:var(--gold);transform:translateY(-1px)}
 .header-cart-count{position:absolute;top:0;right:-5px;min-width:16px;height:16px;display:grid;place-items:center;border-radius:50%;background:var(--crimson-bright);color:#fff;font:700 9px/1 Manrope,sans-serif}
+.header-actions .header-icon{min-width:44px;min-height:44px}
 .header-cta{padding:11px 16px;border:1px solid #d02a30;background:linear-gradient(135deg,#c51a24,#9d0e17);color:#fff!important;font-size:10px;letter-spacing:.09em;text-transform:uppercase;white-space:nowrap;transition:transform .2s,box-shadow .2s}
 .header-cta:hover{transform:translateY(-2px);box-shadow:0 8px 24px #bd122a45}
 .header-cta span{color:#fff;margin-left:8px}
@@ -209,13 +211,20 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
   .mobile-nav-utilities{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-top:16px;margin-top:8px;border-top:1px solid var(--hairline)}
   .main-nav.open .mobile-nav-utilities a{display:flex;align-items:center;justify-content:space-between;min-height:46px;padding:10px 12px;border:1px solid rgba(202,165,107,.38);background:rgba(202,165,107,.07);color:var(--ivory);font-size:11px}
   .main-nav.open .mobile-nav-utilities a:first-child{grid-column:1/-1;background:linear-gradient(130deg,#bb1622,#850c14);border-color:#d02a30;color:#fff}
-  .site-header .header-actions{display:flex;gap:6px;flex:none}
-  .site-header .header-actions .header-icon{display:none}
-  .site-header .header-actions .cart-toggle{display:flex;align-items:center;gap:7px;min-height:34px;padding:0 9px;font-size:10px;letter-spacing:.04em}
-  .main-nav.open .mobile-nav-utilities .cart-toggle{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:8px 12px}
+  .site-header .header-actions{display:flex;gap:4px;flex:none}
+  .site-header .header-actions .header-icon:not(.header-cart-link){display:none}
+  .site-header .header-actions .header-cart-link{display:grid;min-width:44px;min-height:44px}
+  .site-header .header-actions .cart-toggle{display:none!important}
+  .mobile-menu{width:44px;height:44px;flex:none}
   .mobile-cart-count{display:inline-grid;min-width:20px;height:20px;place-items:center;border-radius:50%;background:var(--crimson-bright);color:#fff;font-size:10px}
 }
 @media(max-width:600px){.main-nav.open{max-height:calc(100dvh - 64px)}}
+@media(max-width:360px){.site-header{padding-inline:12px;gap:8px}.wordmark{gap:8px}.brand-type small{display:none}}
+
+/* One persistent cart entry in the sticky header; no floating duplicate. */
+.cart-toggle{position:static;display:none!important}
+.header-cart-link{min-width:44px;min-height:44px}
+.main-nav.open .mobile-nav-utilities .cart-toggle{display:none!important}
 
 /* Philosophy page: editorial chapter rhythm, portrait and sourcing story. */
 .about-hero{position:relative;min-height:430px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:76px max(7vw,calc((100vw - var(--page-width))/2));overflow:hidden;background:radial-gradient(ellipse at 80% 60%,#70201944,transparent 38%),linear-gradient(110deg,#0d0b09,#1b110d 64%,#100c09)}
@@ -282,7 +291,7 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .review-submit-copy h2{font:400 clamp(2.5rem,4vw,4rem)/1.05 Georgia,serif;color:var(--jp-cream)}
 .review-submit-copy img{width:100%;max-height:300px;object-fit:cover;border:1px solid var(--jp-line);margin-top:20px}
 .review-form{align-self:start}
-.detail-gallery{display:grid;grid-template-columns:68px minmax(0,1fr);gap:16px;align-items:stretch}
+.detail-gallery{display:grid;grid-template-columns:minmax(0,1fr);min-width:0;align-items:stretch}
 .detail-crops{display:flex;flex-direction:column;gap:12px}
 .detail-crops button{padding:0;border:1px solid var(--jp-line);background:transparent;overflow:hidden;cursor:pointer}
 .detail-crops button[aria-pressed="true"]{border-color:var(--jp-gold);box-shadow:0 0 0 1px var(--jp-gold)}
@@ -326,3 +335,12 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .account-order-meta{margin:6px 0 0;color:var(--muted);font-size:.9rem;overflow-wrap:anywhere}
 .account-order-card .order-item-details ul{padding-left:1.15rem;overflow-wrap:anywhere}
 @media(max-width:640px){.account-shell{margin:24px auto;padding-inline:14px}.account-card{padding:22px 18px}.account-welcome{align-items:flex-start;flex-direction:column}.account-order-card{padding:15px}.account-order-heading{align-items:flex-start}}
+
+.local-review-panel{width:min(1320px,calc(100% - 48px));margin:0 auto 72px;padding:30px;border:1px solid rgba(199,167,102,.38);background:linear-gradient(135deg,#15120f,#0e0d0c);color:#f3eadb}
+.local-review-panel[hidden]{display:none}.local-review-heading{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:8px 24px;margin-bottom:20px}
+.local-review-heading h2{grid-column:1/-1;margin:0;font:400 clamp(25px,3vw,38px)/1.15 'Playfair Display',serif}.local-review-heading p{margin:0;color:#c4b9a8;font-size:13px}.local-review-heading .text-button{grid-column:2;grid-row:2;border:1px solid rgba(199,167,102,.55);background:transparent;color:#f0d49d;padding:9px 13px;cursor:pointer}
+.local-review-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.local-review-card{min-width:0;border:1px solid rgba(199,167,102,.27);background:#100f0d;padding:20px}.local-review-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:#e8dcc8}.local-review-meta span{padding:4px 9px;border-radius:99px;background:#372118;color:#f1ce92;font-size:11px}.local-review-meta time{margin-left:auto;color:#b9aa96;font-size:11px}.local-review-rating{color:#e8b247;letter-spacing:.08em}.local-review-body{overflow-wrap:anywhere;color:#f0eadf}.local-review-card small{color:#ae9c83}
+@media(max-width:600px){.local-review-panel{width:calc(100% - 28px);margin-bottom:46px;padding:19px}.local-review-heading{grid-template-columns:1fr}.local-review-heading h2,.local-review-heading .text-button{grid-column:1;grid-row:auto}.local-review-heading .text-button{justify-self:start}.local-review-list{grid-template-columns:1fr}.local-review-meta time{margin-left:0}}
+.editorial-hero.cart-hero{min-height:430px;padding-block:44px;align-items:center}
+.cart-page.section{padding-top:clamp(32px,4vw,52px)}
+@media(max-width:640px){.editorial-hero.cart-hero{min-height:360px;padding-block:64px 40px}.cart-page.section{padding-top:30px}}

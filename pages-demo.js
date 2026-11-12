@@ -1,3 +1,9 @@
+document.addEventListener('DOMContentLoaded', () => {
+  const format = new URLSearchParams(location.search).get('format');
+  const select = document.querySelector('#booking-format');
+  if (select && ['Начало', 'Сезонный', 'Премиальный'].includes(format || '')) select.value = format;
+});
+
 document.addEventListener('submit', async event => {
   const form = event.target;
   if (!(form instanceof HTMLFormElement) || !form.matches('form[data-api]')) return;
@@ -50,7 +56,7 @@ document.addEventListener('submit', async event => {
       items: snapshot
     });
   } else if (type === 'booking') {
-    rows.unshift({ name: data.name, date: data.date, time: data.time, guests: data.guests, zone: data.zone, table: data.table });
+    rows.unshift({ name: data.name, date: data.date, time: data.time, guests: data.guests, zone: data.zone, table: data.table, format: data.format || '' });
   } else if (type === 'review') {
     if (String(data.body || '').trim().length < 20) {
       status.textContent = 'Добавьте отзыв не короче 20 символов.';
@@ -77,15 +83,17 @@ document.addEventListener('submit', async event => {
     cart.clear();
     cart.finishCheckout();
   }
-  status.textContent = type === 'review'
+  const successMessage = type === 'review'
     ? 'Спасибо. Отзыв сохранён в этом браузере и не публикуется.'
     : type === 'contact'
       ? 'Сообщение сохранено только в этом браузере. Оно не отправлено ресторану.'
       : 'Готово: демо-запись сохранена только в этом браузере. Это не подтверждённая бронь и не отправленный заказ.';
+  if (type === 'order' && window.TokyoCheckout) window.TokyoCheckout.reset(form);
+  else form.reset();
+  status.textContent = successMessage;
   status.className = 'form-status success';
-  form.reset();
   form.dataset.submitting = 'false';
   const submit = form.querySelector('button[type="submit"]');
-  if (submit) submit.disabled = false;
+  if (submit) submit.disabled = type === 'order' && !(cart?.get().length);
   document.dispatchEvent(new Event('tokyo-demo-data-updated'));
 }, true);
