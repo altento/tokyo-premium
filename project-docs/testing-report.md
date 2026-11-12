@@ -7,8 +7,8 @@ Updated 2026-11-13
 | Check | Result | Evidence / scope |
 |---|---|---|
 | Cart store | Passed, 12/12 | Input sanitization, old-format migration, quantity limits, cross-tab state, checkout lock/retry key, custom-set bounds and clear/re-add behavior. |
-| PHP + SQLite integration | Passed, 95 assertions | Isolated database; order price authority, idempotent and concurrent same-key orders, rollback, booking date/status, admin search/notifications, campaign targets, loyalty/order history, and Secret Menu direct-route/API protection plus session unlock, including category targets. |
-| PHP syntax | Passed | All PHP application and support files linted with PHP 8.5. |
+| PHP + SQLite integration | Passed, 101 assertions | Isolated database; six independent PHP processes race to initialize a clean SQLite file, plus order price authority, idempotent and concurrent same-key orders, rollback, booking date/status, admin search/notifications, campaign targets, loyalty/order history, and Secret Menu route/API protection plus session unlock. The suite passed three consecutive runs after the CI-discovered initialization race was fixed. |
+| PHP syntax | Passed | All 25 PHP application and support files linted with PHP 8.4. |
 | JavaScript syntax | Passed | Application JS and CJS regression files checked by Node. |
 | Core browser regression | Passed | 11 page types, all 20 dish details (18 public; 2 after a server-validated Secret Menu unlock), cart/checkout, tabs, favorites, navigation, menu filters and six viewport widths. |
 | Tokyo 2.0 browser regression | Passed in PHP and exported static mode | Offers/collection, Secret Menu unlock → cart, Omakase stage selection, set builder and shared cart, preference wizard, table-preference disclosure, certificate preview, quick view, profile demo labeling, and six viewport widths. Static-only Secret Menu data is explicitly client-side and cannot grant PHP access. |
@@ -17,7 +17,7 @@ Updated 2026-11-13
 | Responsive regression | Passed | 11 page types × 9 widths (320–1920 px), heading clipping checks, cart access, mobile menu keyboard/focus behavior and booking dates across browser time zones. |
 | Gallery/profile visual state | Passed | Default gallery and static profile desktop/mobile captures. |
 | Static export | Passed | Exporter generated 36 pages; locked Secret Menu detail routes are omitted, stale generated detail pages are removed, and the client-only preview payload is generated separately. No PHP/backend files are exported. |
-| Diff hygiene | Passed before release | `git diff --check` reported no whitespace errors. |
+| Diff hygiene | Pending | The complete 133-file feature commit passed staged `git diff --cached --check`; the follow-up fixes will be checked before their PR is opened. |
 
 The Playwright evidence suite writes to `TOKYO_EVIDENCE_DIR` when set; by default it writes into `project-docs/visual-qa/`. This keeps the checks reproducible in restricted workspaces without changing what CI captures. Secret Menu unlock desktop/mobile captures are included alongside the route and checkout states.
 
@@ -31,10 +31,16 @@ The final booking regression additionally checks both initial and selected-table
 
 Secret Menu visibility is enforced at the PHP query and order-validation layers. Anonymous visitors do not receive those dishes in the shared catalog, menu, details, set builder, recommendation wizard, seasonal collection page, or public offers API. A successful code unlock is recorded in the PHP session and rechecked against active campaign rules on subsequent pages and order quotes. Static GitHub Pages includes only a public browser-preview payload; it is intentionally not an authorization mechanism.
 
+## CI follow-up
+
+The first GitHub Pages workflow run installed dependencies and passed the cart tests, then found a real concurrency defect: multiple PHP workers could repeat schema initialization while accepting simultaneous requests, producing `database is locked` before order handling. `db()` now serializes first-time schema/migration setup with a per-database process lock and skips DDL once migration 5 is present. A regression test now launches six independent PHP processes against a clean database before any parent-process connection; local PHP/SQLite integration passed three consecutive runs (101 assertions each), and the full browser regression, Tokyo 2.0 flows, reviews, cart states, responsive checks and visual states passed against freshly exported PHP and static versions. The follow-up GitHub workflow and Pages deploy are still pending.
+
+Local `npm ci` did not finish in this Windows environment; browser suites used the already cached, pinned Playwright 1.65.0 package. The hosted workflow did complete `npm ci` successfully before reaching the database failure.
+
 ## Not production-certified
 
 - No restaurant SMTP/provider credentials or email delivery adapter is configured; the admin notification center is in-app only.
 - There is no payment provider, live inventory, table availability service, or production restaurant backend. A booking request is not automatically confirmed.
 - GitHub Pages is a browser-local demonstration, not server authentication or durable shared storage.
 - User, menu, price, contact and offer seed values are fictional educational data.
-- CI and public deployment status must be checked after the current commit is pushed; local green tests are not a claim about the hosted revision.
+- The Pages deployment remains unverified until the follow-up workflow completes successfully and the public URL is checked.

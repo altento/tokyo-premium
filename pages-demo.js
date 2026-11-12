@@ -1,8 +1,10 @@
-document.addEventListener('DOMContentLoaded', () => {
+const applyBookingFormat = () => {
   const format = new URLSearchParams(location.search).get('format');
   const select = document.querySelector('#booking-format');
   if (select && ['Начало', 'Сезонный', 'Премиальный'].includes(format || '')) select.value = format;
-});
+};
+applyBookingFormat();
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyBookingFormat, { once: true });
 
 document.addEventListener('submit', async event => {
   const form = event.target;

@@ -5,6 +5,40 @@ declare(strict_types=1);
 $dbPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'tokyo-integrity-' . bin2hex(random_bytes(6)) . '.sqlite';
 if (!extension_loaded('pdo_sqlite')) { fwrite(STDERR, "SKIP: pdo_sqlite extension is required.\n"); exit(77); }
 putenv('RESTAURANT_DB=' . $dbPath);
+$checks = 0;
+$initGatePath = $dbPath . '.start';
+$initScript = 'for ($wait=0; !is_file($argv[2]) && $wait<500; $wait++) usleep(10000); if (!is_file($argv[2])) exit(70); require $argv[1]; db(); echo "db-ready";';
+$initLockPath = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'tokyo-db-init-' . hash('sha256', realpath(dirname($dbPath)) . DIRECTORY_SEPARATOR . basename($dbPath)) . '.lock';
+$initializers = [];
+for ($i = 0; $i < 6; $i++) {
+    $workerPipes = [];
+    $workerCommand = [PHP_BINARY];
+    if (PHP_OS_FAMILY === 'Windows') {
+        $workerCommand[] = '-d';
+        $workerCommand[] = 'extension_dir=' . ini_get('extension_dir');
+        $workerCommand[] = '-d';
+        $workerCommand[] = 'extension=php_sqlite3.dll';
+        $workerCommand[] = '-d';
+        $workerCommand[] = 'extension=php_pdo_sqlite.dll';
+    }
+    array_push($workerCommand, '-r', $initScript, dirname(__DIR__) . '/bootstrap.php', $initGatePath);
+    $worker = proc_open($workerCommand, [0 => ['pipe','r'], 1 => ['pipe','w'], 2 => ['pipe','w']], $workerPipes, dirname(__DIR__), null);
+    if (!is_resource($worker)) throw new RuntimeException('Could not start concurrent SQLite initializer ' . ($i + 1) . '.');
+    fclose($workerPipes[0]);
+    $initializers[] = [$worker, $workerPipes, $i + 1];
+}
+if (file_put_contents($initGatePath, 'start') === false) throw new RuntimeException('Could not release concurrent SQLite initializers.');
+foreach ($initializers as [$worker, $workerPipes, $number]) {
+    $stdout = stream_get_contents($workerPipes[1]);
+    $stderr = stream_get_contents($workerPipes[2]);
+    fclose($workerPipes[1]);
+    fclose($workerPipes[2]);
+    $exitCode = proc_close($worker);
+    if ($exitCode !== 0 || !str_contains($stdout, 'db-ready')) {
+        throw new RuntimeException('Concurrent SQLite initializer ' . $number . ' failed (exit ' . $exitCode . '): ' . trim((string)$stdout . ' ' . (string)$stderr));
+    }
+    $checks++;
+}
 require dirname(__DIR__) . '/bootstrap.php';
 $pdo = db();
 $password = 'Integration-Only-' . bin2hex(random_bytes(8));
@@ -21,7 +55,6 @@ $server = proc_open([PHP_BINARY, '-d', 'extension_dir=' . ini_get('extension_dir
 if ($previousWorkers === false) putenv('PHP_CLI_SERVER_WORKERS'); else putenv('PHP_CLI_SERVER_WORKERS=' . $previousWorkers);
 if (!is_resource($server)) throw new RuntimeException('Could not start PHP test server.');
 $cookie = '';
-$checks = 0;
 function check(bool $ok, string $message): void { global $checks; if (!$ok) throw new RuntimeException('FAIL: ' . $message); $checks++; }
 function request(string $path, array $fields = [], array $headers = []): array {
  global $base, $cookie;
@@ -206,5 +239,5 @@ try {
  throw $ex;
 } finally {
  proc_terminate($server); foreach ($pipes as $pipe) if (is_resource($pipe)) fclose($pipe); proc_close($server);
- foreach ([$dbPath,$dbPath.'-wal',$dbPath.'-shm',$serverLog] as $file) if (is_file($file)) @unlink($file);
+ foreach ([$dbPath,$dbPath.'-wal',$dbPath.'-shm',$serverLog,$initLockPath,$initGatePath] as $file) if (is_file($file)) @unlink($file);
 }

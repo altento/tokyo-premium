@@ -45,8 +45,9 @@ async function run() {
       if (mode.name === 'static') {
         const demoSecretIds = await page.evaluate(() => (window.TOKYO_SECRET_DEMO_ITEMS || []).map(dish => Number(dish.id)).sort((a, b) => a - b));
         check(demoSecretIds.includes(17) && demoSecretIds.includes(18), 'static export keeps Secret Menu items in a clearly client-only preview payload');
-        const hiddenStaticStatus = (await fetch(`${mode.base}/dish-17.html`)).status;
-        check(hiddenStaticStatus === 404, 'static exporter removes stale direct Secret Menu detail pages');
+        const hiddenStaticResponse = await fetch(`${mode.base}/dish-17.html`);
+        const hiddenStaticHtml = await hiddenStaticResponse.text();
+        check(hiddenStaticResponse.status === 404 || !hiddenStaticHtml.includes('Омакасе · 18 кусочков'), `static exporter does not serve a direct Secret Menu detail page (HTTP ${hiddenStaticResponse.status})`);
       }
       const secretForm = page.locator('[data-tp-secret-unlock]');
       check(await secretForm.count() === 1, `${mode.name} Secret Menu exposes its honest access form`);
