@@ -1,6 +1,8 @@
 name: Publish Tokyo Premium demo
 
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
   workflow_dispatch:
@@ -107,20 +109,22 @@ jobs:
           TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:cart-visual
           TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:responsive
           TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:visual-states
+          TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:visual-fidelity
       - name: Save visual QA screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: tokyo-premium-visual-qa
           path: |
-            project-docs/visual-qa/*.jpg
-            project-docs/visual-qa/*.png
+            project-docs/visual-qa/**/*.jpg
+            project-docs/visual-qa/**/*.png
           if-no-files-found: warn
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: docs
   deploy:
+    if: github.event_name != 'pull_request'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
