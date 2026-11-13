@@ -14,6 +14,24 @@
     });
   });
 
+  document.querySelectorAll('[data-copy-invite]').forEach(button => {
+    button.addEventListener('click', async () => {
+      let invite;
+      try {
+        const url = new URL(String(button.dataset.copyInvite || ''), location.href);
+        if (url.origin !== location.origin) return;
+        invite = url.href;
+      } catch (_) { return; }
+      try {
+        await navigator.clipboard.writeText(invite);
+        button.textContent = 'Ссылка скопирована';
+      } catch (_) {
+        button.textContent = invite;
+      }
+      window.setTimeout(() => { button.textContent = button.dataset.label || 'Скопировать ссылку'; }, 2200);
+    });
+  });
+
   const secretForm = document.querySelector('[data-tp-secret-unlock]');
   if (secretForm) {
     secretForm.addEventListener('submit', async event => {

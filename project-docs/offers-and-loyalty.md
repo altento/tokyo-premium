@@ -19,3 +19,9 @@ The export presents local versions of the offers, set builder, recommendation wi
 ## Seed examples
 
 `DEMO10`, `TOKYOHOUR`, and `SECRET` are fictitious defaults for testing. The sample Golden Hour rule is weekdays 14:00–17:00 in the restaurant timezone. Tier thresholds and reward values are also examples that must be edited before any real service. They are not public offers or contractual terms.
+
+## Referral and birthday follow-up — 2026-11-13
+
+Referral codes are now stable per inviter and stored on the existing profile record. The account offers both a shareable same-origin invitation link and a copy action. Registration preserves the validated code; the invitee explicitly attaches it in the account before ordering. One inviter can refer multiple accounts. Repeated attachment by the same invitee is idempotent; self-invites and changing an already attached inviter are rejected. Existing legacy referral codes remain resolvable. Referral points are awarded only for a qualifying completed order and retain the existing reversal/idempotency ledger rules.
+
+Birthday remains optional. The profile date is validated and a separate, withdrawable consent gates birthday campaigns. This is PHP + SQLite functionality; the static export remains a browser-only demonstration and does not register referrals or issue rewards.

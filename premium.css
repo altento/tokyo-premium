@@ -553,6 +553,8 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .account-dashboard .tp20-referral-code>span{color:var(--muted);font-size:.68rem}
 .account-dashboard .tp20-referral-code>strong{color:#f0d39c;letter-spacing:.11em}
 .account-dashboard .tp20-referral-code .button{min-height:34px;margin-left:auto;padding-inline:10px;font-size:.68rem}
+.account-dashboard .tp20-referral-actions{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}
+.account-dashboard .tp20-referral-actions .button{min-height:36px;padding-inline:12px;font-size:.7rem}
 .account-dashboard .account-referral-form{gap:10px}
 .account-dashboard .account-referral-form .button,.account-dashboard .tp20-account-form .button{min-height:39px;padding-inline:13px;font-size:.72rem}
 .account-dashboard .tp20-referral-history{margin-top:12px;padding-top:10px;border-top:1px solid rgba(202,165,107,.16)}
@@ -626,6 +628,7 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
   .account-browser-favorites-grid .dish-card{grid-template-columns:66px minmax(0,1fr)}
   .account-browser-favorites-grid .dish-meta>p{display:none}
   .account-dashboard .tp20-referral-code .button{margin-left:0}
+  .account-dashboard .tp20-referral-actions .button{flex:1 1 150px}
   .account-ledger-details{grid-column:auto}
   .account-demo-page .tp20-static-privilege .tp20-loyalty-card{min-height:0}
   .account-demo-page .account-demo-nav{grid-template-columns:repeat(2,minmax(0,1fr))}

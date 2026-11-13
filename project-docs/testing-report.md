@@ -108,3 +108,9 @@ New evidence is indexed in `visual-qa/README.md`: menu 1440/390/320 initial stat
 ## Homepage scroll-story follow-up — 2026-11-13
 
 Added a single requestAnimationFrame-throttled progress line, one-time chapter reveals and restrained active-chapter accents across the homepage story. Reduced-motion users receive all content immediately with transitions disabled. Static output was regenerated from the PHP routes, and the focused `npm run test:motion` run passed in PHP and Pages modes, including progress updates, chapter activation, all reveals, keyboard controls, reduced motion, no autoplay and eight viewport widths. Four updated full-page captures are saved under `visual-qa/2.0-motion/story-*`. The 11-design pixel comparison remains incomplete.
+
+## Referral and birthday integration follow-up — 2026-11-13
+
+The PHP/SQLite integration suite now passes 149 assertions. New coverage verifies registration via an invite link, explicit attachment, retry idempotency, multiple invitees per personal code, self-invite rejection, inviter replacement rejection, completed-order rewards, duplicate completion, cancellation reversal and re-qualification. Birthday checks cover invalid dates, optional consent, eligibility windows and consent withdrawal. `php -l` passed on the changed PHP files, `node --check tokyo20.js` passed, and `git diff --check` was clean. Browser suites were not repeated because this change affects PHP account/referral logic; the prior focused cinematic-motion browser run remains the relevant visual check.
+
+The suite uses a disposable SQLite database. The earlier checks exposed stale read snapshots in the expanded integration fixture; the fixture now uses fresh connections across concurrent HTTP writes. The application flow itself passed after that isolation fix.

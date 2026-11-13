@@ -3,6 +3,8 @@ require __DIR__ . '/bootstrap.php';
 $pdo = db();
 $err = '';
 $profileNotice = '';
+$incomingReferralCode = strtoupper(trim((string)($_POST['referral_code'] ?? $_GET['ref'] ?? '')));
+if (!preg_match('/^TP[A-F0-9]{10}$/',$incomingReferralCode)) $incomingReferralCode = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     check_csrf();
@@ -25,7 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $insert->execute([$email, $name, password_hash($password, PASSWORD_DEFAULT)]);
                 $_SESSION['user_id'] = (int)$pdo->lastInsertId();
                 session_regenerate_id(true);
-                header('Location: account.php');
+                $redirect = $incomingReferralCode !== '' ? 'account.php?ref='.rawurlencode($incomingReferralCode).'#account-referrals' : 'account.php';
+                header('Location: '.$redirect);
                 exit;
             } catch (Throwable $exception) {
                 $err = 'Этот email уже зарегистрирован.';
@@ -74,6 +77,7 @@ $tier = null;
 $loyaltyBalance = 0;
 $loyaltyEntries = [];
 $referralCode = '';
+$referralInviteHref = '';
 $invitedUsers = [];
 $personalOffers = [];
 $loyaltySpent = 0;
@@ -101,6 +105,7 @@ if (!empty($_SESSION['user_id'])) {
         $query = $pdo->prepare('SELECT transaction_type,points,note,created_at FROM loyalty_ledger WHERE user_id=? ORDER BY id DESC LIMIT 12');
         $query->execute([$userId]); $loyaltyEntries = $query->fetchAll();
         $referralCode = commerce_referral_code_for_user($pdo, $userId);
+        $referralInviteHref = 'account.php?ref='.rawurlencode($referralCode).'#account-referrals';
         $query = $pdo->prepare('SELECT r.code,r.status,r.created_at,u.full_name AS referred_name FROM referrals r LEFT JOIN users u ON u.id=r.referred_user_id WHERE r.inviter_user_id=? ORDER BY r.id DESC LIMIT 20');
         $query->execute([$userId]); $invitedUsers = $query->fetchAll();
         $query = $pdo->prepare('SELECT c.title,c.description,po.expires_at FROM personalized_offers po JOIN promotion_campaigns c ON c.id=po.campaign_id WHERE po.user_id=? AND po.used_order_id IS NULL AND (po.expires_at IS NULL OR po.expires_at>=CURRENT_TIMESTAMP) AND c.active=1 ORDER BY po.assigned_at DESC');
@@ -151,6 +156,7 @@ header_html();
       <h1>Личный кабинет</h1>
       <p>Сохраняйте историю заказов и бронирований в одном месте.</p>
       <?php if ($err): ?><p class="form-status error"><?=e($err)?></p><?php endif ?>
+      <?php if ($incomingReferralCode): ?><p class="form-status" role="status">Вас пригласили в Tokyo Premium. После регистрации вы сможете привязать код <?=e($incomingReferralCode)?>.</p><?php endif ?>
       <div class="intro-grid account-auth-grid account-dashboard-auth">
         <form method="post" class="admin-form">
           <h2>Войти</h2>
@@ -164,6 +170,7 @@ header_html();
           <h2>Создать аккаунт</h2>
           <input type="hidden" name="csrf" value="<?=e(csrf())?>">
           <input type="hidden" name="action" value="register">
+          <input type="hidden" name="referral_code" value="<?=e($incomingReferralCode)?>">
           <label>Имя<input name="name" required minlength="2" maxlength="80" autocomplete="name"></label>
           <label>Email<input type="email" name="email" required autocomplete="email"></label>
           <label>Пароль от 10 символов<input type="password" name="password" required minlength="10" autocomplete="new-password"></label>
@@ -294,8 +301,10 @@ header_html();
             <section id="account-referrals" class="account-section account-dashboard-panel" aria-labelledby="tp20-referral-title">
               <div class="account-dashboard-section-heading"><div><span class="kicker">TOKYO PRIVILEGE · ПРИГЛАШЕНИЯ</span><h2 id="tp20-referral-title">Пригласить друга</h2></div></div>
               <p class="account-section-copy">Награда начисляется только после подходящего завершённого заказа. Код не создаёт денежного вознаграждения.</p>
-              <div class="tp20-referral-code"><span>Ваш код</span><strong><?=e($referralCode)?></strong><button class="button secondary" type="button" data-copy-code="<?=e($referralCode)?>" data-label="Скопировать код">Скопировать</button></div>
-              <form method="post" class="tp20-account-form account-referral-form"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="referral-attach"><label>Код того, кто пригласил вас<input name="referral_code" maxlength="12" pattern="TP[A-Fa-f0-9]{10}" placeholder="TP0123ABCDEF" required></label><button class="button secondary" type="submit">Привязать код</button></form>
+              <div class="tp20-referral-code"><span>Ваш персональный код</span><strong><?=e($referralCode)?></strong><button class="button secondary" type="button" data-copy-code="<?=e($referralCode)?>" data-label="Скопировать код">Скопировать</button></div>
+              <div class="tp20-referral-actions"><a class="button secondary" href="<?=e($referralInviteHref)?>">Открыть приглашение ↗</a><button class="button secondary" type="button" data-copy-invite="<?=e($referralInviteHref)?>" data-label="Скопировать ссылку">Скопировать ссылку</button></div>
+              <p class="account-section-copy">Ссылка ведёт на регистрацию. Друг сможет привязать приглашение до первого заказа; награда появится только после выполнения настроенного серверного условия.</p>
+              <form method="post" class="tp20-account-form account-referral-form"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="referral-attach"><label>Код того, кто пригласил вас<input name="referral_code" value="<?=e($incomingReferralCode)?>" maxlength="12" pattern="TP[A-Fa-f0-9]{10}" placeholder="TP0123ABCDEF" required></label><button class="button secondary" type="submit">Привязать код</button></form>
               <div class="tp20-referral-history"><strong>Приглашения</strong><?php if (!$invitedUsers): ?><p>Пока нет привязанных приглашений.</p><?php else: ?><?php foreach ($invitedUsers as $invite): ?><p><?=e($invite['referred_name']?:'Ожидает регистрации')?> · <?=e($invite['status'])?></p><?php endforeach ?><?php endif ?></div>
             </section>
 

@@ -255,19 +255,54 @@ function commerce_birthday_eligible(PDO $pdo, int $userId): bool
 function commerce_referral_code_for_user(PDO $pdo, int $userId): string
 {
     if ($userId<1) throw new DomainException('Войдите в аккаунт, чтобы получить приглашение.');
-    $q=$pdo->prepare('SELECT code FROM referrals WHERE inviter_user_id=? ORDER BY id LIMIT 1');
-    $q->execute([$userId]); $existing=$q->fetchColumn();
-    if ($existing) return (string)$existing;
-    for ($attempt=0;$attempt<5;$attempt++) {
-        $code='TP'.strtoupper(bin2hex(random_bytes(5)));
-        try {
-            $pdo->prepare('INSERT INTO referrals(code,inviter_user_id) VALUES(?,?)')->execute([$code,$userId]);
-            return $code;
-        } catch (PDOException $error) {
-            if ((string)$error->getCode()!=='23000' && !str_contains(strtolower($error->getMessage()),'unique')) throw $error;
+    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    try {
+        $find=$pdo->prepare('SELECT referral_code FROM user_profiles WHERE user_id=?');
+        $find->execute([$userId]);
+        $existing=$find->fetchColumn();
+        if (is_string($existing) && preg_match('/^TP[A-F0-9]{10}$/',$existing)) {
+            $pdo->commit();
+            return $existing;
         }
+
+        // Keep codes issued before the profile column was used valid and stable.
+        $legacy=$pdo->prepare('SELECT code FROM referrals WHERE inviter_user_id=? ORDER BY id LIMIT 1');
+        $legacy->execute([$userId]);
+        $legacyCode=$legacy->fetchColumn();
+        $save=$pdo->prepare("INSERT INTO user_profiles(user_id,referral_code) VALUES(?,?) ON CONFLICT(user_id) DO UPDATE SET referral_code=COALESCE(NULLIF(user_profiles.referral_code,''),excluded.referral_code)");
+        if (is_string($legacyCode) && preg_match('/^TP[A-F0-9]{10}$/',$legacyCode)) {
+            try {
+                $save->execute([$userId,$legacyCode]);
+                $find->execute([$userId]);
+                $saved=$find->fetchColumn();
+                if (is_string($saved) && preg_match('/^TP[A-F0-9]{10}$/',$saved)) {
+                    $pdo->commit();
+                    return $saved;
+                }
+            } catch (PDOException $error) {
+                if ((string)$error->getCode()!=='23000' && !str_contains(strtolower($error->getMessage()),'unique')) throw $error;
+            }
+        }
+
+        for ($attempt=0;$attempt<5;$attempt++) {
+            $code='TP'.strtoupper(bin2hex(random_bytes(5)));
+            try {
+                $save->execute([$userId,$code]);
+                $find->execute([$userId]);
+                $saved=$find->fetchColumn();
+                if (is_string($saved) && preg_match('/^TP[A-F0-9]{10}$/',$saved)) {
+                    $pdo->commit();
+                    return $saved;
+                }
+            } catch (PDOException $error) {
+                if ((string)$error->getCode()!=='23000' && !str_contains(strtolower($error->getMessage()),'unique')) throw $error;
+            }
+        }
+        throw new RuntimeException('Не удалось создать код приглашения.');
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
     }
-    throw new RuntimeException('Не удалось создать код приглашения.');
 }
 
 function commerce_attach_referral(PDO $pdo, int $referredUserId, string $code): bool
@@ -276,20 +311,39 @@ function commerce_attach_referral(PDO $pdo, int $referredUserId, string $code): 
     if ($referredUserId<1 || !preg_match('/^TP[A-F0-9]{10}$/',$code)) throw new DomainException('Код приглашения имеет неверный формат.');
     $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
     try {
-        $q=$pdo->prepare('SELECT id,inviter_user_id,referred_user_id FROM referrals WHERE code=? COLLATE NOCASE');
-        $q->execute([$code]); $referral=$q->fetch();
-        if (!$referral) throw new DomainException('Код приглашения не найден.');
-        if ((int)$referral['inviter_user_id']===$referredUserId) throw new DomainException('Нельзя пригласить самого себя.');
-        if ($referral['referred_user_id']!==null && (int)$referral['referred_user_id']!==$referredUserId) throw new DomainException('Этот код уже использован.');
-        $q=$pdo->prepare('SELECT COUNT(*) FROM referrals WHERE referred_user_id=?');
-        $q->execute([$referredUserId]);
-        if ((int)$q->fetchColumn()>0) throw new DomainException('Для аккаунта уже задан код приглашения.');
+        $q=$pdo->prepare('SELECT user_id FROM user_profiles WHERE referral_code=? COLLATE NOCASE');
+        $q->execute([$code]); $inviterUserId=(int)$q->fetchColumn();
+        if ($inviterUserId<1) {
+            // Accept a code already issued by the previous one-invite implementation.
+            $q=$pdo->prepare('SELECT inviter_user_id FROM referrals WHERE code=? COLLATE NOCASE ORDER BY id LIMIT 1');
+            $q->execute([$code]); $inviterUserId=(int)$q->fetchColumn();
+        }
+        if ($inviterUserId<1) throw new DomainException('Код приглашения не найден.');
+        if ($inviterUserId===$referredUserId) throw new DomainException('Нельзя пригласить самого себя.');
+        $q=$pdo->prepare('SELECT inviter_user_id FROM referrals WHERE referred_user_id=?');
+        $q->execute([$referredUserId]); $existingInviter=$q->fetchColumn();
+        if ($existingInviter!==false) {
+            if ((int)$existingInviter===$inviterUserId) {
+                $pdo->commit();
+                return true;
+            }
+            throw new DomainException('Для аккаунта уже задан код приглашения.');
+        }
         $q=$pdo->prepare('SELECT COUNT(*) FROM orders WHERE user_id=?');
         $q->execute([$referredUserId]);
         if ((int)$q->fetchColumn()>0) throw new DomainException('Код приглашения можно указать до первого заказа.');
-        $pdo->prepare("UPDATE referrals SET referred_user_id=?,status='pending' WHERE id=? AND referred_user_id IS NULL")->execute([$referredUserId,$referral['id']]);
-        $pdo->commit();
-        return true;
+        $insert=$pdo->prepare("INSERT INTO referrals(code,inviter_user_id,referred_user_id,status) VALUES(?,?,?,'pending')");
+        for ($attempt=0;$attempt<5;$attempt++) {
+            $trackingCode='TP'.strtoupper(bin2hex(random_bytes(5)));
+            try {
+                $insert->execute([$trackingCode,$inviterUserId,$referredUserId]);
+                $pdo->commit();
+                return true;
+            } catch (PDOException $error) {
+                if ((string)$error->getCode()!=='23000' && !str_contains(strtolower($error->getMessage()),'unique')) throw $error;
+            }
+        }
+        throw new RuntimeException('Не удалось сохранить приглашение.');
     } catch (Throwable $error) {
         if ($pdo->inTransaction()) $pdo->rollBack();
         throw $error;
@@ -734,7 +788,8 @@ function commerce_apply_referral_for_completed_order(PDO $pdo, int $orderId, int
         [(int)$referral['inviter_user_id'],(int)($settings['referral_inviter_points']??0)],
         [(int)$order['user_id'],(int)($settings['referral_friend_points']??0)],
     ];
-    $pdo->prepare("UPDATE referrals SET status='qualified',qualifying_order_id=?,qualified_at=CURRENT_TIMESTAMP WHERE id=?")->execute([$orderId,$referral['id']]);
+    $status=array_sum(array_column($points,1))>0?'rewarded':'qualified';
+    $pdo->prepare('UPDATE referrals SET status=?,qualifying_order_id=?,qualified_at=CURRENT_TIMESTAMP WHERE id=?')->execute([$status,$orderId,$referral['id']]);
     foreach ($points as [$userId,$count]) {
         if ($count<1) continue;
         $event='referral:'.$referral['id'].':status-event:'.$statusEventId.':user:'.$userId;
