@@ -25,6 +25,8 @@ async function revealAll(page) {
     return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity) < 0.95;
   }).length);
   assert.equal(hiddenReveals, 0, 'homepage has no visible content left hidden after scrolling');
+  const hiddenStoryTargets = await page.locator('[data-story-reveal]:not(.story-visible)').count();
+  assert.equal(hiddenStoryTargets, 0, 'all homepage story chapters reveal after scrolling');
 }
 
 async function runMode(browser, name, base, route, capture) {
@@ -37,6 +39,14 @@ async function runMode(browser, name, base, route, capture) {
   const response = await page.goto(`${base}${route}`, { waitUntil: 'networkidle' });
   assert.equal(response?.status(), 200, `${name} homepage loads`);
   await page.evaluate(() => document.fonts.ready);
+  assert.equal(await page.locator('.story-scroll-progress').count(), 1, `${name} has a single quiet story progress bar`);
+  await page.evaluate(() => {
+    const chapter = document.querySelector('[data-story-chapter="space"]');
+    if (!chapter) return;
+    window.scrollTo({ top: chapter.offsetTop + chapter.offsetHeight / 2 - innerHeight / 2, behavior: 'instant' });
+  });
+  await page.waitForFunction(() => document.querySelector('[data-story-chapter="space"]')?.getAttribute('data-story-active') === 'true');
+  assert.ok(await page.locator('.story-scroll-progress').evaluate(node => Number.parseFloat(getComputedStyle(node).getPropertyValue('--story-progress')) > 0), `${name} updates reading progress during the story`);
 
   const hero = page.locator('[data-home-hero]');
   const dots = page.locator('[data-home-hero-index]');
@@ -131,6 +141,6 @@ async function runReducedMotion(browser, name, base, route) {
     await runReducedMotion(browser, 'php', phpBase, '/');
     await runMode(browser, 'static', staticBase, '/index.html', true);
     await runReducedMotion(browser, 'static', staticBase, '/index.html');
-    console.log(`PASS: cinematic homepage scene controls, keyboard, reduced motion, no autoplay, and eight responsive widths in PHP and static modes; screenshots saved to ${evidenceDir}`);
+    console.log(`PASS: cinematic hero and scroll story, scene controls, keyboard, reduced motion, no autoplay, and eight responsive widths in PHP and static modes; screenshots saved to ${evidenceDir}`);
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

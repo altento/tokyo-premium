@@ -300,7 +300,14 @@ document.addEventListener('DOMContentLoaded', () => {
   renderCart();
   renderFavorites();
 
-  document.querySelectorAll('form[data-api]').forEach(form => form.addEventListener('submit', async event => {
+  document.querySelectorAll('form[data-api]').forEach(form => {
+    if (form.dataset.api === 'booking') {
+      const clearBookingKey = () => { if (form.dataset.submitting !== 'true') delete form.dataset.bookingRequestKey; };
+      form.addEventListener('input', clearBookingKey);
+      form.addEventListener('change', clearBookingKey);
+      form.addEventListener('reset', clearBookingKey);
+    }
+    form.addEventListener('submit', async event => {
     event.preventDefault();
     const type = form.dataset.api;
     const status = $('.form-status', form);
@@ -327,6 +334,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       const headers = { 'X-CSRF-Token': data.get('csrf') || '' };
       if (type === 'order' && cart) headers['Idempotency-Key'] = cart.checkoutRequestKey();
+      if (type === 'booking') {
+        if (!form.dataset.bookingRequestKey) {
+          form.dataset.bookingRequestKey = window.crypto?.randomUUID?.() || `${Date.now().toString(36)}.${Math.random().toString(36).slice(2)}`;
+        }
+        headers['Idempotency-Key'] = form.dataset.bookingRequestKey;
+      }
       const response = await fetch('api.php', { method: 'POST', body: data, headers });
       const result = await response.json();
       if (!response.ok || !result.ok) throw new Error(result.message || 'Не удалось отправить форму.');
@@ -335,7 +348,8 @@ document.addEventListener('DOMContentLoaded', () => {
         cart.clear();
         if (window.TokyoCheckout) window.TokyoCheckout.reset(form);
         else form.reset();
-      } else if (type === 'booking' || type === 'review') form.reset();
+      } else if (type === 'booking') { form.reset(); delete form.dataset.bookingRequestKey; }
+      else if (type === 'review') form.reset();
       if (status) { status.textContent = result.message; status.className = 'form-status success'; }
     } catch (error) {
       if (status) { status.textContent = error.message; status.className = 'form-status error'; }
@@ -344,5 +358,6 @@ document.addEventListener('DOMContentLoaded', () => {
       form.dataset.submitting = 'false';
       if (button) button.disabled = type === 'order' ? !(cart?.get().length || cart?.getCustomSets().length) : false;
     }
-  }));
+    });
+  });
 });

@@ -11,7 +11,7 @@ $heroScenes=[
 ];
 ?>
 <main class="home-premium">
-  <section class="home-hero" aria-labelledby="home-title" data-home-hero aria-roledescription="carousel" aria-label="Истории Tokyo Premium">
+  <section class="home-hero" aria-labelledby="home-title" data-home-hero data-story-chapter="hero" aria-roledescription="carousel" aria-label="Истории Tokyo Premium">
     <img class="home-hero-photo home-hero-photo--active" id="home-hero-photo" src="assets/generated/home-hero-salmon-nigiri-v3.webp" width="1672" height="944" fetchpriority="high" alt="Нигири с лососем, которое подают японскими палочками при свете фонарей">
     <img class="home-hero-photo home-hero-photo--next" data-home-hero-next width="1672" height="944" alt="" aria-hidden="true">
     <div class="home-hero-shade" aria-hidden="true"></div>
@@ -45,8 +45,8 @@ $heroScenes=[
     <div><span class="value-mark" aria-hidden="true">心</span><span><strong>Забота</strong><small>японское omotenashi</small></span></div>
   </section>
 
-  <section class="home-menu-section" id="menu-selection">
-    <div class="home-section-head">
+  <section class="home-menu-section" id="menu-selection" data-story-chapter="menu">
+    <div class="home-section-head" data-story-reveal>
       <div><p class="kicker">Выбор шефа · сезонная коллекция</p><h2>Вкус начинается<br><em>с одного мгновения</em></h2></div>
       <a class="text-link" href="menu.php">Все меню <span aria-hidden="true">↗</span></a>
     </div>
@@ -62,21 +62,21 @@ $heroScenes=[
     <p class="home-disclaimer">Учебное меню: названия, состав и цены придуманы для демонстрации проекта.</p>
   </section>
 
-  <section class="home-philosophy">
-    <div class="philosophy-photo-wrap"><img src="assets/generated/chef-at-counter.webp" width="1448" height="1096" alt="Вымышленный шеф Tokyo Premium бережно формует нигири у суши-стойки" loading="lazy" decoding="async"><span class="photo-index">手仕事 · ремесло</span></div>
-    <div class="philosophy-copy"><p class="kicker">Философия Tokyo Premium</p><h2>Уважение к продукту.<br><em>Свобода для вкуса.</em></h2><p>Сезон задаёт направление, мастерство сохраняет чистоту вкуса, а пауза помогает заметить детали. Так устроена наша учебная история о японском столе.</p><p class="japanese-line" lang="ja">季節 · 技 · 心</p><a class="button secondary" href="about.php">Открыть философию <span aria-hidden="true">↗</span></a><span class="fictional-chef">Рэн Такахаси · вымышленный шеф-повар концепции</span></div>
+  <section class="home-philosophy" data-story-chapter="philosophy">
+    <div class="philosophy-photo-wrap" data-story-reveal><img src="assets/generated/chef-at-counter.webp" width="1448" height="1096" alt="Вымышленный шеф Tokyo Premium бережно формует нигири у суши-стойки" loading="lazy" decoding="async"><span class="photo-index">手仕事 · ремесло</span></div>
+    <div class="philosophy-copy" data-story-reveal><p class="kicker">Философия Tokyo Premium</p><h2>Уважение к продукту.<br><em>Свобода для вкуса.</em></h2><p>Сезон задаёт направление, мастерство сохраняет чистоту вкуса, а пауза помогает заметить детали. Так устроена наша учебная история о японском столе.</p><p class="japanese-line" lang="ja">季節 · 技 · 心</p><a class="button secondary" href="about.php">Открыть философию <span aria-hidden="true">↗</span></a><span class="fictional-chef">Рэн Такахаси · вымышленный шеф-повар концепции</span></div>
     <div class="enso" aria-hidden="true"><span>和</span></div>
   </section>
 
-  <section class="home-space">
-    <div class="space-photo"><img src="assets/generated/restaurant-interior.webp" width="1672" height="944" alt="Вымышленный интерьер Tokyo Premium: ореховое дерево, тёплый свет и садовое окно" loading="lazy" decoding="async"></div>
-    <div class="space-copy"><p class="kicker">Пространство · тёплая тишина</p><h2>Вечер начинается<br><em>ещё до первой подачи</em></h2><p>Тёмный орех, мягкий свет бумажных фонарей и камерная суши-стойка создают спокойный ритм для долгого ужина.</p><a class="text-link" href="pages.php?page=gallery">Исследовать пространство <span aria-hidden="true">↗</span></a></div>
+  <section class="home-space" data-story-chapter="space">
+    <div class="space-photo" data-story-reveal><img src="assets/generated/restaurant-interior.webp" width="1672" height="944" alt="Вымышленный интерьер Tokyo Premium: ореховое дерево, тёплый свет и садовое окно" loading="lazy" decoding="async"></div>
+    <div class="space-copy" data-story-reveal><p class="kicker">Пространство · тёплая тишина</p><h2>Вечер начинается<br><em>ещё до первой подачи</em></h2><p>Тёмный орех, мягкий свет бумажных фонарей и камерная суши-стойка создают спокойный ритм для долгого ужина.</p><a class="text-link" href="pages.php?page=gallery">Исследовать пространство <span aria-hidden="true">↗</span></a></div>
     <span class="space-side-note" lang="ja" aria-hidden="true">間 · пространство</span>
   </section>
 
-  <section class="home-omakase-strip">
-    <div class="omakase-seal" aria-hidden="true"><span>おまかせ</span><b>匠</b></div>
-    <div><p class="kicker">Omakase · доверьтесь выбору шефа</p><h2>История вкуса<br><em>в нескольких подачах</em></h2><p>Сезонный дегустационный маршрут — от лёгкого первого акцента до спокойного финала.</p><a class="button" href="pages.php?page=omakase">Узнать об Omakase <span aria-hidden="true">↗</span></a></div>
+  <section class="home-omakase-strip" data-story-chapter="omakase">
+    <div class="omakase-seal" data-story-reveal aria-hidden="true"><span>おまかせ</span><b>匠</b></div>
+    <div data-story-reveal><p class="kicker">Omakase · доверьтесь выбору шефа</p><h2>История вкуса<br><em>в нескольких подачах</em></h2><p>Сезонный дегустационный маршрут — от лёгкого первого акцента до спокойного финала.</p><a class="button" href="pages.php?page=omakase">Узнать об Omakase <span aria-hidden="true">↗</span></a></div>
     <div class="omakase-decoration" aria-hidden="true"><span>一</span><span>期</span><span>一</span><span>会</span></div>
   </section>
 
@@ -87,9 +87,9 @@ $heroScenes=[
     <a class="text-link" href="reviews.php">Читать и оставить отзыв <span aria-hidden="true">↗</span></a>
   </section>
 
-  <section class="home-booking" id="booking">
-    <div class="booking-intro"><p class="kicker">Оставьте место для вечера</p><h2>Ваш стол.<br><em>Ваш темп.</em></h2><p>В PHP-версии форма создаёт запрос на бронирование. На GitHub Pages данные останутся только в этом браузере.</p><span class="booking-jp" lang="ja" aria-hidden="true">今宵 · сегодня вечером</span></div>
-    <form class="home-booking-form" data-api="booking"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><div class="field"><label for="guest-name">Имя</label><input required maxlength="80" id="guest-name" name="name" autocomplete="name"></div><div class="field"><label for="guest-phone">Телефон</label><input required maxlength="30" id="guest-phone" name="phone" type="tel" autocomplete="tel"></div><div class="field"><label for="guest-email-home">Email для ответа</label><input required maxlength="190" id="guest-email-home" name="email" type="email" autocomplete="email"></div><div class="field"><label for="booking-date">Дата</label><input required type="date" id="booking-date" name="date" min="<?=date('Y-m-d')?>"></div><div class="field"><label for="booking-time">Время</label><select id="booking-time" name="time" required><?php foreach(['12:00','13:00','14:00','17:00','18:00','19:00','20:00','21:00'] as $t): ?><option value="<?=e($t)?>"><?=e($t)?></option><?php endforeach ?></select></div><div class="field"><label for="guest-count">Гостей</label><select id="guest-count" name="guests"><?php for($i=1;$i<=12;$i++): ?><option value="<?=$i?>" <?=$i===2?'selected':''?>><?=$i?> <?=$i===1?'гость':'гостя'?></option><?php endfor ?></select></div><div class="field"><label for="booking-zone-home">Зона</label><select id="booking-zone-home" name="zone"><option>Основной зал</option><option>Суши-стойка</option><option>Камерная комната</option></select></div><button class="button" type="submit">Отправить запрос <span aria-hidden="true">↗</span></button><p class="form-status" aria-live="polite"></p></form>
+  <section class="home-booking" id="booking" data-story-chapter="booking">
+    <div class="booking-intro" data-story-reveal><p class="kicker">Оставьте место для вечера</p><h2>Ваш стол.<br><em>Ваш темп.</em></h2><p>В PHP-версии форма создаёт запрос на бронирование. На GitHub Pages данные останутся только в этом браузере.</p><span class="booking-jp" lang="ja" aria-hidden="true">今宵 · сегодня вечером</span></div>
+    <form class="home-booking-form" data-story-reveal data-api="booking"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><div class="field"><label for="guest-name">Имя</label><input required maxlength="80" id="guest-name" name="name" autocomplete="name"></div><div class="field"><label for="guest-phone">Телефон</label><input required maxlength="30" id="guest-phone" name="phone" type="tel" autocomplete="tel"></div><div class="field"><label for="guest-email-home">Email для ответа</label><input required maxlength="190" id="guest-email-home" name="email" type="email" autocomplete="email"></div><div class="field"><label for="booking-date">Дата</label><input required type="date" id="booking-date" name="date" min="<?=date('Y-m-d')?>"></div><div class="field"><label for="booking-time">Время</label><select id="booking-time" name="time" required><?php foreach(['12:00','13:00','14:00','17:00','18:00','19:00','20:00','21:00'] as $t): ?><option value="<?=e($t)?>"><?=e($t)?></option><?php endforeach ?></select></div><div class="field"><label for="guest-count">Гостей</label><select id="guest-count" name="guests"><?php for($i=1;$i<=12;$i++): ?><option value="<?=$i?>" <?=$i===2?'selected':''?>><?=$i?> <?=$i===1?'гость':'гостя'?></option><?php endfor ?></select></div><div class="field"><label for="booking-zone-home">Зона</label><select id="booking-zone-home" name="zone"><option>Основной зал</option><option>Суши-стойка</option><option>Камерная комната</option></select></div><button class="button" type="submit">Отправить запрос <span aria-hidden="true">↗</span></button><p class="form-status" aria-live="polite"></p></form>
   </section>
 </main>
 <script>window.DISHES=<?=json_encode(dishes(),JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP|JSON_UNESCAPED_UNICODE)?>;</script>

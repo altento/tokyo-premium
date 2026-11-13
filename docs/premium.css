@@ -636,6 +636,21 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
   .account-dashboard-actions a,.account-dashboard-nav a,.account-demo-page .account-demo-nav button{transition:none}
 }
 
+/* Quiet, coordinated scroll-story cues on the homepage. */
+.story-scroll-progress{position:fixed;z-index:1002;inset:0 0 auto;height:2px;pointer-events:none;overflow:hidden;background:transparent}
+.story-scroll-progress:after{content:"";position:absolute;inset:0 auto 0 0;width:100%;background:linear-gradient(90deg,#a21b22,#d1ad6d 60%,#e3c790);transform:scaleX(var(--story-progress,0));transform-origin:left center;transition:transform .12s linear}
+body.story-motion-ready [data-story-reveal]{opacity:0;transform:translate3d(0,22px,0);transition:opacity .72s ease,transform .82s cubic-bezier(.2,.65,.25,1)}
+body.story-motion-ready [data-story-reveal].story-visible{opacity:1;transform:none}
+body.story-motion-ready [data-story-reveal].story-visible img{animation:story-image-settle 1.45s cubic-bezier(.2,.65,.25,1) both}
+@keyframes story-image-settle{from{transform:scale(1.045)}to{transform:scale(1)}}
+[data-story-chapter] h2 em{transition:color .55s ease}
+[data-story-chapter="philosophy"][data-story-active="true"] h2 em{color:#d27569}
+[data-story-chapter="space"][data-story-active="true"] h2 em{color:#e1c48e}
+[data-story-chapter="omakase"][data-story-active="true"] h2 em{color:#d78e91}
+[data-story-chapter="booking"][data-story-active="true"] h2 em{color:#a51d24}
+@media(max-width:760px){body.story-motion-ready [data-story-reveal]{transform:translate3d(0,14px,0);transition-duration:.55s,.62s}}
+@media(prefers-reduced-motion:reduce){.story-scroll-progress:after{transition:none}body.story-motion-ready [data-story-reveal]{opacity:1;transform:none;transition:none}body.story-motion-ready [data-story-reveal].story-visible img{animation:none}[data-story-chapter] h2 em{transition:none}}
+
 /* Philosophy hero uses an actual editorial photograph instead of an empty gradient. */
 .about-hero{background:linear-gradient(90deg,rgba(9,8,7,.94) 0%,rgba(9,8,7,.82) 38%,rgba(9,8,7,.28) 76%,rgba(9,8,7,.12) 100%),linear-gradient(0deg,rgba(9,8,7,.32),transparent 55%),url("assets/generated/room-garden-terrace.webp") center 52%/cover no-repeat}
 .about-hero:after{border-color:rgba(235,211,161,.28);box-shadow:0 0 0 24px rgba(235,211,161,.05),0 0 0 58px rgba(235,211,161,.035)}

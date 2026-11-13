@@ -30,10 +30,54 @@
       'pages.php?page=gallery': 'gallery.html'
     };
     const dots = [...controls.querySelectorAll('[data-home-hero-index]')];
+    const storyTargets = [...document.querySelectorAll('[data-story-reveal]')];
+    const storyChapters = [...document.querySelectorAll('[data-story-chapter]')];
     let activeIndex = 0;
     let changing = false;
     let queuedIndex = null;
     let pointerFrame = 0;
+    let progressFrame = 0;
+
+    const progress = document.createElement('div');
+    progress.className = 'story-scroll-progress';
+    progress.setAttribute('aria-hidden', 'true');
+    document.body.append(progress);
+    const updateProgress = () => {
+      progressFrame = 0;
+      const scrollable = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      const value = Math.max(0, Math.min(1, window.scrollY / scrollable));
+      progress.style.setProperty('--story-progress', value.toFixed(4));
+    };
+    const scheduleProgress = () => {
+      if (!progressFrame) progressFrame = requestAnimationFrame(updateProgress);
+    };
+    window.addEventListener('scroll', scheduleProgress, { passive: true });
+    window.addEventListener('resize', scheduleProgress, { passive: true });
+    window.addEventListener('load', scheduleProgress, { once: true });
+    updateProgress();
+
+    const activateChapter = chapter => {
+      storyChapters.forEach(item => item.removeAttribute('data-story-active'));
+      chapter.setAttribute('data-story-active', 'true');
+    };
+    if (!reducedMotion.matches && 'IntersectionObserver' in window) {
+      document.body.classList.add('story-motion-ready');
+      const revealObserver = new IntersectionObserver(entries => entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('story-visible');
+          revealObserver.unobserve(entry.target);
+        }
+      }), { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+      storyTargets.forEach(target => revealObserver.observe(target));
+
+      const chapterObserver = new IntersectionObserver(entries => entries.forEach(entry => {
+        if (entry.isIntersecting) activateChapter(entry.target);
+      }), { threshold: 0, rootMargin: '-42% 0px -42% 0px' });
+      storyChapters.forEach(chapter => chapterObserver.observe(chapter));
+    } else {
+      storyTargets.forEach(target => target.classList.add('story-visible'));
+      if (storyChapters[0]) activateChapter(storyChapters[0]);
+    }
 
     const safeHref = value => {
       try {

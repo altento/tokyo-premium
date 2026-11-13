@@ -104,3 +104,7 @@ New evidence is indexed in `visual-qa/README.md`: menu 1440/390/320 initial stat
 - `npm run test:browser`: **passed** against local PHP + Pages: 11 routes, all 20 dish details, cart/checkout flows, and six viewport widths. A repeat booking reuses the same idempotency key after a recoverable API response.
 - PHP 8.4 lint passed for the changed bootstrap, API, mail adapter and integration fixtures; `git diff --check` passed. SMTP credentials are not configured, so delivery to a real mailbox was not tested.
 - Browser screenshots from this run were written to a temporary evidence directory because these backend changes did not alter layout. Existing visual captures remain in `visual-qa/`; this update does not claim a new 11-reference pixel comparison.
+
+## Homepage scroll-story follow-up — 2026-11-13
+
+Added a single requestAnimationFrame-throttled progress line, one-time chapter reveals and restrained active-chapter accents across the homepage story. Reduced-motion users receive all content immediately with transitions disabled. Static output was regenerated from the PHP routes, and the focused `npm run test:motion` run passed in PHP and Pages modes, including progress updates, chapter activation, all reveals, keyboard controls, reduced motion, no autoplay and eight viewport widths. Four updated full-page captures are saved under `visual-qa/2.0-motion/story-*`. The 11-design pixel comparison remains incomplete.
