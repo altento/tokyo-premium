@@ -7,7 +7,7 @@ foreach(array_merge(dishes(true),dishes()) as $dish){$image=trim((string)$dish['
 ?>
 <main class="home-premium">
   <section class="home-hero" aria-labelledby="home-title">
-    <img class="home-hero-photo" src="assets/generated/home-hero-nigiri-v2.webp" width="1672" height="944" fetchpriority="high" alt="Нигири с лососем на тёмной керамической тарелке в свете японских фонарей">
+    <img class="home-hero-photo" src="assets/generated/home-hero-salmon-nigiri-v3.webp" width="1672" height="944" fetchpriority="high" alt="Нигири с лососем, которое подают японскими палочками при свете фонарей">
     <div class="home-hero-shade" aria-hidden="true"></div>
     <span class="home-kanji" lang="ja" aria-hidden="true">東京</span>
     <div class="home-hero-copy">

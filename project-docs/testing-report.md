@@ -16,6 +16,7 @@ Updated 2026-11-13
 | Cart visual states | Passed | Empty/populated, desktop/mobile validation, pickup, delivery; three dishes and quantity two in the populated base scenario. |
 | Responsive regression | Passed | 11 PHP page types × 14 widths (320–1920 px), plus static Pages header at 929/1024/1025 px; heading clipping checks, cart access, mobile/tablet menu keyboard behavior and booking dates across browser time zones. The 901–1023 px overflow band was reproduced on the public menu and fixed by moving the shared header/navigation breakpoint to 1024 px without changing the page-layout breakpoint. |
 | Gallery/profile visual state | Passed | Default gallery and static profile desktop/mobile captures. |
+| Visual fidelity follow-up | Passed | New `tests/visual-fidelity-regression.cjs` checks seven routes in PHP and static mode; unique home/menu heroes, all four visible home recommendations after scrolling, philosophy hero image, eight non-clipped gallery tiles, five catalog-backed Omakase overview photos, SVG preference floorplan, fictional map disclosure, image loading, mobile title geometry and no console errors. Captured 14 PHP desktop/mobile full-page screenshots. |
 | Static export | Passed | Exporter generated 36 pages; locked Secret Menu detail routes are omitted, stale generated detail pages are removed, and the client-only preview payload is generated separately. No PHP/backend files are exported. |
 | Diff hygiene | Passed | Feature and SQLite follow-up patches passed staged diff checks; release-documentation changes are checked before commit. |
 
@@ -44,6 +45,18 @@ The local PHP/SQLite integration suite passed 102 assertions in three consecutiv
 The intermediate-width header correction was merged as `9599f3c4996e1eeb43948a1dba80c3bc62f06e29`. Follow-up [Pages workflow run 43320764592](https://github.com/altento/tokyo-premium/actions/runs/43320764592) completed with both build and deploy successful, including the expanded responsive regression. A fresh Playwright check of the deployed menu returned HTTP 200 at 929 px and 1025 px: 929 px had no horizontal overflow, retained the header cart, exposed booking and account links in the keyboard-operable menu, and closed on Escape; 1025 px restored the desktop navigation and booking CTA with no overflow. No failed same-origin requests or console errors were observed.
 
 A fresh pixel-by-pixel comparison of every current page against all 11 source PNG references remains incomplete. Screenshots and older visual gap notes remain in visual-qa/ and final-acceptance-report.md. No pixel-perfect acceptance is claimed.
+
+### Additional current-source visual check (2026-11-13)
+
+Run with a local PHP + SQLite server and exported static build:
+
+```powershell
+$env:TOKYO_BASE_URL='http://127.0.0.1:8085'
+$env:TOKYO_STATIC_BASE_URL='http://127.0.0.1:8085/docs'
+npm run test:visual-fidelity
+```
+
+The run passed seven routes in both PHP and static mode and saved 14 PHP screenshots under `visual-qa/2.0-visual-fidelity/`. It tests image uniqueness/loading, reveal-triggered recommendations, the philosophy background, gallery bounds, Omakase catalog photos, booking SVG and disclosure, contact-map disclosure, responsive title bounds, and JavaScript/console errors. It does not assert pixel-level similarity for all 11 reference designs.
 
 Local `npm ci` and the pinned Playwright 1.65.0 Chromium installation completed successfully in this Windows environment. The responsive regression passed locally against PHP and the freshly exported Pages build after the intermediate-width header fix. The post-merge CI and public deployment check are complete for commit `9599f3c`.
 

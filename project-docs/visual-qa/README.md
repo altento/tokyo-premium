@@ -29,3 +29,19 @@ The following current-source screenshots were reviewed after fixing initial-rend
 - `11-account-populated-desktop.jpg` and `11-account-populated-mobile.jpg`: authenticated synthetic QA account with two saved demo orders (composition expanded) and one browser-local favorite. The existing `11-account-mobile.jpg` remains the anonymous login/register state.
 
 The focused captures are paired with automated checks in `tests/menu-visual-regression.cjs`, `tests/tokyo20-regression.cjs`, and `tests/browser-regression.cjs`. The menu check covers 1440, 390 and 320 px; the account check captures real authenticated data separately from the static browser-local profile. This is a focused re-review of four affected page types, not a new pixel-by-pixel comparison of all 11 source designs.
+
+## 2026-11-13 Tokyo 2.0 visual-fidelity pass
+
+`2.0-visual-fidelity/` contains full-page PHP browser captures at desktop and 390 px mobile for home, menu, Omakase, philosophy, space, booking and contacts. The Playwright test scrolls through each page so reveal animations and lazy photos are actually exercised before capture. It separately opens the seven routes in the exported static build, checks image loading, gallery bounds, floorplan rendering, headings, overflow and browser errors.
+
+Focused comparison notes against the approved concepts:
+
+- **Home:** `home-hero-salmon-nigiri-v3.webp` adds a distinct editorial nigiri/chopsticks frame, with the dish to the right and calm copy space at left. The four recommendation cards are verified after a real scroll; the previous full-page capture had missed them.
+- **Menu:** `menu-hero-sushi-assortment-v1.webp` now gives the catalog its own sushi platter scene instead of reusing the homepage photo. Existing searchable, filterable catalog cards remain the primary content; this is not a pixel recreation of every toolbar detail in `02-menu.png`.
+- **Philosophy:** the hero now uses the garden terrace photograph to match the reference's image-led opening; existing editorial story and chef sections remain intact.
+- **Space:** the gallery no longer inherits the legacy 390 px homepage-gallery height. All eight tiles fit within the gallery section, and all eight photos load. This corrects actual content clipping visible in earlier screenshots.
+- **Booking:** the benefits strip uses less vertical padding. The test verifies the five-stage preference form has the rendered SVG map and labels selection as a preference, not availability.
+- **Contacts:** the hero uses an exterior image, the map is explicitly a fictional schematic, and the browser test checks the local/demo contact form. The new section spacing is shorter while retaining the page's distinct sections.
+- **Omakase:** five image cards give a compact overview of the same catalog-backed items shown by the interactive course selector. No fake video or invented dish data is introduced.
+
+Evidence filenames are `<page>-php-desktop.jpg` and `<page>-php-mobile.jpg`. The static build is behavior-checked, but this pass does not claim a complete pixel-difference comparison of all 11 reference PNGs or equal visual parity for every page.
