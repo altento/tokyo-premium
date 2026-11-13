@@ -181,16 +181,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!isset($allowed[$table]) || !in_array($status, $allowed[$table], true)) {
                     throw new RuntimeException('Недопустимый статус.');
                 }
-                $query = $pdo->prepare('UPDATE ' . $table . ' SET status=? WHERE id=?');
-                $query->execute([$status, (int)($_POST['id'] ?? 0)]);
-                if ($query->rowCount() === 0) {
-                    $exists = $pdo->prepare('SELECT 1 FROM ' . $table . ' WHERE id=?');
-                    $exists->execute([(int)($_POST['id'] ?? 0)]);
-                    if (!$exists->fetchColumn()) throw new RuntimeException('Запись не найдена.');
+                $recordId = filter_var($_POST['id'] ?? null, FILTER_VALIDATE_INT);
+                if (!$recordId || $recordId < 1) throw new RuntimeException('Запись не найдена.');
+                if ($table === 'bookings' && $status === 'confirmed') {
+                    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+                    try {
+                        $exists = $pdo->prepare('SELECT 1 FROM bookings WHERE id=?');
+                        $exists->execute([$recordId]);
+                        if (!$exists->fetchColumn()) throw new RuntimeException('Запись не найдена.');
+                        $pdo->prepare("UPDATE bookings SET status='confirmed' WHERE id=?")->execute([$recordId]);
+                        $confirmationMailId = booking_mail_queue_confirmation($pdo,(int)$recordId);
+                        $pdo->commit();
+                    } catch (Throwable $error) {
+                        if ($pdo->inTransaction()) $pdo->rollBack();
+                        throw $error;
+                    }
+                    $mailState = $confirmationMailId ? booking_mail_deliver($pdo,$confirmationMailId) : 'missing';
+                    $_SESSION['admin_flash'] = match ($mailState) {
+                        'sent' => 'Бронь подтверждена. Письмо гостю отправлено.',
+                        'failed' => 'Бронь подтверждена. Email не отправлено; запись доступна для повтора.',
+                        'pending' => 'Бронь подтверждена. Email в очереди; настройте SMTP и запустите отправку.',
+                        default => 'Бронь подтверждена. Email гостя не указан, письмо не отправлялось.',
+                    };
+                } else {
+                    $query = $pdo->prepare('UPDATE ' . $table . ' SET status=? WHERE id=?');
+                    $query->execute([$status, $recordId]);
+                    if ($query->rowCount() === 0) {
+                        $exists = $pdo->prepare('SELECT 1 FROM ' . $table . ' WHERE id=?');
+                        $exists->execute([$recordId]);
+                        if (!$exists->fetchColumn()) throw new RuntimeException('Запись не найдена.');
+                    }
+                    $_SESSION['admin_flash'] = 'Статус обновлён.';
                 }
-                $_SESSION['admin_flash'] = $table === 'bookings' && $status === 'confirmed'
-                    ? 'Бронь подтверждена. Статус обновлён в личном кабинете гостя.'
-                    : 'Статус обновлён.';
+            } elseif ($action === 'mail-retry') {
+                $mailId = filter_var($_POST['id'] ?? null, FILTER_VALIDATE_INT);
+                if (!$mailId || $mailId < 1) throw new RuntimeException('Письмо не найдено.');
+                $mailQuery = $pdo->prepare('SELECT 1 FROM email_outbox WHERE id=? AND booking_id IS NOT NULL');
+                $mailQuery->execute([$mailId]);
+                if (!$mailQuery->fetchColumn()) throw new RuntimeException('Письмо бронирования не найдено.');
+                $mailState = booking_mail_retry($pdo,(int)$mailId);
+                $_SESSION['admin_flash'] = match ($mailState) {
+                    'sent' => 'Письмо отправлено.',
+                    'pending' => 'Письмо осталось в очереди. Проверьте настройки SMTP.',
+                    'failed' => 'Повтор не удался. Письмо оставлено в очереди ошибок.',
+                    'sending' => 'Письмо уже отправляется.',
+                    default => 'Не удалось найти письмо для повтора.',
+                };
             } elseif ($action === 'settings') {
                 $keys = ['site_name','meta_title','meta_description','hero_eyebrow','hero_title','hero_text','address','phone','hours','instagram'];
                 foreach ($keys as $key) {
@@ -246,8 +282,13 @@ $orders = admin_rows($pdo,
     "SELECT o.*,GROUP_CONCAT(oi.item_name || ' × ' || oi.quantity,' · ') AS items_summary
      FROM orders o LEFT JOIN order_items oi ON oi.order_id=o.id" . $orderFilter[0] . '
      GROUP BY o.id ORDER BY o.id DESC LIMIT 100', $orderFilter[1]);
-$bookingFilter = admin_search_where(['CAST(b.id AS TEXT)','b.guest_name','b.phone','b.booking_date','b.booking_time','b.zone','b.preferred_table','b.format','b.message','b.status'], $search);
-$bookings = admin_rows($pdo, 'SELECT b.* FROM bookings b' . $bookingFilter[0] . ' ORDER BY b.booking_date DESC,b.booking_time DESC,b.id DESC LIMIT 100', $bookingFilter[1]);
+$bookingFilter = admin_search_where(['CAST(b.id AS TEXT)','b.guest_name','b.guest_email','b.phone','b.booking_date','b.booking_time','b.zone','b.preferred_table','b.format','b.message','b.status'], $search);
+$bookings = admin_rows($pdo, "SELECT b.*,
+    (SELECT m.id FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':request:guest' ORDER BY m.id DESC LIMIT 1) AS request_mail_id,
+    (SELECT m.status FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':request:guest' ORDER BY m.id DESC LIMIT 1) AS request_mail_status,
+    (SELECT m.id FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':confirmed:guest' ORDER BY m.id DESC LIMIT 1) AS confirmation_mail_id,
+    (SELECT m.status FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':confirmed:guest' ORDER BY m.id DESC LIMIT 1) AS confirmation_mail_status
+    FROM bookings b" . $bookingFilter[0] . ' ORDER BY b.booking_date DESC,b.booking_time DESC,b.id DESC LIMIT 100', $bookingFilter[1]);
 $reviewFilter = admin_search_where(['CAST(r.id AS TEXT)','r.guest_name','r.theme','r.body','CAST(r.rating AS TEXT)','r.status'], $search);
 $reviews = admin_rows($pdo, 'SELECT r.* FROM reviews r' . $reviewFilter[0] . ' ORDER BY r.id DESC LIMIT 100', $reviewFilter[1]);
 $messageFilter = admin_search_where(['CAST(m.id AS TEXT)','m.guest_name','m.email','m.subject','m.message','m.status'], $search);
@@ -399,6 +440,7 @@ $notificationLabels = ['orders'=>'Новые заказы','bookings'=>'Новы
             <?php if (!empty($row['comment'])): ?><span>Комментарий: <?=e($row['comment'])?></span><?php endif ?>
           <?php elseif ($table === 'bookings'): ?>
             <span><?=e($row['booking_date'])?> · <?=e($row['booking_time'])?> · <?=(int)$row['guest_count']?> гостей</span>
+            <?php if ($row['guest_email'] !== ''): ?><span>Email гостя: <?=e($row['guest_email'])?></span><?php endif ?>
             <?php if ($row['zone'] !== ''): ?><span>Зона: <?=e($row['zone'])?></span><?php endif ?>
             <?php if ($row['preferred_table'] !== ''): ?><span>Стол: <?=e($row['preferred_table'])?></span><?php endif ?>
             <?php if ($row['format'] !== ''): ?><span>Формат Omakase: <?=e($row['format'])?></span><?php endif ?>
@@ -410,7 +452,16 @@ $notificationLabels = ['orders'=>'Новые заказы','bookings'=>'Новы
           <?php endif ?>
           <time datetime="<?=e(str_replace(' ', 'T', (string)$row['created_at']))?>"><?=e($row['created_at'])?></time>
         </div>
-        <div class="admin-record-actions">
+        <?php if ($table === 'bookings'): ?>
+        <div class="admin-booking-emails">
+            <?php foreach ([['Заявка',$row['request_mail_id']??null,$row['request_mail_status']??null],['Подтверждение',$row['confirmation_mail_id']??null,$row['confirmation_mail_status']??null]] as [$mailLabel,$mailId,$mailStatus]): if ($mailStatus !== null): ?>
+              <div class="admin-booking-email-row"><span class="admin-status status-<?=e($mailStatus)?>">Email · <?=e($mailLabel)?> · <?=e(booking_mail_status_label((string)$mailStatus))?></span>
+                <?php if (in_array($mailStatus,['pending','failed'],true)): ?><form method="post"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="mail-retry"><input type="hidden" name="id" value="<?=(int)$mailId?>"><button class="button secondary admin-mail-retry" type="submit">Повторить email</button></form><?php endif ?>
+              </div>
+            <?php endif; endforeach ?>
+          </div>
+        <?php endif ?>
+          <div class="admin-record-actions">
           <form method="post" class="admin-status-form">
             <input type="hidden" name="csrf" value="<?=e(csrf())?>">
             <input type="hidden" name="action" value="status">

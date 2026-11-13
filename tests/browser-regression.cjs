@@ -190,6 +190,31 @@ async function run(options = {}) {
     await page.locator('#fulfillment').selectOption('delivery');
     check(await page.locator('#checkout-address-field').isVisible() && await isRequired(page.locator('#checkout-address')), 'switching back to delivery restores required address');
 
+    // Booking retries retain the same key after a recoverable API rejection.
+    await page.goto(base + '/pages.php?page=booking');
+    const bookingForm = page.locator('#full-booking-form');
+    check(await isRequired(page.locator('#full-guest-email')), 'PHP booking form requires an email for the response');
+    await page.locator('#full-guest-name').fill('Гость бронирования QA');
+    await page.locator('#full-guest-phone').fill('+77010000003');
+    await page.locator('#full-guest-email').fill(`booking-qa-${Date.now()}@example.test`);
+    await page.locator('#full-guest-date').fill(await page.locator('#full-guest-date').getAttribute('min'));
+    const bookingKeys = [];
+    let bookingAttempt = 0;
+    await page.route('**/api.php', async route => {
+      if (route.request().method() === 'POST') {
+        bookingKeys.push(route.request().headers()['idempotency-key'] || '');
+        bookingAttempt++;
+        if (bookingAttempt === 1) return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: false, message: 'Temporary test interruption' }) });
+      }
+      await route.continue();
+    });
+    await bookingForm.locator('button[type="submit"]').click();
+    await page.waitForFunction(() => document.querySelector('#full-booking-form .form-status')?.classList.contains('error'));
+    await bookingForm.locator('button[type="submit"]').click();
+    await page.waitForFunction(() => document.querySelector('#full-booking-form .form-status')?.classList.contains('success'));
+    await page.unroute('**/api.php');
+    check(bookingKeys.length === 2 && bookingKeys[0].length >= 16 && bookingKeys[0] === bookingKeys[1], 'same booking payload reuses its idempotency key after an API rejection');
+
     // Scenario C: the cart persists through navigation and reload, while form defaults stay consistent.
     await page.goto(base + '/about.php');
     await page.goto(base + '/pages.php?page=cart');

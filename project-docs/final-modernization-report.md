@@ -29,7 +29,7 @@ The final hosted [Pages workflow run 43312293771](https://github.com/altento/tok
 
 This is still an educational restaurant concept. The seeded menu, address, phone, reviews, prices, promotional codes and example privileges are fictitious. Pages actions store only local browser demo state. PHP bookings are requests pending admin action; a confirmed badge is only shown after an admin changes the database status. Orders are training records and there is no payment provider.
 
-Email delivery is not active: SMTP credentials and an external mail service are not configured. Promotions, loyalty values, discounts and gift stocks must be reviewed by an administrator before any real operation. The static demo does not implement cross-device identity, secure loyalty balances or certificate redemption.
+The PHP branch now contains an optional SMTP delivery adapter and durable email outbox, but delivery is not active until SMTP credentials and a verified sender are configured in the PHP service environment. Promotions, loyalty values, discounts and gift stocks must be reviewed by an administrator before any real operation. The static demo does not implement cross-device identity, secure loyalty balances or certificate redemption.
 
 The PHP Secret Menu now hides targeted dishes from public catalog/detail/collection/API results until an active code, role, or tier rule authorizes access. A successful code check is stored in the PHP session and checked again for quoting and order persistence. GitHub Pages is public by design; its preview data is not a security boundary.
 
@@ -70,3 +70,11 @@ The published [GitHub Pages site](https://altento.github.io/tokyo-premium/) was 
 A subsequent local-only PHP test expansion now exercises valid and forged-price custom sets, unavailable dishes, inactive/unknown variants, duplicate IDs, quantity limits, persisted component snapshots, and rollback without creating an order. The isolated integration suite passes 114 assertions on this branch. That extra test coverage has not yet passed hosted CI or been published; the set-builder server validator itself was already present in the deployed release.
 
 The whole Tokyo Premium 2.0 scope is not complete. In particular, full pixel-by-pixel comparison against all 11 approved PNGs, focused referral/birthday test cases, and a coordinated cinematic scroll narrative remain open. No live email, payment, stock or table-availability service is configured.
+
+## Booking email and migration follow-up — 2026-11-13
+
+The follow-up found and reproduced a real upgrade defect on an existing v6 SQLite database: `bootstrap.php` could skip migration 7 because it only checked migration 6 and the order-idempotency table. Bootstrap now verifies migration 7 plus both new booking tables before skipping schema work. A v6 fixture upgrades through the real bootstrap path.
+
+Local verification passed: 131 PHP/SQLite assertions and the browser regression over 11 routes, 20 dish details, cart/checkout, booking retry behavior, and six viewport widths. The SMTP concurrency test now gates the fake server after the first worker connects; a second worker must observe the fresh lease, and the outbox records one attempt. The Windows PHP built-in server serializes concurrent HTTP requests, so that specific race still needs the Linux multiworker CI run.
+
+The SMTP transport was tested only against a local fake server. No real credentials or verified sender are configured. This backend follow-up does not complete the full Tokyo Premium 2.0 scope: the 11-reference pixel comparison, birthday/referral coverage, cinematic scroll story, external email, payment, live inventory and live table availability remain open. Hosted CI and the public Pages revision still need verification after this branch is pushed.

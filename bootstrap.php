@@ -6,6 +6,7 @@ session_name('tokyo_session');
 session_set_cookie_params(['httponly'=>true,'secure'=>$isHttps,'samesite'=>'Lax','path'=>'/']);
 if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 require_once __DIR__.'/lib/commerce.php';
+require_once __DIR__.'/lib/booking_mail.php';
 header('X-Content-Type-Options: nosniff'); header('Referrer-Policy: strict-origin-when-cross-origin'); header('X-Frame-Options: DENY');
 function db(): PDO
 {
@@ -50,11 +51,14 @@ function db(): PDO
         }
         if ($journalMode !== 'wal') error_log('SQLite WAL mode is unavailable; using ' . ($journalMode ?: 'default journal mode') . '.');
 
-        // Workers starting after the first one can skip DDL after migration 5.
+        // Workers starting after the first can skip DDL once v7 booking
+        // idempotency and email rate-limit tables are present.
         $ready = false;
         try {
-            $ready = (bool)$connection->query("SELECT 1 FROM app_migrations WHERE version=5")->fetchColumn()
-                && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='api_order_requests'")->fetchColumn();
+            $ready = (bool)$connection->query("SELECT 1 FROM app_migrations WHERE version=7")->fetchColumn()
+                && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='api_order_requests'")->fetchColumn()
+                && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='api_booking_requests'")->fetchColumn()
+                && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='booking_email_rate_limits'")->fetchColumn();
         } catch (Throwable) {
             $ready = false;
         }

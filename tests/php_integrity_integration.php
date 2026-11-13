@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 // Repeatable HTTP integration checks. Uses a uniquely named SQLite database in the OS temp dir.
 $dbPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'tokyo-integrity-' . bin2hex(random_bytes(6)) . '.sqlite';
+// Never let developer or CI mail credentials escape into this integration test.
+foreach (["TOKYO_SMTP_HOST","TOKYO_SMTP_PORT","TOKYO_SMTP_USER","TOKYO_SMTP_PASSWORD","TOKYO_SMTP_ENCRYPTION","TOKYO_SMTP_SECURE","TOKYO_MAIL_FROM","TOKYO_MAIL_FROM_NAME","TOKYO_BOOKING_NOTIFY_EMAIL"] as $mailEnvironmentKey) putenv($mailEnvironmentKey);
 if (!extension_loaded('pdo_sqlite')) { fwrite(STDERR, "SKIP: pdo_sqlite extension is required.\n"); exit(77); }
 putenv('RESTAURANT_DB=' . $dbPath);
 $checks = 0;
@@ -16,10 +18,8 @@ for ($i = 0; $i < 6; $i++) {
     if (PHP_OS_FAMILY === 'Windows') {
         $workerCommand[] = '-d';
         $workerCommand[] = 'extension_dir=' . ini_get('extension_dir');
-        $workerCommand[] = '-d';
-        $workerCommand[] = 'extension=php_sqlite3.dll';
-        $workerCommand[] = '-d';
-        $workerCommand[] = 'extension=php_pdo_sqlite.dll';
+        if (!extension_loaded('sqlite3')) { $workerCommand[] = '-d'; $workerCommand[] = 'extension=php_sqlite3.dll'; }
+        if (!extension_loaded('pdo_sqlite')) { $workerCommand[] = '-d'; $workerCommand[] = 'extension=php_pdo_sqlite.dll'; }
     }
     array_push($workerCommand, '-r', $initScript, dirname(__DIR__) . '/bootstrap.php', $initGatePath);
     $worker = proc_open($workerCommand, [0 => ['pipe','r'], 1 => ['pipe','w'], 2 => ['pipe','w']], $workerPipes, dirname(__DIR__), null);
@@ -42,6 +42,35 @@ foreach ($initializers as [$worker, $workerPipes, $number]) {
 require dirname(__DIR__) . '/bootstrap.php';
 $pdo = db();
 check(strtolower((string)$pdo->query('PRAGMA journal_mode')->fetchColumn()) === 'wal', 'SQLite uses WAL for concurrent read and order commits');
+$upgradeDbPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'tokyo-v6-upgrade-' . bin2hex(random_bytes(6)) . '.sqlite';
+$pdo->query('PRAGMA wal_checkpoint(TRUNCATE)');
+if (!copy($dbPath, $upgradeDbPath)) throw new RuntimeException('Could not create a migration-v6 fixture.');
+$v6Fixture = new PDO('sqlite:' . $upgradeDbPath, null, null, [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);
+$v6Fixture->exec('DROP TABLE api_booking_requests');
+$v6Fixture->exec('DROP TABLE booking_email_rate_limits');
+$v6Fixture->exec('DELETE FROM app_migrations WHERE version=7');
+$v6Fixture = null;
+$oldRestaurantDb = getenv('RESTAURANT_DB');
+putenv('RESTAURANT_DB=' . $upgradeDbPath);
+$upgradeCommand = [PHP_BINARY];
+if (PHP_OS_FAMILY === 'Windows') {
+    array_push($upgradeCommand, '-d', 'extension_dir=' . ini_get('extension_dir'));
+    if (!extension_loaded('sqlite3')) array_push($upgradeCommand, '-d', 'extension=php_sqlite3.dll');
+    if (!extension_loaded('pdo_sqlite')) array_push($upgradeCommand, '-d', 'extension=php_pdo_sqlite.dll');
+}
+array_push($upgradeCommand, '-r', 'require $argv[1]; db(); echo (int)db()->query("SELECT 1 FROM app_migrations WHERE version=7")->fetchColumn();', dirname(__DIR__) . '/bootstrap.php');
+$upgradePipes = [];
+$upgradeProcess = proc_open($upgradeCommand, [0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']], $upgradePipes, dirname(__DIR__), null);
+if ($oldRestaurantDb === false) putenv('RESTAURANT_DB'); else putenv('RESTAURANT_DB=' . $oldRestaurantDb);
+if (!is_resource($upgradeProcess)) throw new RuntimeException('Could not start a migration-v6 upgrade check.');
+fclose($upgradePipes[0]);
+$upgradeOutput = trim(stream_get_contents($upgradePipes[1]));
+$upgradeError = trim(stream_get_contents($upgradePipes[2]));
+fclose($upgradePipes[1]);
+fclose($upgradePipes[2]);
+$upgradeExit = proc_close($upgradeProcess);
+check($upgradeExit === 0 && $upgradeOutput === '1', 'an existing migration-v6 database receives the v7 booking tables during bootstrap' . ($upgradeError !== '' ? ' (' . $upgradeError . ')' : ''));
+foreach ([$upgradeDbPath,$upgradeDbPath.'-wal',$upgradeDbPath.'-shm'] as $fixtureFile) if (is_file($fixtureFile)) @unlink($fixtureFile);
 $password = 'Integration-Only-' . bin2hex(random_bytes(8));
 $pdo->prepare('INSERT INTO admins(email,password_hash) VALUES(?,?)')->execute(['integration@example.test', password_hash($password, PASSWORD_DEFAULT)]);
 $port = random_int(21000, 45000);
@@ -53,7 +82,10 @@ $serverLog = $dbPath . '.server.log';
 $previousWorkers = getenv('PHP_CLI_SERVER_WORKERS');
 if (PHP_OS_FAMILY !== 'Windows') putenv('PHP_CLI_SERVER_WORKERS=4');
 $serverCommand = [PHP_BINARY, '-d', 'extension_dir=' . ini_get('extension_dir')];
-if (PHP_OS_FAMILY === 'Windows') array_push($serverCommand, '-d', 'extension=php_sqlite3.dll', '-d', 'extension=php_pdo_sqlite.dll');
+if (PHP_OS_FAMILY === 'Windows') {
+    if (!extension_loaded('sqlite3')) array_push($serverCommand, '-d', 'extension=php_sqlite3.dll');
+    if (!extension_loaded('pdo_sqlite')) array_push($serverCommand, '-d', 'extension=php_pdo_sqlite.dll');
+}
 array_push($serverCommand, '-S', '127.0.0.1:' . $port, '-t', dirname(__DIR__));
 $server = proc_open($serverCommand, [0 => ['pipe','r'], 1 => ['file',$serverLog,'a'], 2 => ['file',$serverLog,'a']], $pipes, dirname(__DIR__), $env);
 if ($previousWorkers === false) putenv('PHP_CLI_SERVER_WORKERS'); else putenv('PHP_CLI_SERVER_WORKERS=' . $previousWorkers);
@@ -81,6 +113,22 @@ function adminPost(array $fields): array {
  }
  [$status,$body,$headers] = request('/admin.php', [], []);
  return [$status,$body,$headers,$postedStatus];
+}
+function startFakeSmtpServer(string $mode='accept'): array {
+  $portFile=tempnam(sys_get_temp_dir(),'tokyo-smtp-port-'); $captureFile=tempnam(sys_get_temp_dir(),'tokyo-smtp-message-'); $connectedFile=$mode==='slow'?tempnam(sys_get_temp_dir(),'tokyo-smtp-connected-'):''; $releaseFile=$mode==='slow'?tempnam(sys_get_temp_dir(),'tokyo-smtp-release-'):''; @unlink($portFile); if($connectedFile!=='')@unlink($connectedFile); if($releaseFile!=='')@unlink($releaseFile);
+  $pipes=[]; $process=proc_open([PHP_BINARY,dirname(__DIR__).'/tests/fake-smtp-server.php',$portFile,$captureFile,$mode,$connectedFile,$releaseFile],[0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']],$pipes,dirname(__DIR__),null);
+  if(!is_resource($process)) throw new RuntimeException('Could not start the local fake SMTP server.'); fclose($pipes[0]);
+  $port=''; for($wait=0;$wait<300;$wait++){if(is_file($portFile)){$port=trim((string)file_get_contents($portFile));if($port!=='')break;} usleep(10000);}
+  if($port===''||!ctype_digit($port)){proc_terminate($process);throw new RuntimeException('The local fake SMTP server did not become ready.');}
+  return ['process'=>$process,'pipes'=>$pipes,'port'=>(int)$port,'port_file'=>$portFile,'capture_file'=>$captureFile,'connected_file'=>$connectedFile,'release_file'=>$releaseFile];
+}
+function stopFakeSmtpServer(array $server): string {
+  if (($server['release_file']??'')!=='') @file_put_contents($server['release_file'],'release');
+  foreach($server['pipes'] as $pipe) if(is_resource($pipe)) fclose($pipe);
+  $exit=proc_close($server['process']); $capture=is_file($server['capture_file'])?(string)file_get_contents($server['capture_file']):'';
+  foreach([$server['port_file'],$server['capture_file'],$server['connected_file']??'',$server['release_file']??''] as $file) if($file!==''&&is_file($file)) @unlink($file);
+  if($exit!==0) throw new RuntimeException('The local fake SMTP server exited unexpectedly.');
+  return $capture;
 }
 function parallelOrderRequests(array $fields, string $idempotencyKey, int $count): array {
  global $base, $cookie, $pdo;
@@ -121,6 +169,88 @@ function parallelOrderRequests(array $fields, string $idempotencyKey, int $count
   $responses[] = [(int)$match[1], $body];
  }
  return $responses;
+}
+function parallelBookingRequests(array $fields, string $idempotencyKey, int $count): array {
+ global $base, $cookie, $pdo;
+ $body=http_build_query($fields);$sockets=[];$pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+ try {
+  for($i=0;$i<$count;$i++){
+   $errno=0;$error='';$socket=@stream_socket_client('tcp://'.parse_url($base,PHP_URL_HOST).':'.parse_url($base,PHP_URL_PORT),$errno,$error,5,STREAM_CLIENT_CONNECT);
+   if(!$socket)throw new RuntimeException('Could not open concurrent booking socket: '.$error);
+   $sockets[]=$socket;stream_set_timeout($socket,20);
+   $headers="POST /api.php HTTP/1.1\r\nHost: 127.0.0.1\r\nAccept: application/json\r\nConnection: close\r\nContent-Type: application/x-www-form-urlencoded\r\nIdempotency-Key: {$idempotencyKey}\r\nContent-Length: ".strlen($body)."\r\n";
+   if($cookie!=='')$headers.='Cookie: '.$cookie."\r\n";$request=$headers."\r\n".$body;$offset=0;
+   while($offset<strlen($request)){$written=fwrite($socket,substr($request,$offset));if($written===false||$written===0)throw new RuntimeException('Could not write concurrent booking request.');$offset+=$written;}
+  }
+  if(PHP_OS_FAMILY!=='Windows')usleep(200000);$pdo->exec('COMMIT');
+ }catch(Throwable $error){try{$pdo->exec('ROLLBACK');}catch(Throwable $ignored){}foreach($sockets as $socket)if(is_resource($socket))fclose($socket);throw $error;}
+ $responses=[];foreach($sockets as $socket){$raw=stream_get_contents($socket);fclose($socket);if(!preg_match('/^HTTP\/\d(?:\.\d)?\s+(\d{3})/m',$raw,$match))throw new RuntimeException('Malformed concurrent booking response: '.substr($raw,0,200));$body=substr($raw,strpos($raw,"\r\n\r\n")+4);$responses[]=[(int)$match[1],$body];}
+ return $responses;
+}
+function parallelMailDeliveries(int $outboxId, int $count, array $fakeSmtp): array {
+ if ($count !== 2 || ($fakeSmtp['connected_file'] ?? '') === '' || ($fakeSmtp['release_file'] ?? '') === '') {
+  throw new RuntimeException('Parallel SMTP delivery requires two workers and a gated fake server.');
+ }
+ $script = 'require $argv[1]; db(); echo booking_mail_deliver(db(),(int)$argv[2]);';
+ $startWorker = static function () use ($script, $outboxId): array {
+  $command = [PHP_BINARY];
+  if (PHP_OS_FAMILY === 'Windows') {
+   array_push($command, '-d', 'extension_dir=' . ini_get('extension_dir'));
+   if (!extension_loaded('sqlite3')) array_push($command, '-d', 'extension=php_sqlite3.dll');
+   if (!extension_loaded('pdo_sqlite')) array_push($command, '-d', 'extension=php_pdo_sqlite.dll');
+  }
+  array_push($command, '-r', $script, dirname(__DIR__) . '/bootstrap.php', (string)$outboxId);
+  $pipes = [];
+  $process = proc_open($command, [0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']], $pipes, dirname(__DIR__), null);
+  if (!is_resource($process)) throw new RuntimeException('Could not start parallel SMTP worker.');
+  fclose($pipes[0]);
+  return ['process'=>$process,'pipes'=>$pipes,'stdout'=>'','stderr'=>''];
+ };
+ $waitForWorker = static function (array &$worker, int $timeoutMs): bool {
+  stream_set_blocking($worker['pipes'][1], false);
+  $deadline = microtime(true) + ($timeoutMs / 1000);
+  while (!feof($worker['pipes'][1]) && microtime(true) < $deadline) {
+   $chunk = fread($worker['pipes'][1], 4096);
+   if ($chunk !== false) $worker['stdout'] .= $chunk;
+   usleep(10000);
+  }
+  return feof($worker['pipes'][1]);
+ };
+ $collectWorker = static function (array &$worker): array {
+  foreach ([1=>'stdout',2=>'stderr'] as $index=>$key) {
+   if (is_resource($worker['pipes'][$index])) {
+    $worker[$key] .= stream_get_contents($worker['pipes'][$index]);
+    fclose($worker['pipes'][$index]);
+   }
+  }
+  return [proc_close($worker['process']), trim($worker['stdout']), trim($worker['stderr'])];
+ };
+ $workers = [$startWorker()];
+ $connected = false;
+ for ($wait=0; $wait<500; $wait++) {
+  if (is_file($fakeSmtp['connected_file'])) { $connected = true; break; }
+  usleep(10000);
+ }
+ if (!$connected) {
+  @file_put_contents($fakeSmtp['release_file'], 'release');
+  [$exit,$stdout,$stderr] = $collectWorker($workers[0]);
+  throw new RuntimeException('First SMTP worker did not reach the fake server (exit '.$exit.'; stdout='.$stdout.'; stderr='.$stderr.').');
+ }
+ $workers[] = $startWorker();
+ $secondFinished = $waitForWorker($workers[1], 5000);
+ @file_put_contents($fakeSmtp['release_file'], 'release');
+ $results = [];
+ foreach ($workers as $index=>&$worker) {
+  $workerFinished = $index === 1 && $secondFinished ? true : $waitForWorker($worker, 10000);
+  [$exit,$stdout,$stderr] = $collectWorker($worker);
+  if (!$workerFinished || $exit !== 0) throw new RuntimeException('Parallel SMTP worker '.$index.' failed (finished='.($workerFinished?'yes':'no').'; exit='.$exit.'; stdout='.$stdout.'; stderr='.$stderr.').');
+  $results[] = $stdout;
+ }
+ unset($worker);
+ if (count(array_filter($results, static fn(string $state): bool => $state === 'sending')) !== 1) {
+  throw new RuntimeException('Second SMTP worker did not observe the active lease before release (results='.json_encode($results).').');
+ }
+ return $results;
 }
 function tokenFrom(string $html): string { if (!preg_match('/name="csrf" value="([^"]+)"/', $html, $m)) throw new RuntimeException('CSRF token not found.'); return html_entity_decode($m[1], ENT_QUOTES); }
 function freshTestDatabase(string $path): PDO {
@@ -242,15 +372,23 @@ try {
  $badOrder=$orderFields; $badOrder['items']='{"id":1,"qty":2}'; [$status]=request('/api.php',$badOrder); check($status===422, 'non-list item payload rejected');
  $badOrder=$orderFields; $badOrder['items']=json_encode([['id'=>999999,'qty'=>1]]); [$status]=request('/api.php',$badOrder); check($status===422, 'unknown dish rejected');
  $future=(new DateTimeImmutable('tomorrow'))->format('Y-m-d');
- $booking=['csrf'=>$csrf,'type'=>'booking','name'=>'Тестовый гость','phone'=>'+77010000000','guests'=>'2','date'=>'2026-02-31','time'=>'19:00','format'=>'Сезонный']; [$status]=request('/api.php',$booking); check($status===422, 'impossible booking date rejected');
-  $booking['date']=$future; [$status,$body]=request('/api.php',$booking,['Idempotency-Key'=>'integration-booking-key-0001']); $book=json_decode($body,true); check($status===201 && $book['ok'] && str_contains($book['message'],'не зарезервирован'), 'valid booking is explicitly unconfirmed demo request'); check((string)testDatabaseValue($dbPath,'SELECT format FROM bookings WHERE id=?',[(int)$book['id']])==='Сезонный', 'selected Omakase format is saved with booking request');
+ $booking=['csrf'=>$csrf,'type'=>'booking','name'=>'Тестовый гость','email'=>'guest@example.test','phone'=>'+77010000000','guests'=>'2','date'=>'2026-02-31','time'=>'19:00','format'=>'Сезонный']; [$status]=request('/api.php',$booking); check($status===422, 'impossible booking date rejected');
+  $badBooking=$booking;$badBooking['email']='not-an-email';[$status]=request('/api.php',$badBooking);check($status===422,'booking rejects an invalid guest email');
+  $booking['date']=$future; [$status,$body]=request('/api.php',$booking,['Idempotency-Key'=>'integration-booking-key-0001']); $book=json_decode($body,true); check($status===201 && $book['ok'] && $book['mail_status']==='pending' && str_contains($book['message'],'SMTP'), 'valid booking is explicitly unconfirmed and queues email when SMTP is not configured'); check((string)testDatabaseValue($dbPath,'SELECT format FROM bookings WHERE id=?',[(int)$book['id']])==='Сезонный', 'selected Omakase format is saved with booking request');check((string)testDatabaseValue($dbPath,'SELECT guest_email FROM bookings WHERE id=?',[(int)$book['id']])==='guest@example.test','booking email is stored with the request');$requestMailId=(int)testDatabaseValue($dbPath,'SELECT id FROM email_outbox WHERE event_key=?',['booking:'.$book['id'].':request:guest']);check($requestMailId>0&&(string)testDatabaseValue($dbPath,'SELECT status FROM email_outbox WHERE id=?',[$requestMailId])==='pending','guest receipt is durably queued without SMTP');
  [$status,$adminHtml]=request('/admin.php'); $adminCsrf=tokenFrom($adminHtml);
  [$status,$adminHtml]=adminPost(['csrf'=>$adminCsrf,'action'=>'admin-search','q'=>'тЕСТовый гость']);
  check($status===200 && str_contains($adminHtml,'Тестовый гость') && str_contains($adminHtml,'Новые брони'), 'admin search finds a booking and shows actionable notification counts');
- [$status,$body]=request('/api.php',$booking,['Idempotency-Key'=>'integration-booking-key-0001']); check($status===201 && json_decode($body,true)['id']===$book['id'], 'booking retry replays original request');
+ $bookingCountBeforeRetry=(int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM bookings');$mailCountBeforeRetry=(int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM email_outbox WHERE booking_id=?',[(int)$book['id']]);[$status,$body]=request('/api.php',$booking,['Idempotency-Key'=>'integration-booking-key-0001']);check($status===201&&json_decode($body,true)['id']===$book['id']&&(int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM bookings')===$bookingCountBeforeRetry&&(int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM email_outbox WHERE booking_id=?',[(int)$book['id']])===$mailCountBeforeRetry,'booking retry atomically replays the original record and outbox without duplicates');
+ $parallelBookingResponses=parallelBookingRequests($booking,'integration-booking-concurrent-0001',4);$parallelBookingIds=[];foreach($parallelBookingResponses as [$parallelStatus,$parallelBody]){$parallelResult=json_decode($parallelBody,true);if($parallelStatus!==201||empty($parallelResult['ok']))throw new RuntimeException('Concurrent booking request failed: HTTP '.$parallelStatus.' '.$parallelBody);$parallelBookingIds[]=(int)$parallelResult['id'];}$parallelBookingCount=(int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM bookings WHERE booking_date=? AND guest_email=?',[$future,'guest@example.test']);preg_match('/tokyo_session=([^;]+)/',$cookie,$sessionMatch);$parallelBookingToken=hash('sha256',($sessionMatch[1]??'').'|booking|integration-booking-concurrent-0001');$parallelBookingId=(int)testDatabaseValue($dbPath,'SELECT booking_id FROM api_booking_requests WHERE token=?',[$parallelBookingToken]);$parallelOutboxCount=(int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM email_outbox WHERE booking_id=?',[$parallelBookingId]);check(count(array_unique($parallelBookingIds))===1&&$parallelBookingCount===2&&$parallelBookingId===$parallelBookingIds[0]&&$parallelOutboxCount===1,'parallel duplicate booking submissions create one booking and one receipt (ids='.implode(',',$parallelBookingIds).'; rows='.$parallelBookingCount.'; outbox='.$parallelOutboxCount.')');
+ $pdo->exec('DELETE FROM booking_email_rate_limits');$rateBooking=$booking;$rateBooking['email']='rate-limit@example.test';for($i=1;$i<=3;$i++){[$rateStatus,$rateBody]=request('/api.php',$rateBooking,['Idempotency-Key'=>'integration-rate-limit-'.$i.'-0001']);if($rateStatus!==201)throw new RuntimeException('Booking email limit rejected allowed request '.$i.': '.$rateBody);}$rateBooking['email']='rate-limit@example.test';[$rateStatus,$rateBody]=request('/api.php',$rateBooking,['Idempotency-Key'=>'integration-rate-limit-4-0001']);check($rateStatus===429&&str_contains($rateBody,'Слишком много заявок'),'booking email rate limit blocks repeat mail abuse after three requests per recipient per day');$pdo->exec('DELETE FROM booking_email_rate_limits');
   [$status,$adminHtml]=request('/admin.php'); $adminCsrf=tokenFrom($adminHtml);
   [$status,$adminHtml]=adminPost(['csrf'=>$adminCsrf,'action'=>'status','table'=>'bookings','id'=>(string)$book['id'],'status'=>'confirmed']);
-  check($status===200 && str_contains($adminHtml,'Бронь подтверждена') && str_contains($adminHtml,'Статус обновлён в личном кабинете'), 'admin confirms a booking and shows a visible confirmation badge');
+  check($status===200 && str_contains($adminHtml,'Бронь подтверждена') && str_contains($adminHtml,'Email в очереди'), 'admin confirms a booking, shows its badge and reports that mail is queued without SMTP');$confirmationMailId=(int)testDatabaseValue($dbPath,'SELECT id FROM email_outbox WHERE event_key=?',['booking:'.$book['id'].':confirmed:guest']);check($confirmationMailId>0&&(string)testDatabaseValue($dbPath,'SELECT status FROM email_outbox WHERE id=?',[$confirmationMailId])==='pending','confirmation email is queued in the same status transition');check(str_contains($adminHtml,'Email · Подтверждение · В очереди')&&str_contains($adminHtml,'Повторить email'),'admin shows queue status and a CSRF-protected retry control');
+  $retryCsrf=tokenFrom($adminHtml);[$status,$retryHtml]=adminPost(['csrf'=>$retryCsrf,'action'=>'mail-retry','id'=>(string)$confirmationMailId]);check($status===200&&str_contains($retryHtml,'Письмо осталось в очереди')&&(string)testDatabaseValue($dbPath,'SELECT status FROM email_outbox WHERE id=?',[$confirmationMailId])==='pending','manual retry remains queued and reports SMTP is not configured');
+  $fake=startFakeSmtpServer();foreach(['TOKYO_SMTP_HOST'=>'127.0.0.1','TOKYO_SMTP_PORT'=>(string)$fake['port'],'TOKYO_SMTP_ENCRYPTION'=>'none','TOKYO_MAIL_FROM'=>'tokyo@example.test','TOKYO_MAIL_FROM_NAME'=>'Tokyo Premium'] as $key=>$value)putenv($key.'='.$value);check(booking_mail_configuration_state()==='ready','SMTP configuration accepts local test transport without external credentials');$sentState=booking_mail_deliver(freshTestDatabase($dbPath),$confirmationMailId);$captured=stopFakeSmtpServer($fake);check($sentState==='sent'&&(string)testDatabaseValue($dbPath,'SELECT status FROM email_outbox WHERE id=?',[$confirmationMailId])==='sent','SMTP worker marks confirmed booking email as sent only after 250 response');check(str_contains($captured,'To: <guest@example.test>')&&str_contains($captured,'Subject: =?UTF-8?B?')&&!str_contains($captured,'SMTP_PASSWORD'),'SMTP message contains the guest and encoded subject, never credentials');
+  $fake=startFakeSmtpServer();putenv('TOKYO_SMTP_PORT='.(string)$fake['port']);$requestResults=booking_mail_process_pending(freshTestDatabase($dbPath),10);$captured=stopFakeSmtpServer($fake);check(($requestResults[$requestMailId]??'')==='sent'&&(string)testDatabaseValue($dbPath,'SELECT status FROM email_outbox WHERE id=?',[$requestMailId])==='sent','outbox worker sends the queued receipt after SMTP becomes available');
+  $raceMailId=booking_mail_queue(freshTestDatabase($dbPath),(int)$book['id'],'qa:smtp-lock-race','guest@example.test','SMTP lock integration','Concurrent workers must claim this message once.');$fake=startFakeSmtpServer('slow');putenv('TOKYO_SMTP_PORT='.(string)$fake['port']);$raceStates=parallelMailDeliveries($raceMailId,2,$fake);$captured=stopFakeSmtpServer($fake);$raceFinalState=(string)testDatabaseValue($dbPath,'SELECT status FROM email_outbox WHERE id=?',[$raceMailId]);$raceAttempts=(int)testDatabaseValue($dbPath,'SELECT attempts FROM email_outbox WHERE id=?',[$raceMailId]);check($raceFinalState==='sent'&&$raceAttempts===1&&count(array_filter($raceStates,static fn(string $state):bool=>$state==='sent'))===1&&count(array_filter($raceStates,static fn(string $state):bool=>$state==='sending'))===1,'parallel SMTP workers respect the fresh UTC lock and make one delivery attempt (workers='.json_encode($raceStates).'; state='.$raceFinalState.'; attempts='.$raceAttempts.'; bytes='.strlen($captured).')');
+  $failureMailId=booking_mail_queue(freshTestDatabase($dbPath),(int)$book['id'],'qa:smtp-failure','guest@example.test','SMTP retry integration','Test failure then retry.');$fake=startFakeSmtpServer('reject');putenv('TOKYO_SMTP_PORT='.(string)$fake['port']);$failed=booking_mail_deliver(freshTestDatabase($dbPath),$failureMailId);$captured=stopFakeSmtpServer($fake);check($failed==='failed'&&(string)testDatabaseValue($dbPath,'SELECT status FROM email_outbox WHERE id=?',[$failureMailId])==='failed','SMTP rejection leaves a failed, retryable outbox record');check((string)testDatabaseValue($dbPath,'SELECT last_error FROM email_outbox WHERE id=?',[$failureMailId])==='SMTP rejected message (code 550)','SMTP failure stores a safe response without raw server data');$fake=startFakeSmtpServer();putenv('TOKYO_SMTP_PORT='.(string)$fake['port']);$retried=booking_mail_retry(freshTestDatabase($dbPath),$failureMailId);$captured=stopFakeSmtpServer($fake);check($retried==='sent'&&(string)testDatabaseValue($dbPath,'SELECT status FROM email_outbox WHERE id=?',[$failureMailId])==='sent','failed booking email can be explicitly retried successfully');foreach(['TOKYO_SMTP_HOST','TOKYO_SMTP_PORT','TOKYO_SMTP_USER','TOKYO_SMTP_PASSWORD','TOKYO_SMTP_ENCRYPTION','TOKYO_SMTP_SECURE','TOKYO_MAIL_FROM','TOKYO_MAIL_FROM_NAME','TOKYO_BOOKING_NOTIFY_EMAIL'] as $key)putenv($key);
   [$status,$history]=request('/account.php');
   check($status===200 && str_contains($history,'Бронь подтверждена') && str_contains($history,'role="status"'), 'confirmed booking is clearly shown in the guest account');
   [$status,$marketingHtml]=request('/admin-marketing.php'); $marketingCsrf=tokenFrom($marketingHtml);

@@ -1,6 +1,6 @@
 # SQLite schema and migration notes
 
-Updated 2026-11-12
+Updated 2026-11-13
 
 The app runs `schema.sql` with `CREATE TABLE/INDEX IF NOT EXISTS`, then records explicit upgrades in `app_migrations`. Existing SQLite files are upgraded additively; migrations avoid deleting menu, user, order or booking data.
 
@@ -11,6 +11,8 @@ The app runs `schema.sql` with `CREATE TABLE/INDEX IF NOT EXISTS`, then records 
 | 3 | Add order subtotals/discount fields and commerce defaults; seed demo set variants, loyalty tiers, campaigns, promo codes, Secret Menu access rules, and the Autumn collection. Transaction is `BEGIN IMMEDIATE`. |
 | 4 | Add certificate-preview actor key, rate-limit index and editable example denominations. |
 | 5 | Update only the untouched sample Autumn collection image to its generated seasonal asset; preserves any administrator-selected image. |
+| 6 | Add optional booking guest email and a unique-event SMTP outbox. Existing bookings are preserved and receive an empty default email; delivery remains disabled until the PHP service is configured. |
+| 7 | Add transactional booking idempotency reservations and hashed email/IP rate-limit buckets. Existing bookings and outbox rows are preserved. |
 
 `schema.sql` declares the normalized entities for campaigns and targets, gift options, promo-code redemptions, collection membership, set variants, Secret Menu rules, personalized offers, loyalty settings/tiers/ledger, order set components, referral relationships/rewards, certificate previews and status-event idempotency. Foreign keys, unique event constraints, indexes and `CHECK` constraints are used where the domain supports them.
 

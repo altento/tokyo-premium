@@ -9,15 +9,22 @@ const evidenceDir = path.resolve(process.env.TOKYO_MOTION_EVIDENCE_DIR || path.j
 const waitForScene = async (page, title) => page.waitForFunction(expected => document.querySelector('#home-title')?.textContent.includes(expected), title, { timeout: 5000 });
 async function revealAll(page) {
   await page.evaluate(async () => {
-    const bottom = document.documentElement.scrollHeight;
+    document.documentElement.style.scrollBehavior = 'auto';
     const step = Math.max(320, innerHeight * 0.72);
-    for (let top = 0; top < bottom; top += step) {
-      window.scrollTo(0, top);
-      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    for (let top = 0; top < document.documentElement.scrollHeight; top += step) {
+      window.scrollTo({ top, behavior: 'instant' });
+      await new Promise(resolve => setTimeout(resolve, 90));
     }
-    window.scrollTo(0, 0);
-    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    await Promise.all([...document.images].map(image => image.decode().catch(() => {})));
+    window.scrollTo({ top: 0, behavior: 'instant' });
   });
+  await page.waitForTimeout(850);
+  const hiddenReveals = await page.evaluate(() => [...document.querySelectorAll('.reveal,[data-tp-reveal]')].filter(node => {
+    const rect = node.getBoundingClientRect();
+    const style = getComputedStyle(node);
+    return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity) < 0.95;
+  }).length);
+  assert.equal(hiddenReveals, 0, 'homepage has no visible content left hidden after scrolling');
 }
 
 async function runMode(browser, name, base, route, capture) {

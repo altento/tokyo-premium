@@ -90,6 +90,63 @@ function commerce_migrate(PDO $pdo): void
             throw $error;
         }
     }
+
+    if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=6')->fetchColumn()) {
+        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        try {
+            $bookingColumns = $pdo->query('PRAGMA table_info(bookings)')->fetchAll(PDO::FETCH_COLUMN, 1);
+            if (!in_array('guest_email', $bookingColumns, true)) {
+                $pdo->exec("ALTER TABLE bookings ADD COLUMN guest_email TEXT NOT NULL DEFAULT ''");
+            }
+            $pdo->exec("CREATE TABLE IF NOT EXISTS email_outbox (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_key TEXT NOT NULL UNIQUE,
+                booking_id INTEGER REFERENCES bookings(id) ON DELETE SET NULL,
+                recipient TEXT NOT NULL,
+                subject TEXT NOT NULL,
+                body TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','sending','sent','failed')),
+                attempts INTEGER NOT NULL DEFAULT 0 CHECK(attempts >= 0),
+                locked_at TEXT,
+                sent_at TEXT,
+                last_error TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )");
+            $pdo->exec('CREATE INDEX IF NOT EXISTS idx_email_outbox_status_id ON email_outbox(status,id)');
+            $pdo->exec('CREATE INDEX IF NOT EXISTS idx_email_outbox_booking_id ON email_outbox(booking_id,id)');
+            $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(6)');
+            $pdo->commit();
+        } catch (Throwable $error) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $error;
+        }
+    }
+
+    if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=7')->fetchColumn()) {
+        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        try {
+            $pdo->exec("CREATE TABLE IF NOT EXISTS api_booking_requests (
+                token TEXT PRIMARY KEY,
+                booking_id INTEGER UNIQUE REFERENCES bookings(id) ON DELETE SET NULL,
+                response_json TEXT,
+                response_status INTEGER,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                CHECK ((response_json IS NULL AND response_status IS NULL) OR (response_json IS NOT NULL AND response_status IS NOT NULL))
+            )");
+            $pdo->exec("CREATE TABLE IF NOT EXISTS booking_email_rate_limits (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                bucket_hash TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )");
+            $pdo->exec('CREATE INDEX IF NOT EXISTS idx_booking_email_rate_bucket_time ON booking_email_rate_limits(bucket_hash,created_at)');
+            $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(7)');
+            $pdo->commit();
+        } catch (Throwable $error) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $error;
+        }
+    }
 }
 
 function commerce_actor_key(?int $userId, string $sessionId): string

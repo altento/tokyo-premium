@@ -37,16 +37,22 @@ async function visit(browser, base, route, mode, capture = false) {
   });
   const revealAll = async () => {
     await page.evaluate(async () => {
-      const bottom = document.documentElement.scrollHeight;
+      document.documentElement.style.scrollBehavior = 'auto';
       const step = Math.max(320, innerHeight * 0.72);
-      for (let top = 0; top < bottom; top += step) {
-        window.scrollTo(0, top);
-        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      for (let top = 0; top < document.documentElement.scrollHeight; top += step) {
+        window.scrollTo({ top, behavior: 'instant' });
+        await new Promise(resolve => setTimeout(resolve, 90));
       }
-      window.scrollTo(0, 0);
-      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      await Promise.all([...document.images].map(image => image.decode().catch(() => {})));
+      window.scrollTo({ top: 0, behavior: 'instant' });
     });
-    await page.waitForTimeout(420);
+    await page.waitForTimeout(850);
+    const hiddenReveals = await page.evaluate(() => [...document.querySelectorAll('.reveal,[data-tp-reveal]')].filter(node => {
+      const rect = node.getBoundingClientRect();
+      const style = getComputedStyle(node);
+      return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity) < 0.95;
+    }).length);
+    assert.equal(hiddenReveals, 0, `${mode} ${route.key} has no visible content left hidden after scrolling`);
   };
   await revealAll();
 
@@ -86,6 +92,7 @@ async function visit(browser, base, route, mode, capture = false) {
     assert.equal(geometry.imageCount, 8, `${mode} all gallery images load`);
   } else if (route.key === 'booking') {
     assert.equal(await page.locator('#full-booking-form').count(), 1, `${mode} booking form is present`);
+    assert.equal(await page.locator('#full-guest-email').getAttribute('required'), '', `${mode} booking requests an email for status updates`);
     assert.equal(await page.locator('[data-tp-floorplan] svg').count(), 1, `${mode} preference floorplan renders as SVG`);
     assert.equal(await page.locator('[data-tp-floorplan-selection]').count(), 1, `${mode} floorplan clearly labels selection as a preference`);
   } else if (route.key === 'contacts') {

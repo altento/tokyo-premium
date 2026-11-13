@@ -200,6 +200,8 @@ async function run() {
 
       await page.goto(mode.base + mode.routes.booking, { waitUntil: 'domcontentloaded' });
       await page.waitForSelector('[data-tp-table]', { timeout: 8000 });
+      const bookingEmail = page.locator('#full-guest-email');
+      check(await bookingEmail.getAttribute('type') === 'email' && await bookingEmail.getAttribute('required') !== null, mode.name + ' booking requires a valid guest response email');
       check(!(await page.locator('.booking-form .table-selection').innerText()).includes('Параметры изменились'), `${mode.name} booking form has no stale table warning on initial load`);
       await page.locator('[data-tp-table]').first().click();
       check(await page.locator('[name="table"]').inputValue() === '1', `${mode.name} floorplan stores a preferred table in the booking form`);
@@ -225,6 +227,15 @@ async function run() {
       await page.setViewportSize({ width: 390, height: 844 });
       await page.screenshot({ path: path.join(evidence, `12-${mode.name}-booking-mobile.jpg`), fullPage: true, type: 'jpeg', quality: 72 });
       await page.setViewportSize({ width: 1440, height: 1000 });
+      if (mode.name === 'static') {
+        await page.locator('#full-guest-name').fill('Гость QA');
+        await page.locator('#full-guest-phone').fill('+77010000000');
+        await bookingEmail.fill('guest@example.test');
+        await page.locator('.booking-form button[type="submit"]').click();
+        await page.waitForFunction(() => document.querySelector('.booking-form > .form-status')?.textContent.includes('Email не отправляется'));
+        const savedBooking = await page.evaluate(() => JSON.parse(localStorage.getItem('tokyo-demo-bookings') || '[]')[0]);
+        check(savedBooking && !Object.hasOwn(savedBooking, 'email'), 'static Pages booking confirms no email is sent and does not retain the guest email locally');
+      }
 
       await page.goto(mode.base + mode.routes.gift, { waitUntil: 'domcontentloaded' });
       await page.locator('[name="recipient_name"]').fill('Ая QA');

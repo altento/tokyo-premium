@@ -640,3 +640,5 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .about-hero{background:linear-gradient(90deg,rgba(9,8,7,.94) 0%,rgba(9,8,7,.82) 38%,rgba(9,8,7,.28) 76%,rgba(9,8,7,.12) 100%),linear-gradient(0deg,rgba(9,8,7,.32),transparent 55%),url("assets/generated/room-garden-terrace.webp") center 52%/cover no-repeat}
 .about-hero:after{border-color:rgba(235,211,161,.28);box-shadow:0 0 0 24px rgba(235,211,161,.05),0 0 0 58px rgba(235,211,161,.035)}
 @media(max-width:760px){.about-hero{background-position:58% center}}
+
+.admin-booking-emails{display:grid;gap:7px;margin-top:10px}.admin-booking-email-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.admin-mail-retry{min-height:32px;padding:5px 10px;font-size:.76rem}.admin-status.status-sent{border-color:#538b50;background:rgba(50,104,50,.2);color:#d8f1d0}.admin-status.status-failed{border-color:#9d4036;background:rgba(125,40,33,.2);color:#f0aaa1}.admin-status.status-sending{border-color:#9e7938;background:rgba(120,86,34,.2);color:#f2d18b}

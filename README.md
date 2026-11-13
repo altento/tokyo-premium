@@ -63,6 +63,8 @@ PHP-версия сохраняет меню, пользователей, зак
 
 Новые сценарии доступны в разделах «Привилегии», Omakase, «Собрать сет», «Идеальный вечер», сезонных коллекциях и предпросмотре подарочного сертификата. PHP-версия проверяет бизнес-правила на сервере; GitHub Pages остаётся браузерной демонстрацией. Границы промоакций, бонусов, рефералов и сертификатов описаны в [`project-docs/offers-and-loyalty.md`](project-docs/offers-and-loyalty.md), миграции — в [`project-docs/database-migrations.md`](project-docs/database-migrations.md), дизайн-токены — в [`project-docs/design-system.md`](project-docs/design-system.md).
 
+Опциональная отправка писем о заявках на бронирование в PHP-версии документирована в [`project-docs/booking-email.md`](project-docs/booking-email.md). Для неё нужны настройки SMTP в окружении PHP; на GitHub Pages email не отправляется.
+
 ## Автоматические проверки
 
 ```sh
