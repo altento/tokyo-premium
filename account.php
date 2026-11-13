@@ -92,6 +92,8 @@ if (!empty($_SESSION['user_id'])) {
         $userId = (int)$user['id'];
         $query = $pdo->prepare('SELECT birth_date,birthday_offer_consent,birthday_consent_at FROM user_profiles WHERE user_id=?');
         $query->execute([$userId]); $profile = $query->fetch() ?: ['birth_date'=>'','birthday_offer_consent'=>0,'birthday_consent_at'=>null];
+        $birthdayPointsAwarded=commerce_award_birthday_points($pdo,$userId);
+        if ($birthdayPointsAwarded>0) $profileNotice='С днём рождения — начислено '.number_format($birthdayPointsAwarded,0,'.',' ').' учебных бонусов Tokyo Privilege.';
         $tier = commerce_user_tier($pdo, $userId);
         $loyaltyBalance = commerce_get_loyalty_balance($pdo, $userId);
         $query = $pdo->prepare("SELECT COALESCE(SUM(total),0) FROM orders WHERE user_id=? AND status='completed'");

@@ -413,9 +413,12 @@ try {
  $storedBirth=testDatabaseValue($dbPath,'SELECT birth_date FROM user_profiles WHERE user_id=?',[$profileUserId]);
  check($status===200&&str_contains($birthdayPage,'Укажите корректную дату рождения')&&($storedBirth===''||$storedBirth===null),'invalid birth date and consent are rejected without storing invalid data');
  $localToday=new DateTimeImmutable('today',commerce_timezone()); $nearBirthday=$localToday->modify('+3 days'); $birthYear=(int)$localToday->format('Y')-25; $birthDate=$nearBirthday->setDate($birthYear,(int)$nearBirthday->format('m'),(int)$nearBirthday->format('d'))->format('Y-m-d');
- $pdo->exec('UPDATE loyalty_settings SET birthday_window_days=7 WHERE id=1');
+  $birthdayBalanceBefore=testLoyaltyBalance($dbPath,$profileUserId);
+  $pdo->exec('UPDATE loyalty_settings SET enabled=1,birthday_window_days=7,birthday_reward_points=75 WHERE id=1');
  $birthdayCsrf=tokenFrom($birthdayPage); [$status,$birthdayPage]=request('/account.php',['csrf'=>$birthdayCsrf,'action'=>'profile-save','birth_date'=>$birthDate,'birthday_offer_consent'=>'1']);
- check($status===200&&str_contains($birthdayPage,'Настройки персональных предложений сохранены.')&&commerce_birthday_eligible($pdo,$profileUserId),'valid profile date plus explicit consent enables a birthday-window offer');
+  check($status===200&&str_contains($birthdayPage,'начислено 75 учебных бонусов')&&commerce_birthday_eligible($pdo,$profileUserId)&&testLoyaltyBalance($dbPath,$profileUserId)===$birthdayBalanceBefore+75&&(int)testDatabaseValue($dbPath,"SELECT COUNT(*) FROM loyalty_ledger WHERE user_id=? AND transaction_type='birthday'",[$profileUserId])===1,'valid date and consent award the configured birthday points once');
+  [$status,$birthdayPage]=request('/account.php');
+  check($status===200&&testLoyaltyBalance($dbPath,$profileUserId)===$birthdayBalanceBefore+75&&(int)testDatabaseValue($dbPath,"SELECT COUNT(*) FROM loyalty_ledger WHERE user_id=? AND transaction_type='birthday'",[$profileUserId])===1,'reopening the account does not duplicate birthday points');
  $farBirthday=$localToday->modify('+20 days'); $farBirthDate=$farBirthday->setDate($birthYear,(int)$farBirthday->format('m'),(int)$farBirthday->format('d'))->format('Y-m-d');
  $birthdayCsrf=tokenFrom($birthdayPage); [$status,$birthdayPage]=request('/account.php',['csrf'=>$birthdayCsrf,'action'=>'profile-save','birth_date'=>$farBirthDate,'birthday_offer_consent'=>'1']);
  check($status===200&&!commerce_birthday_eligible($pdo,$profileUserId),'birthday eligibility follows the configured window rather than any saved birthday');

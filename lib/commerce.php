@@ -229,17 +229,17 @@ function commerce_public_collections(PDO $pdo): array
     }));
 }
 
-function commerce_birthday_eligible(PDO $pdo, int $userId): bool
+function commerce_birthday_occurrence(PDO $pdo, int $userId): ?DateTimeImmutable
 {
-    if ($userId<1) return false;
+    if ($userId<1) return null;
     $q=$pdo->prepare('SELECT birth_date,birthday_offer_consent FROM user_profiles WHERE user_id=?');
     $q->execute([$userId]); $profile=$q->fetch();
-    if (!$profile || (int)$profile['birthday_offer_consent']!==1 || empty($profile['birth_date'])) return false;
+    if (!$profile || (int)$profile['birthday_offer_consent']!==1 || empty($profile['birth_date'])) return null;
     $settings=$pdo->query('SELECT birthday_window_days FROM loyalty_settings WHERE id=1')->fetch() ?: [];
     $window=max(0,min(60,(int)($settings['birthday_window_days']??0)));
     try {
         $birth=DateTimeImmutable::createFromFormat('!Y-m-d',(string)$profile['birth_date'],commerce_timezone());
-        if (!$birth || $birth->format('Y-m-d')!==$profile['birth_date']) return false;
+        if (!$birth || $birth->format('Y-m-d')!==$profile['birth_date']) return null;
         $today=new DateTimeImmutable('today',commerce_timezone());
         $month=(int)$birth->format('m'); $day=(int)$birth->format('d');
         $year=(int)$today->format('Y');
@@ -248,8 +248,34 @@ function commerce_birthday_eligible(PDO $pdo, int $userId): bool
             $year++;
             $candidate=$candidate->setDate($year,$month,min($day,(int)$candidate->setDate($year,$month,1)->format('t')));
         }
-        return (int)$today->diff($candidate)->format('%a') <= $window;
-    } catch (Throwable) { return false; }
+        return (int)$today->diff($candidate)->format('%a') <= $window ? $candidate : null;
+    } catch (Throwable) { return null; }
+}
+
+function commerce_birthday_eligible(PDO $pdo, int $userId): bool
+{
+    return commerce_birthday_occurrence($pdo,$userId)!==null;
+}
+
+function commerce_award_birthday_points(PDO $pdo, int $userId): int
+{
+    if ($userId<1) return 0;
+    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    try {
+        $settings=$pdo->query('SELECT enabled,birthday_reward_points FROM loyalty_settings WHERE id=1')->fetch() ?: [];
+        $points=(int)($settings['birthday_reward_points']??0);
+        $occurrence=(!empty($settings['enabled']) && $points>0) ? commerce_birthday_occurrence($pdo,$userId) : null;
+        if (!$occurrence) { $pdo->commit(); return 0; }
+        $eventKey='birthday:'.$userId.':'.$occurrence->format('Y');
+        $insert=$pdo->prepare("INSERT OR IGNORE INTO loyalty_ledger(user_id,event_key,transaction_type,points,note) VALUES(?,?,'birthday',?,'Поздравительные бонусы Tokyo Privilege')");
+        $insert->execute([$userId,$eventKey,$points]);
+        $awarded=$insert->rowCount()===1 ? $points : 0;
+        $pdo->commit();
+        return $awarded;
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
+    }
 }
 
 function commerce_referral_code_for_user(PDO $pdo, int $userId): string
