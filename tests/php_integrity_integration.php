@@ -177,6 +177,7 @@ try {
  [$status,$body]=request('/api.php',$orderFields,['Idempotency-Key'=>'integration-order-key-0001']); $first=json_decode($body,true); check($status===201 && $first['ok'], 'valid pickup order succeeds with no address');
  [$status,$body2]=request('/api.php',$orderFields,['Idempotency-Key'=>'integration-order-key-0001']); $second=json_decode($body2,true); check($status===201 && $second['id']===$first['id'], 'same idempotency key replays original order');
  $orderReadPdo=freshTestDatabase($dbPath); $order=$orderReadPdo->query('SELECT total FROM orders WHERE id='.(int)$first['id'])->fetchColumn(); check((int)$order===7500, 'server price used, client price ignored'); check((int)$orderReadPdo->query('SELECT COUNT(*) FROM orders WHERE id='.(int)$first['id'])->fetchColumn()===1, 'retry created no second order');
+ unset($setReadPdo,$orderReadPdo,$pdo); gc_collect_cycles(); $pdo=freshTestDatabase($dbPath);
  $concurrentKey='integration-concurrent-order-'.bin2hex(random_bytes(8));
  $parallel=parallelOrderRequests($orderFields,$concurrentKey,6); $parallelIds=[];
  foreach($parallel as [$parallelStatus,$parallelBody]){$parallelResult=json_decode($parallelBody,true);check($parallelStatus===201&&$parallelResult['ok'],'concurrent same-key order request returns the committed result');$parallelIds[]=(int)$parallelResult['id'];}
