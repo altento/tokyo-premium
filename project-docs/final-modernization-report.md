@@ -15,6 +15,7 @@ The existing PHP 8 + SQLite application and its GitHub Pages exporter remain the
 - A protected Marketing & Loyalty admin route for campaign, code, collection, gift-stock, Secret Menu and tier settings. Include/exclude targets can specify `dish:<id>`, `category:<slug>`, or `set:<slug>`; unknown targets and conflicting include/exclude rules are rejected. Target replacement shares a transaction with the campaign save.
 - Additive SQLite migrations for campaigns, promo use, collections, custom sets, loyalty ledger, referrals and certificate preview records.
 - Native CSS motion and responsive editorial components with reduced-motion support. The project does not add GSAP because the present sequences do not require a scroll-animation runtime.
+- Homepage hero now has three coordinated manual scenes with text, image-alt and CTA changes; keyboard arrows, dots, queued rapid input, no autoplay, fine-pointer-only parallax and `prefers-reduced-motion` support. Static scene links resolve to static routes. The transition is implemented with local CSS/deferred JavaScript rather than adding a heavy animation dependency.
 
 ## Verification
 
@@ -43,6 +44,10 @@ The menu, dish detail, Omakase and authenticated account were rechecked against 
 The focused regression suites and full local PHP/SQLite, responsive, cart, review, Tokyo 2.0, and visual-state suites passed. Exact commands, screenshot inventory and scope are in [testing-report.md](testing-report.md) and [visual-qa/README.md](visual-qa/README.md). This did not complete the requested pixel-by-pixel comparison of all 11 design references.
 
 The requested optional hero video was not created: the connected video workspace reported no available video models and zero credits. Existing optimized still photography remains the hero fallback; no video is simulated.
+
+### Cinematic homepage follow-up — 2026-11-13
+
+The home page now has three manually selected editorial scenes with coordinated photographs, alternative text, headings, lead copy and calls to action. Keyboard controls, queued rapid input, same-origin static route mapping and fine-pointer-only parallax are included; there is no autoplay. Reduced-motion behavior and layout at eight widths are covered in `test:motion`. Local PHP and static browser runs passed, and the captures are indexed in `visual-qa/README.md`. Hosted CI and publication verification are still pending for this follow-up. The later PR #17 backend suite expanded the SQLite integration count from the 102 assertions recorded above to 114; hosted run 43341069860 passed it.
 
 ## Release status
 

@@ -52,4 +52,8 @@ Evidence filenames are `<page>-php-desktop.jpg` and `<page>-php-mobile.jpg`. The
 
 ### Server set validation follow-up
 
-The local PHP/SQLite integration suite now includes forged-price and invalid-composition cases for custom sets, plus persisted component price snapshots and rejection without partial order creation. It passed 114 assertions locally. This follow-up is not part of the already-published release yet; hosted CI is pending for these added assertions.
+The local PHP/SQLite integration suite includes forged-price and invalid-composition cases for custom sets, persisted component price snapshots, and rejection without partial order creation. The 114-assertion suite passed hosted CI run 43341069860 and was merged as `e09a6bd4d348211d155447622650fd52bac30e3f`; public deployment verification is tracked separately.
+
+## 2026-11-13 cinematic homepage follow-up
+
+`2.0-motion/` contains PHP and static screenshots for the homepage at desktop and mobile, plus the selected seasonal Omakase scene on desktop. The route-level full-page images were captured after scrolling through the page to trigger lazy images and reveals. `tests/motion-system-regression.cjs` checks both modes, three scenes, previous/next and dot controls, keyboard arrows, rapid queued input, changing links and image alt text, no autoplay, reduced motion and layout bounds at eight widths. The current screenshot set was visually inspected. This is a focused home-hero review, not completion of the outstanding full comparison against all eleven design references.
