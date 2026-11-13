@@ -6,7 +6,7 @@ $root = dirname(__DIR__);
 $docs = rtrim(getenv('TOKYO_EXPORT_DIR') ?: ($root . '/docs'), '/\\');
 $source = getenv('TOKYO_EXPORT_URL') ?: 'http://127.0.0.1:8080';
 if (!is_dir($docs) && !mkdir($docs, 0775, true) && !is_dir($docs)) throw new RuntimeException('Cannot create docs directory');
-foreach (['luxury.css','editorial.css','premium.css','luxury-refinements.css','tokyo20.css','experience-ui.css','cart-store.js','luxury.js','pages-extra.js','pages-demo.js','account-demo.js','reviews.js','navigation.js','experience-ui.js','tokyo-secret-demo.js','tokyo20.js'] as $asset) {
+foreach (['luxury.css','editorial.css','premium.css','luxury-refinements.css','tokyo20.css','experience-ui.css','cart-store.js','luxury.js','pages-extra.js','pages-demo.js','account-demo.js','reviews.js','navigation.js','experience-ui.js','tokyo-secret-demo.js','tokyo20.js','motion-system.js'] as $asset) {
     if (!copy($root . '/' . $asset, $docs . '/' . $asset)) throw new RuntimeException('Cannot copy ' . $asset);
 }
 $copyAssets = function (string $sourceDir, string $targetDir) use (&$copyAssets): void {

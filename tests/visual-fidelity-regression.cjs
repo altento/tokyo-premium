@@ -51,7 +51,7 @@ async function visit(browser, base, route, mode, capture = false) {
   await revealAll();
 
   if (route.key === 'home') {
-    const image = page.locator('.home-hero-photo');
+    const image = page.locator('.home-hero-photo--active');
     assert.match(await image.getAttribute('src'), /home-hero-salmon-nigiri-v3\.webp$/);
     assert.equal(await image.evaluate(node => node.naturalWidth > 0), true, `${mode} homepage hero image loads`);
     assert.equal(await page.locator('.home-dish-grid .home-dish-card.visible').count(), 4, `${mode} featured dishes appear after a natural scroll through the page`);

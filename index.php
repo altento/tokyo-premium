@@ -4,23 +4,38 @@ page_start('Tokyo Premium — японская кухня как искусст�
 header_html('home');
 $featured=[];$featuredImages=[];
 foreach(array_merge(dishes(true),dishes()) as $dish){$image=trim((string)$dish['image_url']);if($image===''||isset($featuredImages[$image]))continue;$featuredImages[$image]=true;$featured[]=$dish;if(count($featured)===4)break;}
+$heroScenes=[
+  ['image'=>'assets/generated/home-hero-salmon-nigiri-v3.webp','alt'=>'Нигири с лососем подают японскими палочками в тёплом свете — учебная концепция','eyebrow'=>setting('hero_eyebrow'),'title'=>'Вкус, которому','accent'=>'нужно время','lead'=>setting('hero_text'),'primary'=>['label'=>'Открыть меню','href'=>'menu.php'],'secondary'=>['label'=>'Выбрать вечер','href'=>'pages.php?page=booking']],
+  ['image'=>'assets/generated/tokyo-seasonal-omakase-v2.webp','alt'=>'Сезонная композиция из японских блюд при свете фонаря — учебная концепция','eyebrow'=>'OMAKASE · СЕЗОННЫЙ МАРШРУТ','title'=>'Позвольте вечеру','accent'=>'постепенно раскрыться','lead'=>'Несколько подач, единый ритм и внимание к сезону. Изучите учебный сценарий Omakase и выберите формат ужина.','primary'=>['label'=>'История Omakase','href'=>'pages.php?page=omakase'],'secondary'=>['label'=>'Собрать свой сет','href'=>'set-builder.php']],
+  ['image'=>'assets/generated/chef-at-counter.webp','alt'=>'Шеф формует нигири у суши-стойки — вымышленный образ для учебной концепции','eyebrow'=>'手仕事 · РЕМЕСЛО И ВНИМАНИЕ','title'=>'Точность в каждом','accent'=>'прикосновении','lead'=>'За каждым блюдом — спокойный жест, уважение к продукту и искусство замечать детали. Познакомьтесь с философией Tokyo Premium.','primary'=>['label'=>'Наша философия','href'=>'about.php'],'secondary'=>['label'=>'Пространство ресторана','href'=>'pages.php?page=gallery']]
+];
 ?>
 <main class="home-premium">
-  <section class="home-hero" aria-labelledby="home-title">
-    <img class="home-hero-photo" src="assets/generated/home-hero-salmon-nigiri-v3.webp" width="1672" height="944" fetchpriority="high" alt="Нигири с лососем, которое подают японскими палочками при свете фонарей">
+  <section class="home-hero" aria-labelledby="home-title" data-home-hero aria-roledescription="carousel" aria-label="Истории Tokyo Premium">
+    <img class="home-hero-photo home-hero-photo--active" id="home-hero-photo" src="assets/generated/home-hero-salmon-nigiri-v3.webp" width="1672" height="944" fetchpriority="high" alt="Нигири с лососем, которое подают японскими палочками при свете фонарей">
+    <img class="home-hero-photo home-hero-photo--next" data-home-hero-next width="1672" height="944" alt="" aria-hidden="true">
     <div class="home-hero-shade" aria-hidden="true"></div>
     <span class="home-kanji" lang="ja" aria-hidden="true">東京</span>
     <div class="home-hero-copy">
-      <p class="eyebrow"><?=e(setting('hero_eyebrow'))?></p>
-      <h1 id="home-title">Вкус, которому<br><em>нужно время</em></h1>
-      <p class="home-hero-lead"><?=e(setting('hero_text'))?></p>
+      <p class="eyebrow" data-home-hero-eyebrow><?=e($heroScenes[0]['eyebrow'])?></p>
+      <h1 id="home-title"><span data-home-hero-title><?=e($heroScenes[0]['title'])?></span><br><em data-home-hero-accent><?=e($heroScenes[0]['accent'])?></em></h1>
+      <p class="home-hero-lead" id="home-hero-lead" data-home-hero-lead><?=e($heroScenes[0]['lead'])?></p>
       <div class="button-row">
-        <a class="button" href="menu.php">Открыть меню <span aria-hidden="true">↗</span></a>
-        <a class="button secondary" href="pages.php?page=booking">Выбрать вечер</a>
+        <a class="button" data-home-hero-primary href="menu.php">Открыть меню <span aria-hidden="true">↗</span></a>
+        <a class="button secondary" data-home-hero-secondary href="pages.php?page=booking">Выбрать вечер</a>
       </div>
     </div>
     <p class="home-hero-note"><span>旬</span> сезонность · точность · omotenashi</p>
     <a class="hero-scroll" href="#menu-selection" aria-label="Прокрутить к меню"><span></span> Листайте к истории вкуса</a>
+    <div class="home-hero-controls" data-home-hero-controls role="group" aria-label="Сменить сюжет" hidden>
+      <button type="button" class="home-hero-arrow" data-home-hero-step="-1" aria-label="Предыдущий сюжет">←</button>
+      <div class="home-hero-dots" role="group" aria-label="Сюжеты">
+        <?php foreach($heroScenes as $i=>$scene): ?><button type="button" data-home-hero-index="<?=$i?>" aria-label="Показать сюжет: <?=e($scene['eyebrow'])?>" aria-pressed="<?=$i===0?'true':'false'?>"></button><?php endforeach ?>
+      </div>
+      <button type="button" class="home-hero-arrow" data-home-hero-step="1" aria-label="Следующий сюжет">→</button>
+    </div>
+    <p class="sr-only" data-home-hero-status role="status" aria-live="polite"></p>
+    <script type="application/json" id="home-hero-scenes"><?=json_encode($heroScenes,JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE)?></script>
   </section>
 
   <section class="home-values" aria-label="Принципы кухни">
@@ -78,4 +93,5 @@ foreach(array_merge(dishes(true),dishes()) as $dish){$image=trim((string)$dish['
   </section>
 </main>
 <script>window.DISHES=<?=json_encode(dishes(),JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP|JSON_UNESCAPED_UNICODE)?>;</script>
+<script src="motion-system.js" defer></script>
 <?php footer_html(); ?>

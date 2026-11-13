@@ -10,6 +10,7 @@ Updated 2026-11-13
 | Chef voice and service descriptions | Editorial copy | Fictional writing, not a real person's quote |
 | Guest reviews | Seed data and review page | Fictional demonstrations; no real rating claim |
 | Food and interior photography | Local WebP assets in `assets/food/` and `assets/generated/` | Illustrative concept photography, not proof of a location or served dishes |
+| Homepage hero stories | `index.php`, `motion-system.js`, and the existing home, seasonal Omakase, and chef WebP assets | Three manually selected, fictional editorial scenes; no autoplay and no video simulation |
 | Customer profile, bookings, orders and messages on Pages | Browser localStorage | Test-only records on the current browser |
 | PHP orders, bookings, messages, reviews and admin users | SQLite | Local educational data; not connected to a real restaurant |
 

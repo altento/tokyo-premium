@@ -7,7 +7,7 @@ Updated 2026-11-13
 | Check | Result | Evidence / scope |
 |---|---|---|
 | Cart store | Passed, 12/12 | Input sanitization, old-format migration, quantity limits, cross-tab state, checkout lock/retry key, custom-set bounds and clear/re-add behavior. |
-| PHP + SQLite integration | Passed, 102 assertions | Isolated database; six independent PHP processes race to initialize a clean SQLite file, WAL mode is verified, plus order price authority, idempotent and concurrent same-key orders, rollback, booking date/status, admin search/notifications, campaign targets, loyalty/order history, and Secret Menu route/API protection plus session unlock. The suite passed three consecutive runs after the CI-discovered locking fixes. |
+| PHP + SQLite integration | Passed, 114 assertions | Isolated database; six independent PHP processes race to initialize a clean SQLite file, WAL mode is verified, plus order price authority, idempotent and concurrent same-key orders, rollback, booking date/status, admin search/notifications, campaign targets, loyalty/order history, Secret Menu route/API protection plus session unlock, and server-validated custom-set pricing/composition. The 114-assertion suite passed hosted CI run 43341069860. |
 | PHP syntax | Passed | All 25 PHP application and support files linted with PHP 8.4. |
 | JavaScript syntax | Passed | Application JS and CJS regression files checked by Node. |
 | Core browser regression | Passed | 11 page types, all 20 dish details (18 public; 2 after a server-validated Secret Menu unlock), cart/checkout, tabs, favorites, navigation, menu filters and six viewport widths. |
@@ -17,6 +17,7 @@ Updated 2026-11-13
 | Responsive regression | Passed | 11 PHP page types × 14 widths (320–1920 px), plus static Pages header at 929/1024/1025 px; heading clipping checks, cart access, mobile/tablet menu keyboard behavior and booking dates across browser time zones. The 901–1023 px overflow band was reproduced on the public menu and fixed by moving the shared header/navigation breakpoint to 1024 px without changing the page-layout breakpoint. |
 | Gallery/profile visual state | Passed | Default gallery and static profile desktop/mobile captures. |
 | Visual fidelity follow-up | Passed | New `tests/visual-fidelity-regression.cjs` checks seven routes in PHP and static mode; unique home/menu heroes, all four visible home recommendations after scrolling, philosophy hero image, eight non-clipped gallery tiles, five catalog-backed Omakase overview photos, SVG preference floorplan, fictional map disclosure, image loading, mobile title geometry and no console errors. Captured 14 PHP desktop/mobile full-page screenshots. |
+| Cinematic home hero | Passed locally in PHP and static export | `test:motion` verifies three manual scenes, image/alt/copy/CTA synchronization, PHP-to-static route mapping, arrows and dots, keyboard control, rapid input queuing, no autoplay, reduced motion, no overflow and title/control bounds at 320, 360, 390, 430, 768, 1024, 1440 and 1920 px. Captures default and Omakase scenes on desktop/mobile. |
 | Static export | Passed | Exporter generated 36 pages; locked Secret Menu detail routes are omitted, stale generated detail pages are removed, and the client-only preview payload is generated separately. No PHP/backend files are exported. |
 | Diff hygiene | Passed | Feature and SQLite follow-up patches passed staged diff checks; release-documentation changes are checked before commit. |
 
@@ -40,11 +41,17 @@ The hosted [Pages workflow run 43312293771](https://github.com/altento/tokyo-pre
 
 After deployment, the public Pages site was opened with a cache-busting URL. Browser fetch checks returned HTTP 200 for 15 routes: home, menu, Omakase, offers, philosophy, gallery, reviews, contacts, booking, Perfect Evening, set builder, account, cart, Autumn in Kyoto collection, and gift certificates. The Offers page and its images loaded without failed same-origin requests; the browser recorded zero console errors and zero warnings. At 320 px and 390 px viewport widths, the Offers heading remained inside the viewport and there was no horizontal overflow.
 
-The local PHP/SQLite integration suite passed 102 assertions in three consecutive runs. Hosted CI also passed the integration suite under its multi-worker test configuration. Cart, Tokyo 2.0, review, responsive, and visual-state Playwright suites passed in the hosted build.
+The local PHP/SQLite integration suite now passes 114 assertions; hosted CI run 43341069860 passed the expanded suite under its multi-worker test configuration. Cart, Tokyo 2.0, review, responsive, and visual-state Playwright suites passed in the hosted build.
 
 The intermediate-width header correction was merged as `9599f3c4996e1eeb43948a1dba80c3bc62f06e29`. Follow-up [Pages workflow run 43320764592](https://github.com/altento/tokyo-premium/actions/runs/43320764592) completed with both build and deploy successful, including the expanded responsive regression. A fresh Playwright check of the deployed menu returned HTTP 200 at 929 px and 1025 px: 929 px had no horizontal overflow, retained the header cart, exposed booking and account links in the keyboard-operable menu, and closed on Escape; 1025 px restored the desktop navigation and booking CTA with no overflow. No failed same-origin requests or console errors were observed.
 
 A fresh pixel-by-pixel comparison of every current page against all 11 source PNG references remains incomplete. Screenshots and older visual gap notes remain in visual-qa/ and final-acceptance-report.md. No pixel-perfect acceptance is claimed.
+
+## Cinematic home follow-up (2026-11-13)
+
+The home hero now has three manually operated scenes: salmon nigiri, the seasonal Omakase table, and chef craft. Arrows, scene dots and left/right keyboard input update the photograph, alternative text, headings, lead copy and both actions together. No automatic rotation, video or audio was added. Pointer parallax runs only on fine-pointer devices; `prefers-reduced-motion` disables it and transition effects. Static links map to the exported `.html` routes.
+
+Local Playwright passed `test:motion` in PHP and the exported static build, including eight viewport widths and reduced-motion contexts. The screenshots and the rest of the current regression pass are indexed in `visual-qa/README.md`. Hosted CI and public Pages verification for this focused motion follow-up remain pending until its PR is pushed and deployed.
 
 ### Additional current-source visual check (2026-11-13)
 
