@@ -8,7 +8,8 @@
     "test:reviews": "node tests/reviews-regression.cjs",
     "test:cart-visual": "node tests/cart-visual-regression.cjs",
     "test:responsive": "node tests/responsive-regression.cjs",
-    "test:visual-states": "node tests/visual-state-regression.cjs"
+    "test:visual-states": "node tests/visual-state-regression.cjs",
+    "test:visual-fidelity": "node tests/visual-fidelity-regression.cjs"
   },
   "devDependencies": {
     "playwright": "1.65.0"

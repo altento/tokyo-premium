@@ -111,3 +111,11 @@
 - Public cache-busted browser checks returned HTTP 200 on home, menu, Omakase, cart and account. Current menu rendered its 18 active catalog cards; Omakase rendered all five course stages and stage 2 showed the catalog-backed “Нигири с тунцом”; all images on these routes decoded. Desktop checks had no overflow; the menu at 390 px had no horizontal overflow. No browser console/page errors were recorded.
 - Full pixel-by-pixel comparison of all 11 approved PNGs is still incomplete. Focused visual checks cover the current menu at 1440/390/320 px, dish details, Omakase course 2 and a populated authenticated dashboard; see `visual-qa/README.md`.
 - Known limits remain: the public Pages experience is a local demo, no real payment or email delivery is configured, and the educational restaurant data are fictitious.
+
+## Дополнение: визуальная точность Tokyo Premium 2.0 — 2026-11-13
+
+- **Исправлено и проверено локально:** отдельные оригинальные WebP-кадры для hero главной и меню; фотография японского сада в hero философии; обзор пяти Omakase-позиций из учебного каталога; снято ограничение высоты, обрезавшее восемь плиток галереи; уменьшены интервалы на бронировании и контактах.
+- **Исправлено и проверено локально:** добавлен `npm run test:visual-fidelity`. Семь маршрутов открываются в PHP и статической сборке, снимки делаются после прокрутки, галерея проверяется по границам карточек, а не только по ширине документа. Созданы desktop/mobile снимки в `project-docs/visual-qa/2.0-visual-fidelity/`.
+- **Регрессия:** локально прошли 12 cart-store тестов, 102 PHP/SQLite assertions, Tokyo 2.0 browser regression, review regression, восемь корзинных состояний, responsive 11×14, menu visual 1440/390/320, visual-state и новый visual-fidelity suite. Корневые PHP-файлы прошли lint на PHP 8.4 с SQLite-модулями.
+- **Публикация:** эти изменения находятся в локальной ветке `tokyo20-visual-fidelity`; они ещё не размещены на GitHub Pages. Публичный статус будет добавлен после CI и проверки опубликованной версии.
+- **Ограничение:** этот проход проверил семь страниц, затронутых визуальными изменениями, но не выполнил новый pixel-by-pixel аудит всех 11 исходных PNG. Остальные визуальные расхождения и коммерческие ограничения описаны выше.

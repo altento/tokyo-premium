@@ -9,7 +9,7 @@ foreach($metadataQuery->fetchAll() as $row) $searchMetadata[(int)$row['id']]=str
 $cats=db()->query('SELECT slug,name FROM categories ORDER BY sort_order')->fetchAll();
 ?>
 <main class="menu-page">
-  <section class="menu-hero"><img src="assets/generated/home-hero-nigiri-v2.webp" alt="Нигири и суши-сет из вымышленного меню Tokyo Premium" fetchpriority="high"><div class="menu-hero-shade"></div><div class="menu-hero-copy"><div class="kicker">旬 · СЕЗОННЫЙ ВЫБОР</div><h1>Меню</h1><p class="menu-hero-sub">Коллекция вкусов Японии</p><p>Авторские блюда концепции — от чистого вкуса нигири до тёплых подач и сезонных десертов.</p><span class="school-note">Все блюда и цены — демонстрационные</span></div><span class="menu-hero-kanji" lang="ja" aria-hidden="true">日本の味</span></section>
+  <section class="menu-hero"><img src="assets/generated/menu-hero-sushi-assortment-v1.webp" width="1672" height="944" alt="Подборка роллов и нигири на тёмном блюде в интерьере с видом на японский сад" fetchpriority="high"><div class="menu-hero-shade"></div><div class="menu-hero-copy"><div class="kicker">旬 · СЕЗОННЫЙ ВЫБОР</div><h1>Меню</h1><p class="menu-hero-sub">Коллекция вкусов Японии</p><p>Авторские блюда концепции — от чистого вкуса нигири до тёплых подач и сезонных десертов.</p><span class="school-note">Все блюда и цены — демонстрационные</span></div><span class="menu-hero-kanji" lang="ja" aria-hidden="true">日本の味</span></section>
   <section class="section menu-section">
     <div class="menu-layout">
       <aside class="menu-sidebar" aria-label="Разделы меню">
