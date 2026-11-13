@@ -45,3 +45,11 @@ Focused comparison notes against the approved concepts:
 - **Omakase:** five image cards give a compact overview of the same catalog-backed items shown by the interactive course selector. No fake video or invented dish data is introduced.
 
 Evidence filenames are `<page>-php-desktop.jpg` and `<page>-php-mobile.jpg`. The static build is behavior-checked, but this pass does not claim a complete pixel-difference comparison of all 11 reference PNGs or equal visual parity for every page.
+
+### Public post-deploy browser captures
+
+`home-public-postdeploy-desktop.jpg` and `home-public-postdeploy-mobile.jpg` are full-page Chromium captures of the cache-busted GitHub Pages release `4256718a68f8016ff7e9b5dafb0ffa4d33a917c3`. The browser scrolled through the page before capture so reveal animations and lazy-loaded images were visible. The public route check covered home, menu, Omakase, offers, Perfect Evening, set builder, booking and account; all had a main heading and no console/page errors. The home hero image returned HTTP 200 and decoded successfully. The screenshots were visually inspected after capture; mobile width was 390 CSS px.
+
+### Server set validation follow-up
+
+The local PHP/SQLite integration suite now includes forged-price and invalid-composition cases for custom sets, plus persisted component price snapshots and rejection without partial order creation. It passed 114 assertions locally. This follow-up is not part of the already-published release yet; hosted CI is pending for these added assertions.

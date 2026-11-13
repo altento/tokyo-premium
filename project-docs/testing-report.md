@@ -60,6 +60,14 @@ The run passed seven routes in both PHP and static mode and saved 14 PHP screens
 
 Local `npm ci` and the pinned Playwright 1.65.0 Chromium installation completed successfully in this Windows environment. The responsive regression passed locally against PHP and the freshly exported Pages build after the intermediate-width header fix. The post-merge CI and public deployment check are complete for commit `9599f3c`.
 
+## Tokyo 2.0 visual release and custom-set integrity follow-up — 2026-11-13
+
+- PR [#16](https://github.com/altento/tokyo-premium/pull/16) merged at `4256718a68f8016ff7e9b5dafb0ffa4d33a917c3`. Pull-request workflow [43335988363](https://github.com/altento/tokyo-premium/actions/runs/43335988363) passed, including the seven-route PHP/static visual-fidelity regression. Main deployment [43336522224](https://github.com/altento/tokyo-premium/actions/runs/43336522224) completed successfully.
+- Public Chromium check with a commit cache-buster passed on home, menu, Omakase, offers, Perfect Evening, set builder, booking and account. The distinct home hero returned HTTP 200 and loaded; desktop 1440 px and mobile 390 px had no horizontal overflow; the mobile heading stayed in the viewport; there were no console or page errors. Public desktop/mobile full-page home screenshots are saved in `visual-qa/2.0-visual-fidelity/` and were inspected after natural scroll through the page.
+- The live `offers.html` route rendered correctly; one early assertion was aimed at an absent optional data attribute, so it was replaced by a route heading check. This was a test-selector mismatch, not a page failure.
+- **Local follow-up, not yet hosted:** `tests/php_integrity_integration.php` now adds custom-set threat cases (forged client prices, unavailable dish, inactive/unknown variant, duplicate IDs, too few dishes, and excessive quantity), then checks persisted server-price/component snapshots and no order on invalid checkout. PHP/SQLite integration passed 114 assertions. The added assertions are queued for a subsequent PR and have not yet run in CI.
+- Scope remains explicit: the release is a focused visual pass; a fresh pixel-level comparison across all 11 references, focused birthday/referral tests, and the coordinated cinematic scroll-story remain incomplete.
+
 ## Follow-up visual and dashboard pass (2026-11-13)
 
 The latest local pass reproduced and fixed three presentation defects against the current PHP routes and static export:
