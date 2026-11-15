@@ -21,6 +21,14 @@ try {
     $pdo = db();
     $pdo->prepare('INSERT INTO users(email,full_name,password_hash) VALUES(?,?,?)')->execute(['personal+'.bin2hex(random_bytes(5)).'@example.test','Personal QA',password_hash('test-only',PASSWORD_DEFAULT)]);
     $userId=(int)$pdo->lastInsertId();
+    $userEmail=(string)$pdo->query('SELECT email FROM users WHERE id='.$userId)->fetchColumn();
+    $testPasswordHash=password_hash('test-only',PASSWORD_DEFAULT);
+    for($index=0;$index<205;$index++)$pdo->prepare('INSERT INTO users(email,full_name,password_hash) VALUES(?,?,?)')->execute(['newer-'.$index.'+'.bin2hex(random_bytes(3)).'@example.test','Newer account '.$index,$testPasswordHash]);
+    $recentIds=array_map('intval',$pdo->query('SELECT id FROM users ORDER BY id DESC LIMIT 200')->fetchAll(PDO::FETCH_COLUMN));
+    $pattern='%'.str_replace(['!','%','_'],['!!','!%','!_'],$userEmail).'%';
+    $search=$pdo->prepare("SELECT id,email,full_name FROM users WHERE full_name COLLATE NOCASE LIKE ? ESCAPE '!' OR email COLLATE NOCASE LIKE ? ESCAPE '!' OR CAST(id AS TEXT)=? ORDER BY id DESC LIMIT 200");
+    $search->execute([$pattern,$pattern,$userEmail]);$found=$search->fetch();
+    $assert(!in_array($userId,$recentIds,true)&&$found&&(int)$found['id']===$userId,'account search can find a registered user older than the recent-200 list by email');
     $pdo->prepare("INSERT INTO promotion_campaigns(slug,campaign_type,title,description,reward_type,reward_value,active,stackable,demo_only) VALUES(?,'personal','Private invitation','Account-scoped integration offer','percent',10,1,1,1)")->execute(['personal-'.bin2hex(random_bytes(5))]);
     $campaignId=(int)$pdo->lastInsertId();
     $pdo->prepare('INSERT INTO promo_codes(code,campaign_id,active) VALUES(?,?,1)')->execute(['PERSONALQA',$campaignId]);
