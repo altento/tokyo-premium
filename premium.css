@@ -478,12 +478,14 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 /* Tokyo Premium account dashboard — scoped to account pages only. */
 .account-dashboard.account-shell{max-width:1400px;margin:clamp(24px,4vw,58px) auto;padding-inline:clamp(12px,2.4vw,34px)}
 .account-dashboard .account-dashboard-card{padding:clamp(18px,2.8vw,38px);border-radius:14px;background:radial-gradient(ellipse at 88% 0,rgba(111,43,24,.16),transparent 40%),linear-gradient(145deg,#171411,#0c0b09 72%);overflow:visible}
-.account-dashboard-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;padding-bottom:24px;border-bottom:1px solid var(--hairline)}
+.account-dashboard-hero{position:relative;isolation:isolate;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;min-height:190px;margin:-8px -8px 0;padding:24px 20px 30px;overflow:hidden;border:1px solid rgba(202,165,107,.2);border-radius:9px;background:#100e0c;border-bottom:1px solid var(--hairline)}
+.account-dashboard-hero:before{position:absolute;z-index:0;inset:0;content:"";background-image:linear-gradient(90deg,rgba(12,11,9,.98) 0%,rgba(12,11,9,.91) 38%,rgba(12,11,9,.48) 100%),url("assets/generated/room-garden-terrace.webp");background-position:center 46%;background-size:cover;opacity:.92;pointer-events:none}
+.account-dashboard-hero>*{position:relative;z-index:1}
 .account-dashboard-identity{position:relative;min-width:0;padding-left:82px}
 .account-dashboard-identity:before{content:"TP";position:absolute;inset:2px auto auto 0;display:grid;width:62px;height:62px;place-items:center;border:1px solid rgba(211,177,112,.75);border-radius:50%;background:radial-gradient(circle at 35% 25%,rgba(204,158,83,.18),transparent 58%),#12100e;color:#e9cb91;font:500 1.05rem/1 'Playfair Display',Georgia,serif;letter-spacing:.08em;box-shadow:inset 0 0 0 5px rgba(202,165,107,.06)}
 .account-dashboard-identity .kicker{color:var(--gold);letter-spacing:.15em}
 .account-dashboard-identity h1{margin:.32em 0 .14em;font:500 clamp(2rem,4vw,3.35rem)/1.08 'Playfair Display',Georgia,serif;color:var(--ivory);overflow-wrap:anywhere}
-.account-dashboard-identity p{margin:0;color:#e1d3bd;overflow-wrap:anywhere}
+.account-dashboard-identity p{max-width:min(100%,520px);margin:0;overflow:hidden;color:#e1d3bd;text-overflow:ellipsis;white-space:nowrap}
 .account-dashboard-identity>small{display:block;margin-top:10px;color:var(--muted);line-height:1.5}
 .account-logout-form{flex:none}
 .account-dashboard-overview{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr);gap:16px;margin:20px 0}
@@ -507,15 +509,16 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .account-dashboard-actions a{display:flex;min-width:0;min-height:48px;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border:1px solid rgba(202,165,107,.27);border-radius:7px;background:linear-gradient(145deg,#16130f,#100e0c);color:var(--ivory);font-size:.78rem;transition:border-color .2s,background .2s}
 .account-dashboard-actions a:hover{border-color:rgba(202,165,107,.7);background:#1b1712}
 .account-dashboard-actions a span{color:#e8c98e}
-.account-dashboard-layout{display:grid;grid-template-columns:200px minmax(0,1fr);align-items:start;gap:14px}
-.account-dashboard-nav{position:sticky;top:96px;display:grid;gap:4px;padding:8px;border:1px solid rgba(202,165,107,.2);border-radius:9px;background:#100e0c}
+.account-dashboard-layout{display:grid;grid-template-columns:200px minmax(0,1fr);align-items:stretch;gap:14px}
+.account-dashboard-nav{position:sticky;top:96px;align-self:stretch;display:grid;align-content:start;gap:4px;padding:8px 8px 220px;border:1px solid rgba(202,165,107,.2);border-radius:9px;background-image:linear-gradient(180deg,rgba(16,14,12,.97) 0%,rgba(16,14,12,.91) 58%,rgba(16,14,12,.28) 100%),url("assets/generated/room-garden-terrace.webp");background-position:center;background-size:cover}
 .account-dashboard-nav a{display:grid;grid-template-columns:27px minmax(0,1fr) auto;align-items:center;gap:8px;min-height:45px;padding:8px 10px;border-bottom:1px solid rgba(202,165,107,.11);color:#eadfcf;font-size:.77rem;transition:background .18s,color .18s}
 .account-dashboard-nav a:last-child{border-bottom:0}
 .account-dashboard-nav a:hover,.account-dashboard-nav a:focus-visible{background:rgba(183,23,34,.16);color:#fff}
 .account-dashboard-nav a>span{color:#d0aa6b;font-size:.65rem}
 .account-dashboard-nav a>small{color:#a99b87;font-size:.62rem;text-align:right}
-.account-dashboard-content{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(285px,.86fr);align-items:start;gap:14px}
+.account-dashboard-content{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:14px}
 .account-dashboard-primary,.account-dashboard-aside{display:grid;align-content:start;gap:14px;min-width:0}
+.account-dashboard-primary,.account-dashboard-aside{grid-template-columns:repeat(2,minmax(0,1fr))}
 .account-dashboard .account-dashboard-panel{min-width:0;margin:0;padding:clamp(16px,2vw,24px);border:1px solid rgba(202,165,107,.22);border-radius:9px;background:linear-gradient(145deg,#15120f,#100e0c);color:var(--ivory)}
 .account-dashboard-section-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:15px}
 .account-dashboard-section-heading .kicker{color:var(--gold);font-size:.62rem;letter-spacing:.12em}
@@ -590,6 +593,7 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 
 @media(max-width:1100px){
   .account-dashboard-content{grid-template-columns:minmax(0,1fr)}
+  .account-dashboard-nav{padding-bottom:8px;background-image:none;background-color:#100e0c}
   .account-dashboard-aside{grid-template-columns:repeat(2,minmax(0,1fr))}
   .account-ledger-details{grid-column:1/-1}
   .account-dashboard-layout{grid-template-columns:1fr}
@@ -602,7 +606,8 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 @media(max-width:680px){
   .account-dashboard.account-shell{margin:20px auto;padding-inline:10px}
   .account-dashboard .account-dashboard-card{padding:17px 13px}
-  .account-dashboard-hero{align-items:flex-start}
+  .account-dashboard-hero{align-items:flex-start;min-height:170px;margin:-4px -4px 0;padding:18px 13px 22px}
+  .account-dashboard-hero:before{background-image:linear-gradient(90deg,rgba(12,11,9,.97) 0%,rgba(12,11,9,.86) 62%,rgba(12,11,9,.65) 100%),url("assets/generated/room-garden-terrace.webp");background-position:58% center}
   .account-dashboard-identity{padding-left:60px}
   .account-dashboard-identity:before{width:46px;height:46px;font-size:.84rem}
   .account-dashboard-identity h1{font-size:clamp(1.75rem,8vw,2.45rem)}
@@ -616,8 +621,7 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
   .account-dashboard-nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:3px;padding:6px}
   .account-dashboard-nav a{min-height:48px;padding:7px 8px;font-size:.69rem}
   .account-dashboard-content{gap:9px}
-  .account-dashboard-primary,.account-dashboard-aside{gap:9px}
-  .account-dashboard-aside{grid-template-columns:1fr}
+  .account-dashboard-primary,.account-dashboard-aside{grid-template-columns:minmax(0,1fr);gap:9px}
   .account-dashboard .account-dashboard-panel{padding:14px}
   .account-dashboard-section-heading{align-items:flex-start}
   .account-dashboard-section-heading h2{font-size:1.38rem}

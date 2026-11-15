@@ -30,6 +30,12 @@ The following current-source screenshots were reviewed after fixing initial-rend
 
 The focused captures are paired with automated checks in `tests/menu-visual-regression.cjs`, `tests/tokyo20-regression.cjs`, and `tests/browser-regression.cjs`. The menu check covers 1440, 390 and 320 px; the account check captures real authenticated data separately from the static browser-local profile. This is a focused re-review of four affected page types, not a new pixel-by-pixel comparison of all 11 source designs.
 
+## 2026-11-16 focused account layout pass
+
+`11-account-rebalanced-desktop.jpg` and `11-account-rebalanced-mobile.jpg` show the PHP account with one synthetic completed checkout. The dashboard now gives orders and bookings a wide paired row, uses two balanced columns for account panels on desktop, adds a dark garden photograph behind the profile identity and fills the tall section navigation with the same local room image. The long account email truncates visually while its full value remains in the element title and text.
+
+The screenshots were captured in Chromium at 1440 px and 390 px and inspected. The mobile document width equals the viewport, the main heading stays in bounds, and there were no page errors. This is a page-specific visual review, not a rerun of the broad responsive suite or a full comparison against all eleven references.
+
 ## 2026-11-13 Tokyo 2.0 visual-fidelity pass
 
 `2.0-visual-fidelity/` contains full-page PHP browser captures at desktop and 390 px mobile for home, menu, Omakase, philosophy, space, booking and contacts. The Playwright test scrolls through each page so reveal animations and lazy photos are actually exercised before capture. It separately opens the seven routes in the exported static build, checks image loading, gallery bounds, floorplan rendering, headings, overflow and browser errors.

@@ -184,7 +184,7 @@ header_html();
         <div class="account-dashboard-identity">
           <span class="kicker">Tokyo Premium · личное пространство</span>
           <h1>Здравствуйте, <?=e($user['full_name'])?></h1>
-          <p><?=e($user['email'])?></p>
+          <p title="<?=e($user['email'])?>"><?=e($user['email'])?></p>
           <small>Участник с <?=e(substr((string)$user['created_at'], 0, 10))?> · история и бонусы видны только после входа в этот аккаунт.</small>
         </div>
         <form method="post" class="account-logout-form">

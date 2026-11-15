@@ -905,9 +905,19 @@ function commerce_set_order_status(PDO $pdo, int $orderId, string $newStatus): b
 function commerce_adjust_loyalty(PDO $pdo, int $userId, int $points, string $eventKey, string $note, ?int $adminId = null): void
 {
     if ($points===0 || $userId<1 || !$adminId || $adminId<1 || !preg_match('/^[A-Za-z0-9._:-]{8,160}$/',$eventKey)) throw new DomainException('Некорректная операция с бонусами.');
-    if ($points<0 && commerce_get_loyalty_balance($pdo,$userId)<abs($points)) throw new DomainException('Нельзя списать больше доступного баланса.');
-    $q=$pdo->prepare("INSERT INTO loyalty_ledger(user_id,event_key,transaction_type,points,admin_id,note) VALUES(?,?,'admin_adjustment',?,?,?)");
-    $q->execute([$userId,$eventKey,$points,$adminId,substr($note,0,240)]);
+    if ($pdo->inTransaction()) throw new LogicException('Административная корректировка бонусов должна владеть транзакцией.');
+    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    try {
+        // Serialize the balance check with the ledger write so concurrent
+        // deductions cannot both spend the same points.
+        if ($points<0 && commerce_get_loyalty_balance($pdo,$userId)<abs($points)) throw new DomainException('Нельзя списать больше доступного баланса.');
+        $q=$pdo->prepare("INSERT INTO loyalty_ledger(user_id,event_key,transaction_type,points,admin_id,note) VALUES(?,?,'admin_adjustment',?,?,?)");
+        $q->execute([$userId,$eventKey,$points,$adminId,substr($note,0,240)]);
+        $pdo->commit();
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
+    }
 }
 
 function commerce_certificate_denominations(PDO $pdo): array

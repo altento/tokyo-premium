@@ -123,3 +123,9 @@ The suite uses a disposable SQLite database. The earlier checks exposed stale re
 - PHP 8.4 lint passed for `index.php`; `tools/export-pages.php` generated 36 static pages and copied the vendored GSAP files. `git diff --check` passed.
 - Full-page and hero screenshots were generated in `visual-qa/2.0-motion/` and `visual-qa/2.0-visual-fidelity/`. Homepage desktop/mobile PHP captures were visually inspected against `01-home.png`; this focused motion update does not close the 11-reference pixel comparison.
 - This is local evidence only. No CI run or public Pages deployment was performed for this revision.
+# Focused follow-up — 2026-11-16
+
+- Administrative loyalty debit race: `tests/loyalty-adjustment-atomicity.php` passed 6 assertions. Two concurrent 80-point deductions against 100 points produced exactly one accepted ledger entry and a balance of 20; overdraft rejection left the balance unchanged; a separate credit succeeded.
+- PHP lint passed for `lib/commerce.php`, `account.php`, and the focused regression script under PHP 8.4 with `pdo_sqlite` enabled.
+- Account layout was browser-captured once at desktop 1440 px and mobile 390 px with a synthetic order. Mobile scroll width was 390 px, the page heading remained inside the viewport, and the browser recorded no page errors. Screenshots are indexed in `visual-qa/README.md`.
+- The broad browser, responsive and PHP integration suites were not rerun in this focused cycle.
