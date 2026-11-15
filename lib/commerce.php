@@ -940,9 +940,16 @@ function commerce_assign_personal_offer(PDO $pdo, int $userId, int $campaignId, 
         $user = $pdo->prepare('SELECT 1 FROM users WHERE id=?');
         $user->execute([$userId]);
         if (!$user->fetchColumn()) throw new DomainException('Аккаунт не найден.');
-        $campaign = $pdo->prepare("SELECT 1 FROM promotion_campaigns WHERE id=? AND campaign_type='personal' AND active=1");
+        $campaign = $pdo->prepare("SELECT * FROM promotion_campaigns WHERE id=? AND campaign_type='personal' AND active=1");
         $campaign->execute([$campaignId]);
-        if (!$campaign->fetchColumn()) throw new DomainException('Выберите активную персональную кампанию.');
+        $campaignRow=$campaign->fetch();
+        if (!$campaignRow) throw new DomainException('Выберите активную персональную кампанию.');
+        $codes=$pdo->prepare('SELECT starts_at,ends_at,uses_count,maximum_uses FROM promo_codes WHERE campaign_id=? AND active=1');
+        $codes->execute([$campaignId]); $hasRedeemableCode=false;
+        foreach($codes->fetchAll() as $code){
+            if(($code['maximum_uses']===null||(int)$code['uses_count']<(int)$code['maximum_uses'])&&commerce_date_window_is_active($code['starts_at']?:null,$code['ends_at']?:null,(string)$campaignRow['timezone'])){$hasRedeemableCode=true;break;}
+        }
+        if(!$hasRedeemableCode)throw new DomainException('Добавьте к кампании действующий промокод с доступным лимитом, затем назначайте её аккаунту.');
 
         $existing = $pdo->prepare('SELECT id,used_order_id FROM personalized_offers WHERE user_id=? AND campaign_id=?');
         $existing->execute([$userId, $campaignId]);

@@ -70,4 +70,4 @@ The latest local `test:motion` run passed on PHP and freshly exported static pag
 
 ## 2026-11-16 personal-offer admin follow-up
 
-This was a server-side admin and SQLite flow change. A focused helper regression and PHP syntax checks passed; route assertions are included in `tests/php_integrity_integration.php` but were not run in the shortened cycle. No new browser screenshot was produced, so this is functional verification context and not a visual acceptance claim.
+This was a server-side admin/account and SQLite flow change. The account now exposes the assigned offer code and a direct checkout link; private codes are absent from the public Offers list. A focused helper regression and PHP syntax checks passed; route assertions are included in `tests/php_integrity_integration.php` but were not run in the shortened cycle. No new browser screenshot was produced, so this is functional verification context and not a visual acceptance claim.

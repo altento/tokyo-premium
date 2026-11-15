@@ -34,6 +34,9 @@
 .tp20-offer-grid > .tp20-offer-card:only-child .tp20-offer-copy { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: clamp(24px, 4vw, 52px); }
 .tp20-offer-grid > .tp20-offer-card:only-child .tp20-offer-copy p { min-height: 0; }
 .tp20-offer-card { min-width: 0; overflow: hidden; border: 1px solid var(--tp20-line); border-radius: 16px; background: linear-gradient(145deg, rgba(199,155,89,.07), transparent 42%), var(--tp20-panel); }
+.tp20-private-code { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:14px; padding-top:12px; border-top:1px solid var(--tp20-line); }
+.tp20-private-code strong { color:var(--tp20-gold); letter-spacing:.1em; }
+.tp20-private-code .button { min-height:36px; padding:8px 12px; font-size:.72rem; }
 .tp20-offer-image { position: relative; overflow: hidden; }
 .tp20-offer-image img { width: 100%; aspect-ratio: 1.55; object-fit: cover; transition: transform .8s cubic-bezier(.2,.72,.18,1); }
 .tp20-offer-card:hover .tp20-offer-image img { transform: scale(1.045); }

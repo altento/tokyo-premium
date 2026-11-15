@@ -54,6 +54,13 @@ try {
     try { commerce_assign_personal_offer($pdo,$userId,$wrongTypeId,null); } catch (DomainException $error) { $wrongTypeRejected=str_contains($error->getMessage(),'активную персональную кампанию'); }
     $assert($wrongTypeRejected,'exclusive campaigns cannot be assigned through the personal-offer path');
 
+    $noCodeSlug='personal-no-code-'.bin2hex(random_bytes(5));
+    $pdo->prepare("INSERT INTO promotion_campaigns(slug,campaign_type,title,reward_type,active) VALUES(?,'personal','No code','percent',1)")->execute([$noCodeSlug]);
+    $noCodeCampaignId=(int)$pdo->lastInsertId();
+    $noCodeRejected=false;
+    try { commerce_assign_personal_offer($pdo,$userId,$noCodeCampaignId,null); } catch (DomainException $error) { $noCodeRejected=str_contains($error->getMessage(),'действующий промокод'); }
+    $assert($noCodeRejected,'campaigns without an active redeemable code cannot be assigned as personal invitations');
+
     echo "PASS: {$assertions} focused personal-offer assertions.\n";
 } finally {
     $pdo=null;

@@ -156,6 +156,9 @@
     const quoteTotal = quoteRoot.querySelector('[data-tp-quote-total]');
     const giftChoice = quoteRoot.querySelector('[data-tp-gift-choice]');
     const giftSelect = quoteRoot.querySelector('[name="gift_dish_id"]');
+    const promoInput = quoteRoot.querySelector('#checkout-promo-code');
+    const requestedPromo = new URLSearchParams(window.location.search).get('promo') || '';
+    if (promoInput && !promoInput.value && /^[A-Z0-9][A-Z0-9_-]{2,30}$/i.test(requestedPromo)) promoInput.value = requestedPromo.toUpperCase();
     const clearQuote = message => { quoteTotal.hidden = true; quoteTotal.textContent = ''; if (message) quoteStatus.textContent = message; };
     const staticQuote = (payload, fields) => {
       const subtotal = Number(window.TokyoCart?.total() || 0);

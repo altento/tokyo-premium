@@ -110,8 +110,15 @@ if (!empty($_SESSION['user_id'])) {
         $referralInviteHref = 'account.php?ref='.rawurlencode($referralCode).'#account-referrals';
         $query = $pdo->prepare('SELECT r.code,r.status,r.created_at,u.full_name AS referred_name FROM referrals r LEFT JOIN users u ON u.id=r.referred_user_id WHERE r.inviter_user_id=? ORDER BY r.id DESC LIMIT 20');
         $query->execute([$userId]); $invitedUsers = $query->fetchAll();
-        $query = $pdo->prepare('SELECT c.title,c.description,po.expires_at FROM personalized_offers po JOIN promotion_campaigns c ON c.id=po.campaign_id WHERE po.user_id=? AND po.used_order_id IS NULL AND (po.expires_at IS NULL OR po.expires_at>=CURRENT_TIMESTAMP) AND c.active=1 ORDER BY po.assigned_at DESC');
-        $query->execute([$userId]); $personalOffers = $query->fetchAll();
+        $query = $pdo->prepare("SELECT po.id AS offer_id,po.expires_at,c.id AS campaign_id,c.campaign_type,c.title,c.description,c.active,c.starts_at,c.ends_at,c.weekday_mask,c.starts_time,c.ends_time,c.timezone,pc.code,pc.starts_at AS code_starts_at,pc.ends_at AS code_ends_at,pc.uses_count,pc.maximum_uses FROM personalized_offers po JOIN promotion_campaigns c ON c.id=po.campaign_id LEFT JOIN promo_codes pc ON pc.campaign_id=c.id AND pc.active=1 AND (pc.maximum_uses IS NULL OR pc.uses_count<pc.maximum_uses) WHERE po.user_id=? AND po.used_order_id IS NULL AND (po.expires_at IS NULL OR po.expires_at>=CURRENT_TIMESTAMP) AND c.active=1 ORDER BY po.assigned_at DESC,pc.created_at DESC");
+        $query->execute([$userId]); $personalOfferRows=$query->fetchAll(); $personalOffers=[];
+        foreach($personalOfferRows as $offerRow){
+            if(!commerce_campaign_is_active($offerRow)||($offerRow['campaign_type']==='birthday'&&!commerce_birthday_eligible($pdo,$userId)))continue;
+            $offerId=(int)$offerRow['offer_id'];
+            if(!isset($personalOffers[$offerId])){$personalOffers[$offerId]=['title'=>$offerRow['title'],'description'=>$offerRow['description'],'expires_at'=>$offerRow['expires_at'],'codes'=>[]];if($offerRow['expires_at'])$personalOffers[$offerId]['expires_at']=(new DateTimeImmutable((string)$offerRow['expires_at'],new DateTimeZone('UTC')))->setTimezone(commerce_timezone())->format('d.m.Y H:i');}
+            if($offerRow['code']&&!isset($personalOffers[$offerId]['codes'][$offerRow['code']])&&commerce_date_window_is_active($offerRow['code_starts_at']?:null,$offerRow['code_ends_at']?:null,(string)$offerRow['timezone']))$personalOffers[$offerId]['codes'][$offerRow['code']]=$offerRow['code'];
+        }
+        $personalOffers=array_values(array_filter($personalOffers,static fn(array $offer):bool=>(bool)$offer['codes']));
         $query = $pdo->prepare('SELECT id,total,status,fulfillment,created_at FROM orders WHERE user_id=? ORDER BY id DESC LIMIT 50');
         $query->execute([$_SESSION['user_id']]);
         $orders = $query->fetchAll();
@@ -296,7 +303,7 @@ header_html();
               <?php if (!$personalOffers): ?>
                 <p class="account-section-copy">Персональных предложений пока нет. Здесь появятся только адресно назначенные действующие кампании.</p>
               <?php else: ?>
-                <div class="tp20-offer-grid"><?php foreach ($personalOffers as $offer): ?><article class="tp20-offer-card"><div class="tp20-offer-copy"><span class="kicker">PERSONAL INVITATION</span><h3><?=e($offer['title'])?></h3><p><?=e($offer['description'])?></p><?php if ($offer['expires_at']): ?><small>Действует до <?=e($offer['expires_at'])?></small><?php endif ?></div></article><?php endforeach ?></div>
+                <div class="tp20-offer-grid"><?php foreach ($personalOffers as $offer): ?><article class="tp20-offer-card"><div class="tp20-offer-copy"><span class="kicker">PERSONAL INVITATION</span><h3><?=e($offer['title'])?></h3><p><?=e($offer['description'])?></p><?php if ($offer['expires_at']): ?><small>Действует до <?=e($offer['expires_at'])?> · время Кызылорды</small><?php endif ?><?php foreach($offer['codes'] as $code): ?><div class="tp20-private-code"><strong><?=e($code)?></strong><button class="button secondary" type="button" data-copy-code="<?=e($code)?>" data-label="Скопировать код">Скопировать</button><a class="text-link" href="pages.php?page=cart&amp;promo=<?=e(rawurlencode($code))?>">Перейти к заказу ↗</a></div><?php endforeach ?></div></article><?php endforeach ?></div>
               <?php endif ?>
             </section>
 

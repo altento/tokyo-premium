@@ -5,7 +5,7 @@ $pdo = db();
 $userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
 $offers = commerce_public_offers($pdo, $userId);
 $collections = commerce_public_collections($pdo);
-$codeRows = $pdo->query("SELECT pc.code,pc.campaign_id,pc.active AS code_active,pc.starts_at AS code_starts_at,pc.ends_at AS code_ends_at,pc.uses_count,pc.maximum_uses,c.title,c.active,c.starts_at,c.ends_at,c.weekday_mask,c.starts_time,c.ends_time,c.timezone FROM promo_codes pc JOIN promotion_campaigns c ON c.id=pc.campaign_id WHERE pc.active=1 AND c.active=1 AND c.campaign_type<>'secret_menu' ORDER BY c.sort_order,pc.created_at DESC")->fetchAll();
+$codeRows = $pdo->query("SELECT pc.code,pc.campaign_id,pc.active AS code_active,pc.starts_at AS code_starts_at,pc.ends_at AS code_ends_at,pc.uses_count,pc.maximum_uses,c.title,c.active,c.starts_at,c.ends_at,c.weekday_mask,c.starts_time,c.ends_time,c.timezone FROM promo_codes pc JOIN promotion_campaigns c ON c.id=pc.campaign_id WHERE pc.active=1 AND c.active=1 AND c.campaign_type NOT IN ('secret_menu','personal','birthday') ORDER BY c.sort_order,pc.created_at DESC")->fetchAll();
 $codes = array_values(array_filter($codeRows, static fn(array $row): bool => commerce_campaign_is_active($row) && commerce_date_window_is_active($row['code_starts_at'] ?: null, $row['code_ends_at'] ?: null, (string)$row['timezone']) && ($row['maximum_uses'] === null || (int)$row['uses_count'] < (int)$row['maximum_uses'])));
 $secretDishes = commerce_secret_menu_dishes($pdo, $userId, (string)($_SESSION['secret_menu_code']??''), !empty($_SESSION['admin_id']));
 page_start('Привилегии и коллекции — Tokyo Premium', 'Сезонные предложения, меню шефа и привилегии Tokyo Premium. Учебные условия демонстрационные.');
