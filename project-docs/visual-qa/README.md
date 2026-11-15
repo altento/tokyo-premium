@@ -67,3 +67,7 @@ The local PHP/SQLite integration suite includes forged-price and invalid-composi
 ## 2026-11-16 GSAP motion follow-up
 
 The latest local `test:motion` run passed on PHP and freshly exported static pages. It verifies GSAP/ScrollTrigger initialization, no ScrollTrigger instances under reduced motion, hero scenes, scroll-story state, keyboard input and eight viewport widths. The test refreshed the current desktop/mobile and hero captures in `2.0-motion/`; the seven-route `test:visual-fidelity` suite also passed in both delivery modes and refreshed PHP captures in `2.0-visual-fidelity/`. The home desktop/mobile captures were inspected next to `01-home.png`. The page retains the separate, more restrained editorial implementation; this motion-only change does not represent a full visual redesign or pixel comparison.
+
+## 2026-11-16 personal-offer admin follow-up
+
+This was a server-side admin and SQLite flow change. A focused helper regression and PHP syntax checks passed; route assertions are included in `tests/php_integrity_integration.php` but were not run in the shortened cycle. No new browser screenshot was produced, so this is functional verification context and not a visual acceptance claim.

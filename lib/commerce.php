@@ -920,6 +920,65 @@ function commerce_adjust_loyalty(PDO $pdo, int $userId, int $points, string $eve
     }
 }
 
+function commerce_assign_personal_offer(PDO $pdo, int $userId, int $campaignId, ?string $expiresAt = null): int
+{
+    if ($userId < 1 || $campaignId < 1) throw new DomainException('Выберите аккаунт и персональную кампанию.');
+    if ($pdo->inTransaction()) throw new LogicException('Назначение предложения должно владеть транзакцией.');
+    // `personalized_offers.expires_at` is compared with SQLite CURRENT_TIMESTAMP,
+    // so keep the persisted value in UTC even though the admin enters local time.
+    $timezone = new DateTimeZone('UTC');
+    if ($expiresAt !== null) {
+        $expiry = DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', $expiresAt, $timezone);
+        $parseErrors = DateTimeImmutable::getLastErrors();
+        if (!$expiry || ($parseErrors !== false && ($parseErrors['warning_count'] > 0 || $parseErrors['error_count'] > 0)) || $expiry->format('Y-m-d H:i:s') !== $expiresAt || $expiry <= new DateTimeImmutable('now', $timezone)) {
+            throw new DomainException('Срок предложения должен быть корректной будущей датой.');
+        }
+    }
+
+    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    try {
+        $user = $pdo->prepare('SELECT 1 FROM users WHERE id=?');
+        $user->execute([$userId]);
+        if (!$user->fetchColumn()) throw new DomainException('Аккаунт не найден.');
+        $campaign = $pdo->prepare("SELECT 1 FROM promotion_campaigns WHERE id=? AND campaign_type='personal' AND active=1");
+        $campaign->execute([$campaignId]);
+        if (!$campaign->fetchColumn()) throw new DomainException('Выберите активную персональную кампанию.');
+
+        $existing = $pdo->prepare('SELECT id,used_order_id FROM personalized_offers WHERE user_id=? AND campaign_id=?');
+        $existing->execute([$userId, $campaignId]);
+        $row = $existing->fetch();
+        if ($row) {
+            if ($row['used_order_id'] !== null) throw new DomainException('Это предложение уже использовано; повторно назначить его нельзя.');
+            $offerId = (int)$row['id'];
+            $pdo->prepare('UPDATE personalized_offers SET expires_at=? WHERE id=?')->execute([$expiresAt, $offerId]);
+        } else {
+            $pdo->prepare('INSERT INTO personalized_offers(user_id,campaign_id,expires_at) VALUES(?,?,?)')->execute([$userId, $campaignId, $expiresAt]);
+            $offerId = (int)$pdo->lastInsertId();
+        }
+        $pdo->commit();
+        return $offerId;
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
+    }
+}
+
+function commerce_revoke_personal_offer(PDO $pdo, int $offerId): void
+{
+    if ($offerId < 1) throw new DomainException('Персональное предложение не найдено.');
+    if ($pdo->inTransaction()) throw new LogicException('Отзыв предложения должен владеть транзакцией.');
+    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    try {
+        $delete = $pdo->prepare('DELETE FROM personalized_offers WHERE id=? AND used_order_id IS NULL');
+        $delete->execute([$offerId]);
+        if ($delete->rowCount() !== 1) throw new DomainException('Предложение уже использовано или не найдено.');
+        $pdo->commit();
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
+    }
+}
+
 function commerce_certificate_denominations(PDO $pdo): array
 {
     $q=$pdo->prepare('SELECT value FROM settings WHERE key=?');

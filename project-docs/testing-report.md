@@ -129,3 +129,7 @@ The suite uses a disposable SQLite database. The earlier checks exposed stale re
 - PHP lint passed for `lib/commerce.php`, `account.php`, and the focused regression script under PHP 8.4 with `pdo_sqlite` enabled.
 - Account layout was browser-captured once at desktop 1440 px and mobile 390 px with a synthetic order. Mobile scroll width was 390 px, the page heading remained inside the viewport, and the browser recorded no page errors. Screenshots are indexed in `visual-qa/README.md`.
 - The broad browser, responsive and PHP integration suites were not rerun in this focused cycle.
+
+## Personal offers follow-up — 2026-11-16
+
+`tests/personal-offer-regression.php` passed 8 isolated SQLite assertions: an unassigned account cannot use the campaign code; assignment enables a server-priced quote; reassignment updates the single row; invalid/past expiry is rejected; expiry removes eligibility; unused assignments can be revoked; and non-personal campaigns are rejected. PHP 8.4 lint passed for `lib/commerce.php`, `admin-marketing.php`, and the focused regression. `git diff --check` passed. Route-level admin assignment/revocation assertions were added to the broad integration suite but not run in this short cycle. No browser capture, full regression suite, CI, or Pages deployment is claimed.
