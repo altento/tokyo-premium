@@ -137,3 +137,9 @@ The suite uses a disposable SQLite database. The earlier checks exposed stale re
 ## Gift quantity follow-up — 2026-11-16
 
 Added the focused `php tests/gift-quantity-regression.php` check for eligible quantity 2, rejection above the configured cap, zero and insufficient stock, persisted order-line quantity, transactional stock decrement, and the legacy default of one. It passed 9 assertions using PHP 8.5.11 with the installed SQLite extensions loaded explicitly. PHP lint for all changed PHP files, JS syntax checks, source/static CSS/JS parity and `git diff --check` passed. The broader PHP, browser and Pages suites were not run for this change.
+
+## Omakase spacing and gift API assertions — 2026-11-16
+
+- Tightened Omakase course and set-card spacing in `tokyo20.css`; `docs/tokyo20.css` is byte-for-byte synchronized. A focused static-browser check confirmed the course tabs still switch, compact desktop spacing is applied, and the 390 px layout has no horizontal overflow. This was not a full-page visual comparison against `04-omakase.png`.
+- Extended `tests/php_integrity_integration.php` with API assertions for quoted gift quantity/limits, rejecting quantities above the cap, persisted order quantity, stock decrement, and rejecting a request exceeding remaining stock. `php -l` passed; the integration suite was not run in this shortened cycle.
+- No broad PHP, browser, responsive, CI, or Pages deployment checks were run. The already-recorded nine-assertion isolated gift regression remains the latest executed PHP coverage for quantity handling.

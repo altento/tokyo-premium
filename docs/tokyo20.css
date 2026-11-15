@@ -448,3 +448,36 @@ selected dish photography for a custom-set composition. */
   .cart-page-side .cart-page-controls { flex-wrap:wrap; gap:6px; }
   .cart-page-side .line-price { white-space:nowrap; text-align:right; }
 }
+
+/* Omakase: keep the course story cinematic while tightening its editorial rhythm. */
+.editorial-page > .tp20-omakase-experience,
+.editorial-page > .omakase-course-overview,
+.editorial-page > .section:has(.experience-tiers) { padding-block:clamp(38px,4.6vw,66px); }
+.tp20-omakase-experience .tp20-course-heading { gap:22px; margin-bottom:20px; }
+.tp20-omakase-experience .tp20-course-tabs { margin-bottom:14px; }
+.tp20-omakase-experience .tp20-course-panels { min-height:0; }
+.tp20-omakase-experience .tp20-course-photo,
+.tp20-omakase-experience .tp20-course-photo img { min-height:350px; max-height:500px; }
+.tp20-omakase-experience .tp20-course-story { padding:clamp(24px,3.2vw,42px); }
+.editorial-page:has(.tp20-omakase-experience) .experience-tiers { gap:14px; }
+.editorial-page:has(.tp20-omakase-experience) .tier-card {
+  min-height:230px;
+  padding:clamp(22px,2.6vw,30px);
+  border-radius:9px;
+  box-shadow:0 16px 42px rgba(0,0,0,.18);
+}
+.editorial-page:has(.tp20-omakase-experience) .tier-card:not(.tier-card-featured) {
+  background:radial-gradient(ellipse at 100% 0,rgba(196,163,108,.12),transparent 48%),linear-gradient(145deg,#191511,#100e0c);
+}
+.editorial-page:has(.tp20-omakase-experience) .tier-card h3 { margin:13px 0 7px; }
+.editorial-page:has(.tp20-omakase-experience) .tier-card strong { font-size:1.75rem; }
+.editorial-page:has(.tp20-omakase-experience) .tier-card .button { width:100%; justify-content:center; }
+@media(max-width:600px) {
+  .editorial-page > .tp20-omakase-experience,
+  .editorial-page > .omakase-course-overview,
+  .editorial-page > .section:has(.experience-tiers) { padding-block:34px; }
+  .tp20-omakase-experience .tp20-course-photo,
+  .tp20-omakase-experience .tp20-course-photo img { min-height:240px; max-height:380px; }
+  .tp20-omakase-experience .tp20-course-story { padding:20px; }
+  .editorial-page:has(.tp20-omakase-experience) .tier-card { min-height:210px; }
+}
