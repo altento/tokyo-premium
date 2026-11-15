@@ -13,12 +13,19 @@ fs.mkdirSync(evidenceDir, { recursive: true });
 const routes = [
   { key: 'home', php: '/', static: '/index.html', width: 1440 },
   { key: 'menu', php: '/menu.php', static: '/menu.html', width: 1440 },
+  { key: 'dish', php: '/pages.php?page=dish&id=3', static: '/dish-3.html', width: 1440 },
   { key: 'philosophy', php: '/about.php', static: '/about.html', width: 1440 },
   { key: 'space', php: '/pages.php?page=gallery', static: '/gallery.html', width: 1440 },
   { key: 'booking', php: '/pages.php?page=booking', static: '/booking.html', width: 1440 },
   { key: 'contacts', php: '/pages.php?page=contacts', static: '/contacts.html', width: 1440 },
   { key: 'omakase', php: '/pages.php?page=omakase', static: '/omakase.html', width: 1440 }
 ];
+
+const requestedRoutes = (process.env.TOKYO_VISUAL_ROUTES || '').split(',').map(value => value.trim()).filter(Boolean);
+const routesToRun = requestedRoutes.length ? routes.filter(route => requestedRoutes.includes(route.key)) : routes;
+if (requestedRoutes.length && routesToRun.length !== requestedRoutes.length) {
+  throw new Error(`Unknown visual route filter: ${requestedRoutes.join(', ')}`);
+}
 
 async function visit(browser, base, route, mode, capture = false) {
   const page = await browser.newPage({ viewport: { width: route.width, height: 1000 }, deviceScaleFactor: 1 });
@@ -71,6 +78,13 @@ async function visit(browser, base, route, mode, capture = false) {
     assert.ok(await page.locator('.menu-hero').evaluate(node => node.getBoundingClientRect().height <= 460), `${mode} menu hero stays within the compact editorial height`);
     assert.equal(await page.locator('.menu-set-story-photo img').evaluateAll(images => images.length === 2 && images.every(image => image.naturalWidth > 0)), true, `${mode} menu's authored-set story has two loaded photographs`);
     assert.equal(await page.locator('.menu-set-story a[href*="set-builder"]').count(), 1, `${mode} menu links its authored-set story to the set builder`);
+  } else if (route.key === 'dish') {
+    assert.equal(await page.locator('.detail-feature--product').count(), 1, `${mode} dish uses the product detail layout`);
+    assert.equal(await page.locator('.detail-product-heading h1').count(), 1, `${mode} dish has one product heading`);
+    assert.equal(await page.locator('h1').count(), 1, `${mode} dish does not duplicate its title`);
+    assert.equal(await page.locator('#dish-main-image').evaluate(image => image.naturalWidth > 0), true, `${mode} dish photo loads`);
+    assert.equal(await page.locator('.dish-chef-story img').evaluate(image => image.naturalWidth > 0), true, `${mode} chef editorial photo loads`);
+    assert.equal(await page.locator('.detail-actions .add-to-cart').count(), 1, `${mode} dish retains its add-to-cart action`);
   } else if (route.key === 'philosophy') {
     const background = await page.locator('.about-hero').evaluate(node => getComputedStyle(node).backgroundImage);
     assert.match(background, /room-garden-terrace\.webp/, `${mode} philosophy hero uses its garden photograph`);
@@ -136,9 +150,10 @@ async function visit(browser, base, route, mode, capture = false) {
 (async () => {
   const browser = await chromium.launch({ headless: true });
   try {
-    for (const route of routes) await visit(browser, phpBase, route, 'php', true);
-    for (const route of routes) await visit(browser, staticBase, route, 'static', false);
-    console.log(`PASS: seven visual-fidelity routes validated in PHP and static mode; PHP desktop/mobile evidence saved to ${evidenceDir}`);
+    for (const route of routesToRun) await visit(browser, phpBase, route, 'php', true);
+    const captureStatic = process.env.TOKYO_CAPTURE_STATIC === '1';
+    for (const route of routesToRun) await visit(browser, staticBase, route, 'static', captureStatic);
+    console.log(`PASS: ${routesToRun.length} visual-fidelity route${routesToRun.length === 1 ? '' : 's'} validated in PHP and static mode; screenshots saved to ${evidenceDir}`);
   } finally {
     await browser.close();
   }

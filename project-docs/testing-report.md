@@ -165,3 +165,9 @@ Confirmed that the admin's generic status update bypassed `commerce_set_order_st
 `npm run test:menu-visual` passed four focused Playwright cases against local PHP and the freshly exported Pages build at 1440×1000 and 390×844 CSS px. Both modes returned HTTP 200, loaded the new hero and two story photos, showed the breadcrumb and six visible first-page dishes, linked to the correct set builder route, and had no horizontal overflow or browser console/page errors. The hero measured 432 px on desktop and 370 px on mobile. Full-page captures are indexed in `project-docs/visual-qa/README.md`.
 
 The static exporter generated 36 pages before the browser check. The changed page was visually inspected beside `design-references/02-menu.png`; this does not complete the outstanding 11-page pixel comparison. No broad suite, CI run, GitHub Pages deployment, or public-site check was repeated in this shortened cycle.
+
+## 2026-11-16 dish-detail focused regression
+
+The visual-fidelity browser regression was run only for dish, in PHP and freshly exported static mode, on desktop and mobile. It passed the one-title, loaded-image, editorial-photo and add-to-cart assertions, then saved four full-page screenshots under project-docs/visual-qa/. The static exporter produced 36 pages. PHP syntax for pages.php, JavaScript syntax for the browser test, and git diff --check passed.
+
+This accelerated pass did not rerun the broad browser, responsive or PHP/SQLite suites, hosted CI, or public deployment checks. It does not claim that all twenty product routes or all eleven design references have now been visually reviewed.

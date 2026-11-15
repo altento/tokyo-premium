@@ -688,3 +688,7 @@ body.story-motion-gsap [data-story-reveal].story-visible img{animation:none}
 @media(max-width:760px){.about-hero{background-position:58% center}}
 
 .admin-booking-emails{display:grid;gap:7px;margin-top:10px}.admin-booking-email-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.admin-mail-retry{min-height:32px;padding:5px 10px;font-size:.76rem}.admin-status.status-sent{border-color:#538b50;background:rgba(50,104,50,.2);color:#d8f1d0}.admin-status.status-failed{border-color:#9d4036;background:rgba(125,40,33,.2);color:#f0aaa1}.admin-status.status-sending{border-color:#9e7938;background:rgba(120,86,34,.2);color:#f2d18b}
+/* Keep the product hero and its editorial companion as one deliberate composition. */
+.editorial-page .section.detail-feature--product{padding-block:clamp(32px,4vw,56px)}
+.editorial-page .section.dish-chef-section{padding-block:clamp(28px,4vw,54px)}
+@media(max-width:900px){.editorial-page .section.detail-feature--product{padding-top:24px;padding-bottom:32px}}
