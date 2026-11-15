@@ -22,6 +22,8 @@ try {
     $pdo->prepare('INSERT INTO users(email,full_name,password_hash) VALUES(?,?,?)')->execute(['personal+'.bin2hex(random_bytes(5)).'@example.test','Personal QA',password_hash('test-only',PASSWORD_DEFAULT)]);
     $userId=(int)$pdo->lastInsertId();
     $userEmail=(string)$pdo->query('SELECT email FROM users WHERE id='.$userId)->fetchColumn();
+    $pdo->prepare('INSERT INTO users(email,full_name,password_hash) VALUES(?,?,?)')->execute(['other+'.bin2hex(random_bytes(5)).'@example.test','Other QA',password_hash('test-only',PASSWORD_DEFAULT)]);
+    $otherUserId=(int)$pdo->lastInsertId();
     $testPasswordHash=password_hash('test-only',PASSWORD_DEFAULT);
     for($index=0;$index<205;$index++)$pdo->prepare('INSERT INTO users(email,full_name,password_hash) VALUES(?,?,?)')->execute(['newer-'.$index.'+'.bin2hex(random_bytes(3)).'@example.test','Newer account '.$index,$testPasswordHash]);
     $recentIds=array_map('intval',$pdo->query('SELECT id FROM users ORDER BY id DESC LIMIT 200')->fetchAll(PDO::FETCH_COLUMN));
@@ -34,6 +36,55 @@ try {
     $pdo->prepare('INSERT INTO promo_codes(code,campaign_id,active) VALUES(?,?,1)')->execute(['PERSONALQA',$campaignId]);
     $expires=(new DateTimeImmutable('+2 hours',new DateTimeZone('UTC')))->format('Y-m-d H:i:s');
 
+    // Exercise the route gates in separate PHP processes so admin exit paths
+    // cannot terminate this isolated regression runner.
+    $runPhp = static function (string $code) use ($root): string {
+        static $childHasSqlite=null;
+        $pipes=[];
+        $command=[PHP_BINARY];
+        $iniFile=php_ini_loaded_file();
+        if($iniFile)$command=array_merge($command,['-c',$iniFile]);
+        // CLI-only extension flags used by the parent test process are not
+        // inherited by child PHP processes. Re-enable SQLite only when the
+        // loaded php.ini does not provide its PDO driver.
+        if($childHasSqlite===null) {
+            $probeCommand=$command;
+            $probeCommand=array_merge($probeCommand,['-r','echo in_array("sqlite", PDO::getAvailableDrivers(), true) ? "1" : "0";']);
+            $probePipes=[];
+            $probe=proc_open($probeCommand,[0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']],$probePipes,$root);
+            if(!is_resource($probe))throw new RuntimeException('Could not inspect child PHP SQLite configuration.');
+            fclose($probePipes[0]);$probeOutput=stream_get_contents($probePipes[1]);$probeError=stream_get_contents($probePipes[2]);fclose($probePipes[1]);fclose($probePipes[2]);$probeStatus=proc_close($probe);
+            if($probeStatus!==0)throw new RuntimeException('Could not inspect child PHP SQLite configuration: '.$probeError);
+            $childHasSqlite=trim((string)$probeOutput)==='1';
+        }
+        if(!$childHasSqlite) {
+            $extensionDir=ini_get('extension_dir');
+            if($extensionDir!=='')$command=array_merge($command,['-d','extension_dir='.$extensionDir]);
+            $sqliteExtensions=PHP_OS_FAMILY==='Windows'
+                ? ['php_sqlite3.dll','php_pdo_sqlite.dll']
+                : ['sqlite3','pdo_sqlite'];
+            foreach($sqliteExtensions as $extension)$command=array_merge($command,['-d','extension='.$extension]);
+        }
+        $command=array_merge($command,['-r',$code]);
+        $process=proc_open($command,[0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']],$pipes,$root);
+        if(!is_resource($process))throw new RuntimeException('Could not start isolated PHP route check.');
+        fclose($pipes[0]);$stdout=stream_get_contents($pipes[1]);$stderr=stream_get_contents($pipes[2]);fclose($pipes[1]);fclose($pipes[2]);$status=proc_close($process);
+        if($status!==0)throw new RuntimeException('Isolated PHP route check failed: '.$stderr.' '.$stdout);
+        return (string)$stdout;
+    };
+    $route=var_export($root.'/admin-marketing.php',true);
+    $anonymousOutput=$runPhp('$_SERVER["REQUEST_METHOD"]="GET"; require '.$route.';');
+    $assert(str_contains($anonymousOutput,'ДОСТУП ОГРАНИЧЕН'),'marketing route denies an unauthenticated session before rendering controls');
+    $csrfSessionId='tp'.bin2hex(random_bytes(12));
+    try {
+        $csrfOutput=$runPhp('session_name("tokyo_session"); session_save_path('.var_export(sys_get_temp_dir(),true).'); session_id('.var_export($csrfSessionId,true).'); session_start(); $_SESSION["admin_id"]=1; session_write_close(); $_SERVER["REQUEST_METHOD"]="POST"; $_POST=["action"=>"personal-offer-save","user_id"=>'.var_export((string)$userId,true).',"campaign_id"=>'.var_export((string)$campaignId,true).']; require '.$route.';');
+        $assert(str_contains($csrfOutput,'Сессия формы истекла'),'marketing route rejects a privileged POST without a valid CSRF token');
+    } finally {
+        $sessionFile=sys_get_temp_dir().DIRECTORY_SEPARATOR.'sess_'.$csrfSessionId;
+        if(is_file($sessionFile))@unlink($sessionFile);
+    }
+    $assert((int)$pdo->query('SELECT COUNT(*) FROM personalized_offers WHERE campaign_id='.$campaignId)->fetchColumn()===0,'authorization and CSRF failures do not create assignments');
+
     $unassigned=commerce_quote($pdo,[['id'=>1,'qty'=>1]],[],'PERSONALQA','pickup',$userId,'personal-qa-actor');
     $assert(!$unassigned['ok']&&str_contains($unassigned['message'],'вам недоступно'),'a valid personal promo is denied before assignment');
 
@@ -41,6 +92,21 @@ try {
     $assigned=commerce_quote($pdo,[['id'=>1,'qty'=>1]],[],'PERSONALQA','pickup',$userId,'personal-qa-actor');
     $assert($assigned['ok']&&$assigned['discount_total']===450,'an assigned eligible offer is accepted and server-priced');
     $assert((int)$pdo->query('SELECT COUNT(*) FROM personalized_offers WHERE user_id='.$userId.' AND campaign_id='.$campaignId)->fetchColumn()===1,'assignment is stored once');
+    $otherAccountQuote=commerce_quote($pdo,[['id'=>1,'qty'=>1]],[],'PERSONALQA','pickup',$otherUserId,'other-personal-qa-actor');
+    $assert(!$otherAccountQuote['ok']&&str_contains($otherAccountQuote['message'],'вам недоступно'),'an assigned offer is not visible to another account');
+
+    $missingUserId=(int)$pdo->query('SELECT MAX(id)+1000 FROM users')->fetchColumn();
+    $missingUserRejected=false;
+    try { commerce_assign_personal_offer($pdo,$missingUserId,$campaignId,null); } catch (DomainException $error) { $missingUserRejected=str_contains($error->getMessage(),'Аккаунт не найден'); }
+    $assert($missingUserRejected&&!$pdo->inTransaction()&&(int)$pdo->query('SELECT COUNT(*) FROM personalized_offers WHERE user_id='.$missingUserId)->fetchColumn()===0,'assignment validates the selected owner and leaves no open transaction for a missing account');
+
+    // Force an insert failure after BEGIN IMMEDIATE; the function must roll
+    // back and leave both the connection and assignment table clean.
+    $pdo->exec('CREATE TRIGGER personal_offer_regression_abort BEFORE INSERT ON personalized_offers WHEN NEW.user_id='.$otherUserId.' AND NEW.campaign_id='.$campaignId." BEGIN SELECT RAISE(ABORT,'personal offer rollback probe'); END");
+    $insertRolledBack=false;
+    try { commerce_assign_personal_offer($pdo,$otherUserId,$campaignId,null); } catch (PDOException $error) { $insertRolledBack=str_contains($error->getMessage(),'personal offer rollback probe'); }
+    $pdo->exec('DROP TRIGGER personal_offer_regression_abort');
+    $assert($insertRolledBack&&!$pdo->inTransaction()&&(int)$pdo->query('SELECT COUNT(*) FROM personalized_offers WHERE user_id='.$otherUserId.' AND campaign_id='.$campaignId)->fetchColumn()===0,'failed assignment insertion rolls back atomically and releases its transaction');
 
     $revisedExpiry=(new DateTimeImmutable('+4 hours',new DateTimeZone('UTC')))->format('Y-m-d H:i:s');
     $sameOfferId=commerce_assign_personal_offer($pdo,$userId,$campaignId,$revisedExpiry);

@@ -204,14 +204,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         default => 'Бронь подтверждена. Email гостя не указан, письмо не отправлялось.',
                     };
                 } else {
-                    $query = $pdo->prepare('UPDATE ' . $table . ' SET status=? WHERE id=?');
-                    $query->execute([$status, $recordId]);
-                    if ($query->rowCount() === 0) {
-                        $exists = $pdo->prepare('SELECT 1 FROM ' . $table . ' WHERE id=?');
-                        $exists->execute([$recordId]);
-                        if (!$exists->fetchColumn()) throw new RuntimeException('Запись не найдена.');
+                    if ($table === 'orders') {
+                        try {
+                            $changed = commerce_set_order_status($pdo, (int)$recordId, $status);
+                        } catch (DomainException $exception) {
+                            throw new RuntimeException($exception->getMessage(), 0, $exception);
+                        }
+                        $_SESSION['admin_flash'] = $changed ? 'Статус заказа обновлён.' : 'Этот статус заказа уже установлен.';
+                    } else {
+                        $query = $pdo->prepare('UPDATE ' . $table . ' SET status=? WHERE id=?');
+                        $query->execute([$status, $recordId]);
+                        if ($query->rowCount() === 0) {
+                            $exists = $pdo->prepare('SELECT 1 FROM ' . $table . ' WHERE id=?');
+                            $exists->execute([$recordId]);
+                            if (!$exists->fetchColumn()) throw new RuntimeException('Запись не найдена.');
+                        }
+                        $_SESSION['admin_flash'] = 'Статус обновлён.';
                     }
-                    $_SESSION['admin_flash'] = 'Статус обновлён.';
                 }
             } elseif ($action === 'mail-retry') {
                 $mailId = filter_var($_POST['id'] ?? null, FILTER_VALIDATE_INT);
