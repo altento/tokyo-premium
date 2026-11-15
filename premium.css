@@ -316,6 +316,7 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .detail-title .editorial-kanji{left:auto;right:7vw;top:10px;opacity:.2}
 .breadcrumbs{padding:16px clamp(20px,5vw,70px);color:var(--jp-gold);font-size:.82rem}
 .breadcrumbs span{margin-inline:8px}
+.breadcrumbs.menu-breadcrumbs{max-width:none;padding:12px max(6vw,calc((100vw - 1320px)/2));border-bottom:1px solid rgba(199,167,102,.18);font-size:.78rem}
 @media(max-width:640px){.detail-title{padding:18px 20px 4px}.detail-title h1{font-size:clamp(2.6rem,12vw,4rem)}}
 /* Order-history line snapshots in the PHP account dashboard. */
 .order-item-details{margin-top:.45rem;color:var(--muted,#b5ad9d);font-size:.84rem}

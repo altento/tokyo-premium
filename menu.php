@@ -9,7 +9,8 @@ foreach($metadataQuery->fetchAll() as $row) $searchMetadata[(int)$row['id']]=str
 $cats=db()->query('SELECT slug,name FROM categories ORDER BY sort_order')->fetchAll();
 ?>
 <main class="menu-page">
-  <section class="menu-hero"><img src="assets/generated/menu-hero-sushi-assortment-v1.webp" width="1672" height="944" alt="Подборка роллов и нигири на тёмном блюде в интерьере с видом на японский сад" fetchpriority="high"><div class="menu-hero-shade"></div><div class="menu-hero-copy"><div class="kicker">旬 · СЕЗОННЫЙ ВЫБОР</div><h1>Меню</h1><p class="menu-hero-sub">Коллекция вкусов Японии</p><p>Авторские блюда концепции — от чистого вкуса нигири до тёплых подач и сезонных десертов.</p><span class="school-note">Все блюда и цены — демонстрационные</span></div><span class="menu-hero-kanji" lang="ja" aria-hidden="true">日本の味</span></section>
+  <section class="menu-hero"><img src="assets/generated/menu-hero-japanese-garden-v2-1600.webp" srcset="assets/generated/menu-hero-japanese-garden-v2-640.webp 640w, assets/generated/menu-hero-japanese-garden-v2-960.webp 960w, assets/generated/menu-hero-japanese-garden-v2-1280.webp 1280w, assets/generated/menu-hero-japanese-garden-v2-1600.webp 1600w" sizes="100vw" width="1600" height="914" alt="Нигири с лососем и тунцом на керамическом блюде рядом с японским садом в сумерках" fetchpriority="high" decoding="async"><div class="menu-hero-shade"></div><div class="menu-hero-copy"><div class="kicker">旬 · СЕЗОННЫЙ ВЫБОР</div><h1>Меню</h1><p class="menu-hero-sub">Коллекция вкусов Японии</p><p>Авторские блюда концепции — от чистого вкуса нигири до тёплых подач и сезонных десертов.</p><span class="school-note">Все блюда и цены — демонстрационные</span></div><span class="menu-hero-kanji" lang="ja" aria-hidden="true">日本の味</span></section>
+  <nav class="breadcrumbs menu-breadcrumbs" aria-label="Навигация"><a href="index.php">Главная</a><span aria-hidden="true">›</span><span aria-current="page">Меню</span></nav>
   <section class="section menu-section">
     <div class="menu-layout">
       <aside class="menu-sidebar" aria-label="Разделы меню">
@@ -42,6 +43,11 @@ $cats=db()->query('SELECT slug,name FROM categories ORDER BY sort_order')->fetch
         <p class="menu-note">Все блюда, цены и гости — часть вымышленной ресторанной концепции для лабораторной работы.</p>
       </div>
     </div>
+  </section>
+  <section class="menu-set-story" aria-labelledby="menu-set-story-title">
+    <div class="menu-set-story-photo menu-set-story-photo--chef"><img src="assets/generated/chef-at-counter.webp" width="1480" height="1000" alt="Иллюстративный кадр: шеф формирует нигири у стойки" loading="lazy" decoding="async"></div>
+    <div class="menu-set-story-copy"><div class="kicker">Авторские композиции</div><h2 id="menu-set-story-title">Соберите свой Tokyo set</h2><p>Выберите формат вечера и состав из позиций меню. Предварительная сумма обновится сразу; PHP-версия пересчитает состав и цены перед оформлением.</p><a class="button" href="set-builder.php?variant=signature">Собрать сет <span aria-hidden="true">↗</span></a><small>Демонстрационные блюда и условия учебной версии</small></div>
+    <div class="menu-set-story-photo menu-set-story-photo--platter"><img src="assets/generated/tokyo-seasonal-omakase-v2.webp" width="1600" height="900" alt="Сезонная композиция из нигири и японских подач на тёмном столе" loading="lazy" decoding="async"></div>
   </section>
 </main>
 <script>window.DISHES=<?=json_encode($all,JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP|JSON_UNESCAPED_UNICODE)?>;</script>

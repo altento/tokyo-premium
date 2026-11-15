@@ -64,9 +64,13 @@ async function visit(browser, base, route, mode, capture = false) {
     assert.equal(await page.locator('.home-dish-grid img').evaluateAll(images => images.filter(image => image.naturalWidth > 0).length), 4, `${mode} all featured dish photos load`);
   } else if (route.key === 'menu') {
     const image = page.locator('.menu-hero > img');
-    assert.match(await image.getAttribute('src'), /menu-hero-sushi-assortment-v1\.webp$/);
+    assert.match(await image.getAttribute('src'), /menu-hero-japanese-garden-v2-1600\.webp$/);
     assert.equal(await image.evaluate(node => node.naturalWidth > 0), true, `${mode} menu hero image loads`);
     assert.notEqual(await image.getAttribute('src'), 'assets/generated/home-hero-salmon-nigiri-v3.webp', 'menu hero is a distinct photograph');
+    assert.equal(await page.locator('.menu-breadcrumbs [aria-current="page"]').innerText(), 'Меню', `${mode} menu includes the current breadcrumb`);
+    assert.ok(await page.locator('.menu-hero').evaluate(node => node.getBoundingClientRect().height <= 460), `${mode} menu hero stays within the compact editorial height`);
+    assert.equal(await page.locator('.menu-set-story-photo img').evaluateAll(images => images.length === 2 && images.every(image => image.naturalWidth > 0)), true, `${mode} menu's authored-set story has two loaded photographs`);
+    assert.equal(await page.locator('.menu-set-story a[href*="set-builder"]').count(), 1, `${mode} menu links its authored-set story to the set builder`);
   } else if (route.key === 'philosophy') {
     const background = await page.locator('.about-hero').evaluate(node => getComputedStyle(node).backgroundImage);
     assert.match(background, /room-garden-terrace\.webp/, `${mode} philosophy hero uses its garden photograph`);

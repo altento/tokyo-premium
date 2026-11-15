@@ -117,3 +117,9 @@ Per-format builder drafts now survive refreshes in browser-local storage. Only I
 ## Omakase visual review — 2026-11-16
 
 Captured and visually inspected the local PHP Omakase page at 1440 px desktop and 390 px mobile against `design-references/04-omakase.png`. All five catalog-backed course photos are visible after scroll reveals; mobile width is 390 px. The current composition remains intentionally distinct in section order and hero framing, and is not a pixel match. Evidence is saved as `project-docs/visual-qa/04-omakase-current-2026-11-16-{desktop,mobile}.jpg` with a page-specific comparison note. The other ten reference pages still need their own current-state comparison.
+
+## Menu editorial follow-up — 2026-11-16
+
+Replaced the menu hero with a new text-free, original AI-generated photograph and four optimized responsive WebP sizes, shortened its vertical footprint, and added a current-page breadcrumb. Added a two-photo editorial transition from the menu into the existing set builder, with copy that distinguishes the browser estimate from PHP's server-side price validation. The existing catalog, filters, and cart controls remain in place.
+
+The focused `npm run test:menu-visual` check passed four PHP/static desktop/mobile cases (1440 and 390 CSS px). All four loaded the hero and both story photos, displayed six initial cards, preserved the builder link, had no horizontal overflow, and produced no browser errors. Captures were visually inspected beside `design-references/02-menu.png`; the menu composition is closer, while exact card/detail styling and the full 11-reference comparison remain outstanding. No broad suite, hosted CI, or Pages deployment was run. Tokyo Premium 2.0 remains in progress.

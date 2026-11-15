@@ -75,3 +75,9 @@ This was a server-side admin/account and SQLite flow change. The admin can searc
 ## 2026-11-16 Omakase review
 
 `04-omakase-current-2026-11-16-desktop.jpg` and `04-omakase-current-2026-11-16-mobile.jpg` were captured from the local PHP route after scrolling through the page so lazy images and reveals were visible. Both were reviewed against `design-references/04-omakase.png`. The current route keeps the cinematic chef opening, interactive five-stage course story, catalog photography, set tiers and clear booking action. Its editorial section order and hero composition differ from the approved concept; these captures confirm visual continuity and content visibility, not pixel-level equivalence. See `omakase-comparison-2026-11-16.md` for page-specific notes.
+
+## 2026-11-16 menu-focused visual pass
+
+`02-menu-current-php-desktop-2026-11-16.jpg`, `02-menu-current-php-mobile-2026-11-16.jpg`, `02-menu-current-static-desktop-2026-11-16.jpg` and `02-menu-current-static-mobile-2026-11-16.jpg` are fresh full-page captures at 1440×1000 and 390×844 CSS px. A single focused Playwright command, `npm run test:menu-visual`, checked four PHP/static and desktop/mobile cases: HTTP 200, 432 px desktop / 370 px mobile hero, loaded responsive hero, breadcrumb, six visible first-page dishes, two decoded editorial photos, working set-builder route, no horizontal overflow and no browser errors.
+
+The new text-free, AI-generated menu photograph is exported as responsive 640/960/1280/1600 px WebP variants. The menu now has a compact image-led hero, breadcrumb, and a two-photo author-set story with a direct builder link. Compared with `design-references/02-menu.png`, the page keeps the dark/gold food-led direction and adds the missing authored-set transition; its category controls, card detail and exact section proportions still differ from the mockup. This is a focused page comparison only, not a pixel match or completion of the remaining ten-page review.
