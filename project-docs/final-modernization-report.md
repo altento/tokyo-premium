@@ -109,3 +109,7 @@ The PHP marketing admin now searches accounts by ID, name or email, and assigns 
 ## Configurable gift quantity — 2026-11-16
 
 The admin-configured `max_per_order` for threshold gifts now reaches the server quote and checkout form. Both the per-order cap and live SQLite stock are enforced server-side; order items store the selected quantity and the transaction decrements stock by the same amount. The static demo continues to omit server-owned gift inventory. The focused isolated SQLite regression passed 9 assertions for multiple gifts, invalid quantities, stock bounds, persisted line quantity, transactional stock decrement, and compatibility with callers that omit `gift_quantity`. Changed PHP files passed lint under PHP 8.5.11; source/static JS syntax and diff whitespace checks passed. The broad suite, browser QA, CI and Pages publication were not run. Overall Tokyo Premium 2.0 remains incomplete.
+
+## Set-builder draft persistence — 2026-11-16
+
+Per-format builder drafts now survive refreshes in browser-local storage. Only IDs and quantities are retained; current menu entries and prices are reloaded for the estimate, and invalid or out-of-limit saved data is discarded. The shared cart reports whether it accepted a custom set, so the builder clears its draft only after successful transfer. The focused `npm run test:set-draft` browser check passed 16 assertions across local PHP and static modes. Broader suites, CI and public Pages were not run for this follow-up. Tokyo Premium 2.0 remains in progress.

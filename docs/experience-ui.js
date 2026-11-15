@@ -111,11 +111,40 @@
     if (started.has(root)) return;
     started.add(root);
     const selected = new Map();
+    const variant = root.dataset.setType || 'signature';
+    const draftKey = `tokyo-custom-set-draft-v1:${variant}`;
+    const allowedDishIds = new Set(many('[data-tp-set-dish]', root).map(card => Number(card.dataset.dishId)).filter(Number.isSafeInteger));
     const minDistinct = Math.max(1, Number(root.dataset.minDistinct) || 3);
     const maxDistinct = Math.max(minDistinct, Number(root.dataset.maxDistinct) || 5);
     const maxQuantity = Math.max(maxDistinct, Number(root.dataset.maxQuantity) || 8);
     const status = one('[data-tp-status]', root);
     const composition = one('[data-tp-set-composition]', root.parentElement || doc);
+
+    const persistDraft = () => {
+      try {
+        if (selected.size) global.localStorage.setItem(draftKey, JSON.stringify(Array.from(selected, ([id, qty]) => ({ id, qty }))));
+        else global.localStorage.removeItem(draftKey);
+      } catch (_) { /* A blocked local store should not block set building. */ }
+    };
+    try {
+      const saved = global.localStorage.getItem(draftKey);
+      if (saved) {
+        const rows = JSON.parse(saved);
+        if (!Array.isArray(rows) || rows.length > maxDistinct) throw new Error('Invalid saved set');
+        let total = 0;
+        for (const row of rows) {
+          const id = Number(row?.id);
+          const qty = Number(row?.qty);
+          if (!Number.isSafeInteger(id) || !allowedDishIds.has(id) || !Number.isSafeInteger(qty) || qty < 1 || qty > 4 || selected.has(id)) throw new Error('Invalid saved set item');
+          total += qty;
+          if (total > maxQuantity) throw new Error('Saved set exceeds the variant limit');
+          selected.set(id, qty);
+        }
+      }
+    } catch (_) {
+      selected.clear();
+      try { global.localStorage.removeItem(draftKey); } catch (_) { /* Ignore unavailable storage. */ }
+    }
 
     const render = () => {
       let pieces = 0;
@@ -186,7 +215,8 @@
       if (delta > 0 && total >= maxQuantity) { setStatus(root, `В этом варианте не больше ${maxQuantity} порций.`); return; }
       if (delta > 0 && !current && selected.size >= maxDistinct) { setStatus(root, `В этом варианте не больше ${maxDistinct} разных блюд.`); return; }
       if (next) selected.set(id, next); else selected.delete(id);
-      if (status) status.textContent = `${dish.name}: ${next ? `выбрано ${next}` : 'удалено из сета'}. Сумма — ориентировочная и перепроверяется сервером.`;
+      persistDraft();
+      if (status) status.textContent = `${dish.name}: ${next ? `выбрано ${next}` : 'удалено из сета'}. Черновик сохранён в этом браузере; цена ориентировочная и перепроверяется сервером.`;
       render();
     };
 
@@ -232,6 +262,9 @@
         if (timeout) global.clearTimeout(timeout);
         const accepted = result === true || Boolean(result && typeof result === 'object' && result.ok === true);
         if (accepted) {
+          selected.clear();
+          persistDraft();
+          render();
           setStatus(root, 'Сет добавлен в общую корзину. Итоговая цена будет подтверждена сервером.');
           return;
         }
@@ -262,6 +295,7 @@
     });
 
     render();
+    if (selected.size && status) status.textContent = `Черновик восстановлен из этого браузера · ${selected.size} блюд. Сумма ориентировочная; сервер проверит состав и цену.`;
   }
 
   const signals = {

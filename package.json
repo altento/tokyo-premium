@@ -4,6 +4,7 @@
   "scripts": {
     "test:cart": "node --test tests/cart-store.test.cjs",
     "test:gift-quantity": "php tests/gift-quantity-regression.php",
+    "test:set-draft": "node tests/set-builder-draft-regression.cjs",
     "test:browser": "node tests/browser-regression.cjs",
     "test:tokyo20": "node tests/tokyo20-regression.cjs",
     "test:reviews": "node tests/reviews-regression.cjs",
