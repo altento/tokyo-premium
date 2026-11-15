@@ -48,17 +48,17 @@ if (!copy($dbPath, $upgradeDbPath)) throw new RuntimeException('Could not create
 $v6Fixture = new PDO('sqlite:' . $upgradeDbPath, null, null, [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);
 $v6Fixture->exec('DROP TABLE api_booking_requests');
 $v6Fixture->exec('DROP TABLE booking_email_rate_limits');
-$v6Fixture->exec('DELETE FROM app_migrations WHERE version=7');
+$v6Fixture->exec('DROP TABLE user_addresses');
+$v6Fixture->exec('DELETE FROM app_migrations WHERE version>=7');
 $v6Fixture = null;
 $oldRestaurantDb = getenv('RESTAURANT_DB');
 putenv('RESTAURANT_DB=' . $upgradeDbPath);
 $upgradeCommand = [PHP_BINARY];
 if (PHP_OS_FAMILY === 'Windows') {
     array_push($upgradeCommand, '-d', 'extension_dir=' . ini_get('extension_dir'));
-    if (!extension_loaded('sqlite3')) array_push($upgradeCommand, '-d', 'extension=php_sqlite3.dll');
-    if (!extension_loaded('pdo_sqlite')) array_push($upgradeCommand, '-d', 'extension=php_pdo_sqlite.dll');
+    array_push($upgradeCommand, '-d', 'extension=php_sqlite3.dll', '-d', 'extension=php_pdo_sqlite.dll');
 }
-array_push($upgradeCommand, '-r', 'require $argv[1]; db(); echo (int)db()->query("SELECT 1 FROM app_migrations WHERE version=7")->fetchColumn();', dirname(__DIR__) . '/bootstrap.php');
+array_push($upgradeCommand, '-r', 'require $argv[1]; db(); echo (int)db()->query("SELECT 1 FROM app_migrations WHERE version=8")->fetchColumn() . (int)db()->query("SELECT 1 FROM sqlite_master WHERE type=\'table\' AND name=\'user_addresses\'")->fetchColumn();', dirname(__DIR__) . '/bootstrap.php');
 $upgradePipes = [];
 $upgradeProcess = proc_open($upgradeCommand, [0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']], $upgradePipes, dirname(__DIR__), null);
 if ($oldRestaurantDb === false) putenv('RESTAURANT_DB'); else putenv('RESTAURANT_DB=' . $oldRestaurantDb);
@@ -69,7 +69,7 @@ $upgradeError = trim(stream_get_contents($upgradePipes[2]));
 fclose($upgradePipes[1]);
 fclose($upgradePipes[2]);
 $upgradeExit = proc_close($upgradeProcess);
-check($upgradeExit === 0 && $upgradeOutput === '1', 'an existing migration-v6 database receives the v7 booking tables during bootstrap' . ($upgradeError !== '' ? ' (' . $upgradeError . ')' : ''));
+check($upgradeExit === 0 && $upgradeOutput === '11', 'an existing migration-v6 database receives booking idempotency, email rate limits and saved addresses during bootstrap' . ($upgradeError !== '' ? ' (' . $upgradeError . ')' : ''));
 foreach ([$upgradeDbPath,$upgradeDbPath.'-wal',$upgradeDbPath.'-shm'] as $fixtureFile) if (is_file($fixtureFile)) @unlink($fixtureFile);
 $password = 'Integration-Only-' . bin2hex(random_bytes(8));
 $pdo->prepare('INSERT INTO admins(email,password_hash) VALUES(?,?)')->execute(['integration@example.test', password_hash($password, PASSWORD_DEFAULT)]);

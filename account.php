@@ -66,6 +66,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             commerce_attach_referral($pdo, (int)$_SESSION['user_id'], (string)($_POST['referral_code'] ?? ''));
             $profileNotice = 'Код приглашения сохранён. Вознаграждение появится только после подходящего завершённого заказа.';
         } catch (DomainException $exception) { $err = $exception->getMessage(); }
+    } elseif ($action === 'address-save' && !empty($_SESSION['user_id'])) {
+        try {
+            $rawAddressId = $_POST['address_id'] ?? '';
+            $addressId = $rawAddressId === '' ? null : filter_var($rawAddressId, FILTER_VALIDATE_INT);
+            if ($addressId === false || ($addressId !== null && $addressId < 1)) throw new DomainException('Выберите сохранённый адрес.');
+            commerce_save_user_address($pdo, (int)$_SESSION['user_id'], (string)($_POST['label'] ?? ''), (string)($_POST['address'] ?? ''), $addressId === null ? null : (int)$addressId);
+            $profileNotice = $addressId === null ? 'Адрес сохранён в вашем аккаунте.' : 'Адрес обновлён.';
+        } catch (DomainException $exception) { $err = $exception->getMessage(); }
+    } elseif ($action === 'address-default' && !empty($_SESSION['user_id'])) {
+        $addressId = filter_var($_POST['address_id'] ?? null, FILTER_VALIDATE_INT);
+        try {
+            if ($addressId === false || $addressId === null || $addressId < 1) throw new DomainException('Выберите сохранённый адрес.');
+            commerce_set_user_address_default($pdo, (int)$_SESSION['user_id'], (int)$addressId);
+            $profileNotice = 'Основной адрес доставки обновлён.';
+        } catch (DomainException $exception) { $err = $exception->getMessage(); }
+    } elseif ($action === 'address-delete' && !empty($_SESSION['user_id'])) {
+        $addressId = filter_var($_POST['address_id'] ?? null, FILTER_VALIDATE_INT);
+        try {
+            if ($addressId === false || $addressId === null || $addressId < 1) throw new DomainException('Выберите сохранённый адрес.');
+            commerce_delete_user_address($pdo, (int)$_SESSION['user_id'], (int)$addressId);
+            $profileNotice = 'Адрес удалён из вашего аккаунта.';
+        } catch (DomainException $exception) { $err = $exception->getMessage(); }
     }
 }
 
@@ -73,6 +95,7 @@ $user = null;
 $orders = [];
 $bookings = [];
 $profile = null;
+$addresses = [];
 $tier = null;
 $loyaltyBalance = 0;
 $loyaltyEntries = [];
@@ -90,6 +113,7 @@ if (!empty($_SESSION['user_id'])) {
 
     if ($user) {
         $userId = (int)$user['id'];
+        $addresses = commerce_user_addresses($pdo, $userId);
         $query = $pdo->prepare('SELECT birth_date,birthday_offer_consent,birthday_consent_at FROM user_profiles WHERE user_id=?');
         $query->execute([$userId]); $profile = $query->fetch() ?: ['birth_date'=>'','birthday_offer_consent'=>0,'birthday_consent_at'=>null];
         $birthdayPointsAwarded=commerce_award_birthday_points($pdo,$userId);
@@ -236,8 +260,9 @@ header_html();
           <a href="#account-orders"><span>01</span>Мои заказы<small><?=$orderCount?></small></a>
           <a href="#account-bookings"><span>02</span>Бронирования<small><?=$bookingCount?></small></a>
           <a href="#account-browser-favorites"><span>03</span>Избранное<small>в браузере</small></a>
-          <a href="#account-referrals"><span>04</span>Приглашения</a>
-          <a href="#account-settings"><span>05</span>Настройки</a>
+          <a href="#account-addresses"><span>04</span>Адреса<small><?=count($addresses)?></small></a>
+          <a href="#account-referrals"><span>05</span>Приглашения</a>
+          <a href="#account-settings"><span>06</span>Настройки</a>
         </nav>
         <div class="account-dashboard-content">
           <div class="account-dashboard-primary">
@@ -296,6 +321,22 @@ header_html();
               <p class="account-local-note">Избранное хранится локально в этом браузере и не привязывается к серверному аккаунту.</p>
               <div id="account-browser-favorites-list" class="account-browser-favorites-grid" aria-live="polite"></div>
               <p id="account-browser-favorites-empty" class="account-empty-copy">Здесь появятся блюда, сохранённые сердцем в меню.</p>
+            </section>
+
+            <section id="account-addresses" class="account-section account-dashboard-panel" aria-labelledby="account-addresses-title">
+              <div class="account-dashboard-section-heading"><div><span class="kicker">ТОЛЬКО ВАШ АККАУНТ</span><h2 id="account-addresses-title">Адреса доставки</h2></div><span class="account-section-count"><?=count($addresses)?> / 10</span></div>
+              <p class="account-section-copy">Адреса доступны только после входа в ваш аккаунт. Добавление адреса не отправляет заказ.</p>
+              <form method="post" class="tp20-account-form tp20-address-form"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="address-save"><label>Название адреса<input name="label" minlength="2" maxlength="60" required autocomplete="off" placeholder="Дом, работа"></label><label>Адрес<input name="address" minlength="5" maxlength="240" required autocomplete="street-address" placeholder="Улица, дом, квартира"></label><button class="button secondary" type="submit" <?=count($addresses)>=10?'disabled':''?>>Сохранить адрес ↗</button></form>
+              <?php if (!$addresses): ?><p class="account-empty-copy">Сохранённых адресов пока нет.</p><?php else: ?>
+                <div class="tp20-address-list">
+                  <?php foreach ($addresses as $savedAddress): ?>
+                    <article class="tp20-saved-address"><div><span class="kicker"><?=e($savedAddress['label'])?></span><address><?=e($savedAddress['address'])?></address><?php if (!empty($savedAddress['is_default'])): ?><span class="tp20-address-default">Основной адрес</span><?php endif ?><details class="tp20-address-edit"><summary>Изменить адрес</summary><form method="post" class="tp20-account-form"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="address-save"><input type="hidden" name="address_id" value="<?= (int)$savedAddress['id']?>"><label>Название адреса<input name="label" minlength="2" maxlength="60" required value="<?=e($savedAddress['label'])?>"></label><label>Адрес<input name="address" minlength="5" maxlength="240" required autocomplete="street-address" value="<?=e($savedAddress['address'])?>"></label><button class="button secondary" type="submit">Сохранить изменения</button></form></details></div><div class="tp20-address-actions">
+                      <?php if (empty($savedAddress['is_default'])): ?><form method="post"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="address-default"><input type="hidden" name="address_id" value="<?= (int)$savedAddress['id']?>"><button class="button secondary" type="submit">Сделать основным</button></form><?php endif ?>
+                      <form method="post"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="address-delete"><input type="hidden" name="address_id" value="<?= (int)$savedAddress['id']?>"><button class="text-button" type="submit" aria-label="Удалить адрес <?=e($savedAddress['label'])?>">Удалить</button></form>
+                    </div></article>
+                  <?php endforeach ?>
+                </div>
+              <?php endif ?>
             </section>
 
             <section class="account-section account-dashboard-panel" aria-labelledby="tp20-personal-offers">

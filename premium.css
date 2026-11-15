@@ -567,6 +567,21 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .account-dashboard .tp20-account-form label{font-size:.73rem}
 .account-dashboard .tp20-account-form input:not([type=checkbox]){min-height:40px}
 .account-dashboard .tp20-account-consent{font-size:.69rem;line-height:1.45}
+.account-dashboard .tp20-address-form{grid-template-columns:repeat(2,minmax(0,1fr));align-items:end;margin:12px 0 16px}
+.account-dashboard .tp20-address-form .button{grid-column:1/-1;justify-self:start}
+.tp20-address-list{display:grid;gap:8px}
+.tp20-saved-address{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px;border:1px solid rgba(202,165,107,.2);border-radius:7px;background:rgba(255,255,255,.018)}
+.tp20-saved-address .kicker{color:var(--gold);font-size:.63rem;letter-spacing:.1em}
+.tp20-saved-address address{margin-top:5px;color:#eee4d3;font-size:.77rem;font-style:normal;line-height:1.5;overflow-wrap:anywhere}
+.tp20-address-default{display:inline-block;margin-top:7px;padding:3px 7px;border:1px solid rgba(202,165,107,.35);border-radius:999px;color:#e8c98e;font-size:.63rem}
+.tp20-address-edit{margin-top:8px}
+.tp20-address-edit summary{width:max-content;cursor:pointer;color:#e8c98e;font-size:.68rem;text-decoration:underline;text-underline-offset:3px}
+.tp20-address-edit .tp20-account-form{grid-template-columns:repeat(2,minmax(0,1fr));margin:8px 0 0;padding:10px;border:1px solid rgba(202,165,107,.18);border-radius:6px}
+.tp20-address-edit .tp20-account-form .button{grid-column:1/-1;justify-self:start}
+.tp20-address-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:7px}
+.tp20-address-actions form{margin:0}
+.tp20-address-actions .button{min-height:34px;padding:6px 9px;font-size:.65rem}
+.tp20-address-actions .text-button{min-height:34px;padding:6px 8px;color:#df9e9e;font-size:.68rem}
 .account-ledger-details{padding:0!important}
 .account-ledger-details>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px;cursor:pointer;list-style:none}
 .account-ledger-details>summary::-webkit-details-marker{display:none}
@@ -633,6 +648,12 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
   .account-browser-favorites-grid .dish-meta>p{display:none}
   .account-dashboard .tp20-referral-code .button{margin-left:0}
   .account-dashboard .tp20-referral-actions .button{flex:1 1 150px}
+  .account-dashboard .tp20-address-form{grid-template-columns:minmax(0,1fr)}
+  .account-dashboard .tp20-address-form .button{grid-column:auto}
+  .tp20-saved-address{grid-template-columns:minmax(0,1fr);align-items:start}
+  .tp20-address-edit .tp20-account-form{grid-template-columns:minmax(0,1fr)}
+  .tp20-address-edit .tp20-account-form .button{grid-column:auto}
+  .tp20-address-actions{justify-content:flex-start}
   .account-ledger-details{grid-column:auto}
   .account-demo-page .tp20-static-privilege .tp20-loyalty-card{min-height:0}
   .account-demo-page .account-demo-nav{grid-template-columns:repeat(2,minmax(0,1fr))}

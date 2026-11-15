@@ -21,8 +21,13 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(tableInput)tableInput.value=button.dataset.tableSelect;
     if(tableStatus)tableStatus.textContent='Выбран предпочтительный стол №'+button.dataset.tableSelect+'. Доступность подтвердит ресторан.';
   }));
-  const fulfillment=$('#fulfillment'), addressField=$('#checkout-address'), addressWrap=$('#checkout-address-field');
+  const fulfillment=$('#fulfillment'), addressField=$('#checkout-address'), addressWrap=$('#checkout-address-field'), savedAddressSelect=$('#checkout-saved-address'), savedAddressWrap=$('#checkout-saved-address-field');
   const checkoutForm=$('#checkout-form');
+  function copySavedAddress(){
+    if(!addressField||!savedAddressSelect)return;
+    addressField.value=savedAddressSelect.selectedOptions[0]?.dataset.address||'';
+    addressField.dispatchEvent(new Event('input',{bubbles:true}));
+  }
   function syncFulfillment(){
     if(!fulfillment||!addressField)return;
     const delivery=fulfillment.value!=='pickup';
@@ -31,7 +36,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     addressField.setCustomValidity('');
     addressField.removeAttribute('aria-invalid');
     if(addressWrap)addressWrap.hidden=!delivery;
-    if(!delivery)addressField.value='';
+    if(savedAddressWrap)savedAddressWrap.hidden=!delivery;
+    if(!delivery){addressField.value='';if(savedAddressSelect)savedAddressSelect.value=''}
   }
   function resetCheckout(form=checkoutForm){
     if(!form||form!==checkoutForm)return;
@@ -49,6 +55,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(status){status.textContent='';status.className='form-status';}
   }
   fulfillment?.addEventListener('change',()=>{syncFulfillment();clearCheckoutStatus()});
+  savedAddressSelect?.addEventListener('change',copySavedAddress);
   checkoutForm?.addEventListener('input',clearCheckoutStatus);
   checkoutForm?.addEventListener('change',clearCheckoutStatus);
   addressField?.addEventListener('input',clearCheckoutStatus);
@@ -56,6 +63,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   checkoutForm?.addEventListener('reset',()=>queueMicrotask(syncFulfillment));
   window.TokyoCheckout=Object.freeze({syncFulfillment,reset:resetCheckout});
   syncFulfillment();
+  if(savedAddressSelect?.value)copySavedAddress();
   const esc=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const recommendationContainer=$('.cart-recommendations');
   const allRecommendations=recommendationContainer?$$('.dish-card',recommendationContainer):[];

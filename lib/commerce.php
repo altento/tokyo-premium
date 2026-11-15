@@ -147,6 +147,29 @@ function commerce_migrate(PDO $pdo): void
             throw $error;
         }
     }
+
+    $addressTableExists = (bool)$pdo->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='user_addresses'")->fetchColumn();
+    if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=8')->fetchColumn() || !$addressTableExists) {
+        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        try {
+            $pdo->exec("CREATE TABLE IF NOT EXISTS user_addresses (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                label TEXT NOT NULL CHECK(length(label) BETWEEN 2 AND 60),
+                address TEXT NOT NULL CHECK(length(address) BETWEEN 5 AND 240),
+                is_default INTEGER NOT NULL DEFAULT 0 CHECK(is_default IN (0,1)),
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )");
+            $pdo->exec('CREATE INDEX IF NOT EXISTS idx_user_addresses_owner ON user_addresses(user_id,id DESC)');
+            $pdo->exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_user_addresses_one_default ON user_addresses(user_id) WHERE is_default=1');
+            $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(8)');
+            $pdo->commit();
+        } catch (Throwable $error) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $error;
+        }
+    }
 }
 
 function commerce_actor_key(?int $userId, string $sessionId): string
@@ -901,6 +924,85 @@ function commerce_set_order_status(PDO $pdo, int $orderId, string $newStatus): b
         }
         $pdo->commit();
         return true;
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
+    }
+}
+
+function commerce_user_addresses(PDO $pdo, int $userId): array
+{
+    $query = $pdo->prepare('SELECT id,label,address,is_default,created_at,updated_at FROM user_addresses WHERE user_id=? ORDER BY is_default DESC,id DESC');
+    $query->execute([$userId]);
+    return $query->fetchAll();
+}
+
+function commerce_save_user_address(PDO $pdo, int $userId, string $label, string $address, ?int $addressId = null): int
+{
+    $label = trim($label);
+    $address = trim($address);
+    $labelLength = preg_match_all('/./us', $label, $matches);
+    $addressLength = preg_match_all('/./us', $address, $matches);
+    if ($userId < 1 || $labelLength === false || $labelLength < 2 || $labelLength > 60 || strlen($label) > 240 || $addressLength === false || $addressLength < 5 || $addressLength > 240 || strlen($address) > 1000) {
+        throw new DomainException('Укажите название адреса и адрес длиной от 5 до 240 символов.');
+    }
+    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    try {
+        if ($addressId !== null) {
+            $exists = $pdo->prepare('SELECT 1 FROM user_addresses WHERE id=? AND user_id=?');
+            $exists->execute([$addressId, $userId]);
+            if (!$exists->fetchColumn()) throw new DomainException('Сохранённый адрес не найден.');
+            $save = $pdo->prepare('UPDATE user_addresses SET label=?,address=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND user_id=?');
+            $save->execute([$label, $address, $addressId, $userId]);
+            $id = $addressId;
+        } else {
+            $count = $pdo->prepare('SELECT COUNT(*) FROM user_addresses WHERE user_id=?');
+            $count->execute([$userId]);
+            if ((int)$count->fetchColumn() >= 10) throw new DomainException('Можно сохранить не больше 10 адресов.');
+            $save = $pdo->prepare('INSERT INTO user_addresses(user_id,label,address,is_default) VALUES(?,?,?,CASE WHEN EXISTS(SELECT 1 FROM user_addresses WHERE user_id=?) THEN 0 ELSE 1 END)');
+            $save->execute([$userId, $label, $address, $userId]);
+            $id = (int)$pdo->lastInsertId();
+        }
+        $pdo->commit();
+        return $id;
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
+    }
+}
+
+function commerce_set_user_address_default(PDO $pdo, int $userId, int $addressId): void
+{
+    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    try {
+        $exists = $pdo->prepare('SELECT 1 FROM user_addresses WHERE id=? AND user_id=?');
+        $exists->execute([$addressId, $userId]);
+        if (!$exists->fetchColumn()) throw new DomainException('Сохранённый адрес не найден.');
+        $pdo->prepare('UPDATE user_addresses SET is_default=0 WHERE user_id=?')->execute([$userId]);
+        $pdo->prepare('UPDATE user_addresses SET is_default=1,updated_at=CURRENT_TIMESTAMP WHERE id=? AND user_id=?')->execute([$addressId, $userId]);
+        $pdo->commit();
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
+    }
+}
+
+function commerce_delete_user_address(PDO $pdo, int $userId, int $addressId): void
+{
+    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    try {
+        $query = $pdo->prepare('SELECT is_default FROM user_addresses WHERE id=? AND user_id=?');
+        $query->execute([$addressId, $userId]);
+        $wasDefault = $query->fetchColumn();
+        if ($wasDefault === false) throw new DomainException('Сохранённый адрес не найден.');
+        $pdo->prepare('DELETE FROM user_addresses WHERE id=? AND user_id=?')->execute([$addressId, $userId]);
+        if ((int)$wasDefault === 1) {
+            $next = $pdo->prepare('SELECT id FROM user_addresses WHERE user_id=? ORDER BY id DESC LIMIT 1');
+            $next->execute([$userId]);
+            $nextId = $next->fetchColumn();
+            if ($nextId !== false) $pdo->prepare('UPDATE user_addresses SET is_default=1,updated_at=CURRENT_TIMESTAMP WHERE id=? AND user_id=?')->execute([(int)$nextId, $userId]);
+        }
+        $pdo->commit();
     } catch (Throwable $error) {
         if ($pdo->inTransaction()) $pdo->rollBack();
         throw $error;
