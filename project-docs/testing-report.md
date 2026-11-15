@@ -171,3 +171,7 @@ The static exporter generated 36 pages before the browser check. The changed pag
 The visual-fidelity browser regression was run only for dish, in PHP and freshly exported static mode, on desktop and mobile. It passed the one-title, loaded-image, editorial-photo and add-to-cart assertions, then saved four full-page screenshots under project-docs/visual-qa/. The static exporter produced 36 pages. PHP syntax for pages.php, JavaScript syntax for the browser test, and git diff --check passed.
 
 This accelerated pass did not rerun the broad browser, responsive or PHP/SQLite suites, hosted CI, or public deployment checks. It does not claim that all twenty product routes or all eleven design references have now been visually reviewed.
+
+## 2026-11-16 Omakase mobile selector
+
+A single focused visual-fidelity run checked the Omakase route in PHP and static mode at desktop and 390 px mobile. It passed with all five stage tabs inside the selector bounds, no tab-strip horizontal scrolling, no page overflow, and the existing five-course/image checks intact. The four full-page screenshots were reviewed. No broad suite, CI, or Pages deployment was run.

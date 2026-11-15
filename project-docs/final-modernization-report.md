@@ -129,3 +129,7 @@ The focused `npm run test:menu-visual` check passed four PHP/static desktop/mobi
 Removed the duplicate product title and oversized title band, aligned a single H1 with the product photograph on desktop, moved it before the image on mobile, retained clear quantity/favorite/order controls, and moved the educational nutrition disclosure below the action. Added a restrained chef-preparation editorial panel using an existing concept image with a clear fictional-content disclosure. The product image now uses responsive candidates and high fetch priority.
 
 The focused PHP/static desktop/mobile browser check passed and four screenshots were reviewed. pages.php, the test script, and whitespace checks passed. The page is closer to design-references/03-dish.png, but the full 11-reference comparison and all-20-card review remain incomplete. The broader suite, CI and Pages deployment were not repeated in this accelerated pass.
+
+## Omakase stage navigation — 2026-11-16
+
+On mobile, the horizontal course selector exposed only part of the third stage and left the remaining stages discoverable only by swiping. The selector now becomes a two-column grid at narrow widths. A focused assertion in the existing visual-fidelity route check verifies all five tabs fit and no horizontal scrolling is required. The route passed in PHP and static mode at desktop and 390 px mobile; updated screenshots are saved under project-docs/visual-qa/. Broader checks and publication were not repeated.

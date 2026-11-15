@@ -136,12 +136,25 @@ async function visit(browser, base, route, mode, capture = false) {
   const mobile = await page.evaluate(() => ({
     width: innerWidth,
     scrollWidth: document.documentElement.scrollWidth,
+    omakaseTabsVisible: (() => {
+      const tabs = document.querySelector('.tp20-omakase-experience .tp20-course-tabs');
+      if (!tabs) return true;
+      const bounds = tabs.getBoundingClientRect();
+      const buttons = [...tabs.querySelectorAll('button')];
+      return buttons.length === 5
+        && tabs.scrollWidth <= tabs.clientWidth + 1
+        && buttons.every(button => {
+          const r = button.getBoundingClientRect();
+          return r.left >= bounds.left - 1 && r.right <= bounds.right + 1;
+        });
+    })(),
     heroTitleVisible: [...document.querySelectorAll('h1')].every(title => {
       const r = title.getBoundingClientRect();
       return r.left >= -1 && r.right <= innerWidth + 1 && r.bottom > 0;
     })
   }));
   assert.ok(mobile.scrollWidth <= mobile.width, `${mode} ${route.key} has no mobile horizontal overflow`);
+  assert.equal(mobile.omakaseTabsVisible, true, "Omakase keeps all stages visible without horizontal scrolling");
   assert.equal(mobile.heroTitleVisible, true, `${mode} ${route.key} mobile heading remains in the viewport`);
   if (capture) await page.screenshot({ path: path.join(evidenceDir, `${route.key}-${mode}-mobile.jpg`), fullPage: true, type: 'jpeg', quality: 72 });
   await page.close();

@@ -481,3 +481,9 @@ selected dish photography for a custom-set composition. */
   .tp20-omakase-experience .tp20-course-story { padding:20px; }
   .editorial-page:has(.tp20-omakase-experience) .tier-card { min-height:210px; }
 }
+
+/* Keep every interactive tasting stage visible on narrow screens. */
+@media(max-width:600px){
+  .tp20-omakase-experience .tp20-course-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible}
+  .tp20-omakase-experience .tp20-course-tabs button{min-width:0;flex:initial;white-space:normal;line-height:1.25}
+}

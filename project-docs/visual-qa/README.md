@@ -87,3 +87,7 @@ The new text-free, AI-generated menu photograph is exported as responsive 640/96
 Fresh full-page screenshots are saved as dish-php-desktop.jpg, dish-php-mobile.jpg, dish-static-desktop.jpg and dish-static-mobile.jpg. The single-route Playwright run checked PHP and exported static output at desktop and 390 px mobile. It confirmed one product heading, loaded dish and editorial images, and a working add-to-cart control; the run passed without browser errors or horizontal overflow.
 
 Compared with design-references/03-dish.png, the product title now sits with the main dish image, the order controls remain prominent, and an editorial preparation image supports the story. The detail page honestly states that only one dish angle is available. This is a focused visual review, not a pixel-perfect match or a review of all 20 cards.
+
+## 2026-11-16 Omakase mobile-stage pass
+
+The mobile capture showed that the five-stage selector clipped the third stage and depended on an ambiguous horizontal swipe. It now wraps into a two-column grid on narrow screens, with all five choices visible before the course panel. Updated captures: omakase-php-desktop.jpg, omakase-php-mobile.jpg, omakase-static-desktop.jpg and omakase-static-mobile.jpg. The focused comparison retains the existing image-led premium direction; it is not a pixel-perfect reproduction of 04-omakase.png.
