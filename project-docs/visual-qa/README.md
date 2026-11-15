@@ -71,3 +71,7 @@ The latest local `test:motion` run passed on PHP and freshly exported static pag
 ## 2026-11-16 personal-offer admin follow-up
 
 This was a server-side admin/account and SQLite flow change. The admin can search older accounts; the account page exposes only its assigned offer code and a direct checkout link; private codes are absent from the public Offers list. A focused helper regression and PHP syntax checks passed; route assertions are included in `tests/php_integrity_integration.php` but were not run in the shortened cycle. No new browser screenshot was produced, so this is functional verification context and not a visual acceptance claim.
+
+## 2026-11-16 Omakase review
+
+`04-omakase-current-2026-11-16-desktop.jpg` and `04-omakase-current-2026-11-16-mobile.jpg` were captured from the local PHP route after scrolling through the page so lazy images and reveals were visible. Both were reviewed against `design-references/04-omakase.png`. The current route keeps the cinematic chef opening, interactive five-stage course story, catalog photography, set tiers and clear booking action. Its editorial section order and hero composition differ from the approved concept; these captures confirm visual continuity and content visibility, not pixel-level equivalence. See `omakase-comparison-2026-11-16.md` for page-specific notes.

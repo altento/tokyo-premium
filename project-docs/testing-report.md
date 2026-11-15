@@ -147,3 +147,7 @@ Added the focused `php tests/gift-quantity-regression.php` check for eligible qu
 ## Set-builder draft persistence — 2026-11-16
 
 The set builder now saves only selected dish IDs and quantities in browser-local storage, separately per set format. On reload it validates the draft against the current format's dish list and quantity limits; the displayed estimate is recalculated from the current catalog. An accepted add-to-cart event now returns a result to the builder, which clears the draft and selection only after the shared cart confirms acceptance. Failed adds retain the draft. `npm run test:set-draft` passed 16 focused browser assertions across local PHP and static Pages modes (save, reload, restore, transfer, clear). Node syntax checks and `git diff --check` passed. No broad suite, CI, or public deployment was run.
+
+## Omakase visual review — 2026-11-16
+
+The local PHP Omakase route was captured at 1440 and 390 CSS px, after scrolling to trigger all image reveals, and inspected beside `design-references/04-omakase.png`. The five course photos load and the mobile document remains 390 px wide. The current editorial order and hero framing differ from the mockup; this is a focused page review only, not pixel equivalence. Captures and comparison notes are in `project-docs/visual-qa/`.

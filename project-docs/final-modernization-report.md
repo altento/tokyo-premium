@@ -113,3 +113,7 @@ The admin-configured `max_per_order` for threshold gifts now reaches the server 
 ## Set-builder draft persistence — 2026-11-16
 
 Per-format builder drafts now survive refreshes in browser-local storage. Only IDs and quantities are retained; current menu entries and prices are reloaded for the estimate, and invalid or out-of-limit saved data is discarded. The shared cart reports whether it accepted a custom set, so the builder clears its draft only after successful transfer. The focused `npm run test:set-draft` browser check passed 16 assertions across local PHP and static modes. Broader suites, CI and public Pages were not run for this follow-up. Tokyo Premium 2.0 remains in progress.
+
+## Omakase visual review — 2026-11-16
+
+Captured and visually inspected the local PHP Omakase page at 1440 px desktop and 390 px mobile against `design-references/04-omakase.png`. All five catalog-backed course photos are visible after scroll reveals; mobile width is 390 px. The current composition remains intentionally distinct in section order and hero framing, and is not a pixel match. Evidence is saved as `project-docs/visual-qa/04-omakase-current-2026-11-16-{desktop,mobile}.jpg` with a page-specific comparison note. The other ten reference pages still need their own current-state comparison.
