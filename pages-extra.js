@@ -21,8 +21,21 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(tableInput)tableInput.value=button.dataset.tableSelect;
     if(tableStatus)tableStatus.textContent='Выбран предпочтительный стол №'+button.dataset.tableSelect+'. Доступность подтвердит ресторан.';
   }));
-  const fulfillment=$('#fulfillment'), addressField=$('#checkout-address'), addressWrap=$('#checkout-address-field'), savedAddressSelect=$('#checkout-saved-address'), savedAddressWrap=$('#checkout-saved-address-field');
+  const fulfillment=$('#fulfillment'), addressField=$('#checkout-address'), addressWrap=$('#checkout-address-field');
+  let savedAddressSelect=$('#checkout-saved-address'), savedAddressWrap=$('#checkout-saved-address-field');
   const checkoutForm=$('#checkout-form');
+  if(!savedAddressSelect&&window.TOKYO_STATIC_DEMO&&addressField&&addressWrap){
+    let addresses=[];
+    try{const stored=JSON.parse(localStorage.getItem('tokyo-demo-addresses')||'[]');if(Array.isArray(stored))addresses=stored.filter(value=>typeof value==='string'&&value.trim().length>=5&&value.trim().length<=180).slice(0,10)}catch(_){addresses=[]}
+    if(addresses.length){
+      savedAddressWrap=document.createElement('div');savedAddressWrap.className='field';savedAddressWrap.id='checkout-saved-address-field';
+      const label=document.createElement('label');label.htmlFor='checkout-saved-address';label.textContent='Мой сохранённый адрес';
+      savedAddressSelect=document.createElement('select');savedAddressSelect.id='checkout-saved-address';
+      const other=document.createElement('option');other.value='';other.textContent='Ввести другой адрес';savedAddressSelect.append(other);
+      addresses.forEach((address,index)=>{const option=document.createElement('option');option.value=String(index+1);option.dataset.address=address;option.textContent='Адрес '+(index+1)+' · '+address;savedAddressSelect.append(option)});
+      savedAddressWrap.append(label,savedAddressSelect);addressWrap.before(savedAddressWrap);savedAddressSelect.value='1';
+    }
+  }
   function copySavedAddress(){
     if(!addressField||!savedAddressSelect)return;
     addressField.value=savedAddressSelect.selectedOptions[0]?.dataset.address||'';

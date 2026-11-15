@@ -106,7 +106,18 @@ async function waitForServer(url, child) {
     await page.locator('#fulfillment').selectOption('delivery');
     assert.equal(await checkoutAddress.evaluate(input => input.required), true, 'switching back to delivery restores required address validation');
 
-    console.log('Saved addresses: focused PHP browser flow passed (register, CRUD, default, mobile width, checkout prefill and fulfillment).');
+    await page.goto(`${base}/docs/account.html`, { waitUntil: 'domcontentloaded' });
+    await page.locator('[data-account-tab="addresses"]').click();
+    const demoAddressForm = page.locator('form[data-local-form="address"]');
+    await demoAddressForm.locator('[name="address"]').fill('Демо-город, проспект Сакуры, 8');
+    await demoAddressForm.getByRole('button', { name: 'Добавить адрес ↗' }).click();
+    await page.getByText('Адрес сохранён только в этом браузере.').waitFor();
+    await page.goto(`${base}/docs/cart.html`, { waitUntil: 'domcontentloaded' });
+    await page.locator('#checkout-saved-address').waitFor({ state: 'visible' });
+    assert.equal(await page.locator('#checkout-address').inputValue(), 'Демо-город, проспект Сакуры, 8', 'Pages demo prefills checkout from browser-local account addresses');
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), 390, 'saved-address checkout picker fits the mobile demo viewport');
+
+    console.log('Saved addresses: focused PHP and Pages browser flows passed (CRUD, checkout prefill, delivery/pickup validation and mobile width).');
   } catch (error) {
     if (serverErrors) error.message += `\nPHP server: ${serverErrors}`;
     throw error;
