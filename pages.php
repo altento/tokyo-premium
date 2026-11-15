@@ -53,7 +53,7 @@ header_html($view);
 <section class="section"><div class="editorial-heading"><div class="kicker">Состав и подача</div><h2>Что создаёт характер блюда</h2></div><div class="detail-ingredients"><article><span>01</span><h3>Основа</h3><p><?=e($dish['description'])?></p></article><article><span>02</span><h3>Текстура</h3><p>Контраст нежного, упругого и хрустящего раскрывает каждый компонент постепенно.</p></article><article><span>03</span><h3>Ритм</h3><p>Подавайте сразу после приготовления; точная подача здесь важнее спешки.</p></article></div></section>
 <section class="section dark"><div class="section-head"><div><div class="kicker">Продолжить знакомство · <?=e($dish['category_name'])?></div><h2>Другие блюда раздела</h2></div><a class="button secondary" href="menu.php">Все меню ↗</a></div><div class="dish-grid dish-grid-related"><?php foreach($recommend as $d) ep_card($d); ?></div></section>
 <?php } elseif($view==='omakase'): ?>
-<?php ep_hero('お任せ','ВЫБОР ШЕФА · РИТУАЛ ВКУСА','Omakase','Вечер, который складывается в моменте.','Доверить выбор шефу — значит позволить сезону вести вас от первой лёгкой подачи к глубокому финалу.','assets/generated/chef-at-counter.webp','Шеф готовит дегустационное меню','Выбрать вечер','pages.php?page=booking','Открыть меню'); ?>
+<?php ep_hero('お任せ','ВЫБОР ШЕФА · РИТУАЛ ВКУСА','Omakase','Вечер, который складывается в моменте.','Доверить выбор шефу — значит позволить сезону вести вас от первой лёгкой подачи к глубокому финалу.','assets/generated/chef-at-counter.webp','Шеф готовит дегустационное меню','Выбрать вечер','pages.php?page=booking','Открыть меню','omakase-hero'); ?>
 <?php
 $omakasePlan=[
  ['Знакомство',12],

@@ -175,3 +175,7 @@ This accelerated pass did not rerun the broad browser, responsive or PHP/SQLite 
 ## 2026-11-16 Omakase mobile selector
 
 A single focused visual-fidelity run checked the Omakase route in PHP and static mode at desktop and 390 px mobile. It passed with all five stage tabs inside the selector bounds, no tab-strip horizontal scrolling, no page overflow, and the existing five-course/image checks intact. The four full-page screenshots were reviewed. No broad suite, CI, or Pages deployment was run.
+
+## 2026-11-16 Omakase hero follow-up
+
+One focused visual-fidelity run passed for the Omakase route in PHP and exported static mode at desktop and 390 px mobile. It verifies the hero uses its Omakase-only mirrored composition, preserves the five course photos, exposes all five mobile stage tabs without horizontal scrolling, and has no page overflow or browser errors. Four updated full-page captures were visually inspected. No full suite, CI run, or Pages deployment was performed.

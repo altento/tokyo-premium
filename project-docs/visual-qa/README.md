@@ -91,3 +91,7 @@ Compared with design-references/03-dish.png, the product title now sits with the
 ## 2026-11-16 Omakase mobile-stage pass
 
 The mobile capture showed that the five-stage selector clipped the third stage and depended on an ambiguous horizontal swipe. It now wraps into a two-column grid on narrow screens, with all five choices visible before the course panel. Updated captures: omakase-php-desktop.jpg, omakase-php-mobile.jpg, omakase-static-desktop.jpg and omakase-static-mobile.jpg. The focused comparison retains the existing image-led premium direction; it is not a pixel-perfect reproduction of 04-omakase.png.
+
+## 2026-11-16 Omakase hero composition pass
+
+The existing original chef photograph is now mirrored only in the Omakase hero, placing the chef on the right and leaving calm copy space on the left, closer to design-references/04-omakase.png. The later editorial chef photograph remains unmirrored. The five mobile stage tabs also remain fully visible in a two-column layout. Current PHP and static captures: omakase-php-desktop.jpg, omakase-php-mobile.jpg, omakase-static-desktop.jpg and omakase-static-mobile.jpg. The wider page section order and layout still differ from the reference; this is a focused comparison, not a pixel-perfect match.

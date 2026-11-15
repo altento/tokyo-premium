@@ -125,6 +125,8 @@ async function visit(browser, base, route, mode, capture = false) {
     }));
     assert.equal(counts.overviewCards, counts.selectedStages, `${mode} overview and interactive course stages agree`);
     assert.equal(counts.overviewCards, 5, `${mode} overview presents the five catalog-backed stages`);
+    const heroTransform = await page.locator('.omakase-hero .editorial-hero-photo').evaluate(image => getComputedStyle(image).transform);
+    assert.match(heroTransform, /^matrix\(-1,/);
     assert.equal(counts.loadedOverviewPhotos, 5, `${mode} all overview photographs load`);
   }
 
