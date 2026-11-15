@@ -37,6 +37,8 @@
     let queuedIndex = null;
     let pointerFrame = 0;
     let progressFrame = 0;
+    const gsapMotion = !reducedMotion.matches && window.gsap && window.ScrollTrigger;
+    if (gsapMotion) window.gsap.registerPlugin(window.ScrollTrigger);
 
     const progress = document.createElement('div');
     progress.className = 'story-scroll-progress';
@@ -51,16 +53,54 @@
     const scheduleProgress = () => {
       if (!progressFrame) progressFrame = requestAnimationFrame(updateProgress);
     };
-    window.addEventListener('scroll', scheduleProgress, { passive: true });
-    window.addEventListener('resize', scheduleProgress, { passive: true });
-    window.addEventListener('load', scheduleProgress, { once: true });
-    updateProgress();
+    if (!gsapMotion) {
+      window.addEventListener('scroll', scheduleProgress, { passive: true });
+      window.addEventListener('resize', scheduleProgress, { passive: true });
+      window.addEventListener('load', scheduleProgress, { once: true });
+      updateProgress();
+    }
 
     const activateChapter = chapter => {
       storyChapters.forEach(item => item.removeAttribute('data-story-active'));
       chapter.setAttribute('data-story-active', 'true');
     };
-    if (!reducedMotion.matches && 'IntersectionObserver' in window) {
+    if (gsapMotion) {
+      document.body.classList.add('story-motion-ready', 'story-motion-gsap');
+      window.ScrollTrigger.create({
+        start: 0,
+        end: 'max',
+        onUpdate: self => progress.style.setProperty('--story-progress', self.progress.toFixed(4))
+      });
+      storyTargets.forEach(target => {
+        const start = 'top 88%';
+        window.gsap.fromTo(target, { autoAlpha: 0, y: window.matchMedia('(max-width: 760px)').matches ? 14 : 22 }, {
+          autoAlpha: 1,
+          y: 0,
+          duration: window.matchMedia('(max-width: 760px)').matches ? 0.6 : 0.78,
+          ease: 'power2.out',
+          onComplete: () => target.classList.add('story-visible'),
+          scrollTrigger: { trigger: target, start, once: true }
+        });
+        const photo = target.querySelector('img');
+        if (photo) window.gsap.fromTo(photo, { scale: 1.035 }, {
+          scale: 1,
+          duration: 1.3,
+          ease: 'power2.out',
+          scrollTrigger: { trigger: target, start, once: true }
+        });
+      });
+      storyChapters.forEach(chapter => window.ScrollTrigger.create({
+        trigger: chapter,
+        start: 'top 58%',
+        end: 'bottom 42%',
+        onToggle: self => { if (self.isActive) activateChapter(chapter); }
+      }));
+      const initialChapter = storyChapters.find(chapter => {
+        const bounds = chapter.getBoundingClientRect();
+        return bounds.top <= window.innerHeight * 0.58 && bounds.bottom >= window.innerHeight * 0.58;
+      }) || storyChapters[0];
+      if (initialChapter) activateChapter(initialChapter);
+    } else if (!reducedMotion.matches && 'IntersectionObserver' in window) {
       document.body.classList.add('story-motion-ready');
       const revealObserver = new IntersectionObserver(entries => entries.forEach(entry => {
         if (entry.isIntersecting) {

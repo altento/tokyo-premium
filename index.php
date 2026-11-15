@@ -93,5 +93,7 @@ $heroScenes=[
   </section>
 </main>
 <script>window.DISHES=<?=json_encode(dishes(),JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP|JSON_UNESCAPED_UNICODE)?>;</script>
+<script src="assets/vendor/gsap.min.js" defer></script>
+<script src="assets/vendor/ScrollTrigger.min.js" defer></script>
 <script src="motion-system.js" defer></script>
 <?php footer_html(); ?>

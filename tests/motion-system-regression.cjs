@@ -39,6 +39,8 @@ async function runMode(browser, name, base, route, capture) {
   const response = await page.goto(`${base}${route}`, { waitUntil: 'networkidle' });
   assert.equal(response?.status(), 200, `${name} homepage loads`);
   await page.evaluate(() => document.fonts.ready);
+  assert.equal(await page.evaluate(() => Boolean(window.gsap && window.ScrollTrigger)), true, `${name} loads the locally vendored GSAP motion engine`);
+  assert.ok(await page.evaluate(() => window.ScrollTrigger.getAll().length > 0), `${name} registers ScrollTrigger for scroll storytelling`);
   assert.equal(await page.locator('.story-scroll-progress').count(), 1, `${name} has a single quiet story progress bar`);
   await page.evaluate(() => {
     const chapter = document.querySelector('[data-story-chapter="space"]');
@@ -125,6 +127,7 @@ async function runReducedMotion(browser, name, base, route) {
   const page = await context.newPage();
   await page.goto(`${base}${route}`, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => !document.querySelector('[data-home-hero-controls]')?.hidden);
+  assert.equal(await page.evaluate(() => window.ScrollTrigger?.getAll().length || 0), 0, `${name} creates no scroll animations when reduced motion is requested`);
   const duration = await page.locator('#home-hero-photo').evaluate(image => getComputedStyle(image).transitionDuration);
   assert.ok(duration.split(',').every(value => Number.parseFloat(value) <= 0.01), `${name} respects prefers-reduced-motion`);
   await page.locator('[data-home-hero-step="1"]').click();

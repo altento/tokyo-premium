@@ -114,3 +114,12 @@ Added a single requestAnimationFrame-throttled progress line, one-time chapter r
 The PHP/SQLite integration suite now passes 150 assertions. New coverage verifies registration via an invite link, explicit attachment, retry idempotency, multiple invitees per personal code, self-invite rejection, inviter replacement rejection, completed-order rewards, duplicate completion, cancellation reversal and re-qualification. Birthday checks cover invalid dates, optional consent, eligibility windows, consent withdrawal, configured points and no repeat grant on account reload. `php -l` passed on the changed PHP files, `node --check tokyo20.js` passed, and `git diff --check` was clean. Browser suites were not repeated because this change affects PHP account/referral logic; the prior focused cinematic-motion browser run remains the relevant visual check.
 
 The suite uses a disposable SQLite database. The earlier checks exposed stale read snapshots in the expanded integration fixture; the fixture now uses fresh connections across concurrent HTTP writes. The application flow itself passed after that isolation fix.
+
+## Homepage GSAP integration — 2026-11-16
+
+- Added assertions to `test:motion` that verify ScrollTrigger is active in PHP and static builds and absent when reduced motion is requested.
+- With `TOKYO_BASE_URL=http://127.0.0.1:8100` and `TOKYO_STATIC_BASE_URL=http://127.0.0.1:8100/docs`, `npm run test:motion` passed. It covers three hero scenes, keyboard controls, chapter state, reading progress, reveals, eight viewport widths, reduced motion and browser errors.
+- `npm run test:visual-fidelity` against the same PHP server and static export passed for seven route families in both modes.
+- PHP 8.4 lint passed for `index.php`; `tools/export-pages.php` generated 36 static pages and copied the vendored GSAP files. `git diff --check` passed.
+- Full-page and hero screenshots were generated in `visual-qa/2.0-motion/` and `visual-qa/2.0-visual-fidelity/`. Homepage desktop/mobile PHP captures were visually inspected against `01-home.png`; this focused motion update does not close the 11-reference pixel comparison.
+- This is local evidence only. No CI run or public Pages deployment was performed for this revision.
