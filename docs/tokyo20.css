@@ -372,7 +372,7 @@
 .tp20-checkout-quote .tp20-inline-form { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; }
 .tp20-checkout-quote .tp20-inline-form input { min-width:0; }
 .tp20-gift-choice,.tp20-points-choice { display:grid; gap:8px; margin-top:15px; color:#e4c992; }
-.tp20-gift-choice select,.tp20-points-choice input { min-height:44px; padding:9px 11px; border:1px solid var(--tp20-line); border-radius:6px; background:#0b0a09; color:var(--tp20-ivory); }
+.tp20-gift-choice select,.tp20-gift-choice input,.tp20-points-choice input { min-height:44px; padding:9px 11px; border:1px solid var(--tp20-line); border-radius:6px; background:#0b0a09; color:var(--tp20-ivory); }
 .tp20-quote-total { padding-top:12px; border-top:1px solid var(--tp20-line); color:#f0d39c; font:500 1.25rem var(--tp20-serif); }
 .tp20-static-privilege { display:grid; grid-template-columns:minmax(0,1fr) minmax(280px,.8fr); align-items:stretch; gap:18px; }
 .tp20-static-privilege .tp20-loyalty-card { min-height:350px; }

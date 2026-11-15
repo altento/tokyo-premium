@@ -504,10 +504,11 @@ function commerce_get_loyalty_balance(PDO $pdo, int $userId): int
     return max(0, (int)$q->fetchColumn());
 }
 
-function commerce_quote(PDO $pdo, array $items, array $customSets = [], string $code = '', string $fulfillment = 'delivery', ?int $userId = null, string $actorKey = '', ?int $giftDishId = null, int $pointsToRedeem = 0, string $secretCode = '', bool $isAdmin = false): array
+function commerce_quote(PDO $pdo, array $items, array $customSets = [], string $code = '', string $fulfillment = 'delivery', ?int $userId = null, string $actorKey = '', ?int $giftDishId = null, int $pointsToRedeem = 0, string $secretCode = '', bool $isAdmin = false, int $giftQuantity = 1): array
 {
     try {
         $giftItems=[];
+        if ($giftQuantity < 1 || $giftQuantity > 10) throw new DomainException('Количество подарка должно быть от 1 до 10.');
         if (!in_array($fulfillment, ['delivery','pickup'], true)) throw new DomainException('Выберите способ получения заказа.');
         if (!array_is_list($customSets) || count($customSets) > 3) throw new DomainException('Некорректное количество сетов.');
         $catalog = commerce_catalog_items($pdo, $items, $userId, $secretCode, $isAdmin);
@@ -626,11 +627,14 @@ function commerce_quote(PDO $pdo, array $items, array $customSets = [], string $
                 $option = null;
                 foreach ($giftOptions as $candidate) if ((int)$candidate['dish_id'] === $selected) $option = $candidate;
                 if (!$option || (int)$option['remaining_quantity'] < 1) throw new DomainException('Выбранный подарок закончился.');
-                $giftItems[] = ['dish'=>['id'=>(int)$option['dish_id'],'name'=>$option['name'],'price'=>(int)$option['price'],'category'=>$option['category'],'image_url'=>$option['image_url']],'qty'=>1,'line_total'=>0,'campaign_id'=>(int)$threshold['id'],'gift_key'=>'threshold:'.(int)$threshold['id']];
+                $giftLimit = min(10, max(1, (int)$option['max_per_order']), (int)$option['remaining_quantity']);
+                if ($giftQuantity < 1 || $giftQuantity > $giftLimit) throw new DomainException('Количество подарка превышает доступный остаток или лимит на заказ.');
+                $giftItems[] = ['dish'=>['id'=>(int)$option['dish_id'],'name'=>$option['name'],'price'=>(int)$option['price'],'category'=>$option['category'],'image_url'=>$option['image_url']],'qty'=>$giftQuantity,'line_total'=>0,'campaign_id'=>(int)$threshold['id'],'gift_key'=>'threshold:'.(int)$threshold['id']];
                 $adjustments[] = ['type'=>'gift','code'=>'gift:'.(int)$threshold['id'],'label'=>'Подарок от суммы заказа','amount'=>0,'campaign_id'=>(int)$threshold['id'],'gift_dish_id'=>(int)$option['dish_id']];
             }
         }
         if ($giftDishId && !$threshold && !$giftItems) throw new DomainException('Подарок пока недоступен.');
+        if (!$threshold && $giftQuantity !== 1) throw new DomainException('Количество подарка можно изменить только для доступного подарка от суммы заказа.');
 
         $pointsDiscount = 0;
         if ($pointsToRedeem < 0) throw new DomainException('Количество бонусов не может быть отрицательным.');
@@ -676,7 +680,7 @@ function commerce_find_active_dish(PDO $pdo, int $id): array
 function commerce_persist_order(PDO $pdo, array $input, ?int $userId, string $actorKey): array
 {
     if (!$pdo->inTransaction()) throw new LogicException('Создание заказа требует активной транзакции.');
-    $quote=commerce_quote($pdo,$input['items']??[], $input['custom_sets']??[], (string)($input['promo_code']??''), (string)($input['fulfillment']??'delivery'), $userId, $actorKey, isset($input['gift_dish_id'])?(int)$input['gift_dish_id']:null, (int)($input['points_to_redeem']??0), (string)($input['secret_code']??''), !empty($input['is_admin']));
+    $quote=commerce_quote($pdo,$input['items']??[], $input['custom_sets']??[], (string)($input['promo_code']??''), (string)($input['fulfillment']??'delivery'), $userId, $actorKey, isset($input['gift_dish_id'])?(int)$input['gift_dish_id']:null, (int)($input['points_to_redeem']??0), (string)($input['secret_code']??''), !empty($input['is_admin']), (int)($input['gift_quantity']??1));
     if (!$quote['ok']) throw new DomainException((string)$quote['message']);
     if ($quote['requires_gift_choice']) throw new DomainException('Выберите доступный подарок.');
 
@@ -705,8 +709,9 @@ function commerce_persist_order(PDO $pdo, array $input, ?int $userId, string $ac
         foreach ($quote['gift_items'] as $gift) {
         $insert->execute([$orderId,$gift['dish']['id'],'Подарок · '.$gift['dish']['name'],0,$gift['qty']]);
         if (isset($gift['campaign_id'])) {
-            $update=$pdo->prepare('UPDATE campaign_gift_options SET remaining_quantity=remaining_quantity-1 WHERE campaign_id=? AND dish_id=? AND active=1 AND remaining_quantity>=1');
-            $update->execute([$gift['campaign_id'],$gift['dish']['id']]);
+            $giftQuantity=(int)$gift['qty'];
+            $update=$pdo->prepare('UPDATE campaign_gift_options SET remaining_quantity=remaining_quantity-? WHERE campaign_id=? AND dish_id=? AND active=1 AND remaining_quantity>=?');
+            $update->execute([$giftQuantity,$gift['campaign_id'],$gift['dish']['id'],$giftQuantity]);
             if ($update->rowCount()!==1) throw new DomainException('Подарок закончился, обновите корзину.');
         }
     }

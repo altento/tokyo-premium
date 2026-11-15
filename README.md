@@ -70,6 +70,7 @@ PHP-версия сохраняет меню, пользователей, зак
 ```sh
 npm ci
 npm run test:cart
+php tests/gift-quantity-regression.php
 npx playwright install chromium
 php tests/php_integrity_integration.php
 RESTAURANT_DB=/tmp/tokyo-browser.sqlite php -S 127.0.0.1:8090 -t .

@@ -133,3 +133,7 @@ The suite uses a disposable SQLite database. The earlier checks exposed stale re
 ## Personal offers follow-up — 2026-11-16
 
 `tests/personal-offer-regression.php` passed 10 isolated SQLite assertions, including finding an account older than the latest-200 list by email, server-priced personal-code use, duplicate-free reassignment, expiry validation, eligibility expiry, revocation, and rejection of non-personal or code-less campaigns. PHP 8.4 lint passed for the changed account, offers, cart, commerce, admin, and test PHP files; Node syntax checks passed for both source and static `tokyo20.js`. A local HTTP smoke check confirmed the cart route pre-fills a valid promo query at port 8100. Route assertions for account search by email, private-code visibility, account copy/checkout links, and the public offers page are in the broader integration suite but were not run in this shortened cycle. No browser capture, full regression suite, CI, or Pages deployment is claimed.
+
+## Gift quantity follow-up — 2026-11-16
+
+Added the focused `php tests/gift-quantity-regression.php` check for eligible quantity 2, rejection above the configured cap, zero and insufficient stock, persisted order-line quantity, transactional stock decrement, and the legacy default of one. It passed 9 assertions using PHP 8.5.11 with the installed SQLite extensions loaded explicitly. PHP lint for all changed PHP files, JS syntax checks, source/static CSS/JS parity and `git diff --check` passed. The broader PHP, browser and Pages suites were not run for this change.
