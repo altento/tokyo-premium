@@ -217,3 +217,7 @@ Marketing campaign records can now be edited in place from the admin list with t
 ## Delivery tariff configuration — 2026-11-16
 
 The protected site settings now expose a bounded delivery charge, and new campaigns can select the free-delivery reward; the promotion works when a positive rate is configured. A zero rate remains free and the server remains authoritative. Focused integration assertions were added; PHP syntax and whitespace checks passed, while the SQLite HTTP assertions could not run locally without `pdo_sqlite`.
+
+## Omakase section-order follow-up — 2026-11-16
+
+Reordered the Omakase content toward reference 04: philosophy/principles, course-card overview, set tiers, booking handoff, interactive course detail, honest still-photo editorial interlude, and closing quote. Added responsive layout for the new philosophy and reservation sections; both the PHP template and static Pages route are updated. Syntax and whitespace checks passed. The browser profile was unavailable, so this specific change has no fresh screenshot/visual review; PHP rendering and full regression remain unverified. Details: [Omakase follow-up](visual-qa/omakase-order-follow-up-2026-11-16.md).
