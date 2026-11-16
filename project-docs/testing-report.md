@@ -30,7 +30,7 @@ For the catalogue-pairing change, only the affected dish route and its PHP/schem
 
 The same focused change adds HTTP regression assertions for admin create/reorder, type edit, self-pair rejection and deletion. Those assertions are included in `php_integrity_integration.php` but remain unexecuted locally because the PHP SQLite PDO driver is unavailable.
 
-The Secret Menu follow-up adds focused assertions for rule creation/editing, schedule enforcement (unscheduled, future-start and expired rules), date validation and disabling. They are included in the integration file but were not executed locally because `pdo_sqlite` is unavailable. PHP syntax lint is the local verification for those handlers.
+The Secret Menu follow-up adds focused assertions for rule creation/editing, automatic promo-code provisioning, the resulting server unlock decision, schedule enforcement (unscheduled, future-start and expired rules), date validation and disabling. They are included in the integration file but were not executed locally because `pdo_sqlite` is unavailable. PHP syntax lint is the local verification for those handlers.
 
 For the static account empty-state improvement, one focused Chromium run checked the menu, booking and favorites empty-state links at desktop and mobile widths. Targets were correct, page width matched the 390 px viewport, and no page errors occurred. The full responsive, account, PHP integration and hosted suites were not rerun.
 
