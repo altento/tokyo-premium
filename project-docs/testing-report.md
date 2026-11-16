@@ -340,3 +340,7 @@ The admin account finder now compares Russian and Kazakh Cyrillic names without 
 - `npm run test:cart-visual` passed for all eight cart states. The populated desktop/mobile captures show three distinct dishes, a repeated quantity, working recommendations and matching totals; both were visually inspected beside `design-references/10-cart.png`.
 - `npm run test:account-demo` passed after moving the browser-local privilege summary nearer the profile overview. It now asserts that demo points are recalculated after seeding and return to zero after local data is cleared. Updated full-page desktop/mobile captures are in `project-docs/visual-qa/11-account-seeded-{desktop,mobile}.jpg`.
 - PHP syntax and whitespace checks passed. This accelerated pass did not run the broad browser suite, PHP browser mode or public-site check; the draft branch has not been published to GitHub Pages.
+
+## Draft PR browser release gate — 2026-11-16
+
+The latest draft PR run (`43933421739`) passed the build job but skipped browser QA and deployment because of workflow conditions. Removed only the draft-based skips for browser dependency installation and browser/visual regression, so draft PRs now receive the same PHP + Pages browser gate; deployment remains restricted to non-PR events. A new run for this workflow change is required before treating browser QA as verified. Public Pages is unchanged.

@@ -36,7 +36,6 @@ jobs:
           node-version: 22
           cache: npm
       - name: Install browser test dependencies
-        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
         run: |
           npm ci
           npx playwright install --with-deps chromium
@@ -104,7 +103,6 @@ jobs:
           grep -q 'data-account-demo-seed' docs/account.html
       - name: Run browser regression and visual QA
         id: browser_qa
-        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
         run: |
           set -euo pipefail
           export RESTAURANT_DB=/tmp/tokyo-premium-browser.sqlite
