@@ -230,6 +230,7 @@
 .tp20-admin-row { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:18px; padding:18px; border:1px solid var(--tp20-line); border-radius:10px; background:#100e0c; }
 .tp20-admin-row h3 { margin:5px 0; font:500 1.25rem var(--tp20-serif); }
 .tp20-admin-row p { margin:3px 0; color:var(--tp20-muted); font-size:.85rem; }
+.tp20-admin-row > .tp20-admin-details { flex:0 0 100%; width:100%; }
 .tp20-admin-details { margin-block:10px; border:1px solid var(--tp20-line); border-radius:10px; background:#100e0c; color:var(--tp20-ivory); }
 .tp20-admin-details > summary { cursor:pointer; padding:16px 18px; color:#e4c791; }
 .tp20-admin-details > form { margin:0; border:0; border-top:1px solid var(--tp20-line); border-radius:0 0 10px 10px; }

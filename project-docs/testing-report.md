@@ -243,3 +243,7 @@ Follow-up browser check: the category rail was captured at 1440 px and 390 px, h
 The same route-focused suite now includes the reference-aligned grid/list switch. It checks switching both ways and confirms searching the unique dish name “Рамен с говядиной” in list mode leaves one result while hiding nonmatches. Static-only run: two viewports (1440/390); PHP browser mode was not run in this pass.
 
 Ingredient quick-filters now combine with category and text search. The focused menu test verifies that “Роллы” + “Лосось” + “Филадельфия” yields one dish and that changing category to “Суши и сашими” yields none while the other filters remain active. Filters with no matching catalog item remain hidden; the seeded menu currently has no scallop dish. This supplements the same two-width static-only run; no full suite was repeated.
+
+## Campaign editor follow-up — 2026-11-16
+
+Added an in-place editor for existing marketing campaigns and two regression assertions for prefilled fields, update persistence, editor retention after POST and weekday-mask preservation. `php -l admin-marketing.php`, `php -l tests/php_integrity_integration.php` and `git diff --check` passed. The SQLite HTTP regression was not run locally because this PHP CLI has no `pdo_sqlite`; no full suite was repeated.

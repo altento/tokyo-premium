@@ -76,6 +76,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $values = [$slug,$type,$title,$description,$image,$reward,(int)$value,$giftDishId,(int)$minimum,(int)$maximum,$start ?: null,$end ?: null,$type === 'golden_hour' ? 62 : 127,$timeStart ?: null,$timeEnd ?: null,'Asia/Qyzylorda',trim((string)($_POST['required_tier'] ?? '')) ?: null,isset($_POST['active']) ? 1 : 0,isset($_POST['stackable']) ? 1 : 0,1,(int)($_POST['sort_order'] ?? 50)];
             $pdo->beginTransaction();
             if ($id) {
+                $existingCampaign = $pdo->prepare('SELECT campaign_type,weekday_mask FROM promotion_campaigns WHERE id=?');
+                $existingCampaign->execute([$id]);
+                $existingCampaignData = $existingCampaign->fetch(PDO::FETCH_ASSOC);
+                if (!$existingCampaignData) throw new DomainException('Кампания не найдена для редактирования.');
+                if ($existingCampaignData['campaign_type']==='secret_menu' && $type!=='secret_menu') {
+                    $ruleCheck=$pdo->prepare('SELECT 1 FROM secret_menu_rules WHERE campaign_id=? AND active=1 LIMIT 1');
+                    $ruleCheck->execute([$id]);
+                    if ($ruleCheck->fetchColumn()) throw new DomainException('Сначала отключите или перенесите правила Secret Menu, затем меняйте тип кампании.');
+                }
+                if ($existingCampaignData['campaign_type'] === $type) $values[12] = (int)$existingCampaignData['weekday_mask'];
+                else $values[12] = $type === 'golden_hour' ? 62 : 127;
                 $values[] = $id;
                 $stmt = $pdo->prepare('UPDATE promotion_campaigns SET slug=?,campaign_type=?,title=?,description=?,image_url=?,reward_type=?,reward_value=?,gift_dish_id=?,minimum_subtotal=?,maximum_discount=?,starts_at=?,ends_at=?,weekday_mask=?,starts_time=?,ends_time=?,timezone=?,required_tier=?,active=?,stackable=?,demo_only=?,sort_order=? WHERE id=?');
                 $stmt->execute($values); $savedCampaignId=$id; $notice = 'Кампания обновлена.';
@@ -202,6 +213,7 @@ $collections=$pdo->query('SELECT c.*,COUNT(ci.dish_id) AS dish_count,GROUP_CONCA
 $tiers=$pdo->query('SELECT * FROM loyalty_tiers ORDER BY sort_order,minimum_completed_spend')->fetchAll();
 $secretRules=$pdo->query('SELECT r.*,c.title FROM secret_menu_rules r JOIN promotion_campaigns c ON c.id=r.campaign_id ORDER BY r.id DESC')->fetchAll();
 $giftOptions=$pdo->query('SELECT g.*,c.title,d.name FROM campaign_gift_options g JOIN promotion_campaigns c ON c.id=g.campaign_id JOIN dishes d ON d.id=g.dish_id ORDER BY c.id,g.dish_id')->fetchAll();
+$campaignGiftInventory=[]; foreach($giftOptions as $giftOption) $campaignGiftInventory[(int)$giftOption['campaign_id'].':'.(int)$giftOption['dish_id']]=(int)$giftOption['remaining_quantity'];
 $giftStocks=[]; foreach($pdo->query('SELECT campaign_id,SUM(remaining_quantity) AS quantity FROM campaign_gift_options GROUP BY campaign_id')->fetchAll() as $stockRow) $giftStocks[(int)$stockRow['campaign_id']]=(int)$stockRow['quantity'];
 $loyaltySettings=$pdo->query('SELECT * FROM loyalty_settings WHERE id=1')->fetch();
 $userSearch=trim((string)($_GET['user_search']??''));if(strlen($userSearch)>240)$userSearch=substr($userSearch,0,240);
@@ -224,7 +236,80 @@ header_html();
   <?php if ($notice): ?><p class="booking-confirmation-notice" role="status"><?=e($notice)?></p><?php endif ?><?php if ($error): ?><p class="form-status error" role="alert"><?=e($error)?></p><?php endif ?>
   <section class="section tp20-admin-section" id="campaigns"><div class="editorial-heading"><div class="kicker">01 · TOKYO EXCLUSIVE / GOLDEN HOUR</div><h2>Кампании</h2><p>Даты и расписание считаются в Asia/Qyzylorda. Созданные здесь кампании по умолчанию помечены как учебные.</p></div>
     <form method="post" class="tp20-admin-form"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="campaign-save"><h3>Новая кампания</h3><div class="tp20-admin-fields"><label>Slug<input name="slug" pattern="[a-z0-9][a-z0-9-]{1,50}" required maxlength="51" placeholder="autumn-evening"></label><label>Название<input name="title" required maxlength="100"></label><label>Тип<select name="campaign_type"><option value="exclusive">Tokyo Exclusive</option><option value="golden_hour">Golden Hour</option><option value="chef_drop">Chef’s Secret Drop</option><option value="secret_menu">Secret Menu</option><option value="birthday">Birthday offer</option><option value="personal">Персональное</option><option value="gift_threshold">Подарок от суммы</option></select></label><label>Награда<select name="reward_type"><option value="none">Без скидки</option><option value="percent">Скидка, %</option><option value="fixed">Фиксированная сумма</option><option value="gift_dish">Подарочное блюдо</option><option value="set_price">Цена сета</option><option value="bonus_points">Бонусные баллы</option><option value="access">Доступ</option></select></label><label>Значение награды<input type="number" name="reward_value" min="0" value="0" required></label><label>Подарочное блюдо (для выбранного типа)<select name="gift_dish_id"><option value="">Не использовать</option><?php foreach($dishes as $dish): ?><option value="<?= (int)$dish['id']?>"><?=e($dish['name'])?></option><?php endforeach ?></select></label><label>Начальный запас подарка<input type="number" name="gift_quantity" min="0" max="10000" value="0"></label><label>Минимальная сумма заказа, ₸<input type="number" name="minimum_subtotal" min="0" value="0"></label><label>Максимальная скидка, ₸<input type="number" name="maximum_discount" min="0" value="0"></label><label>С даты<input type="datetime-local" name="starts_at"></label><label>До даты<input type="datetime-local" name="ends_at"></label><label>Начало времени (Golden Hour)<input type="time" name="starts_time"></label><label>Конец времени<input type="time" name="ends_time"></label><label>Изображение<select name="image_url"><?php foreach($imageOptions as $url=>$label): ?><option value="<?=e($url)?>"><?=e($label)?></option><?php endforeach ?></select></label><label>Требуемый уровень (если нужен)<select name="required_tier"><option value="">Без уровня</option><?php foreach($tiers as $tier): ?><option value="<?=e($tier['slug'])?>"><?=e($tier['name'])?></option><?php endforeach ?></select></label><label>Порядок показа<input type="number" name="sort_order" value="50"></label><label>Цели включения · через запятую<textarea name="target_include" rows="2" maxlength="1200" placeholder="dish:12, category:rolls, set:signature"></textarea></label><label>Исключения · через запятую<textarea name="target_exclude" rows="2" maxlength="1200" placeholder="dish:18, category:drinks"></textarea></label><label>Описание<textarea name="description" rows="3" maxlength="1200"></textarea></label><label class="tp20-admin-check"><input type="checkbox" name="active" checked> Активна</label><label class="tp20-admin-check"><input type="checkbox" name="stackable"> Совместима с другими кампаниями</label></div><button class="button" type="submit">Создать кампанию ↗</button></form>
-    <div class="tp20-admin-list"><?php foreach($campaigns as $campaign): ?><article class="tp20-admin-row"><div><span class="kicker"><?=e(strtoupper((string)$campaign['campaign_type']))?> · <?=!empty($campaign['demo_only'])?'DEMO':'LIVE'?></span><h3><?=e($campaign['title'])?></h3><p><?=e($campaign['slug'])?> · <?= (int)$campaign['code_count']?> кодов · <?= (int)$campaign['uses_count']?> применений</p></div><form method="post"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="campaign-toggle"><input type="hidden" name="id" value="<?= (int)$campaign['id']?>"><button class="button secondary" type="submit"><?=!empty($campaign['active'])?'Отключить':'Активировать'?></button></form></article><?php endforeach ?></div>
+    <div class="tp20-admin-list">
+      <?php foreach($campaigns as $campaign):
+        $campaignId=(int)$campaign['id'];
+        $campaignTargets=$campaignTargetText[$campaignId]??[];
+        $campaignGiftDishId=(int)($campaign['gift_dish_id']??0);
+        $campaignGiftQuantity=$campaignGiftInventory[$campaignId.':'.$campaignGiftDishId]??0;
+        $campaignEditOpen=($_SERVER['REQUEST_METHOD']==='POST'&&($_POST['action']??'')==='campaign-save'&&(int)($_POST['id']??0)===$campaignId);
+      ?>
+        <article class="tp20-admin-row">
+          <div>
+            <span class="kicker"><?=e(strtoupper((string)$campaign['campaign_type']))?> · <?=!empty($campaign['demo_only'])?'DEMO':'LIVE'?></span>
+            <h3><?=e($campaign['title'])?></h3>
+            <p><?=e($campaign['slug'])?> · <?= (int)$campaign['code_count']?> кодов · <?= (int)$campaign['uses_count']?> применений</p>
+          </div>
+          <form method="post" action="admin-marketing.php#campaigns">
+            <input type="hidden" name="csrf" value="<?=e(csrf())?>">
+            <input type="hidden" name="action" value="campaign-toggle">
+            <input type="hidden" name="id" value="<?=$campaignId?>">
+            <button class="button secondary" type="submit"><?=!empty($campaign['active'])?'Отключить':'Активировать'?></button>
+          </form>
+          <details class="tp20-admin-details" <?=$campaignEditOpen?'open':''?>>
+            <summary>Редактировать условия кампании</summary>
+            <form method="post" action="admin-marketing.php#campaigns" class="tp20-admin-form">
+              <input type="hidden" name="csrf" value="<?=e(csrf())?>">
+              <input type="hidden" name="action" value="campaign-save">
+              <input type="hidden" name="id" value="<?=$campaignId?>">
+              <h4>Настройки кампании</h4>
+              <div class="tp20-admin-fields">
+                <label>Slug<input name="slug" value="<?=e($campaign['slug'])?>" pattern="[a-z0-9][a-z0-9-]{1,50}" required maxlength="51"></label>
+                <label>Название<input name="title" value="<?=e($campaign['title'])?>" required maxlength="100"></label>
+                <label>Тип<select name="campaign_type">
+                  <option value="exclusive" <?=$campaign['campaign_type']==='exclusive'?'selected':''?>>Tokyo Exclusive</option>
+                  <option value="golden_hour" <?=$campaign['campaign_type']==='golden_hour'?'selected':''?>>Golden Hour</option>
+                  <option value="chef_drop" <?=$campaign['campaign_type']==='chef_drop'?'selected':''?>>Chef’s Secret Drop</option>
+                  <option value="secret_menu" <?=$campaign['campaign_type']==='secret_menu'?'selected':''?>>Secret Menu</option>
+                  <option value="birthday" <?=$campaign['campaign_type']==='birthday'?'selected':''?>>Birthday offer</option>
+                  <option value="personal" <?=$campaign['campaign_type']==='personal'?'selected':''?>>Персональное</option>
+                  <option value="gift_threshold" <?=$campaign['campaign_type']==='gift_threshold'?'selected':''?>>Подарок от суммы</option>
+                </select></label>
+                <label>Награда<select name="reward_type">
+                  <option value="none" <?=$campaign['reward_type']==='none'?'selected':''?>>Без скидки</option>
+                  <option value="percent" <?=$campaign['reward_type']==='percent'?'selected':''?>>Скидка, %</option>
+                  <option value="fixed" <?=$campaign['reward_type']==='fixed'?'selected':''?>>Фиксированная сумма</option>
+                  <option value="gift_dish" <?=$campaign['reward_type']==='gift_dish'?'selected':''?>>Подарочное блюдо</option>
+                  <option value="set_price" <?=$campaign['reward_type']==='set_price'?'selected':''?>>Цена сета</option>
+                  <option value="free_delivery" <?=$campaign['reward_type']==='free_delivery'?'selected':''?>>Бесплатная доставка</option>
+                  <option value="bonus_points" <?=$campaign['reward_type']==='bonus_points'?'selected':''?>>Бонусные баллы</option>
+                  <option value="access" <?=$campaign['reward_type']==='access'?'selected':''?>>Доступ</option>
+                </select></label>
+                <label>Значение награды<input type="number" name="reward_value" min="0" value="<?= (int)$campaign['reward_value']?>" required></label>
+                <label>Подарочное блюдо<select name="gift_dish_id"><option value="">Не использовать</option><?php foreach($dishes as $dish): ?><option value="<?= (int)$dish['id']?>" <?=(int)$dish['id']===$campaignGiftDishId?'selected':''?>><?=e($dish['name'])?></option><?php endforeach ?></select></label>
+                <label>Начальный запас подарка<input type="number" name="gift_quantity" min="0" max="10000" value="<?=$campaignGiftQuantity?>"></label>
+                <label>Минимальная сумма, ₸<input type="number" name="minimum_subtotal" min="0" value="<?= (int)$campaign['minimum_subtotal']?>"></label>
+                <label>Максимальная скидка, ₸<input type="number" name="maximum_discount" min="0" value="<?= (int)$campaign['maximum_discount']?>"></label>
+                <label>С даты<input type="datetime-local" name="starts_at" value="<?=e(!empty($campaign['starts_at'])?str_replace(' ','T',substr((string)$campaign['starts_at'],0,16)):'')?>"></label>
+                <label>До даты<input type="datetime-local" name="ends_at" value="<?=e(!empty($campaign['ends_at'])?str_replace(' ','T',substr((string)$campaign['ends_at'],0,16)):'')?>"></label>
+                <label>Начало времени<input type="time" name="starts_time" value="<?=e((string)($campaign['starts_time']??''))?>"></label>
+                <label>Конец времени<input type="time" name="ends_time" value="<?=e((string)($campaign['ends_time']??''))?>"></label>
+                <label>Изображение<select name="image_url"><?php foreach($imageOptions as $url=>$label): ?><option value="<?=e($url)?>" <?=$campaign['image_url']===$url?'selected':''?>><?=e($label)?></option><?php endforeach ?></select></label>
+                <label>Требуемый уровень<select name="required_tier"><option value="">Без уровня</option><?php foreach($tiers as $tier): ?><option value="<?=e($tier['slug'])?>" <?=($campaign['required_tier']??'')===$tier['slug']?'selected':''?>><?=e($tier['name'])?></option><?php endforeach ?></select></label>
+                <label>Порядок показа<input type="number" name="sort_order" value="<?= (int)$campaign['sort_order']?>"></label>
+                <label>Цели включения<textarea name="target_include" rows="2" maxlength="1200"><?=e(implode(', ',$campaignTargets['include']??[]))?></textarea></label>
+                <label>Исключения<textarea name="target_exclude" rows="2" maxlength="1200"><?=e(implode(', ',$campaignTargets['exclude']??[]))?></textarea></label>
+                <label>Описание<textarea name="description" rows="3" maxlength="1200"><?=e($campaign['description'])?></textarea></label>
+                <label class="tp20-admin-check"><input type="checkbox" name="active" <?=!empty($campaign['active'])?'checked':''?>> Активна</label>
+                <label class="tp20-admin-check"><input type="checkbox" name="stackable" <?=!empty($campaign['stackable'])?'checked':''?>> Совместима с другими кампаниями</label>
+              </div>
+              <p class="tp20-note">Расписание недели сохраняется при редактировании; даты и время применяются в Asia/Qyzylorda.</p>
+              <button class="button" type="submit">Сохранить кампанию ↗</button>
+            </form>
+          </details>
+        </article>
+      <?php endforeach ?>
+    </div>
   </section>
   <section class="section tp20-admin-section" id="personal-offers"><div class="editorial-heading"><div class="kicker">PRIVATE INVITATIONS · ACCOUNT SCOPED</div><h2>Персональные предложения</h2><p>Назначение доступно для активных кампаний типа «Персональное». Сначала добавьте действующий промокод в разделе ниже. Код и предложение видит только выбранный аккаунт; использованное предложение повторно включить нельзя.</p></div>
     <form method="get" action="admin-marketing.php#personal-offers" class="tp20-admin-form"><h3>Найти аккаунт</h3><div class="tp20-admin-fields"><label>ID, имя или email<input type="search" name="user_search" value="<?=e($userSearch)?>" maxlength="120" placeholder="Например, guest@example.test" autocomplete="off"></label></div><button class="button secondary" type="submit">Найти аккаунт</button><?php if($userSearch!==''): ?><a class="text-link" href="admin-marketing.php#personal-offers">Сбросить поиск</a><?php endif ?></form>
