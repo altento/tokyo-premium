@@ -207,3 +207,7 @@ One focused static route check passed at 320, 390 and 1440 px. It verified the t
 ## 2026-11-16 space gallery hero follow-up
 
 One focused static route check passed at 1440 px and 320 px. It verified the title fits its copy area, the desktop title stays single-line, the gallery anchor exists, and the page has no horizontal overflow, console/page errors or failed requests. Both full-page captures were visually inspected against `design-references/06-gallery.png`. `php -l pages.php`, equality of `premium.css` and `docs/premium.css`, and `git diff --check` passed. PHP browser rendering, the broad suite, hosted CI and public Pages were not checked.
+
+## 2026-11-16 space-zone content follow-up
+
+One static route check passed at 1440 px and 390 px. It verified the four reference-aligned zone names, four distinct descriptions, HTTP 200, no browser errors, and no horizontal overflow. Full-page screenshots were visually inspected. This was a content-only follow-up; no broad suite, PHP browser render, CI run, or deployment was repeated.
