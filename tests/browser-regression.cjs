@@ -14,6 +14,19 @@ const widths = [320, 390, 768, 1024, 1440, 1920];
 const failures = [];
 const check = (condition, label) => { if (!condition) throw new Error(label); };
 const isRequired = locator => locator.evaluate(element => element.required);
+async function checkEarlyTransitionOptIn(page, label) {
+  const enabled = await page.evaluate(() => {
+    const style = document.querySelector('#tp20-view-transition');
+    const firstStylesheet = document.querySelector('link[rel="stylesheet"]');
+    if (!style?.sheet || !firstStylesheet || !(style.compareDocumentPosition(firstStylesheet) & Node.DOCUMENT_POSITION_FOLLOWING)) return false;
+    const findOptIn = rules => [...rules].some(rule => {
+      if (rule.cssText.startsWith('@view-transition')) return rule.navigation === 'auto';
+      return rule.cssRules ? findOptIn(rule.cssRules) : false;
+    });
+    try { return findOptIn(style.sheet.cssRules); } catch { return false; }
+  });
+  check(enabled, `${label} has an early native page-transition opt-in`);
+}
 async function addCustomSet(page) {
   return page.evaluate(() => {
     const event = new CustomEvent('tokyo:custom-set:add', {
@@ -66,6 +79,7 @@ async function run(options = {}) {
       console.log(`Visual QA: ${name}`);
       const response = await page.goto(base + route, { waitUntil: 'domcontentloaded', timeout: 15000 });
       check(response && response.status() === 200, `${name} HTTP response`);
+      await checkEarlyTransitionOptIn(page, name);
       check(await page.locator('h1').count() > 0, `${name} has a page heading`);
       await prepareVisual(page);
       await page.screenshot({ path: path.join(evidence, `${name}-desktop.jpg`), fullPage: true, type: 'jpeg', quality: 70 });
@@ -370,6 +384,7 @@ async function run(options = {}) {
     await page.locator('.tier-card-featured a').click();
     check(await page.locator('#booking-format').inputValue() === 'Сезонный' && await page.evaluate(() => new URL(location.href).searchParams.get('format') === 'Сезонный'), 'PHP booking keeps the selected Omakase set in the shared format field');
     await page.goto(staticBase + '/omakase.html');
+    await checkEarlyTransitionOptIn(page, 'static Omakase');
     await page.locator('.tier-card-featured a').click();
     await page.waitForFunction(() => document.querySelector('#booking-format')?.value === 'Сезонный');
     const staticFormatValue = await page.locator('#booking-format').inputValue();

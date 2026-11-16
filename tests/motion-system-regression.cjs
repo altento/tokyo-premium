@@ -42,13 +42,14 @@ async function runMode(browser, name, base, route, capture) {
   assert.equal(await page.evaluate(() => Boolean(window.gsap && window.ScrollTrigger)), true, `${name} loads the locally vendored GSAP motion engine`);
   assert.ok(await page.evaluate(() => window.ScrollTrigger.getAll().length > 0), `${name} registers ScrollTrigger for scroll storytelling`);
   assert.equal(await page.evaluate(() => {
-    const sheet = [...document.styleSheets].find(item => item.href && new URL(item.href).pathname.endsWith('/tokyo20.css'));
-    if (!sheet) return false;
+    const style = document.querySelector('#tp20-view-transition');
+    const firstStylesheet = document.querySelector('link[rel="stylesheet"]');
+    if (!style?.sheet || !firstStylesheet || !(style.compareDocumentPosition(firstStylesheet) & Node.DOCUMENT_POSITION_FOLLOWING)) return false;
     const hasNavigationOptIn = rules => [...rules].some(rule => {
       if (rule.cssText.startsWith('@view-transition')) return rule.navigation === 'auto';
       return rule.cssRules ? hasNavigationOptIn(rule.cssRules) : false;
     });
-    try { return hasNavigationOptIn(sheet.cssRules); } catch { return false; }
+    try { return hasNavigationOptIn(style.sheet.cssRules); } catch { return false; }
   }), true, `${name} opts into native same-origin page transitions`);
   assert.equal(await page.locator('.story-scroll-progress').count(), 1, `${name} has a single quiet story progress bar`);
   await page.evaluate(() => {

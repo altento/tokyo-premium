@@ -44,6 +44,7 @@ foreach (glob($docs.'/dish-*.html')?:[] as $staleDishPage) {
 foreach ($routes as $route => $filename) {
     $html = @file_get_contents($source . $route);
     if ($html === false || !str_contains($html, '<!doctype html>')) throw new RuntimeException('Could not export ' . $route);
+    if (!str_contains($html, 'id="tp20-view-transition"')) throw new RuntimeException('Page transition opt-in must be present in the document head before exporting ' . $route);
     $html = str_replace(
       ['href="index.php#booking"','href="index.php"','href="menu.php"','href="about.php"','href="reviews.php"','href="account.php"','href="pages.php?page=omakase"','href="pages.php?page=gallery"','href="pages.php?page=booking"','href="pages.php?page=contacts"','href="pages.php?page=cart"'],
       ['href="booking.html"','href="index.html"','href="menu.html"','href="about.html"','href="reviews.html"','href="account.html"','href="omakase.html"','href="gallery.html"','href="booking.html"','href="contacts.html"','href="cart.html"'],

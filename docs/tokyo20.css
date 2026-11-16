@@ -500,15 +500,6 @@ selected dish photography for a custom-set composition. */
   .tp20-omakase-experience .tp20-course-tabs button{min-width:0;flex:initial;white-space:normal;line-height:1.25}
 }
 
-/* Native same-origin page transitions. Unsupported browsers use normal navigation. */
-@media (prefers-reduced-motion: no-preference) {
-  @view-transition { navigation: auto; }
-  ::view-transition-old(root) { animation: tp20-page-out 130ms ease both; }
-  ::view-transition-new(root) { animation: tp20-page-in 220ms cubic-bezier(.2,.65,.25,1) both; }
-}
-@keyframes tp20-page-out { to { opacity: 0; } }
-@keyframes tp20-page-in { from { opacity: 0; } to { opacity: 1; } }
-
 /* Contacts: compact, reference-led layout; all location details remain clearly fictional. */
 .editorial-page .editorial-hero.contact-hero{min-height:clamp(370px,34vw,450px);height:auto;padding-block:68px 30px}
 .editorial-page .contact-hero .editorial-hero-photo{object-position:center 54%}
