@@ -276,12 +276,25 @@ function commerce_public_offers(PDO $pdo, ?int $userId = null): array
             $q->execute([$userId, $row['id']]);
             if (!$q->fetchColumn()) continue;
             if ($row['campaign_type']==='birthday' && !commerce_birthday_eligible($pdo,$userId)) continue;
+            if (!commerce_campaign_has_usable_promo_code($pdo, (int)$row['id'], (string)$row['timezone'])) continue;
         }
         if (!commerce_campaign_is_active($row)) continue;
         $row['demo_only'] = (int)$row['demo_only'] === 1;
         $offers[] = $row;
     }
     return $offers;
+}
+
+function commerce_campaign_has_usable_promo_code(PDO $pdo, int $campaignId, string $timezone): bool
+{
+    if ($campaignId < 1) return false;
+    $query = $pdo->prepare('SELECT starts_at,ends_at,uses_count,maximum_uses FROM promo_codes WHERE campaign_id=? AND active=1');
+    $query->execute([$campaignId]);
+    foreach ($query->fetchAll() as $code) {
+        $hasUses = $code['maximum_uses'] === null || (int)$code['uses_count'] < (int)$code['maximum_uses'];
+        if ($hasUses && commerce_date_window_is_active($code['starts_at'] ?: null, $code['ends_at'] ?: null, $timezone)) return true;
+    }
+    return false;
 }
 
 function commerce_public_collections(PDO $pdo): array

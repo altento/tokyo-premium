@@ -33,7 +33,7 @@ try {
     $assert(!in_array($userId,$recentIds,true)&&$found&&(int)$found['id']===$userId,'account search can find a registered user older than the recent-200 list by email');
     $pdo->prepare("INSERT INTO promotion_campaigns(slug,campaign_type,title,description,reward_type,reward_value,active,stackable,demo_only) VALUES(?,'personal','Private invitation','Account-scoped integration offer','percent',10,1,1,1)")->execute(['personal-'.bin2hex(random_bytes(5))]);
     $campaignId=(int)$pdo->lastInsertId();
-    $pdo->prepare('INSERT INTO promo_codes(code,campaign_id,active) VALUES(?,?,1)')->execute(['PERSONALQA',$campaignId]);
+    $pdo->prepare('INSERT INTO promo_codes(code,campaign_id,active,maximum_uses) VALUES(?,?,1,1)')->execute(['PERSONALQA',$campaignId]);
     $expires=(new DateTimeImmutable('+2 hours',new DateTimeZone('UTC')))->format('Y-m-d H:i:s');
 
     // Exercise the route gates in separate PHP processes so admin exit paths
@@ -92,6 +92,13 @@ try {
     $assigned=commerce_quote($pdo,[['id'=>1,'qty'=>1]],[],'PERSONALQA','pickup',$userId,'personal-qa-actor');
     $assert($assigned['ok']&&$assigned['discount_total']===450,'an assigned eligible offer is accepted and server-priced');
     $assert((int)$pdo->query('SELECT COUNT(*) FROM personalized_offers WHERE user_id='.$userId.' AND campaign_id='.$campaignId)->fetchColumn()===1,'assignment is stored once');
+    $visibleCampaignIds=static fn(): array=>array_map(static fn(array $row):int=>(int)$row['id'],commerce_public_offers($pdo,$userId));
+    $assert(in_array($campaignId,$visibleCampaignIds(),true),'assigned offer with an active, in-window, unused code is listed');
+    $pdo->prepare('UPDATE promo_codes SET active=0 WHERE code=?')->execute(['PERSONALQA']);
+    $assert(!in_array($campaignId,$visibleCampaignIds(),true),'offer card disappears when its only promo code is disabled');
+    $pdo->prepare('UPDATE promo_codes SET active=1,uses_count=1 WHERE code=?')->execute(['PERSONALQA']);
+    $assert(!in_array($campaignId,$visibleCampaignIds(),true),'offer card disappears when its only promo code reaches its usage limit');
+    $pdo->prepare('UPDATE promo_codes SET uses_count=0 WHERE code=?')->execute(['PERSONALQA']);
     $otherAccountQuote=commerce_quote($pdo,[['id'=>1,'qty'=>1]],[],'PERSONALQA','pickup',$otherUserId,'other-personal-qa-actor');
     $assert(!$otherAccountQuote['ok']&&str_contains($otherAccountQuote['message'],'вам недоступно'),'an assigned offer is not visible to another account');
 

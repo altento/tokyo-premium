@@ -1,6 +1,10 @@
 # Offers, Tokyo Privilege and static-demo limits
 
-Updated 2026-11-13
+Updated 2026-11-16
+
+## Eligibility consistency follow-up — 2026-11-16
+
+Assigned personal and birthday campaign cards are now returned only while the owner has an unexpired assignment and the campaign has at least one active, in-window promo code with remaining uses. This keeps the Offers page aligned with the account code list and checkout eligibility. The Offers template also reads `campaign_type` from SQLite (with a guarded legacy fallback), avoiding the PHP warning previously embedded in the checked-in static export. The Ideal Evening recommender consistently interprets its input as a per-guest budget, shows the group allowance, and compares the estimated group total against that allowance.
 
 ## PHP + SQLite
 

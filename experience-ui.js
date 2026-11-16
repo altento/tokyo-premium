@@ -320,7 +320,7 @@
     if (state.occasion === 'discovery' && /омак|сашими|сэт|сет|авторск/.test(text)) score += 3;
     if (state.occasion === 'friends' && /сет|сэт|ролл|ассорти/.test(text)) score += 2;
     const price = Math.max(0, Number(dish.price) || 0);
-    const perGuest = Number(state.budget || 0) / Math.max(1, Number(state.guests || 1));
+    const perGuest = Math.max(0, Number(state.budget || 0));
     if (perGuest > 0) score += price <= perGuest * 0.72 ? 2 : price <= perGuest ? 0 : -4;
     return score;
   }
@@ -379,6 +379,7 @@
       result.replaceChildren();
       const guestCount = Math.max(1, Math.min(12, Number(state.guests || 2)));
       const budget = Math.max(0, Number(state.budget || 0));
+      const groupBudget = budget * guestCount;
       const dishes = dishRows().filter(dish => dish && Number(dish.active ?? 1) !== 0)
         .sort((a, b) => scoreDish(b, state) - scoreDish(a, state) || Number(a.price) - Number(b.price))
         .slice(0, 3);
@@ -388,6 +389,12 @@
       const zone = zoneByAtmosphere[state.atmosphere] || zoneByAtmosphere.main;
       safeText(headline, `Подбор для ${guestCount} гостей · предпочтительная зона: ${zone}.`);
       result.append(headline);
+      if (budget > 0) {
+        const budgetNode = doc.createElement('p');
+        budgetNode.className = 'tp-evening-budget-summary';
+        safeText(budgetNode, `Ориентир: ${money(budget)} на гостя · ${money(groupBudget)} на компанию.`);
+        result.append(budgetNode);
+      }
       if (!dishes.length) {
         const empty = doc.createElement('p');
         empty.className = 'tp-empty-state';
@@ -425,7 +432,7 @@
       totalNode.className = 'tp-evening-estimate';
       safeText(totalNode, `Ориентир на выбранные позиции для ${guestCount} гостей: ${money(total)}. Стоимость учебная; сервер проверяет цены при заказе.`);
       result.append(totalNode);
-      if (budget && total > budget) {
+      if (budget && total > groupBudget) {
         const budgetNote = doc.createElement('p');
         budgetNote.className = 'tp-budget-note';
         safeText(budgetNote, 'Подбор превышает указанный ориентир бюджета; измените предпочтения или бюджет.');

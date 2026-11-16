@@ -187,12 +187,15 @@ async function run() {
         if (choice) await step.locator(`[data-tp-evening-option][data-field="${choice[0]}"][value="${choice[1]}"]`).click();
         else {
           const input = step.locator('[data-tp-evening-input]');
-          await input.fill(index === 2 ? '30000' : '2');
+          await input.fill(index === 2 ? '10000' : '3');
         }
         await step.locator('[data-tp-evening-next]').click();
       }
       check(await page.locator('[data-tp-evening-result]').isVisible(), `${mode.name} preference wizard renders a recommendation result`);
       check(await page.locator('.tp-recommendation-card').count() > 0, `${mode.name} recommendation uses real catalog items`);
+      const budgetSummary = await page.locator('.tp-evening-budget-summary').innerText();
+      check(/10[\s\u00a0\u202f]*000.+на гостя/.test(budgetSummary) && /30[\s\u00a0\u202f]*000.+на компанию/.test(budgetSummary), `${mode.name} budget distinguishes the per-guest amount from the group allowance`);
+      check(await page.locator('.tp-budget-note').count() === 0, `${mode.name} recommendation below the three-person budget is not incorrectly flagged`);
       await page.screenshot({ path: path.join(evidence, `12-${mode.name}-perfect-evening-result.jpg`), fullPage: true, type: 'jpeg', quality: 72 });
       await page.setViewportSize({ width: 390, height: 844 });
       await page.screenshot({ path: path.join(evidence, `12-${mode.name}-perfect-evening-mobile.jpg`), fullPage: true, type: 'jpeg', quality: 72 });
