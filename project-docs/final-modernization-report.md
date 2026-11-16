@@ -289,3 +289,7 @@ Reduced excess vertical padding around the room cards and gallery in the PHP and
 ## Menu set-builder story rhythm — 2026-11-16
 
 Reduced the three-image set-builder story from a 310 px minimum desktop frame to a compact 250 px target, tightened copy sizing, and hid the secondary platter image on narrow screens while retaining the chef image and working set-builder CTA. Static Chromium captures measured 326 px at 1440 wide and 449 px at 390 wide; CTA destination remained `set-builder-signature.html`, with no page errors, failed requests, or horizontal overflow. Captures: `project-docs/visual-qa/menu-set-story-compact-2026-11-16/menu-{desktop,mobile}.png`. This is a focused alignment improvement; the full menu reference pass remains open.
+
+## Homepage booking conversion — 2026-11-16
+
+The homepage reservation form now reveals contact fields only after the guest selects a date, time, party size and preferred zone. The existing server or static-demo submission path is preserved, including validation and honest pending/demo messaging; successful demo submission resets the form. One focused browser check passed on Pages at desktop and mobile widths. Evidence: `project-docs/visual-qa/home-booking-progressive-2026-11-16/`. Full PHP browser validation and public release are still pending.

@@ -10,6 +10,7 @@
     "test:set-draft": "node tests/set-builder-draft-regression.cjs",
     "test:personal-offer": "php tests/personal-offer-regression.php",
     "test:offers-evening": "node tests/offers-evening-regression.cjs",
+    "test:home-booking": "node tests/home-booking-step.cjs",
     "test:browser": "node tests/browser-regression.cjs",
     "test:account-demo": "node tests/account-demo-regression.cjs",
     "test:tokyo20": "node tests/tokyo20-regression.cjs",

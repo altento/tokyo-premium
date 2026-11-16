@@ -240,6 +240,10 @@ The custom Pages account template had omitted `luxury-refinements.css`; the expo
 
 Follow-up browser check: the category rail was captured at 1440 px and 390 px, has no zero-result filter, and displays the set-builder shortcut within the initial viewport at both widths. The 390 px flow followed the shortcut to `set-builder.html` successfully with no page or console errors. The strip itself remains horizontally scrollable by design. No broad suite or PHP browser render was repeated.
 
+## Home booking progressive step — 2026-11-16
+
+The homepage now starts with date, time, guest count and preferred zone; contact fields appear after the visitor submits those choices. The first step never saves or sends a booking. On the second step, the existing PHP/API or browser-local demo handler receives the same required contact fields; after a successful demo save, the form resets to the compact first step. The no-JavaScript fallback keeps all fields visible. A single focused Playwright check passed in the static demo at 1440 px and 390 px, including empty-contact validation and successful local demo submission. Four section screenshots are in `visual-qa/home-booking-progressive-2026-11-16/`. PHP route rendering was not tested locally because this PHP runtime lacks `pdo_sqlite`; no broad suite or public deployment was run.
+
 The same route-focused suite now includes the reference-aligned grid/list switch. It checks switching both ways and confirms searching the unique dish name “Рамен с говядиной” in list mode leaves one result while hiding nonmatches. Static-only run: two viewports (1440/390); PHP browser mode was not run in this pass.
 
 Ingredient quick-filters now combine with category and text search. The focused menu test verifies that “Роллы” + “Лосось” + “Филадельфия” yields one dish and that changing category to “Суши и сашими” yields none while the other filters remain active. Filters with no matching catalog item remain hidden; the seeded menu currently has no scallop dish. This supplements the same two-width static-only run; no full suite was repeated.

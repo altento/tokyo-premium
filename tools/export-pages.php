@@ -6,7 +6,7 @@ $root = dirname(__DIR__);
 $docs = rtrim(getenv('TOKYO_EXPORT_DIR') ?: ($root . '/docs'), '/\\');
 $source = getenv('TOKYO_EXPORT_URL') ?: 'http://127.0.0.1:8080';
 if (!is_dir($docs) && !mkdir($docs, 0775, true) && !is_dir($docs)) throw new RuntimeException('Cannot create docs directory');
-foreach (['luxury.css','editorial.css','premium.css','luxury-refinements.css','tokyo20.css','experience-ui.css','cart-store.js','luxury.js','pages-extra.js','pages-demo.js','account-demo.js','reviews.js','navigation.js','experience-ui.js','tokyo-secret-demo.js','tokyo20.js','assets/vendor/gsap.min.js','assets/vendor/ScrollTrigger.min.js','motion-system.js'] as $asset) {
+foreach (['luxury.css','editorial.css','premium.css','luxury-refinements.css','tokyo20.css','experience-ui.css','cart-store.js','luxury.js','pages-extra.js','pages-demo.js','account-demo.js','reviews.js','navigation.js','experience-ui.js','tokyo-secret-demo.js','tokyo20.js','home-booking.js','assets/vendor/gsap.min.js','assets/vendor/ScrollTrigger.min.js','motion-system.js'] as $asset) {
     $target = $docs . '/' . $asset;
     $targetDirectory = dirname($target);
     if (!is_dir($targetDirectory) && !mkdir($targetDirectory, 0775, true) && !is_dir($targetDirectory)) throw new RuntimeException('Cannot create ' . $targetDirectory);
