@@ -8,7 +8,7 @@
 .menu-hero-copy>p:not(.menu-hero-sub){max-width:390px;color:#d7c8b0;line-height:1.65}
 .menu-hero .school-note{display:block;margin-top:18px;color:#c7b99f;font-size:.65rem;letter-spacing:.12em}
 .menu-hero-kanji{position:absolute;right:max(5vw,calc((100vw - 1380px)/2));top:18%;writing-mode:vertical-rl;color:#efd7a5;font:500 clamp(1.4rem,3vw,2.5rem)/1 'Playfair Display',serif;letter-spacing:.3em;text-shadow:0 2px 20px #000}
-.menu-section.section{padding-top:clamp(28px,3vw,44px)}
+.menu-section.section{padding-top:clamp(28px,3vw,44px);padding-bottom:clamp(32px,4vw,58px)}
 .menu-layout{display:grid;grid-template-columns:minmax(185px,220px) minmax(0,1fr);gap:clamp(26px,4vw,58px);align-items:start;max-width:1440px;margin:auto}
 .menu-sidebar{position:sticky;top:102px;min-width:0}
 .menu-sidebar-heading h2{margin:7px 0 18px;color:#f3e5cc;font:500 clamp(1.45rem,2.3vw,2rem)/1.15 'Playfair Display',serif}

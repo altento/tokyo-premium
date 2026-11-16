@@ -1,0 +1,7 @@
+# Menu visual follow-up — 2026-11-16
+
+Reference: `design-references/02-menu.png`. Captures: `menu-1440-loaded.png`, `menu-390-loaded.png`.
+
+The desktop keeps the reference's category rail, search/sort controls, three-column dish grid, pagination, and authored-set story. The phone view retains a horizontally browsable category strip and a readable two-column catalog. The site uses its own original Japanese-garden-and-sushi hero photograph, so its image composition is an intentional adaptation rather than a copy of the reference. The menu catalog's bottom padding is now capped at 58 px on desktop and 32 px on mobile to bring the set-builder story closer to the catalog.
+
+A focused local static check passed at 1440 px and 390 px: HTTP 200, all 22 page images decoded before full-page capture, document width matches viewport, and there were no browser errors or HTTP failures. Screenshots were visually inspected. The PHP route was not rendered because this runtime lacks the PDO SQLite driver; this was not a full menu-interaction test, broad suite, hosted CI run, or public deployment.
