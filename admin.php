@@ -277,9 +277,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     default => 'Не удалось найти письмо для повтора.',
                 };
             } elseif ($action === 'settings') {
-                $keys = ['site_name','meta_title','meta_description','hero_eyebrow','hero_title','hero_text','address','phone','hours','instagram'];
+                $deliveryFee = null;
+                if (array_key_exists('delivery_fee', $_POST)) {
+                    $deliveryFee = filter_var($_POST['delivery_fee'], FILTER_VALIDATE_INT);
+                    if ($deliveryFee === false || $deliveryFee < 0 || $deliveryFee > 100000) {
+                        throw new RuntimeException('Стоимость доставки должна быть целым числом от 0 до 100 000 ₸.');
+                    }
+                }
+                $keys = ['site_name','meta_title','meta_description','hero_eyebrow','hero_title','hero_text','address','phone','hours','instagram','delivery_fee'];
                 foreach ($keys as $key) {
-                    $value = trim((string)($_POST[$key] ?? ''));
+                    if ($key === 'delivery_fee') {
+                        if ($deliveryFee === null) continue;
+                        $value = (string)$deliveryFee;
+                    } else {
+                        $value = trim((string)($_POST[$key] ?? ''));
+                    }
                     $pdo->prepare('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value')
                         ->execute([$key, admin_unicode_slice($value, 500)]);
                 }
@@ -606,10 +618,13 @@ $notificationLabels = ['orders'=>'Новые заказы','bookings'=>'Новы
     <form method="post" class="admin-form admin-settings-form">
       <input type="hidden" name="csrf" value="<?=e(csrf())?>">
       <input type="hidden" name="action" value="settings">
-      <?php foreach (['site_name'=>'Название сайта','meta_title'=>'SEO title','meta_description'=>'SEO description','hero_eyebrow'=>'Надзаголовок первого экрана','hero_title'=>'Заголовок первого экрана','hero_text'=>'Текст первого экрана','address'=>'Адрес','phone'=>'Телефон','hours'=>'График','instagram'=>'Instagram URL'] as $key=>$label): ?>
+      <?php foreach (['site_name'=>'Название сайта','meta_title'=>'SEO title','meta_description'=>'SEO description','hero_eyebrow'=>'Надзаголовок первого экрана','hero_title'=>'Заголовок первого экрана','hero_text'=>'Текст первого экрана','address'=>'Адрес','phone'=>'Телефон','hours'=>'График','instagram'=>'Instagram URL','delivery_fee'=>'Стоимость доставки, ₸'] as $key=>$label): ?>
         <label><?=$label?>
           <?php if (in_array($key, ['meta_description','hero_text'], true)): ?>
             <textarea name="<?=e($key)?>" maxlength="500" rows="3"><?=e(setting($key))?></textarea>
+          <?php elseif ($key === 'delivery_fee'): ?>
+            <input type="number" name="delivery_fee" min="0" max="100000" step="1" value="<?=e(setting('delivery_fee','0'))?>">
+            <small>0 — доставка бесплатна; скидка «Бесплатная доставка» применяется только при тарифе выше нуля.</small>
           <?php else: ?>
             <input name="<?=e($key)?>" value="<?=e(setting($key))?>" maxlength="500">
           <?php endif ?>

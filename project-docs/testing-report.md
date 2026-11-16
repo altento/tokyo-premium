@@ -247,3 +247,7 @@ Ingredient quick-filters now combine with category and text search. The focused 
 ## Campaign editor follow-up — 2026-11-16
 
 Added an in-place editor for existing marketing campaigns and two regression assertions for prefilled fields, update persistence, editor retention after POST and weekday-mask preservation. `php -l admin-marketing.php`, `php -l tests/php_integrity_integration.php` and `git diff --check` passed. The campaign, promo-code and collection form handlers now use the same strict `Asia/Qyzylorda` datetime parser, reject impossible local dates and reject reversed collection windows. A regression assertion covers an impossible campaign date. The SQLite HTTP regression was not run locally because this PHP CLI has no `pdo_sqlite`; no full suite was repeated.
+
+## Delivery tariff configuration — 2026-11-16
+
+The protected site settings now validate and persist a delivery tariff from 0 to 100,000 ₸. The focused integration assertions cover saving a positive rate, rejecting a negative rate without overwriting it, and applying the configured amount to a server-quoted free-delivery promotion. PHP lint and `git diff --check` passed; the SQLite integration suite was not run locally because `pdo_sqlite` is unavailable.

@@ -212,3 +212,8 @@ Focused checks passed: PHP syntax lint for the touched PHP files, JavaScript syn
 ## Campaign editor follow-up — 2026-11-16
 
 Marketing campaign records can now be edited in place from the admin list with their current settings and include/exclude targets prefilled. Existing schedules are preserved for same-type edits, and active Secret Menu rules block incompatible campaign-type changes. Campaign, promo-code and collection forms share strict restaurant-timezone datetime validation and reject impossible or reversed ranges. Syntax checks passed; the SQLite regression remains unexecuted locally because `pdo_sqlite` is unavailable.
+
+
+## Delivery tariff configuration — 2026-11-16
+
+The protected site settings now expose a bounded delivery charge, so the existing free-delivery promotion works when a positive rate is configured. A zero rate remains free and the server remains authoritative. Focused integration assertions were added; PHP syntax and whitespace checks passed, while the SQLite HTTP assertions could not run locally without `pdo_sqlite`.
