@@ -19,25 +19,25 @@
     <g fill="#d0a968" fill-opacity=".72"><circle cx="80" cy="204" r="4"/><circle cx="434" cy="210" r="4"/><circle cx="270" cy="464" r="4"/></g>
   </g>
 
-  <g data-tp-zone="Суши-стойка" data-tp-photo="assets/generated/room-sushi-counter.webp" aria-label="Суши-стойка">
+  <g data-tp-zone="Суши-бар" data-tp-photo="assets/generated/room-sushi-counter.webp" aria-label="Суши-бар">
     <rect class="tp-zone-fill" data-tp-zone-hit="" x="510" y="38" width="412" height="202" rx="18"/>
-    <text class="tp-floor-label" x="535" y="69">Суши-стойка</text>
+    <text class="tp-floor-label" x="535" y="69">Суши-бар</text>
     <rect x="550" y="103" width="332" height="54" rx="13" fill="#31271a" stroke="#b9935c" stroke-opacity=".65"/>
     <path d="M569 117h294M569 143h294" stroke="#e0c187" stroke-opacity=".24"/>
     <text class="tp-floor-note" x="568" y="134">стойка шефа · иллюстративный план</text>
   </g>
 
-  <g data-tp-zone="Камерная комната" data-tp-photo="assets/generated/room-private-dining.webp" aria-label="Камерная комната">
+  <g data-tp-zone="Приватная комната" data-tp-photo="assets/generated/room-private-dining.webp" aria-label="Приватная комната">
     <rect class="tp-zone-fill" data-tp-zone-hit="" x="510" y="270" width="412" height="132" rx="18"/>
-    <text class="tp-floor-label" x="535" y="301">Камерная комната</text>
+    <text class="tp-floor-label" x="535" y="301">Приватная комната</text>
     <path d="M528 319h376" stroke="#e0c187" stroke-opacity=".1"/>
     <rect x="826" y="280" width="62" height="9" rx="4" fill="#8e2530" fill-opacity=".7"/>
   </g>
 
-  <g data-tp-zone="Зал дегустации" data-tp-photo="assets/generated/room-garden-terrace.webp" aria-label="Зал дегустации">
+  <g data-tp-zone="Летняя терраса" data-tp-photo="assets/generated/room-garden-terrace.webp" aria-label="Летняя терраса">
     <rect class="tp-zone-fill" data-tp-zone-hit="" x="510" y="432" width="412" height="90" rx="18"/>
-    <text class="tp-floor-label" x="535" y="464">Зал дегустации</text>
-    <text class="tp-floor-note" x="535" y="487">формат Omakase · доступность не проверяется</text>
+    <text class="tp-floor-label" x="535" y="464">Летняя терраса</text>
+    <text class="tp-floor-note" x="535" y="487">предпочтительная зона · наличие не проверяется</text>
     <path d="M840 454c17 7 27 20 28 42m-40-44c9 13 12 27 10 44" fill="none" stroke="#c6a269" stroke-opacity=".4" stroke-width="2"/>
   </g>
 
@@ -48,14 +48,14 @@
   <g data-tp-table="5" data-tp-zone="Основной зал" data-capacity="4"><rect class="tp-seat-shape" x="128" y="344" width="74" height="54" rx="18"/><text class="tp-seat-number" x="165" y="371">05</text></g>
   <g data-tp-table="6" data-tp-zone="Основной зал" data-capacity="2"><rect class="tp-seat-shape" x="282" y="344" width="74" height="54" rx="18"/><text class="tp-seat-number" x="319" y="371">06</text></g>
 
-  <g data-tp-table="7" data-tp-zone="Суши-стойка" data-capacity="1"><circle class="tp-seat-shape" cx="625" cy="199" r="18"/><text class="tp-seat-number" x="625" y="199">07</text></g>
-  <g data-tp-table="8" data-tp-zone="Суши-стойка" data-capacity="1"><circle class="tp-seat-shape" cx="716" cy="199" r="18"/><text class="tp-seat-number" x="716" y="199">08</text></g>
-  <g data-tp-table="9" data-tp-zone="Суши-стойка" data-capacity="1"><circle class="tp-seat-shape" cx="807" cy="199" r="18"/><text class="tp-seat-number" x="807" y="199">09</text></g>
+  <g data-tp-table="7" data-tp-zone="Суши-бар" data-capacity="1"><circle class="tp-seat-shape" cx="625" cy="199" r="18"/><text class="tp-seat-number" x="625" y="199">07</text></g>
+  <g data-tp-table="8" data-tp-zone="Суши-бар" data-capacity="1"><circle class="tp-seat-shape" cx="716" cy="199" r="18"/><text class="tp-seat-number" x="716" y="199">08</text></g>
+  <g data-tp-table="9" data-tp-zone="Суши-бар" data-capacity="1"><circle class="tp-seat-shape" cx="807" cy="199" r="18"/><text class="tp-seat-number" x="807" y="199">09</text></g>
 
-  <g data-tp-table="10" data-tp-zone="Камерная комната" data-capacity="4"><rect class="tp-seat-shape" x="603" y="325" width="74" height="52" rx="18"/><text class="tp-seat-number" x="640" y="351">10</text></g>
-  <g data-tp-table="11" data-tp-zone="Камерная комната" data-capacity="4"><rect class="tp-seat-shape" x="758" y="325" width="74" height="52" rx="18"/><text class="tp-seat-number" x="795" y="351">11</text></g>
-  <g data-tp-table="12" data-tp-zone="Зал дегустации" data-capacity="2"><rect class="tp-seat-shape" x="713" y="450" width="64" height="48" rx="16"/><text class="tp-seat-number" x="745" y="474">12</text></g>
-  <g data-tp-table="13" data-tp-zone="Зал дегустации" data-capacity="4"><rect class="tp-seat-shape" x="808" y="450" width="64" height="48" rx="16"/><text class="tp-seat-number" x="840" y="474">13</text></g>
+  <g data-tp-table="10" data-tp-zone="Приватная комната" data-capacity="4"><rect class="tp-seat-shape" x="603" y="325" width="74" height="52" rx="18"/><text class="tp-seat-number" x="640" y="351">10</text></g>
+  <g data-tp-table="11" data-tp-zone="Приватная комната" data-capacity="4"><rect class="tp-seat-shape" x="758" y="325" width="74" height="52" rx="18"/><text class="tp-seat-number" x="795" y="351">11</text></g>
+  <g data-tp-table="12" data-tp-zone="Летняя терраса" data-capacity="2"><rect class="tp-seat-shape" x="713" y="450" width="64" height="48" rx="16"/><text class="tp-seat-number" x="745" y="474">12</text></g>
+  <g data-tp-table="13" data-tp-zone="Летняя терраса" data-capacity="4"><rect class="tp-seat-shape" x="808" y="450" width="64" height="48" rx="16"/><text class="tp-seat-number" x="840" y="474">13</text></g>
 
   <g fill="#ba9154" fill-opacity=".36"><path d="M62 460c13-14 24-14 37 0-13 14-24 14-37 0Zm332-264c12-13 23-13 36 0-13 13-24 13-36 0Z"/><circle cx="78" cy="470" r="3"/><circle cx="419" cy="204" r="3"/></g>
 </svg>

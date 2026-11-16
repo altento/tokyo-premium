@@ -232,3 +232,9 @@ Omakase follow-up correction: the Pages route was opened in the in-app browser a
 ### Philosophy editorial grouping — 2026-11-16
 
 The philosophy page now presents its existing image and story beside the four chapter timeline on wide screens, with a two-column tablet layout and a single-column mobile flow. The timeline remains clearly labeled as fictional course history. PHP and static markup use matching section IDs and ARIA labels; the PHP templates linted, the static outline/unique-anchor check passed, and `premium.css` matches the generated Pages copy. The PHP/SQLite page render and full browser visual capture were not run in this focused pass.
+
+### Booking room vocabulary — 2026-11-16
+
+Unified room labels across the Space page, home and booking selectors, gallery, recommendation flow, SVG floorplan, and Pages output: `Основной зал`, `Суши-бар`, `Приватная комната`, `Летняя терраса`. Selecting a room in the booking form now updates the highlighted SVG zone and its photo; a room passed from the recommendation link is preselected in the static flow and PHP template. Older API labels are normalized for compatibility. The floorplan's existing table numbers remain stable, and server validation now accepts table 13.
+
+A focused static browser smoke at 390 px verified the terrace query handoff/photo, changing to the private room/photo, table 10 selection, and zero JavaScript page errors. PHP lint, JS syntax, static asset equality, SVG parsing/zone mapping and whitespace checks passed. PHP/SQLite endpoint integration was not rerun in this slice; no full suite was run.

@@ -384,7 +384,7 @@
         .slice(0, 3);
       const headline = doc.createElement('p');
       headline.className = 'tp-evening-summary';
-      const zoneByAtmosphere = { sushi: 'Суши-стойка', main: 'Основной зал', private: 'Камерная комната', omakase: 'Зал дегустации' };
+      const zoneByAtmosphere = { sushi: 'Суши-бар', main: 'Основной зал', private: 'Приватная комната', omakase: 'Суши-бар' };
       const zone = zoneByAtmosphere[state.atmosphere] || zoneByAtmosphere.main;
       safeText(headline, `Подбор для ${guestCount} гостей · предпочтительная зона: ${zone}.`);
       result.append(headline);
@@ -472,9 +472,9 @@
   function makeFallbackFloorplan(root, message) {
     const zones = [
       ['Основной зал', ['1', '2', '3', '4', '5', '6']],
-      ['Суши-стойка', ['7', '8', '9']],
-      ['Камерная комната', ['10', '11']],
-      ['Зал дегустации', ['12', '13']]
+      ['Суши-бар', ['7', '8', '9']],
+      ['Приватная комната', ['10', '11']],
+      ['Летняя терраса', ['12', '13']]
     ];
     const wrap = doc.createElement('div'); wrap.className = 'tp-floorplan-fallback';
     const note = doc.createElement('p'); note.className = 'tp-floorplan-note'; safeText(note, message || 'Выберите предпочтительную зону и стол. Доступность не проверяется.'); wrap.append(note);
@@ -509,8 +509,12 @@
       if (message) safeText(message, 'Параметры визита изменились. Выберите столик заново; доступность не проверяется.');
       if (formTableStatus) safeText(formTableStatus, 'Параметры изменились. Выберите стол заново или оставьте поле пустым.');
     };
-    ['date', 'time', 'guests', 'zone'].forEach(name => {
+    ['date', 'time', 'guests'].forEach(name => {
       form?.querySelector(`[name="${name}"]`)?.addEventListener('change', clearTablePreference);
+    });
+    zoneInput?.addEventListener('change', () => {
+      clearTablePreference();
+      applyZone(zoneInput.value, false);
     });
     const applyZone = (zone, announce = true) => {
       if (!zone) return;
@@ -593,7 +597,9 @@
         event.preventDefault(); applyZone(zoneHit.closest('[data-tp-zone]')?.dataset.tpZone);
       }
     });
-    const initialZone = zoneInput?.value || zoneInput?.selectedOptions?.[0]?.textContent?.trim();
+    const requestedZone = new URL(doc.location.href).searchParams.get('zone');
+    const hasRequestedZone = requestedZone && many('[data-tp-zone]', root).some(item => !item.hasAttribute('data-tp-table') && item.dataset.tpZone === requestedZone);
+    const initialZone = hasRequestedZone ? requestedZone : (zoneInput?.value || zoneInput?.selectedOptions?.[0]?.textContent?.trim());
     if (initialZone) applyZone(initialZone, false);
   }
 
