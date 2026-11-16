@@ -301,7 +301,11 @@ try {
  $editedSecretRule=$pdo->query("SELECT access_kind,required_value,starts_at FROM secret_menu_rules WHERE id=$secretRuleId")->fetch(PDO::FETCH_ASSOC);
  preg_match('~<p class="form-status error" role="alert">(.*?)</p>~s', $marketingHtml, $secretRuleErrorMatch);
  $secretRuleError = html_entity_decode(strip_tags($secretRuleErrorMatch[1] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
- check($status===200 && $editedSecretRule && $editedSecretRule['access_kind']==='tier' && $editedSecretRule['required_value']==='gold' && $editedSecretRule['starts_at']==='2026-11-16 15:00:00', 'admin can edit rule type and validates local schedule values (HTTP '.$status.'; row='.json_encode($editedSecretRule,JSON_UNESCAPED_UNICODE).'; error='.$secretRuleError.')');
+ preg_match('~<p class="booking-confirmation-notice" role="status">(.*?)</p>~s', $marketingHtml, $secretRuleNoticeMatch);
+ $secretRuleNotice = html_entity_decode(strip_tags($secretRuleNoticeMatch[1] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+ $campaignSecretRules = $pdo->prepare('SELECT id,access_kind,required_value,starts_at FROM secret_menu_rules WHERE campaign_id=? ORDER BY id');
+ $campaignSecretRules->execute([$secretCampaignId]);
+ check($status===200 && $editedSecretRule && $editedSecretRule['access_kind']==='tier' && $editedSecretRule['required_value']==='gold' && $editedSecretRule['starts_at']==='2026-11-16 15:00:00', 'admin can edit rule type and validates local schedule values (HTTP '.$status.'; target='.json_encode($editedSecretRule,JSON_UNESCAPED_UNICODE).'; campaign_rules='.json_encode($campaignSecretRules->fetchAll(PDO::FETCH_ASSOC),JSON_UNESCAPED_UNICODE).'; error='.$secretRuleError.'; notice='.$secretRuleNotice.')');
  $marketingCsrf=tokenFrom($marketingHtml);
  [$status,$marketingError]=request('/admin-marketing.php',['csrf'=>$marketingCsrf,'action'=>'secret-rule-save','id'=>(string)$secretRuleId,'campaign_id'=>(string)$secretCampaignId,'access_kind'=>'tier','required_value'=>'gold','starts_at'=>'2026-02-30T12:00','ends_at'=>'2027-01-01T00:00','active'=>'on']);
  check($status===200 && str_contains($marketingError,'корректные местные дату и время'), 'invalid calendar dates cannot be stored for Secret Menu rules');
