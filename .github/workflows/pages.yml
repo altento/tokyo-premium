@@ -91,6 +91,7 @@ jobs:
           test -s docs/account.html
           test -s docs/assets/food/03-nigiri-salmon.webp
           grep -q 'не зашифровано' docs/account.html
+          grep -q 'href="luxury-refinements.css"' docs/account.html
       - name: Run browser regression and visual QA
         run: |
           set -euo pipefail
