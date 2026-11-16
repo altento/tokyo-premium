@@ -1,10 +1,15 @@
-const applyBookingFormat = () => {
-  const format = new URLSearchParams(location.search).get('format');
-  const select = document.querySelector('#booking-format');
-  if (select && ['Начало', 'Сезонный', 'Премиальный'].includes(format || '')) select.value = format;
+const applyBookingContext = () => {
+  const params = new URLSearchParams(location.search);
+  const format = params.get('format');
+  const formatSelect = document.querySelector('#booking-format');
+  if (formatSelect && ['Начало', 'Сезонный', 'Премиальный'].includes(format || '')) formatSelect.value = format;
+
+  const zone = params.get('zone');
+  const zoneSelect = document.querySelector('#booking-zone');
+  if (zoneSelect && ['Основной зал', 'Суши-бар', 'Приватная комната', 'Летняя терраса'].includes(zone || '')) zoneSelect.value = zone;
 };
-applyBookingFormat();
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyBookingFormat, { once: true });
+applyBookingContext();
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyBookingContext, { once: true });
 
 document.addEventListener('submit', async event => {
   const form = event.target;

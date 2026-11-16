@@ -59,6 +59,7 @@ foreach ($routes as $route => $filename) {
         $slug = rawurldecode($match[1]);
         return preg_match('/^[a-z0-9][a-z0-9-]{1,50}$/', $slug) ? 'href="collection-' . $slug . '.html"' : 'href="offers.html"';
     }, $html) ?? $html;
+    $html = str_replace('href="pages.php?page=booking&amp;zone=', 'href="booking.html?zone=', $html);
     $html = preg_replace('/href="pages\.php\?page=booking&amp;format=([^"]*)"/', 'href="booking.html?format=$1"', $html) ?? $html;
     $html = preg_replace_callback('/href="pages\.php\?page=dish&amp;id=(\d+)"/', fn($m) => 'href="dish-'.$m[1].'.html"', $html) ?? $html;
     $html = preg_replace('/<a href="admin(?:-marketing)?\.php">(?:Управление сайтом|Администрирование|Marketing &amp; Loyalty)<\/a>/', '', $html) ?? $html;

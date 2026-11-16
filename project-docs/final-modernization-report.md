@@ -250,3 +250,7 @@ A focused static browser smoke at 390 px verified the terrace query handoff/phot
 ### Menu card refinement — 2026-11-16
 
 Adjusted menu photography to wider card proportions, reduced the mobile card's redundant navigation, and made the add control a 44×44 px accessible circle with a dish-specific screen-reader label. Fixed the Pages menu head so it loads the shared refinement stylesheet. Static Chromium smoke at 1440, 390 and 320 px found all 18 cards labeled, no horizontal overflow or page errors, the add action updated the cart count, and the image ratios followed the desktop/mobile layout. Screenshot: [390 px menu cards](visual-qa/menu-cards-mobile-390-2026-11-16.png). PHP template syntax passed; PHP/SQLite, the full catalogue browser flow, broad regression and hosted Pages were not retested in this accelerated slice.
+
+### Space-to-booking zone handoff — 2026-11-16
+
+Added a direct “Предпочесть эту зону в заявке” action to each of the four illustrative room cards. The chosen room is carried into the booking form in PHP and GitHub Pages; static export rewrites the route, and the Pages initializer accepts only the four known room labels while preserving the existing Omakase-format handoff. Links have a 44 px minimum touch height and visible keyboard focus. Focused checks passed for PHP syntax, JS syntax, all four exported links, valid and invalid query values, source/Pages CSS and JS parity, and diff whitespace. No full browser or regression suite was run for this small change.
