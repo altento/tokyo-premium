@@ -113,8 +113,13 @@ function request(string $path, array $fields = [], array $headers = []): array {
  return [(int)($m[1] ?? 0), (string)$body, $responseHeaders];
 }
 function adminPost(array $fields): array {
+ global $pdo, $dbPath;
  [$postedStatus] = request('/admin.php', $fields);
  if (in_array($postedStatus, [302,303], true)) {
+  // Admin writes run in a separate PHP worker; replace the test PDO before
+  // later assertions so a prior WAL read cannot mask the committed result.
+  unset($pdo);
+  $pdo = freshTestDatabase($dbPath);
   [$status,$body,$headers] = request('/admin.php');
   return [$status,$body,$headers,$postedStatus];
  }
