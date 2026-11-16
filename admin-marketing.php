@@ -13,7 +13,7 @@ $localDateTime = static function ($value): ?string {
     $date = DateTimeImmutable::createFromFormat('!Y-m-d\\TH:i', $raw, $zone);
     $errors = DateTimeImmutable::getLastErrors();
     if (!$date || ($errors !== false && ($errors['warning_count'] > 0 || $errors['error_count'] > 0)) || $date->format('Y-m-d\\TH:i') !== $raw) {
-        throw new DomainException('Укажите корректные местные дату и время действия правила.');
+        throw new DomainException('Укажите корректные местные дату и время.');
     }
     return $date->format('Y-m-d H:i:s');
 };
@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $giftDishRaw = trim((string)($_POST['gift_dish_id'] ?? ''));
             $giftDishId = $giftDishRaw === '' ? null : filter_var($giftDishRaw, FILTER_VALIDATE_INT);
             $giftQuantity = filter_var($_POST['gift_quantity'] ?? 0, FILTER_VALIDATE_INT);
-            $start = $dateValue($_POST['starts_at'] ?? ''); $end = $dateValue($_POST['ends_at'] ?? '');
+            $start = $localDateTime($_POST['starts_at'] ?? ''); $end = $localDateTime($_POST['ends_at'] ?? '');
             $timeStart = $dateValue($_POST['starts_time'] ?? ''); $timeEnd = $dateValue($_POST['ends_time'] ?? '');
             $image = (string)($_POST['image_url'] ?? 'assets/generated/room-main-hall.webp');
             $parseTargets = static function (string $raw, int $excluded) use ($pdo): array {
@@ -114,19 +114,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $maxPerUser = trim((string)($_POST['maximum_uses_per_user'] ?? ''));
             if (!preg_match('/^[A-Z0-9][A-Z0-9_-]{2,30}$/', $code) || !$campaignId || ($maxUses !== '' && (!ctype_digit($maxUses) || (int)$maxUses < 1)) || ($maxPerUser !== '' && (!ctype_digit($maxPerUser) || (int)$maxPerUser < 1))) throw new DomainException('Проверьте код и лимиты применений.');
             $campaign = $pdo->prepare('SELECT id FROM promotion_campaigns WHERE id=?'); $campaign->execute([$campaignId]); if (!$campaign->fetchColumn()) throw new DomainException('Выберите существующую кампанию.');
-            $start=$dateValue($_POST['starts_at']??''); $end=$dateValue($_POST['ends_at']??''); if ($start && $end && $end <= $start) throw new DomainException('Дата завершения должна быть позже начала.');
+            $start=$localDateTime($_POST['starts_at']??''); $end=$localDateTime($_POST['ends_at']??''); if ($start && $end && $end <= $start) throw new DomainException('Дата завершения должна быть позже начала.');
             $stmt=$pdo->prepare('INSERT INTO promo_codes(code,campaign_id,active,starts_at,ends_at,maximum_uses,maximum_uses_per_user,first_order_only) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(code) DO UPDATE SET campaign_id=excluded.campaign_id,active=excluded.active,starts_at=excluded.starts_at,ends_at=excluded.ends_at,maximum_uses=excluded.maximum_uses,maximum_uses_per_user=excluded.maximum_uses_per_user,first_order_only=excluded.first_order_only');
             $stmt->execute([$code,(int)$campaignId,isset($_POST['active'])?1:0,$start?:null,$end?:null,$maxUses===''?null:(int)$maxUses,$maxPerUser===''?null:(int)$maxPerUser,isset($_POST['first_order_only'])?1:0]);
             $notice='Промокод сохранён. Ограничения проверяются сервером при оформлении заказа.';
         } elseif ($action === 'collection-save') {
             $id=filter_var($_POST['id']??0,FILTER_VALIDATE_INT)?:0; $slug=strtolower(trim((string)($_POST['slug']??''))); $name=trim((string)($_POST['name']??'')); $description=trim((string)($_POST['description']??'')); $image=(string)($_POST['image_url']??'assets/generated/room-garden-terrace.webp'); $theme=(string)($_POST['theme_key']??'sakura');
             if (!preg_match('/^[a-z0-9][a-z0-9-]{1,50}$/',$slug)||$name===''||strlen($name)>100||strlen($description)>1200||!in_array($image,['assets/generated/room-main-hall.webp','assets/generated/room-garden-terrace.webp','assets/generated/tokyo-seasonal-omakase-v2.webp','assets/food/17-omakase-set.webp'],true)||!preg_match('/^[a-z0-9-]{2,24}$/',$theme)) throw new DomainException('Проверьте slug, название, тему и изображение коллекции.');
+            $collectionStart=$localDateTime($_POST['starts_at']??''); $collectionEnd=$localDateTime($_POST['ends_at']??''); if($collectionStart&&$collectionEnd&&$collectionEnd<=$collectionStart)throw new DomainException('Дата завершения должна быть позже начала.');
             $rawIds=trim((string)($_POST['dish_ids']??'')); $dishIds=$rawIds===''?[]:array_values(array_unique(array_filter(array_map('intval',preg_split('/\s*,\s*/',$rawIds)?:[]),static fn(int $v):bool=>$v>0)));
             if (count($dishIds)>20) throw new DomainException('Коллекция может содержать не более 20 блюд.');
             if ($dishIds) { $in=implode(',',array_fill(0,count($dishIds),'?')); $check=$pdo->prepare("SELECT COUNT(*) FROM dishes WHERE active=1 AND id IN ($in)"); $check->execute($dishIds); if ((int)$check->fetchColumn()!==count($dishIds)) throw new DomainException('В коллекцию можно добавлять только активные блюда.'); }
             $pdo->beginTransaction();
-            if ($id) { $stmt=$pdo->prepare('UPDATE seasonal_collections SET slug=?,name=?,description=?,image_url=?,theme_key=?,starts_at=?,ends_at=?,active=?,demo_only=1,sort_order=? WHERE id=?'); $stmt->execute([$slug,$name,$description,$image,$theme,$dateValue($_POST['starts_at']??'')?:null,$dateValue($_POST['ends_at']??'')?:null,isset($_POST['active'])?1:0,(int)($_POST['sort_order']??50),$id]); $collectionId=$id; }
-            else { $stmt=$pdo->prepare('INSERT INTO seasonal_collections(slug,name,description,image_url,theme_key,starts_at,ends_at,active,demo_only,sort_order) VALUES(?,?,?,?,?,?,?,?,1,?)'); $stmt->execute([$slug,$name,$description,$image,$theme,$dateValue($_POST['starts_at']??'')?:null,$dateValue($_POST['ends_at']??'')?:null,isset($_POST['active'])?1:0,(int)($_POST['sort_order']??50)]); $collectionId=(int)$pdo->lastInsertId(); }
+            if ($id) { $stmt=$pdo->prepare('UPDATE seasonal_collections SET slug=?,name=?,description=?,image_url=?,theme_key=?,starts_at=?,ends_at=?,active=?,demo_only=1,sort_order=? WHERE id=?'); $stmt->execute([$slug,$name,$description,$image,$theme,$collectionStart?:null,$collectionEnd?:null,isset($_POST['active'])?1:0,(int)($_POST['sort_order']??50),$id]); $collectionId=$id; }
+            else { $stmt=$pdo->prepare('INSERT INTO seasonal_collections(slug,name,description,image_url,theme_key,starts_at,ends_at,active,demo_only,sort_order) VALUES(?,?,?,?,?,?,?,?,1,?)'); $stmt->execute([$slug,$name,$description,$image,$theme,$collectionStart?:null,$collectionEnd?:null,isset($_POST['active'])?1:0,(int)($_POST['sort_order']??50)]); $collectionId=(int)$pdo->lastInsertId(); }
             $pdo->prepare('DELETE FROM seasonal_collection_items WHERE collection_id=?')->execute([$collectionId]); $insert=$pdo->prepare('INSERT INTO seasonal_collection_items(collection_id,dish_id,sort_order) VALUES(?,?,?)'); foreach($dishIds as $position=>$dishId)$insert->execute([$collectionId,$dishId,$position*10]); $pdo->commit(); $notice='Сезонная коллекция и состав сохранены.';
         } elseif ($action === 'collection-toggle') {
             $id=filter_var($_POST['id']??null,FILTER_VALIDATE_INT); if(!$id)throw new DomainException('Не найдена коллекция.'); $pdo->prepare('UPDATE seasonal_collections SET active=CASE active WHEN 1 THEN 0 ELSE 1 END WHERE id=?')->execute([$id]); $notice='Статус коллекции изменён.';

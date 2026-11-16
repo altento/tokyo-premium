@@ -211,4 +211,4 @@ Focused checks passed: PHP syntax lint for the touched PHP files, JavaScript syn
 
 ## Campaign editor follow-up — 2026-11-16
 
-Marketing campaign records can now be edited in place from the admin list with their current settings and include/exclude targets prefilled. Existing schedules are preserved for same-type edits, and active Secret Menu rules block incompatible campaign-type changes. Syntax checks passed; the SQLite regression remains unexecuted locally because `pdo_sqlite` is unavailable.
+Marketing campaign records can now be edited in place from the admin list with their current settings and include/exclude targets prefilled. Existing schedules are preserved for same-type edits, and active Secret Menu rules block incompatible campaign-type changes. Campaign, promo-code and collection forms share strict restaurant-timezone datetime validation and reject impossible or reversed ranges. Syntax checks passed; the SQLite regression remains unexecuted locally because `pdo_sqlite` is unavailable.
