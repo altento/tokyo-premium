@@ -381,3 +381,7 @@ The first static-only npm run test:motion exposed an outdated assertion for a 75
 - `npm run test:motion` passed in PHP and static modes: scene controls, keyboard interaction, reduced motion, image framing and eight responsive widths.
 - PHP/static hero captures at desktop and 390 px mobile are in `project-docs/visual-qa/home-hero-reference-2026-11-17/`; I inspected all four and compared the desktop framing with `design-references/01-home.png`.
 - This is a focused first-screen improvement; the remaining homepage sections have not been brought to full pixel parity with the reference.
+
+## 2026-11-17 order-history photo previews
+
+The PHP account query now joins order items to the current catalogue image while preserving saved order names, quantities, prices, and totals. The static browser demo resolves thumbnails from catalogue dish IDs and never trusts a persisted image URL. The focused static account regression passed with three sample records and verified a loaded catalogue photograph; `php -l account.php`, `node --check account-demo.js`, and `git diff --check` passed. Desktop (1440 px) and mobile (390 px) seeded account screenshots were inspected in `visual-qa/account-order-previews-2026-11-17/`. PHP browser rendering and public Pages publication were not exercised in this pass.

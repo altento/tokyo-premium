@@ -365,6 +365,11 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .account-order-heading strong{color:var(--gold);font-size:1.15rem}
 .account-order-meta{margin:6px 0 0;color:var(--muted);font-size:.9rem;overflow-wrap:anywhere}
 .account-order-card .order-item-details ul{padding-left:1.15rem;overflow-wrap:anywhere}
+.account-order-card--purchase{display:grid;grid-template-columns:76px minmax(0,1fr);align-items:start;gap:12px}
+.account-order-content,.demo-order-content{min-width:0}
+.account-order-preview{display:block;width:76px;aspect-ratio:1;object-fit:cover;border:1px solid rgba(202,165,107,.3);border-radius:7px;background:#100e0c}
+.account-demo-page .account-list article.account-demo-order{display:grid;grid-template-columns:72px minmax(0,1fr);align-items:start;gap:12px}
+.account-demo-order .account-order-preview{width:72px}
 @media(max-width:640px){.account-shell{margin:24px auto;padding-inline:14px}.account-card{padding:22px 18px}.account-welcome{align-items:flex-start;flex-direction:column}.account-order-card{padding:15px}.account-order-heading{align-items:flex-start}}
 
 .local-review-panel{width:min(1320px,calc(100% - 48px));margin:0 auto 72px;padding:30px;border:1px solid rgba(199,167,102,.38);background:linear-gradient(135deg,#15120f,#0e0d0c);color:#f3eadb}
@@ -581,6 +586,8 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .account-section-count{flex:none;color:#b9ab94;font-size:.65rem;white-space:nowrap}
 .account-dashboard .account-order-list{gap:9px}
 .account-dashboard .account-order-card{padding:14px 15px;border-radius:7px;background:rgba(255,255,255,.018)}
+.account-dashboard .account-order-card--purchase{grid-template-columns:72px minmax(0,1fr);gap:11px}
+.account-dashboard .account-order-card--purchase .account-order-preview{width:72px}
 .account-dashboard .account-order-heading{align-items:flex-start}
 .account-dashboard .account-order-heading>strong{font-size:1rem}
 .account-dashboard .account-order-meta{font-size:.75rem;line-height:1.55}
@@ -683,6 +690,10 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .account-favorites-overview-empty{margin:0;color:var(--muted);font-size:.78rem;line-height:1.55}
 .account-favorites-overview-empty[hidden]{display:none}
 @media(max-width:680px){
+  .account-dashboard .account-order-card--purchase{grid-template-columns:58px minmax(0,1fr);gap:9px;padding:11px}
+  .account-dashboard .account-order-card--purchase .account-order-preview{width:58px;border-radius:5px}
+  .account-demo-page .account-list article.account-demo-order{grid-template-columns:58px minmax(0,1fr);gap:9px;padding:12px}
+  .account-demo-order .account-order-preview{width:58px;border-radius:5px}
   .account-demo-page .account-favorites-overview{gap:12px;padding:16px 13px}
   .account-favorites-overview-heading{align-items:flex-start}
   .account-favorites-overview-heading h2{font-size:1.38rem}

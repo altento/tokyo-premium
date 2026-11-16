@@ -245,6 +245,7 @@ async function run(options = {}) {
     await page.locator('.dish-card [data-favorite]').first().click();
     await page.goto(base + '/account.php');
     check(await page.locator('#account-orders .account-order-card').count() > 0, 'authenticated account dashboard shows its saved order');
+    check(await page.locator('#account-orders .account-order-preview').first().evaluate(image => image.complete && image.naturalWidth > 0), 'server order history shows a loaded catalogue photograph');
     check(await page.locator('#account-browser-favorites-list .dish-card').count() > 0, 'authenticated dashboard renders browser-local favorites separately');
     const firstOrderDetails = page.locator('#account-orders .account-order-card details').first();
     if (await firstOrderDetails.count()) await firstOrderDetails.locator('summary').click();

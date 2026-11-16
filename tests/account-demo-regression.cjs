@@ -53,6 +53,8 @@ async function run() {
     assert.equal(await page.locator('#demo-favorites-preview .dish-card').count(), 3, 'dashboard surfaces the saved dishes without opening another tab');
     assert.ok(await page.locator('#demo-favorites-preview .dish-card img').first().evaluate(image => image.complete && image.naturalWidth > 0), 'dashboard favorite preview uses a loaded dish photograph');
     assert.equal(await page.locator('#demo-orders .account-demo-record-badge').count(), 3, 'every sample order is explicitly labeled');
+    assert.equal(await page.locator('#demo-orders .account-order-preview').count(), 3, 'sample order history uses catalogue thumbnails');
+    assert.ok(await page.locator('#demo-orders .account-order-preview').first().evaluate(image => image.complete && image.naturalWidth > 0), 'order preview resolves to an actual catalogue photograph');
     assert.equal(await page.locator('#demo-bookings .account-demo-record-badge').count(), 1, 'sample booking is explicitly labeled');
     assert.ok(await page.locator('#demo-orders .demo-order-items li').count() >= 5, 'order history shows item snapshots');
     assert.ok(await page.evaluate(() => JSON.parse(localStorage.getItem('tokyo-demo-orders') || '[]').every(order => order.subtotal === order.items.reduce((sum, item) => sum + item.lineTotal, 0))), 'sample totals agree with saved catalog item prices');

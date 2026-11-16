@@ -150,7 +150,7 @@ if (!empty($_SESSION['user_id'])) {
         if ($orders) {
             $ids = array_column($orders, 'id');
             $placeholders = implode(',', array_fill(0, count($ids), '?'));
-            $itemsQuery = $pdo->prepare("SELECT order_id,item_name,price,quantity FROM order_items WHERE order_id IN ($placeholders) ORDER BY id");
+            $itemsQuery = $pdo->prepare("SELECT oi.order_id,oi.dish_id,oi.item_name,oi.price,oi.quantity,COALESCE(d.image_url,'') AS image_url FROM order_items oi LEFT JOIN dishes d ON d.id=oi.dish_id WHERE oi.order_id IN ($placeholders) ORDER BY oi.id");
             $itemsQuery->execute($ids);
             $itemsByOrder = [];
             foreach ($itemsQuery->fetchAll() as $item) $itemsByOrder[$item['order_id']][] = $item;
@@ -279,14 +279,17 @@ header_html();
                 <div class="account-empty-state"><p>Заказы, оформленные после входа в аккаунт, появятся здесь.</p><a class="button secondary" href="menu.php">Перейти к меню ↗</a></div>
               <?php else: ?>
                 <div class="account-order-list">
-                  <?php foreach ($orders as $order): $orderStatus = (string)$order['status']; ?>
-                    <article class="account-order-card">
-                      <div class="account-order-heading"><span>Заказ №<?= (int)$order['id']?></span><strong><?=number_format((int)$order['total'],0,'.',' ')?> ₸</strong></div>
-                      <p class="account-order-meta"><span class="account-status-label"><?=e($orderStatusLabels[$orderStatus] ?? $orderStatus)?></span> · <?=$order['fulfillment']==='pickup'?'Самовывоз':'Доставка'?> · <?=e($order['created_at'])?></p>
-                      <details class="order-item-details">
-                        <summary>Состав заказа · <?=count($order['items'])?> <?=count($order['items'])===1?'позиция':'позиций'?></summary>
-                        <ul><?php foreach ($order['items'] as $item): ?><li><?=e($item['item_name'])?> · <?= (int)$item['quantity']?> × <?=number_format((int)$item['price'],0,'.',' ')?> ₸ = <?=number_format((int)$item['price']*(int)$item['quantity'],0,'.',' ')?> ₸</li><?php endforeach ?></ul>
-                      </details>
+                  <?php foreach ($orders as $order): $orderStatus = (string)$order['status']; $previewItem = null; foreach ($order['items'] as $orderItem) { if ($orderItem['image_url'] !== '') { $previewItem = $orderItem; break; } } ?>
+                    <article class="account-order-card account-order-card--purchase">
+                      <?php if ($previewItem): ?><img class="account-order-preview" src="<?=e($previewItem['image_url'])?>" alt="<?=e($previewItem['item_name'])?>" loading="lazy" decoding="async"><?php endif ?>
+                      <div class="account-order-content">
+                        <div class="account-order-heading"><span>Заказ №<?= (int)$order['id']?></span><strong><?=number_format((int)$order['total'],0,'.',' ')?> ₸</strong></div>
+                        <p class="account-order-meta"><span class="account-status-label"><?=e($orderStatusLabels[$orderStatus] ?? $orderStatus)?></span> · <?=$order['fulfillment']==='pickup'?'Самовывоз':'Доставка'?> · <?=e($order['created_at'])?></p>
+                        <details class="order-item-details">
+                          <summary>Состав заказа · <?=count($order['items'])?> <?=count($order['items'])===1?'позиция':'позиций'?></summary>
+                          <ul><?php foreach ($order['items'] as $item): ?><li><?=e($item['item_name'])?> · <?= (int)$item['quantity']?> × <?=number_format((int)$item['price'],0,'.',' ')?> ₸ = <?=number_format((int)$item['price']*(int)$item['quantity'],0,'.',' ')?> ₸</li><?php endforeach ?></ul>
+                        </details>
+                      </div>
                     </article>
                   <?php endforeach ?>
                 </div>
