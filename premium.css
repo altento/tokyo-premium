@@ -835,3 +835,5 @@ body.story-motion-gsap [data-story-reveal].story-visible img{animation:none}
 .about-page .about-source .source-copy .text-link{color:#e0bd7b}
 .about-page .about-source .source-images figcaption{color:#cbb896}
 @media(max-width:760px){.about-page .about-hero{background-position:61% center}.about-page .about-source{grid-template-columns:1fr}}
+.account-dashboard-hero:before{background-image:linear-gradient(90deg,rgba(12,11,9,.95) 0%,rgba(12,11,9,.83) 40%,rgba(12,11,9,.46) 76%,rgba(12,11,9,.28) 100%),url("assets/generated/contact-exterior.webp");background-position:center 48%}
+@media(max-width:900px){.account-dashboard-hero:before{background-image:linear-gradient(90deg,rgba(12,11,9,.96) 0%,rgba(12,11,9,.86) 58%,rgba(12,11,9,.62) 100%),url("assets/generated/contact-exterior.webp");background-position:58% center}}

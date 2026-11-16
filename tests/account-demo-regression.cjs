@@ -20,6 +20,11 @@ async function run() {
     await page.reload({ waitUntil: 'domcontentloaded' });
     assert.equal(await page.locator('#demo-orders .demo-order').count(), 0, 'new browser starts with an empty history');
     assert.equal(await page.locator('[data-account-demo-seed]').count(), 1, 'account offers an explicit sample-data action');
+    assert.equal(await page.locator('.account-overview h1').innerText(), 'Личный кабинет', 'account masthead keeps a stable page title');
+    assert.equal(await page.locator('.account-overview-lead').innerText(), 'Ваше пространство в Tokyo Premium', 'account masthead follows the approved subtitle hierarchy');
+    assert.equal(await page.locator('.account-overview-art img').getAttribute('src'), 'assets/generated/contact-exterior.webp', 'account uses an entrance photograph rather than a room photo');
+    assert.ok(await page.locator('.account-overview-art img').evaluate(image => image.complete && image.naturalWidth > 0), 'account entrance photograph is decoded');
+    assert.ok(await page.locator('.account-overview').evaluate(hero => hero.getBoundingClientRect().height <= 420), 'desktop account masthead remains a compact introduction');
 
     await page.locator('[data-account-demo-seed]').click();
     assert.equal(await page.locator('#demo-orders .demo-order').count(), 3, 'sample action adds three orders');
@@ -36,9 +41,12 @@ async function run() {
     await page.locator('[data-account-demo-seed]').click();
     assert.equal(await page.locator('#demo-orders .demo-order').count(), 3, 'repeating the action does not duplicate orders');
     assert.equal(await page.locator('#demo-bookings article').count(), 1, 'repeating the action does not duplicate the booking');
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
     await page.screenshot({ path: path.join(evidence, '11-account-seeded-desktop.jpg'), fullPage: true, type: 'jpeg', quality: 74 });
     await page.setViewportSize({ width: 390, height: 844 });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'seeded account has no mobile horizontal overflow');
+    assert.ok(await page.evaluate(() => { const title=document.querySelector('.account-overview h1').getBoundingClientRect(); const hero=document.querySelector('.account-overview').getBoundingClientRect(); return title.left >= hero.left && title.right <= hero.right && title.width > 0; }), 'account title stays inside the mobile masthead');
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
     await page.screenshot({ path: path.join(evidence, '11-account-seeded-mobile.jpg'), fullPage: true, type: 'jpeg', quality: 74 });
 
     await page.locator('[data-account-tab="settings"]').click();

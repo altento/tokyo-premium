@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   const addresses=$('#demo-addresses');if(addresses){const rows=read('tokyo-demo-addresses');addresses.innerHTML=rows.length?rows.map((v,i)=>'<article><div><strong>Адрес '+(i+1)+'</strong><p>'+esc(v)+'</p></div><button class="text-button" type="button" data-address-remove="'+i+'">Удалить</button></article>').join(''):'<p class="menu-note">Адресов пока нет.</p>'}
   const pform=$('[data-local-form="profile"]'),displayName=$('#demo-display-name');
-  if(pform||displayName){const profile=(()=>{try{return JSON.parse(localStorage.getItem('tokyo-demo-profile')||'{}')}catch{return{}}})();if(pform){pform.elements.name.value=profile.name||'';pform.elements.phone.value=profile.phone||''}if(displayName)displayName.textContent=profile.name||'Ваш профиль'}
+  if(pform||displayName){const profile=(()=>{try{return JSON.parse(localStorage.getItem('tokyo-demo-profile')||'{}')}catch{return{}}})();if(pform){pform.elements.name.value=profile.name||'';pform.elements.phone.value=profile.phone||''}if(displayName)displayName.textContent=profile.name?('Здравствуйте, '+profile.name+'.'):'История, избранное и привилегии в одном месте.'}
   const statNodes=$$('[data-account-stat]');
   if(statNodes.length){
    const ordersCount=read('tokyo-demo-orders').length,bookingsCount=read('tokyo-demo-bookings').length,favoritesCount=window.TokyoCart?.getFavorites().length||0,addressesCount=read('tokyo-demo-addresses').length;

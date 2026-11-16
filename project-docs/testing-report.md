@@ -271,3 +271,7 @@ Extended `tests/visual-fidelity-regression.cjs` to cover reviews, cart and accou
 ## 2026-11-16 philosophy reference refinement
 
 Compared the current static route with `design-references/05-philosophy.png`. The hero now uses the existing sakura entrance photograph; the story row follows copy → room photograph → fictional timeline; chef and ingredient sections use the dark editorial palette, while the warm quote strip stays light. `premium.css` and the Pages copy are synchronized. `npm run test:visual-fidelity` passed for the static philosophy route at 1440 px and 390 px: the hero asset loads, the heading remains within bounds, and there are no JavaScript/page errors or horizontal overflow. Full-page captures in `visual-qa/philosophy-refinement-2026-11-16/` were visually inspected beside the approved reference. This remains a focused single-page comparison; PHP browser mode, full suites, all-11 pixel parity, hosted CI and deployment were not checked in this pass.
+
+## 2026-11-16 account hero refinement
+
+Focused static browser regression: `npm run test:account-demo` passed at 1440 px and 390 px. It checked the stable account title/subtitle, loaded entrance photo, seeded local order/booking/favorites, duplicate prevention, clear-data behavior, mobile title bounds, and zero browser exceptions/overflow. Screenshots: `visual-qa/account-hero-refinement-2026-11-16/`. PHP browser rendering, broad suite, hosted CI, and public deployment were not run.

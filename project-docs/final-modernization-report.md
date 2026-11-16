@@ -297,3 +297,7 @@ The homepage reservation form now reveals contact fields only after the guest se
 ## 2026-11-16 philosophy visual pass
 
 A focused comparison against `design-references/05-philosophy.png` corrected the section background rhythm and image sequence: a sakura-lit entrance opens the page, the story text precedes the room photo and timeline, the chef and product sections are dark, and the cream band is reserved for the quote. The shared PHP/Pages stylesheet was synchronized. Static Playwright passed at desktop/mobile sizes and fresh screenshots were visually inspected. PHP rendering and broad regression were not repeated; remaining decorative and proportion differences are recorded in the visual QA index.
+
+## Latest focused delivery — 2026-11-16
+
+The static account page now has a compact entrance-led masthead, stable “Личный кабинет” heading, reference-aligned subtitle, and a clearer separation between its introduction and demo dashboard. The profile greeting remains editable through the browser-local profile form. The focused account regression passed at 1440 px and 390 px and saved fresh screenshots under `project-docs/visual-qa/account-hero-refinement-2026-11-16/`. Visual comparison found closer hero alignment, while the full dashboard still differs from `11-account.png`; this does not complete the broader Tokyo Premium 2.0 work. No PHP browser render, new public deployment, or full regression matrix was performed in this pass.
