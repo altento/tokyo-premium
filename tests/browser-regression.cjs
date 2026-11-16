@@ -380,7 +380,7 @@ async function run(options = {}) {
     await page.locator('[data-tp-table]').first().click();
     const tomorrow = await page.evaluate(() => { const d=new Date();d.setDate(d.getDate()+1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; });
     await page.locator('.booking-form [name="date"]').fill(tomorrow);
-    check(await page.locator('[name="table"]').inputValue() === '' && await page.locator('[data-tp-table="1"]').getAttribute('aria-pressed') === 'false', 'booking selection resets when visit date changes');
+    check(await page.locator('[name="table"]').inputValue() === '' && await page.locator('.tp-seat-plan [data-tp-table="1"]').getAttribute('aria-pressed') === 'false', 'booking selection resets when visit date changes');
     await page.goto(base + '/pages.php?page=omakase');
     await page.locator('.tier-card-featured a').click();
     check(await page.locator('#booking-format').inputValue() === 'Сезонный' && await page.evaluate(() => new URL(location.href).searchParams.get('format') === 'Сезонный'), 'PHP booking keeps the selected Omakase set in the shared format field');
