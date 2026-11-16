@@ -827,6 +827,7 @@ function commerce_can_access_secret(PDO $pdo, ?int $userId, string $code = '', b
 function commerce_secret_rule_matches(PDO $pdo, array $rule, ?int $userId, string $code, bool $isAdmin): bool
 {
     if (!commerce_campaign_is_active(['active'=>$rule['campaign_active'],'starts_at'=>$rule['campaign_start'],'ends_at'=>$rule['campaign_end'],'timezone'=>$rule['timezone'],'weekday_mask'=>$rule['weekday_mask'],'starts_time'=>$rule['starts_time'],'ends_time'=>$rule['ends_time']])) return false;
+    if (!commerce_date_window_is_active($rule['starts_at'] ?? null, $rule['ends_at'] ?? null, (string)($rule['timezone'] ?? 'Asia/Qyzylorda'))) return false;
     if ($rule['access_kind']==='role' && (($rule['required_value']==='admin' && $isAdmin) || ($rule['required_value']==='member' && $userId))) return true;
     if ($rule['access_kind']==='tier' && $userId) {
         $tier=commerce_user_tier($pdo,$userId);
