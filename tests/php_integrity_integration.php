@@ -274,6 +274,10 @@ function testDatabaseValue(string $path, string $sql, array $parameters=[]): mix
  $connection=freshTestDatabase($path); $query=$connection->prepare($sql); $query->execute($parameters); $value=$query->fetchColumn(); $query->closeCursor();
  return $value;
 }
+function testDatabaseRow(string $path, string $sql, array $parameters=[]): ?array {
+ $connection=freshTestDatabase($path); $query=$connection->prepare($sql); $query->execute($parameters); $value=$query->fetch(PDO::FETCH_ASSOC); $query->closeCursor();
+ return $value === false ? null : $value;
+}
 function setTestOrderStatus(string $path, int $orderId, string $status): void {
  commerce_set_order_status(freshTestDatabase($path), $orderId, $status);
 }
@@ -348,15 +352,15 @@ try {
  $csrf=tokenFrom($html);
  $save=['csrf'=>$csrf,'action'=>'dish-save','category'=>'rolls','name'=>'Тестовый ролл','description'=>'Описание для проверки','weight'=>'200 г','price'=>'3450','image_url'=>'assets/food/01-philadelphia.webp','sort_order'=>'99','active'=>'on'];
  [$status,$html,$headers,$postStatus]=adminPost($save); check($status===200 && $postStatus===302 && str_contains($html,'Блюдо добавлено в меню'), 'dish create uses PRG and accepts an existing local webp');
- $dish=(int)$pdo->query("SELECT id FROM dishes WHERE name='Тестовый ролл'")->fetchColumn(); check($dish>0, 'created dish persisted');
+ $dish=(int)testDatabaseValue($dbPath,'SELECT id FROM dishes WHERE name=?',['Тестовый ролл']); check($dish>0, 'created dish persisted');
  $csrf=tokenFrom($html);
  [$status,$html]=adminPost(['csrf'=>$csrf,'action'=>'admin-search','q'=>'тЕСТовый']);
  check($status===200 && str_contains($html,'Тестовый ролл') && str_contains($html,'Результаты по запросу'), 'admin search finds Russian text regardless of case');
  $csrf=tokenFrom($html); $edit=$save; $edit['id']=(string)$dish; $edit['description']='Обновлённое описание'; $edit['price']='3750'; $edit['image_url']='https://images.unsplash.com/photo-1?auto=format&fit=crop&w=800'; $edit['active']='on';
  [$status,$html]=adminPost($edit); check(str_contains($html,'Изменения блюда сохранены'), 'dish edit accepts approved HTTPS image');
- $row=$pdo->query('SELECT description,price,image_url FROM dishes WHERE id='.$dish)->fetch(PDO::FETCH_ASSOC); check($row['description']==='Обновлённое описание' && (int)$row['price']===3750 && str_starts_with($row['image_url'],'https://images.unsplash.com/'), 'description, price, image update persisted');
+ $row=testDatabaseRow($dbPath,'SELECT description,price,image_url FROM dishes WHERE id=?',[$dish]); check($row!==null && $row['description']==='Обновлённое описание' && (int)$row['price']===3750 && str_starts_with($row['image_url'],'https://images.unsplash.com/'), 'description, price, image update persisted');
  foreach (['/../bootstrap.php','//evil.example/x.webp','javascript:alert(1)','https://evil.example/x.webp','https://images.unsplash.com/../../x.webp'] as $bad) { $csrf=tokenFrom($html); $badSave=$edit; $badSave['csrf']=$csrf; $badSave['image_url']=$bad; [$status,$html]=request('/admin.php',$badSave); check(str_contains($html,'Проверьте название, категорию, цену и фото'), 'reject unsafe image: '.$bad); }
- $csrf=tokenFrom($html); $hide=$edit; $hide['csrf']=$csrf; unset($hide['active']); [$status,$html]=adminPost($hide); check(str_contains($html,'Изменения блюда сохранены'), 'dish can be hidden'); check((int)$pdo->query('SELECT active FROM dishes WHERE id='.$dish)->fetchColumn()===0, 'hidden flag persisted');
+ $csrf=tokenFrom($html); $hide=$edit; $hide['csrf']=$csrf; unset($hide['active']); [$status,$html]=adminPost($hide); check(str_contains($html,'Изменения блюда сохранены'), 'dish can be hidden'); check((int)testDatabaseValue($dbPath,'SELECT active FROM dishes WHERE id=?',[$dish])===0, 'hidden flag persisted');
  [$status,$json]=request('/api.php',['csrf'=>$csrf,'type'=>'order','name'=>'Тестовый гость','phone'=>'+77010000000','fulfillment'=>'pickup','items'=>json_encode([['id'=>$dish,'qty'=>1,'price'=>1]])]); check($status===422, 'hidden dish cannot be ordered');
  $csrf=tokenFrom($html); $edit['csrf']=$csrf; $edit['image_url']='assets/food/01-philadelphia.webp'; $edit['active']='on'; [$status,$html]=adminPost($edit); check(str_contains($html,'Изменения блюда сохранены'), 'dish can be reactivated'); $csrf=tokenFrom($html);
  $demoQuote=commerce_quote($pdo,[['id'=>$dish,'qty'=>2]],[],'DEMO10','pickup',null,commerce_actor_key(null,session_id())); check($demoQuote['ok']&&$demoQuote['discount_total']===750&&$demoQuote['total']===6750, 'server promo quote recalculates the current catalog price and cap');
