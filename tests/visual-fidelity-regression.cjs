@@ -138,12 +138,26 @@ async function visit(browser, base, route, mode, capture = false) {
     assert.equal(contactOrder, true, `${mode} contact summary, message panel and visit notes follow the reference order`);
   } else if (route.key === 'omakase') {
     const counts = await page.evaluate(() => ({
-      selectedStages: document.querySelectorAll('[data-tp-course]').length,
-      overviewCards: document.querySelectorAll('.omakase-course-grid .omakase-course-card').length,
-      loadedOverviewPhotos: [...document.querySelectorAll('.omakase-course-grid img')].filter(image => image.naturalWidth > 0).length
+      interactiveStages: document.querySelectorAll('[data-tp-course]').length,
+      stagePanels: document.querySelectorAll('[data-tp-course-panel]').length,
+      duplicateCourseGrid: Boolean(document.querySelector('.omakase-course-grid')),
+      heroHeight: document.querySelector('.omakase-hero')?.getBoundingClientRect().height ?? 0,
+      orderIsEditorial: (() => {
+        const philosophy = document.querySelector('.omakase-philosophy-strip');
+        const story = document.querySelector('.tp20-omakase-experience');
+        const tiers = document.querySelector('.experience-tiers')?.closest('.section');
+        const booking = document.querySelector('.omakase-reservation-band');
+        return Boolean(philosophy && story && tiers && booking
+          && philosophy.compareDocumentPosition(story) & Node.DOCUMENT_POSITION_FOLLOWING
+          && story.compareDocumentPosition(tiers) & Node.DOCUMENT_POSITION_FOLLOWING
+          && tiers.compareDocumentPosition(booking) & Node.DOCUMENT_POSITION_FOLLOWING);
+      })()
     }));
-    assert.equal(counts.overviewCards, counts.selectedStages, `${mode} overview and interactive course stages agree`);
-    assert.equal(counts.overviewCards, 5, `${mode} overview presents the five catalog-backed stages`);
+    assert.equal(counts.interactiveStages, 5, `${mode} Omakase presents five interactive catalog-backed stages`);
+    assert.equal(counts.stagePanels, 5, `${mode} each Omakase stage has a matching story panel`);
+    assert.equal(counts.duplicateCourseGrid, false, `${mode} Omakase does not repeat the same course photos in a second grid`);
+    assert.equal(counts.orderIsEditorial, true, `${mode} Omakase follows philosophy, interactive journey, tiers and booking order`);
+    assert.ok(counts.heroHeight <= 370, `${mode} Omakase desktop hero stays close to the reference height (${counts.heroHeight}px)`);
     const hero = await page.locator('.omakase-hero .editorial-hero-photo').evaluate(image => ({
       transform: getComputedStyle(image).transform,
       source: image.currentSrc,
@@ -154,7 +168,6 @@ async function visit(browser, base, route, mode, capture = false) {
     await page.setViewportSize({ width: 390, height: 844 });
     const mobileObjectPosition = await page.locator('.omakase-hero .editorial-hero-photo').evaluate(image => getComputedStyle(image).objectPosition);
     assert.equal(mobileObjectPosition, '100% 50%', `${mode} mobile Omakase crop keeps the chef in frame`);
-    assert.equal(counts.loadedOverviewPhotos, 5, `${mode} all overview photographs load`);
   }
 
   assert.deepEqual(errors, [], `${mode} ${route.key} has no JavaScript or console errors`);
