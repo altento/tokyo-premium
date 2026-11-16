@@ -151,6 +151,9 @@
 .account-dashboard .account-demo-panel{min-height:330px;border-color:rgba(199,167,102,.34);background:linear-gradient(145deg,#17130f,#100e0c)}
 .account-dashboard .account-demo-panel[hidden]{display:none}
 .account-dashboard .account-demo-panel h2{font:500 clamp(1.65rem,2.4vw,2.15rem)/1.15 'Playfair Display',Georgia,serif}
+.account-demo-page .account-empty-state,.account-dashboard .account-empty-state{width:100%;padding:18px;border:1px solid rgba(202,165,107,.2);border-radius:8px;background:linear-gradient(130deg,rgba(31,24,18,.85),rgba(16,14,12,.94))}
+.account-demo-page .account-empty-state p,.account-dashboard .account-empty-state p{max-width:42ch}
+.account-demo-page .account-empty-state .button,.account-dashboard .account-empty-state .button{min-height:40px}
 .account-dashboard .account-list article{align-items:center;padding:17px 18px;border-radius:8px;background:linear-gradient(100deg,#1a1511,#11100e)}
 .account-dashboard .account-list article strong{color:#f3d9a6}.account-dashboard .account-list article>div{min-width:0}
 .account-dashboard .demo-order-items{margin:12px 0;padding:10px 14px;border-left:1px solid rgba(199,167,102,.45);color:#c9bba5;font-size:.8rem;line-height:1.7}

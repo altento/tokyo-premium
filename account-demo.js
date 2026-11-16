@@ -3,6 +3,9 @@ document.addEventListener('DOMContentLoaded',()=>{
  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const read=key=>{try{return JSON.parse(localStorage.getItem(key)||'[]')}catch{return[]}};
  const writeStatus=(form,msg)=>{const s=$('.form-status',form);if(s){s.textContent=msg;s.className='form-status success'}};
+ const staticMode=Boolean($('.account-demo-page'));
+ const menuHref=staticMode?'menu.html':'menu.php';
+ const bookingHref=staticMode?'booking.html':'pages.php?page=booking';
  function render(){
   const orders=$('#demo-orders'),bookings=$('#demo-bookings');
   if(orders){
@@ -21,17 +24,17 @@ document.addEventListener('DOMContentLoaded',()=>{
     const repeatData=JSON.stringify({items,customSets:repeatSets});
     const lineCount=items.length+customSets.length;
     return '<article class="demo-order"><div><small>'+esc(row.orderId||'Демо-заказ')+'</small><strong>'+esc(row.date)+'</strong><p>'+esc(row.name)+' · '+Number(row.count||0)+' позиций · '+Number(row.subtotal??row.total??0).toLocaleString('ru-RU')+' ₸</p><p>'+esc(row.fulfillment==='pickup'?'Самовывоз':'Демо-доставка')+'</p>'+(allLines?'<ul class="demo-order-items">'+allLines+'</ul>':'<p class="menu-note">Состав старого заказа недоступен.</p>')+(lineCount?'<button class="button secondary" type="button" data-repeat-order="'+esc(repeatData)+'">Собрать заказ снова</button>':'')+'</div></article>';
-   }).join(''):'<p class="menu-note">Пока заказов нет.</p>'
+   }).join(''):'<div class="account-empty-state"><p>Здесь появятся локальные учебные заказы после демонстрационного оформления. Сейчас история пуста.</p><a class="button secondary" href="'+menuHref+'">Открыть меню ↗</a></div>'
   }
-  if(bookings){const rows=read('tokyo-demo-bookings');bookings.innerHTML=rows.length?rows.map(row=>'<article><div><strong>'+esc(row.date)+' · '+esc(row.time)+'</strong><p>'+esc(row.name)+' · гостей: '+esc(row.guests)+' · '+esc(row.zone||'Зона не выбрана')+(row.format?' · формат Omakase «'+esc(row.format)+'»':'')+(row.table?' · стол '+esc(row.table):'')+'</p></div></article>').join(''):'<p class="menu-note">Пока запросов на бронь нет.</p>'}
+  if(bookings){const rows=read('tokyo-demo-bookings');bookings.innerHTML=rows.length?rows.map(row=>'<article><div><strong>'+esc(row.date)+' · '+esc(row.time)+'</strong><p>'+esc(row.name)+' · гостей: '+esc(row.guests)+' · '+esc(row.zone||'Зона не выбрана')+(row.format?' · формат Omakase «'+esc(row.format)+'»':'')+(row.table?' · стол '+esc(row.table):'')+'</p></div></article>').join(''):'<div class="account-empty-state"><p>Запросов на бронирование пока нет. Выберите дату и предпочтительную зону; демоверсия не резервирует стол.</p><a class="button secondary" href="'+bookingHref+'">Выбрать дату и зону ↗</a></div>'}
   const favs=$('#demo-favorites'),phpFavs=$('#account-browser-favorites-list'),empty=$('#demo-favorites-empty'),phpEmpty=$('#account-browser-favorites-empty');
   if(favs||phpFavs){
    const ids=window.TokyoCart?.getFavorites()||[],dishes=window.DISHES||[];
    const saved=ids.map(id=>dishes.find(d=>Number(d.id)===Number(id))).filter(Boolean);
-   const staticMode=Boolean($('.account-demo-page'));
    const cards=saved.map(d=>'<article class="dish-card"><a class="editorial-product-image" href="'+(staticMode?'dish-'+Number(d.id)+'.html':'pages.php?page=dish&amp;id='+Number(d.id))+'"><img src="'+esc(d.image_url)+'" alt="" loading="lazy"></a><div class="dish-meta"><small>'+esc(d.category_name)+' · '+esc(d.weight)+'</small><button class="favorite-btn" type="button" data-favorite="'+Number(d.id)+'" aria-label="Убрать '+esc(d.name)+' из избранного">♥</button><h3>'+esc(d.name)+'</h3><p>'+esc(d.description)+'</p><div class="dish-bottom"><span class="dish-price">'+Number(d.price).toLocaleString('ru-RU')+' ₸</span><button class="add-to-cart" type="button" data-id="'+Number(d.id)+'">Добавить +</button></div></div></article>').join('');
-   if(favs){favs.innerHTML=cards;if(empty)empty.hidden=saved.length>0}
-   if(phpFavs){phpFavs.innerHTML=cards;if(phpEmpty)phpEmpty.hidden=saved.length>0}
+   const emptyFavorites='Пока нет сохранённых блюд. Отметьте понравившееся в меню — оно появится здесь. <a class="text-link" href="'+menuHref+'">Посмотреть меню ↗</a>';
+   if(favs){favs.innerHTML=cards;if(empty){empty.hidden=saved.length>0;if(!saved.length)empty.innerHTML=emptyFavorites}}
+   if(phpFavs){phpFavs.innerHTML=cards;if(phpEmpty){phpEmpty.hidden=saved.length>0;const phpFavoritesEmpty='Пока нет сохранённых блюд. Отметьте понравившееся в меню — оно появится здесь. <a class="text-link" href="menu.php">Посмотреть меню ↗</a>';if(!saved.length)phpEmpty.innerHTML=phpFavoritesEmpty}}
    const count=$('#account-favorite-count');if(count)count.textContent=String(saved.length);
   }
   const addresses=$('#demo-addresses');if(addresses){const rows=read('tokyo-demo-addresses');addresses.innerHTML=rows.length?rows.map((v,i)=>'<article><div><strong>Адрес '+(i+1)+'</strong><p>'+esc(v)+'</p></div><button class="text-button" type="button" data-address-remove="'+i+'">Удалить</button></article>').join(''):'<p class="menu-note">Адресов пока нет.</p>'}

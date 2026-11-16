@@ -32,6 +32,8 @@ The same focused change adds HTTP regression assertions for admin create/reorder
 
 The Secret Menu follow-up adds focused assertions for rule creation/editing, schedule enforcement (unscheduled, future-start and expired rules), date validation and disabling. They are included in the integration file but were not executed locally because `pdo_sqlite` is unavailable. PHP syntax lint is the local verification for those handlers.
 
+For the static account empty-state improvement, one focused Chromium run checked the menu, booking and favorites empty-state links at desktop and mobile widths. Targets were correct, page width matched the 390 px viewport, and no page errors occurred. The full responsive, account, PHP integration and hosted suites were not rerun.
+
 ## Visual inspection performed
 
 Full-page browser captures were inspected for the populated cart on desktop and mobile, the Tokyo set builder, offers, static account/Privilege, and the 320 px booking heading. The single active campaign card was changed from a narrow third-column card into a centered editorial feature. The set in the cart uses a collage of the actual selected dish photos; it does not invent a final dish image.
