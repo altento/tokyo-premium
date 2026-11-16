@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-16 route-specific social previews
+
+PHP routes and the checked-in GitHub Pages export now emit route-specific Open Graph and Twitter preview images. The existing 11-route static visual regression asserts both metadata values for every route and passed in static mode. PHP syntax and JavaScript syntax checks passed. PHP rendering/export could not be run locally because this PHP CLI lacks `pdo_sqlite`; hosted CI and public deployment remain unverified for this patch.
+
 Updated 2026-11-13
 
 ## Local verification completed

@@ -7,7 +7,7 @@ $query->execute([$slug]);
 $collection = $query->fetch();
 if (!$collection) { http_response_code(404); $collection = null; $items = []; }
 else { $itemsQuery = db()->prepare('SELECT d.*,c.name AS category_name FROM seasonal_collection_items ci JOIN dishes d ON d.id=ci.dish_id JOIN categories c ON c.slug=d.category WHERE ci.collection_id=? AND d.active=1 ORDER BY ci.sort_order,d.sort_order'); $itemsQuery->execute([$collection['id']]); $items=commerce_filter_secret_menu_dishes(db(),$itemsQuery->fetchAll(),isset($_SESSION['user_id'])?(int)$_SESSION['user_id']:null,(string)($_SESSION['secret_menu_code']??''),!empty($_SESSION['admin_id'])); }
-page_start(($collection['name'] ?? 'Коллекция не найдена') . ' — Tokyo Premium', $collection ? (string)$collection['description'] : 'Запрошенная сезонная коллекция недоступна.');
+page_start(($collection['name'] ?? 'Коллекция не найдена') . ' — Tokyo Premium', $collection ? (string)$collection['description'] : 'Запрошенная сезонная коллекция недоступна.', $collection ? (string)($collection['image_url'] ?: 'assets/generated/tokyo-seasonal-omakase-v2.webp') : 'assets/generated/tokyo-seasonal-omakase-v2.webp');
 header_html('offers');
 ?>
 <main class="tp20-page tp20-collection-page">

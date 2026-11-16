@@ -3,7 +3,7 @@ require __DIR__.'/bootstrap.php';
 $reviews=db()->query("SELECT id,guest_name,rating,body,theme,created_at FROM reviews WHERE status='published' ORDER BY id DESC LIMIT 60")->fetchAll();
 $average=$reviews?array_sum(array_column($reviews,'rating'))/count($reviews):0;
 $photoById=[1=>'03-nigiri-salmon.webp',2=>'18-hanami-set.webp',3=>'19-matcha-tiramisu.webp',4=>'16-eel-donburi.webp'];
-page_start('Отзывы — Tokyo Premium','Вымышленные истории для учебной концепции Tokyo Premium и форма демонстрационного отзыва.');
+page_start('Отзывы — Tokyo Premium','Вымышленные истории для учебной концепции Tokyo Premium и форма демонстрационного отзыва.','assets/generated/restaurant-interior.webp');
 header_html();
 ?>
 <main class="reviews-page editorial-page">

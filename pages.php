@@ -30,7 +30,16 @@ function ep_card(array $d,string $label=''): void { ?>
  'cart'=>['Корзина — Tokyo Premium','Демо-корзина с учебными блюдами Tokyo Premium.'],
  default=>['Tokyo Premium','Страница учебной концепции японского ресторана.']
 };
-page_start($metaTitle,$metaDescription);
+$metaImage = match($view) {
+ 'dish' => (string)($detailDish['image_url'] ?? 'assets/generated/home-hero-salmon-nigiri-v3.webp'),
+ 'omakase' => 'assets/generated/omakase-chef-panorama-1920.webp',
+ 'gallery' => 'assets/generated/room-main-hall.webp',
+ 'booking' => 'assets/generated/restaurant-interior.webp',
+ 'contacts' => 'assets/generated/contact-exterior.webp',
+ 'cart' => 'assets/food/17-omakase-set.webp',
+ default => 'assets/generated/home-hero-salmon-nigiri-v3.webp'
+};
+page_start($metaTitle,$metaDescription,$metaImage);
 header_html($view);
 ?>
 <main class="editorial-page">

@@ -1,6 +1,6 @@
 <?php
 require __DIR__.'/bootstrap.php';
-page_start('Меню — Tokyo Premium','Японское меню Tokyo Premium в Астане: закуски, суши, сеты омакасе, горячие блюда и десерты.');
+page_start('Меню — Tokyo Premium','Японское меню Tokyo Premium в Астане: закуски, суши, сеты омакасе, горячие блюда и десерты.','assets/generated/menu-hero-sushi-assortment-v1.webp');
 header_html('menu');
 $all=dishes();
 $searchMetadata=[];

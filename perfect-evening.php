@@ -2,7 +2,7 @@
 declare(strict_types=1);
 require __DIR__ . '/bootstrap.php';
 $catalog = dishes();
-page_start('Идеальный вечер — Tokyo Premium', 'Подбор блюд и формата вечера по вашим предпочтениям, бюджету и числу гостей. Правила рекомендаций прозрачны.');
+page_start('Идеальный вечер — Tokyo Premium', 'Подбор блюд и формата вечера по вашим предпочтениям, бюджету и числу гостей. Правила рекомендаций прозрачны.', 'assets/generated/room-main-hall.webp');
 header_html('experience');
 ?>
 <main class="tp20-page tp20-evening-page">

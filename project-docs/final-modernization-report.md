@@ -301,3 +301,7 @@ A focused comparison against `design-references/05-philosophy.png` corrected the
 ## Latest focused delivery — 2026-11-16
 
 The static account page now has a compact entrance-led masthead, stable “Личный кабинет” heading, reference-aligned subtitle, and a clearer separation between its introduction and demo dashboard. The profile greeting remains editable through the browser-local profile form. The focused account regression passed at 1440 px and 390 px and saved fresh screenshots under `project-docs/visual-qa/account-hero-refinement-2026-11-16/`. Visual comparison found closer hero alignment, while the full dashboard still differs from `11-account.png`; this does not complete the broader Tokyo Premium 2.0 work. No PHP browser render, new public deployment, or full regression matrix was performed in this pass.
+
+## 2026-11-16 route-specific social previews
+
+PHP routes and the checked-in GitHub Pages export now emit route-specific Open Graph and Twitter preview images. The existing 11-route static visual regression asserts both metadata values and passed in static mode. PHP/JavaScript syntax checks passed. This focused metadata fix does not close the remaining full visual-fidelity, PHP runtime, hosted CI or publication work.

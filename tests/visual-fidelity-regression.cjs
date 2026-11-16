@@ -11,17 +11,17 @@ const evidenceDir = path.resolve(process.env.TOKYO_VISUAL_FIDELITY_DIR || path.j
 fs.mkdirSync(evidenceDir, { recursive: true });
 
 const routes = [
-  { key: 'home', php: '/', static: '/index.html', width: 1440 },
-  { key: 'menu', php: '/menu.php', static: '/menu.html', width: 1440 },
-  { key: 'dish', php: '/pages.php?page=dish&id=3', static: '/dish-3.html', width: 1440 },
-  { key: 'philosophy', php: '/about.php', static: '/about.html', width: 1440 },
-  { key: 'space', php: '/pages.php?page=gallery', static: '/gallery.html', width: 1440 },
-  { key: 'booking', php: '/pages.php?page=booking', static: '/booking.html', width: 1440 },
-  { key: 'contacts', php: '/pages.php?page=contacts', static: '/contacts.html', width: 1440 },
-  { key: 'omakase', php: '/pages.php?page=omakase', static: '/omakase.html', width: 1440 },
-  { key: 'reviews', php: '/reviews.php', static: '/reviews.html', width: 1440 },
-  { key: 'cart', php: '/pages.php?page=cart', static: '/cart.html', width: 1440 },
-  { key: 'account', php: '/account.php', static: '/account.html', width: 1440 }
+  { key: 'home', php: '/', static: '/index.html', width: 1440, ogImage: 'assets/generated/home-hero-salmon-nigiri-v3.webp' },
+  { key: 'menu', php: '/menu.php', static: '/menu.html', width: 1440, ogImage: 'assets/generated/menu-hero-sushi-assortment-v1.webp' },
+  { key: 'dish', php: '/pages.php?page=dish&id=3', static: '/dish-3.html', width: 1440, ogImage: 'assets/food/03-nigiri-salmon.webp' },
+  { key: 'philosophy', php: '/about.php', static: '/about.html', width: 1440, ogImage: 'assets/generated/contact-exterior.webp' },
+  { key: 'space', php: '/pages.php?page=gallery', static: '/gallery.html', width: 1440, ogImage: 'assets/generated/room-main-hall.webp' },
+  { key: 'booking', php: '/pages.php?page=booking', static: '/booking.html', width: 1440, ogImage: 'assets/generated/restaurant-interior.webp' },
+  { key: 'contacts', php: '/pages.php?page=contacts', static: '/contacts.html', width: 1440, ogImage: 'assets/generated/contact-exterior.webp' },
+  { key: 'omakase', php: '/pages.php?page=omakase', static: '/omakase.html', width: 1440, ogImage: 'assets/generated/omakase-chef-panorama-1920.webp' },
+  { key: 'reviews', php: '/reviews.php', static: '/reviews.html', width: 1440, ogImage: 'assets/generated/restaurant-interior.webp' },
+  { key: 'cart', php: '/pages.php?page=cart', static: '/cart.html', width: 1440, ogImage: 'assets/food/17-omakase-set.webp' },
+  { key: 'account', php: '/account.php', static: '/account.html', width: 1440, ogImage: 'assets/generated/contact-exterior.webp' }
 ];
 
 const requestedRoutes = (process.env.TOKYO_VISUAL_ROUTES || '').split(',').map(value => value.trim()).filter(Boolean);
@@ -39,6 +39,8 @@ async function visit(browser, base, route, mode, capture = false) {
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   const response = await page.goto(`${base}${route[mode]}`, { waitUntil: 'networkidle' });
   assert.equal(response?.status(), 200, `${mode} ${route.key} returns 200`);
+  assert.equal(await page.locator('meta[property="og:image"]').getAttribute('content'), route.ogImage, `${mode} ${route.key} exposes its own social image`);
+  assert.equal(await page.locator('meta[name="twitter:image"]').getAttribute('content'), route.ogImage, `${mode} ${route.key} keeps Twitter image in sync`);
   await page.addStyleTag({ content: 'html{scroll-behavior:auto!important}' });
   await page.evaluate(() => document.fonts.ready);
   await page.evaluate(async () => {

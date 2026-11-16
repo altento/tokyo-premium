@@ -180,7 +180,7 @@ $orderStatusLabels = [
 $orderCount = count($orders);
 $bookingCount = count($bookings);
 
-page_start('Личный кабинет — Tokyo Premium', 'Ваши заказы и бронирования Tokyo Premium.');
+page_start('Личный кабинет — Tokyo Premium', 'Ваши заказы и бронирования Tokyo Premium.', 'assets/generated/contact-exterior.webp');
 header_html();
 ?>
 <main class="admin-shell account-shell account-dashboard">
