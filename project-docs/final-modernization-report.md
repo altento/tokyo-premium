@@ -165,3 +165,7 @@ The four space cards now match the reference's Sushi Bar, Main Hall, Private Roo
 ## Omakase style delivery fix — 2026-11-16
 
 `luxury-refinements.css` was present and copied by the static exporter but missing from the shared PHP page head, so the Omakase-only mirrored hero and several targeted refinements were not reaching users. The shared head now links the file; the static Omakase page was updated for local route QA. Its captured desktop hero now places the chef on the right with copy space on the left, and all five mobile course tabs display in a grid. The two-width static check passed. A fresh full Pages export and PHP browser render remain pending because this runtime cannot initialize PDO SQLite; this does not claim that the site was deployed.
+
+## 2026-11-16 Omakase compact hero
+
+`omakase-compact-hero-2026-11-16/` contains desktop and 320 px full-page captures, focused hero captures, and a comparison against `design-references/04-omakase.png`. The desktop hero is 460 px high and the 320 px hero is 449 px; title/copy bounds fit, five course tabs remain visible, the mirrored chef image is active, and a focused static-browser check reported HTTP 200 with no errors, failed requests, or horizontal overflow. The complete lower page remains an adaptation of the concept. PHP browser rendering, a full export, broad suite, hosted CI, and public deployment were not run.

@@ -215,3 +215,7 @@ One static route check passed at 1440 px and 390 px. It verified the four refere
 ## 2026-11-16 Omakase style delivery fix
 
 One static Omakase route check passed at 1440 px and 390 px. It verified that `luxury-refinements.css` returns HTTP 200, the hero image receives its horizontal mirror transform, all five tabs fit at mobile width, and the document has no browser errors or horizontal overflow. `php -l bootstrap.php` passed. No broad suite, full Pages re-export, PHP browser render, hosted CI or deployment was run.
+
+## 2026-11-16 Omakase compact hero
+
+`omakase-compact-hero-2026-11-16/` contains desktop and 320 px full-page captures, focused hero captures, and a comparison against `design-references/04-omakase.png`. The desktop hero is 460 px high and the 320 px hero is 449 px; title/copy bounds fit, five course tabs remain visible, the mirrored chef image is active, and a focused static-browser check reported HTTP 200 with no errors, failed requests, or horizontal overflow. The complete lower page remains an adaptation of the concept. PHP browser rendering, a full export, broad suite, hosted CI, and public deployment were not run.

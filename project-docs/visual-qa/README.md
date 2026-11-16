@@ -127,3 +127,7 @@ The existing original chef photograph is now mirrored only in the Omakase hero, 
 ## 2026-11-16 Omakase refinement stylesheet fix
 
 `omakase-refinement-css-2026-11-16/` records a shared-template omission: `luxury-refinements.css` was copied by the exporter but not linked by PHP pages. The shared head now loads it; the current static Omakase route also links it pending a database-backed full re-export. Focused static checks at 1440/390 px confirm the chef-facing hero treatment, all five mobile course tabs, HTTP 200 stylesheet load, no browser errors and no horizontal overflow. See the comparison note for limits.
+
+## 2026-11-16 Omakase compact hero
+
+`omakase-compact-hero-2026-11-16/` contains desktop and 320 px full-page captures, focused hero captures, and a comparison against `design-references/04-omakase.png`. The desktop hero is 460 px high and the 320 px hero is 449 px; title/copy bounds fit, five course tabs remain visible, the mirrored chef image is active, and a focused static-browser check reported HTTP 200 with no errors, failed requests, or horizontal overflow. The complete lower page remains an adaptation of the concept. PHP browser rendering, a full export, broad suite, hosted CI, and public deployment were not run.
