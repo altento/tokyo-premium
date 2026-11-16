@@ -532,7 +532,7 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 /* Tokyo Premium account dashboard — scoped to account pages only. */
 .account-dashboard.account-shell{max-width:1400px;margin:clamp(24px,4vw,58px) auto;padding-inline:clamp(12px,2.4vw,34px)}
 .account-dashboard .account-dashboard-card{padding:clamp(18px,2.8vw,38px);border-radius:14px;background:radial-gradient(ellipse at 88% 0,rgba(111,43,24,.16),transparent 40%),linear-gradient(145deg,#171411,#0c0b09 72%);overflow:visible}
-.account-dashboard-hero{position:relative;isolation:isolate;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;min-height:clamp(250px,23vw,310px);margin:-8px -8px 4px;padding:clamp(24px,3vw,38px) clamp(20px,3vw,38px);overflow:hidden;border:1px solid rgba(202,165,107,.28);border-radius:10px;background:#100e0c;border-bottom:1px solid var(--hairline)}
+.account-dashboard-hero{position:relative;isolation:isolate;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;min-height:clamp(230px,19vw,280px);margin:-8px -8px 4px;padding:clamp(24px,3vw,38px) clamp(20px,3vw,38px);overflow:hidden;border:1px solid rgba(202,165,107,.28);border-radius:10px;background:#100e0c;border-bottom:1px solid var(--hairline)}
 .account-dashboard-hero:before{position:absolute;z-index:0;inset:0;content:"";background-image:linear-gradient(90deg,rgba(12,11,9,.97) 0%,rgba(12,11,9,.88) 38%,rgba(12,11,9,.48) 74%,rgba(12,11,9,.28) 100%),url("assets/generated/room-garden-terrace.webp");background-position:center 46%;background-size:cover;opacity:.98;pointer-events:none}
 .account-dashboard-hero>*{position:relative;z-index:1}
 .account-dashboard-identity{position:relative;min-width:0;max-width:760px;padding-left:82px}
@@ -577,7 +577,8 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .account-dashboard-nav a>small{color:#a99b87;font-size:.62rem;text-align:right}
 .account-dashboard-content{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:14px}
 .account-dashboard-primary,.account-dashboard-aside{display:grid;align-content:start;gap:14px;min-width:0}
-.account-dashboard-primary,.account-dashboard-aside{grid-template-columns:repeat(2,minmax(0,1fr))}
+.account-dashboard-primary{grid-template-columns:minmax(0,1fr)}
+.account-dashboard-aside{grid-template-columns:repeat(2,minmax(0,1fr))}
 .account-dashboard .account-dashboard-panel{min-width:0;margin:0;padding:clamp(16px,2vw,24px);border:1px solid rgba(202,165,107,.22);border-radius:9px;background:linear-gradient(145deg,#15120f,#100e0c);color:var(--ivory)}
 .account-dashboard-section-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:15px}
 .account-dashboard-section-heading .kicker{color:var(--gold);font-size:.62rem;letter-spacing:.12em}

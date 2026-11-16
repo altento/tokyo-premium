@@ -245,6 +245,12 @@ async function run(options = {}) {
     await page.locator('.dish-card [data-favorite]').first().click();
     await page.goto(base + '/account.php');
     check(await page.locator('#account-orders .account-order-card').count() > 0, 'authenticated account dashboard shows its saved order');
+    const primaryLayout = await page.locator('.account-dashboard-primary').evaluate(element => ({
+      columns: getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/).length,
+      historyWidth: Math.round(element.querySelector('#account-orders').getBoundingClientRect().width),
+      sectionCount: element.querySelectorAll('.account-dashboard-panel').length
+    }));
+    check(primaryLayout.columns === 1 && primaryLayout.historyWidth > 900 && primaryLayout.sectionCount === 2, `account history and booking use a readable full-width column (layout=${JSON.stringify(primaryLayout)})`);
     check(await page.locator('#account-orders .account-order-preview').first().evaluate(image => image.complete && image.naturalWidth > 0), 'server order history shows a loaded catalogue photograph');
     check(await page.locator('#account-browser-favorites-list .dish-card').count() > 0, 'authenticated dashboard renders browser-local favorites separately');
     const firstOrderDetails = page.locator('#account-orders .account-order-card details').first();
