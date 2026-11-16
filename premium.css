@@ -405,6 +405,14 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .admin-result-count{color:var(--muted);font:400 .78rem/1.4 'DM Sans',sans-serif}
 .admin-muted,.admin-demo-note{color:var(--muted);font-size:.9rem}
 .admin-notice{padding:12px 16px;border:1px solid var(--hairline);border-radius:9px;background:#16120e}
+.admin-mail-readiness{margin:14px 0;padding:14px 16px;border:1px solid rgba(200,164,99,.32);border-radius:9px;background:#15120e;color:#eee0c8}
+.admin-mail-readiness strong{display:block;color:#f1d69f}
+.admin-mail-readiness p{margin:6px 0 0;color:var(--muted);font-size:.84rem;line-height:1.55}
+.admin-mail-readiness a{color:#f0ce87;text-decoration:underline;text-underline-offset:3px}
+.admin-mail-readiness.is-ready{border-color:rgba(104,158,95,.6);background:rgba(45,83,41,.16)}
+.admin-mail-readiness.is-ready strong{color:#cde7bd}
+.admin-mail-readiness.is-invalid{border-color:rgba(194,71,61,.7);background:rgba(91,27,24,.2)}
+.admin-mail-readiness.is-invalid strong{color:#f0b4a7}
 .admin-search-form{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center}
 .admin-search-form input{min-width:0;min-height:48px;padding:10px 14px;border:1px solid var(--hairline);border-radius:7px;background:#0d0c0b;color:var(--ivory)}
 .admin-search-form input::placeholder{color:#958b7b}

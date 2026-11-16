@@ -385,6 +385,13 @@ $notificationCounts = [
     'contact_messages'=>(int)$pdo->query("SELECT COUNT(*) FROM contact_messages WHERE status='new'")->fetchColumn(),
 ];
 $notificationLabels = ['orders'=>'Новые заказы','bookings'=>'Новые брони','reviews'=>'Отзывы на проверке','contact_messages'=>'Новые сообщения'];
+$bookingMailState = booking_mail_configuration_state();
+$bookingNotifyConfigured = filter_var(trim((string)booking_mail_env('TOKYO_BOOKING_NOTIFY_EMAIL', '')), FILTER_VALIDATE_EMAIL) !== false;
+$bookingMailReadiness = match ($bookingMailState) {
+    'ready' => ['class'=>'ready', 'title'=>'Параметры SMTP заполнены', 'text'=>'Письмо о получении заявки ставится в очередь сразу; подтверждение брони отправляется после ручного решения администратора. Фактический статус смотрите в карточке бронирования.'],
+    'invalid' => ['class'=>'invalid', 'title'=>'Настройки SMTP неполные или некорректны', 'text'=>'Заявки сохраняются, но письмо не будет отправлено, пока настройки сервера не исправлены.'],
+    default => ['class'=>'missing', 'title'=>'SMTP не настроен', 'text'=>'Заявки сохраняются, но письма останутся в очереди. Инструкция по настройке находится в документации.'],
+};
 ?>
 <main class="admin-shell admin-dashboard">
   <div class="admin-topline">
@@ -421,7 +428,12 @@ $notificationLabels = ['orders'=>'Новые заказы','bookings'=>'Новы
 
   <section class="admin-card" id="notifications" aria-labelledby="admin-notifications-title">
     <h2 id="admin-notifications-title">Уведомления</h2>
-    <p class="admin-muted">Счётчики показывают новые записи в базе. Уведомления обновляются при открытии панели; письма и SMS не отправляются.</p>
+    <p class="admin-muted">Счётчики показывают новые записи в базе и обновляются при открытии панели. SMS не подключены. Email подтверждается только после ручного решения администратора.</p>
+    <div class="admin-mail-readiness is-<?=e($bookingMailReadiness['class'])?>" role="status" data-smtp-state="<?=e($bookingMailState)?>">
+      <strong><?=e($bookingMailReadiness['title'])?></strong>
+      <p><?=e($bookingMailReadiness['text'])?></p>
+      <p>Уведомление ресторану: <b><?=$bookingNotifyConfigured ? 'адрес настроен' : 'адрес не настроен'?></b>. Адрес и SMTP-пароль панель не показывает. <a href="project-docs/booking-email.md">Как настроить почту</a></p>
+    </div>
     <div class="admin-notification-grid">
       <?php foreach ($notificationCounts as $key=>$count): ?>
         <a class="admin-notification" href="#<?=$key?>">
@@ -633,7 +645,7 @@ $notificationLabels = ['orders'=>'Новые заказы','bookings'=>'Новы
       <button class="button" type="submit">Сохранить настройки</button>
     </form>
   </section>
-  <p class="admin-demo-note">Учебная панель PHP + SQLite. Подтверждение меняет статус в базе и личном кабинете; отправки email/SMS здесь нет.</p>
+  <p class="admin-demo-note">Учебная панель PHP + SQLite. Бронь считается подтверждённой только после действия администратора. Email отправляется только при настроенном SMTP; GitHub Pages не отправляет письма. Реальные платежи и SMS не подключены.</p>
 </main>
 <?php endif; ?>
 <?php footer_html(); ?>
