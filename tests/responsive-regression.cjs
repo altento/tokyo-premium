@@ -178,9 +178,10 @@ async function run(options = {}) {
     for (const fixed of ['2027-01-31T20:00:00.000Z','2027-03-01T19:00:00.000Z']) {
       // Deliberately use a browser zone whose calendar day differs from the restaurant
       // zone at this instant. The date bounds must follow Asia/Qyzylorda, not Date's
-      // browser-local getters (which previously overrode the shared helper).
+      // browser-local getters (which previously overrode the shared helper). Keep the
+      // simulated clock monotonic so GSAP's scroll reveals can still finish.
       const futureContext=await browser.newContext({viewport:{width:390,height:844},timezoneId:'UTC'});
-          await futureContext.addInitScript(`(()=>{const at=${Date.parse(fixed)};const NativeDate=Date;class FrozenDate extends NativeDate{constructor(...args){super(...(args.length?args:[at]))}static now(){return at}}window.Date=FrozenDate})()`);
+      await futureContext.addInitScript(`(()=>{const at=${Date.parse(fixed)};const NativeDate=Date;const started=performance.now();const now=()=>Math.floor(at+performance.now()-started);class FrozenDate extends NativeDate{constructor(...args){super(...(args.length?args:[now()]))}static now(){return now()}}window.Date=FrozenDate})()`);
       const futurePage=await futureContext.newPage();
       const expectedMin=fixed.startsWith('2027-01')?'2027-02-01':'2027-03-02';
       const expectedMax=fixed.startsWith('2027-01')?'2028-02-01':'2028-03-01';
@@ -189,6 +190,11 @@ async function run(options = {}) {
         await futurePage.waitForFunction(() => [...document.styleSheets].some(sheet => sheet.href?.endsWith('/premium.css')));
         await futurePage.evaluate(() => document.fonts.ready);
         for (const input of await futurePage.locator('.home-booking-form input[type="date"], .booking-form input[type="date"]').all()) {
+          // Home booking fields are revealed on scroll. Trigger the reveal before
+          // interacting so this verifies the real, visible form instead of timing
+          // out on an intentionally off-screen story section.
+          await input.evaluate(element => element.scrollIntoView({ block: 'center', inline: 'nearest' }));
+          await input.waitFor({ state: 'visible' });
           check(await input.getAttribute('min')===expectedMin, `booking min date on ${route} at ${fixed}`);
           check(await input.getAttribute('max')===expectedMax, `booking max date on ${route} at ${fixed}`);
           check(await input.getAttribute('data-restaurant-time-zone')==='Asia/Qyzylorda', `restaurant timezone attached on ${route}`);
