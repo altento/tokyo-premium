@@ -332,3 +332,11 @@ The gallery lightbox now has an accessible live caption. It uses the visible til
 ## Admin Cyrillic search and referral login — 2026-11-16
 
 The admin account finder now compares Russian and Kazakh Cyrillic names without case sensitivity using a local SQLite scalar function; referral codes from validated invite links now survive an existing member's login and remain available for explicit attachment. The focused HTTP regression passed with 8 assertions under PHP 8.4 + SQLite, and PHP lint passed. The test is wired into the PHP+SQLite workflow. No broad suite was run.
+
+## Focused visual and seeded-account follow-up — 2026-11-16
+
+- The detail-page related-product grid selector now matches the page's actual `.editorial-page` class. A focused browser run checked the desktop, tablet and mobile grid geometry at 1440, 900 and 390 px; screenshots were inspected.
+- Rechecked reviews against the current export after identifying that an earlier port served stale markup. Three desktop columns and one mobile column were confirmed; `npm run test:reviews` passed with seeded-card disclosure, photo interlude, local review XSS/persistence, and public score stability checks.
+- `npm run test:cart-visual` passed for all eight cart states. The populated desktop/mobile captures show three distinct dishes, a repeated quantity, working recommendations and matching totals; both were visually inspected beside `design-references/10-cart.png`.
+- `npm run test:account-demo` passed after moving the browser-local privilege summary nearer the profile overview. It now asserts that demo points are recalculated after seeding and return to zero after local data is cleared. Updated full-page desktop/mobile captures are in `project-docs/visual-qa/11-account-seeded-{desktop,mobile}.jpg`.
+- PHP syntax and whitespace checks passed. This accelerated pass did not run the broad browser suite, PHP browser mode or public-site check; the draft branch has not been published to GitHub Pages.

@@ -129,6 +129,9 @@ if (!preg_match('/<section class="section tp20-static-privilege"[^>]*>.*?<\/sect
 }
 $privilege = $privilegeMatch[0];
 $overview = str_replace($privilege, '', $overview);
+$privilegeInsertionCount = 0;
+$overview = str_replace('<section class="section account-demo-summary"', $privilege . '<section class="section account-demo-summary"', $overview, $privilegeInsertionCount);
+if ($privilegeInsertionCount !== 1) throw new RuntimeException('Could not place the static loyalty overview before account history.');
 $accountSeedCallout = <<<'HTML'
 <aside class="account-demo-seed"><div><strong>Посмотрите заполненный кабинет</strong><p>Создайте вымышленные учебные заказы, запрос на бронь и избранные блюда. Они останутся только в этом браузере; удалить всё можно в настройках.</p><p class="form-status" data-account-demo-seed-status aria-live="polite"></p></div><button class="button secondary" type="button" data-account-demo-seed>Заполнить учебный пример</button></aside>
 HTML;
@@ -156,7 +159,6 @@ $accountPromo = <<<'HTML'
 <section class="account-promo"><div><div class="kicker">Следующий вечер · учебный сценарий</div><h2>Пусть сезон задаст настроение</h2><p>Выберите дату и формат вечера. Бронирование в демоверсии сохраняется только как запрос и не резервирует стол.</p><a class="button" href="booking.html">Перейти к бронированию ↗</a></div><span class="kicker">SEASONAL · TOKYO PREMIUM</span></section>
 HTML;
 $account = str_replace('</section></main><footer class="footer">', '</section>'.$accountPromo.'</main><footer class="footer">', $account);
-$account = str_replace('</section>'.$accountPromo, '</section>'.$privilege.$accountPromo, $account);
 $account = preg_replace('/<header class="site-header">.*?<\/header>/s', '', $account, 1) ?? $account;
 ob_start(); header_html('account'); $sharedHeader = (string)ob_get_clean();
 $sharedHeader = str_replace(

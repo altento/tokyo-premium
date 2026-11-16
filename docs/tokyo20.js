@@ -251,19 +251,24 @@
   const privilegeRoot = document.querySelector('[data-tp-demo-loyalty]');
   if (privilegeRoot && staticDemo) {
     const readArray = key => { try { const value = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(value) ? value : []; } catch (_) { return []; } };
-    const orders = readArray('tokyo-demo-orders');
-    const spend = orders.reduce((sum, order) => sum + Math.max(0, Number(order.total) || 0), 0);
-    const points = Math.floor(spend / 100);
     const tiers = [{name:'Silver',threshold:0},{name:'Gold',threshold:150000},{name:'Platinum',threshold:400000}];
-    const current = tiers.slice().reverse().find(tier => spend >= tier.threshold) || tiers[0];
-    const next = tiers.find(tier => tier.threshold > current.threshold);
-    privilegeRoot.querySelector('[data-tp-loyalty-tier]').textContent = current.name;
-    privilegeRoot.querySelector('[data-tp-loyalty-card]').dataset.tier = current.name;
-    privilegeRoot.querySelector('[data-tp-loyalty-points]').textContent = points.toLocaleString('ru-RU');
-    const progress = privilegeRoot.querySelector('[data-tp-loyalty-progress]');
-    const percent = next ? Math.min(100, Math.round(((spend-current.threshold)/(next.threshold-current.threshold))*100)) : 100;
-    progress.value = percent; progress.setAttribute('aria-label', next ? 'Демо-прогресс к '+next.name : 'Достигнут наивысший демо-уровень');
-    privilegeRoot.querySelector('[data-tp-loyalty-progress-label]').textContent = next ? 'До '+next.name+': '+Math.max(0,next.threshold-spend).toLocaleString('ru-RU')+' ₸ учебного оборота.' : 'Высший уровень локального демонстрационного сценария.';
+    const updateDemoPrivilege = () => {
+      const orders = readArray('tokyo-demo-orders');
+      const spend = orders.reduce((sum, order) => sum + Math.max(0, Number(order?.total) || 0), 0);
+      const points = Math.floor(spend / 100);
+      const current = tiers.slice().reverse().find(tier => spend >= tier.threshold) || tiers[0];
+      const next = tiers.find(tier => tier.threshold > current.threshold);
+      privilegeRoot.querySelector('[data-tp-loyalty-tier]').textContent = current.name;
+      privilegeRoot.querySelector('[data-tp-loyalty-card]').dataset.tier = current.name;
+      privilegeRoot.querySelector('[data-tp-loyalty-points]').textContent = points.toLocaleString('ru-RU');
+      const progress = privilegeRoot.querySelector('[data-tp-loyalty-progress]');
+      const percent = next ? Math.min(100, Math.round(((spend-current.threshold)/(next.threshold-current.threshold))*100)) : 100;
+      progress.value = percent; progress.setAttribute('aria-label', next ? 'Демо-прогресс к '+next.name : 'Достигнут наивысший демо-уровень');
+      privilegeRoot.querySelector('[data-tp-loyalty-progress-label]').textContent = next ? 'До '+next.name+': '+Math.max(0,next.threshold-spend).toLocaleString('ru-RU')+' ₸ учебного оборота.' : 'Высший уровень локального демонстрационного сценария.';
+    };
+    updateDemoPrivilege();
+    document.addEventListener('tokyo-demo-data-updated', updateDemoPrivilege);
+    window.addEventListener('storage', event => { if (!event.key || event.key === 'tokyo-demo-orders') updateDemoPrivilege(); });
     const referral = privilegeRoot.querySelector('[data-tp-demo-referral]');
     let referralCode = '';
     try { referralCode = localStorage.getItem('tokyo-demo-referral-code') || ''; if (!/^TP-DEMO-[A-Z0-9]{6}$/.test(referralCode)) { referralCode = 'TP-DEMO-'+Math.random().toString(36).slice(2,8).toUpperCase(); localStorage.setItem('tokyo-demo-referral-code',referralCode); } } catch (_) { referralCode = 'TP-DEMO-LOCAL'; }

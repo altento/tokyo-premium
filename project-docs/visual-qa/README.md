@@ -214,3 +214,7 @@ The same folder includes the eight populated/empty/checkout-validation/pickup/de
 
 `gallery-caption-followup-2026-11-16/gallery-caption-desktop.png` shows the lightbox after advancing to the second image, with the “Суши-бар” caption visible below the photo. I inspected the screenshot. `npm run test:gallery-caption` also confirmed the initial “Зал и сервировка” caption, its update on next-image navigation, Escape dismissal, and no browser errors in the static Pages route. CI is configured to run this narrow check against both PHP and Pages routes.
 The paired `gallery-caption-followup-2026-11-16/gallery-caption-mobile.png` capture was also inspected at 390 px; the caption remains inside the dialog viewport.
+
+## 2026-11-16 targeted route follow-up
+
+`dish-related-grid-2026-11-16/` contains the dish-detail recommendation grid at 1440, 900 and 390 px after matching the CSS selector to the actual page class. `reviews-density-follow-up-2026-11-16/` contains refreshed current-export screenshots; the stale preview that prompted the review was not representative of the exported Pages route. `10-cart-compact-2026-11-16/` contains refreshed cart screenshots, including the populated state compared with `10-cart.png`. `11-account-seeded-desktop.jpg` and `11-account-seeded-mobile.jpg` show the revised account hierarchy and live local-demo points after seeding three sample orders. Focused route regressions passed; PHP browser and public deployment checks remain separate.

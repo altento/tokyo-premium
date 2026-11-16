@@ -32,6 +32,11 @@ async function run() {
     await page.locator('[data-account-demo-seed]').click();
     assert.equal(await page.locator('#demo-orders .demo-order').count(), 3, 'sample action adds three orders');
     assert.equal(await page.locator('#demo-bookings article').count(), 1, 'sample action adds one booking request');
+    const privilege = page.locator('[data-tp-demo-loyalty]');
+    assert.ok(await privilege.isVisible(), 'local demo loyalty card is visible');
+    assert.match(await privilege.innerText(), /TOKYO PRIVILEGE · ЛОКАЛЬНАЯ ДЕМО/, 'loyalty card identifies its browser-only demo mode');
+    assert.equal(await privilege.locator('[data-tp-loyalty-points]').innerText(), await page.evaluate(() => Math.floor(JSON.parse(localStorage.getItem('tokyo-demo-orders') || '[]').reduce((sum, order) => sum + Math.max(0, Number(order.total) || 0), 0) / 100).toLocaleString('ru-RU')), 'loyalty points refresh from sample orders created after page load');
+    assert.ok(await page.evaluate(() => document.querySelector('[data-tp-demo-loyalty]').getBoundingClientRect().top < document.querySelector('#demo-orders').getBoundingClientRect().top), 'loyalty summary appears before order history');
     const tabBadgeLayout = await page.locator('.account-demo-nav [data-account-tab]').evaluateAll(buttons => buttons.filter(button => button.querySelector('.account-demo-tab-count')).map(button => {
       const labelNode = [...button.childNodes].find(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
       const range = document.createRange();
@@ -85,6 +90,7 @@ async function run() {
     await page.locator('[data-account-tab="settings"]').click();
     await page.locator('#demo-clear-data').click();
     assert.equal(await page.locator('[data-account-stat="orders"]').innerText(), '0', 'clear-data action removes seeded orders');
+    assert.equal(await page.locator('[data-tp-loyalty-points]').innerText(), '0', 'clearing local orders refreshes the demo loyalty balance');
     assert.equal(await page.locator('[data-account-stat="bookings"]').innerText(), '0', 'clear-data action removes seeded booking');
     assert.equal(await page.evaluate(() => window.TokyoCart.getFavorites().length), 0, 'clear-data action removes seeded favorites');
     assert.equal(errors.length, 0, `no browser exceptions: ${errors.join('; ')}`);

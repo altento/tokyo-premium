@@ -16,6 +16,13 @@ async function run(options = {}) {
     await page.evaluate(() => localStorage.removeItem('tokyo-demo-reviews'));
     await page.reload();
     const publicAverage = await page.locator('.review-score-band strong').innerText();
+    const seededLayout = await page.locator('#review-grid').evaluate(grid => ({
+      columns: getComputedStyle(grid).gridTemplateColumns.split(/\s+(?=[0-9.]+px)/).length,
+      cards: grid.querySelectorAll('[data-review-card]').length,
+      disclosed: grid.querySelectorAll('.review-disclosure').length,
+      hasPhotoMoment: Boolean(document.querySelector('.review-moment figure img'))
+    }));
+    assert.deepEqual(seededLayout, { columns: 3, cards: 4, disclosed: 4, hasPhotoMoment: true }, 'desktop review route shows all four seeded demo records in three columns and uses a photo interlude instead of fictional video reviews');
 
     const hostileName = '<img src=x onerror=window.__reviewXss=1> QA';
     const hostileBody = 'Интерфейс понравился. <img src=x onerror=window.__reviewXss=2> Очень уютно.';
@@ -41,6 +48,8 @@ async function run(options = {}) {
     assert.equal(await page.locator('.review-score-band strong').innerText(), publicAverage, 'clear preserves public aggregate');
 
     await page.setViewportSize({ width: 390, height: 844 });
+    const mobileColumns = await page.locator('#review-grid').evaluate(grid => getComputedStyle(grid).gridTemplateColumns.split(/\s+(?=[0-9.]+px)/).length);
+    assert.equal(mobileColumns, 1, 'mobile review list keeps a single readable column');
     await page.evaluate(() => {
       localStorage.setItem('tokyo-demo-reviews', JSON.stringify([{ name: 'Гость', text: 'Хороший демонстрационный ужин, хочу сохранить заметку.', rating: 5, theme: 'Кухня', date: '2026-11-12' }]));
     });
