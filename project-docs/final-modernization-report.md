@@ -151,3 +151,7 @@ The static populated cart now places recommendations after the order/checkout gr
 ## Philosophy hero visual follow-up — 2026-11-16
 
 The philosophy hero now uses the reference's short title and italic subtitle, preserves the garden photograph, adds working links to the story and kitchen-principles sections, and places the Japanese mark where it does not cover the title or actions. A focused static browser check passed at 320, 390, 768 and 1440 px with no page overflow, console errors or failed resources; all four page images loaded in the captured desktop view. `php -l about.php` passed and the source/static CSS copies match. The PHP route was not browser-rendered. Full-page comparison remains partial: the current story/timeline and chef/ingredient section composition differs from the reference. No broad suite, hosted CI or public Pages deployment was run.
+
+## Booking hero copy follow-up — 2026-11-16
+
+The booking hero now uses “Забронируйте свой столик”, replacing a longer subtitle that nearly touched the right edge on phones and aligning the copy with the approved reservation concept. A route-focused static browser check passed at 320, 390 and 1440 px: hero text, button, anchor and page bounds fit, both photos loaded, and no browser errors or failed requests occurred. `php -l pages.php` passed. The PHP route was not browser-rendered, and no broad suite, CI or public deployment was run.

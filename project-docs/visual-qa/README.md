@@ -113,3 +113,7 @@ The existing original chef photograph is now mirrored only in the Omakase hero, 
 ## 2026-11-16 philosophy hero follow-up
 
 `05-philosophy-hero-2026-11-16/` contains focused desktop/mobile hero crops and full-page static captures. The hero now follows the reference's concise title/subtitle hierarchy and has working story/principles links. A single route check covered 320, 390, 768 and 1440 px; it verified title bounds, no horizontal overflow, no mark collision, valid anchors, four loaded content images and no failed assets/browser errors. PHP syntax lint passed, but the PHP route was not rendered in a browser. The lower page remains an editorial adaptation; see the comparison note in that directory.
+
+## 2026-11-16 booking hero copy follow-up
+
+`07-booking-subtitle-2026-11-16/` contains current desktop/mobile hero crops after shortening the booking subtitle to the wording in `07-reservation.png`. The static route was checked once at 320, 390 and 1440 px: title, subtitle, lead, CTA and page bounds fit; both page images loaded without browser errors or failed resources. PHP syntax lint passed; the PHP route was not browser-rendered. See its comparison note.

@@ -199,3 +199,7 @@ The cart-only static browser regression passed and saved eight states after reco
 ## 2026-11-16 philosophy hero follow-up
 
 One focused static Playwright route check passed at 320, 390, 768 and 1440 px: the title remains in bounds, the decorative mark avoids the title/actions, section links resolve, and the page has no horizontal overflow. HTTP 200, no console errors, no failed resources; the desktop capture decoded all four content images. `php -l about.php`, CSS hash comparison and `git diff --check` passed. PHP browser rendering, broad suites, hosted CI and public Pages were not checked.
+
+## 2026-11-16 booking hero copy follow-up
+
+One focused static route check passed at 320, 390 and 1440 px. It verified the title, subtitle, description and CTA remain inside the viewport, the booking anchor is present, both images load, and there are no console errors, failed resources or horizontal overflow. `php -l pages.php` and `git diff --check` passed. PHP browser rendering, broad suites, hosted CI and public Pages were not checked.
