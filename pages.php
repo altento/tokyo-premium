@@ -139,10 +139,10 @@ if(!$omakaseCourses) foreach(array_slice($all,0,5) as $dish) $omakaseCourses[]=[
     <figure class="contact-interior"><img src="assets/generated/restaurant-interior.webp" alt="Интерьер японского ресторана с мягким светом — оригинальная иллюстрация учебной концепции" loading="lazy" decoding="async"><figcaption><span>Атмосфера Tokyo Premium</span><small>Вымышленный интерьер · учебное изображение</small></figcaption></figure>
   </div>
 </section>
-<section class="section contact-footnotes" aria-label="Информация о посещении">
-  <article><span class="contact-fact-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 8h18M5 8l2-4h10l2 4v11H5zM9 13h6"/></svg></span><div><h3>Расположение</h3><p>Адрес вымышлен; схема показывает декоративную композицию, а не реальный маршрут.</p></div></article>
-  <article><span class="contact-fact-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></svg></span><div><h3>Доступность</h3><p>Параметры помещения относятся к учебному сценарию и требуют проверки на реальном объекте.</p></div></article>
-  <article><span class="contact-fact-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v15H4zM8 3v4m8-4v4M4 10h16"/></svg></span><div><h3>Бронирование</h3><p>Запрос отправляется на подтверждение и не означает, что стол доступен.</p><a class="contact-inline-link" href="pages.php?page=booking">Перейти к форме бронирования ↗</a></div></article>
+<section class="section contact-visit-section" aria-labelledby="contact-visit-title">
+  <figure class="contact-visit-image"><img src="assets/generated/room-garden-terrace.webp" alt="Иллюстрация сада при японском ресторане: деревянная терраса, фонари и клёны" loading="lazy" decoding="async"><figcaption>Образ пространства · учебное изображение</figcaption></figure>
+  <div class="contact-visit-copy"><div class="kicker">ご来店の前に · перед визитом</div><div class="contact-section-heading"><span aria-hidden="true"></span><h2 id="contact-visit-title">Спланируйте вечер заранее</h2></div><p>Tokyo Premium — учебная концепция с вымышленным адресом. Здесь нет реального маршрута, подтверждённых сведений о парковке или доступности помещения.</p><a class="button secondary" href="pages.php?page=booking">Оставить учебную заявку ↗</a></div>
+  <div class="contact-visit-facts" aria-label="Транспорт и доступность в учебной версии"><article><span>Транспорт</span><strong>Данные не заданы</strong></article><article><span>Парковка</span><strong>Не подтверждена</strong></article><article><span>Доступность</span><strong>Требует проверки</strong></article></div>
 </section>
 <?php elseif($view==='cart'): ?>
 <?php ep_hero('注文','ВАШ ВЫБОР','Корзина','Ваш заказ','Проверьте блюда, способ получения и итог. Демо не списывает оплату и не передаёт заказ ресторану.','assets/food/17-omakase-set.webp','Сервировка японского ужина','Продолжить выбор','menu.php','','cart-hero'); ?>
