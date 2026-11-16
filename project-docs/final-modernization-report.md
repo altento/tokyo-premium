@@ -221,3 +221,6 @@ The protected site settings now expose a bounded delivery charge, and new campai
 ## Omakase section-order follow-up — 2026-11-16
 
 Reordered the Omakase content toward reference 04: philosophy/principles, course-card overview, set tiers, booking handoff, interactive course detail, honest still-photo editorial interlude, and closing quote. Added responsive layout for the new philosophy and reservation sections; both the PHP template and static Pages route are updated. Syntax and whitespace checks passed. The browser profile was unavailable, so this specific change has no fresh screenshot/visual review; PHP rendering and full regression remain unverified. Details: [Omakase follow-up](visual-qa/omakase-order-follow-up-2026-11-16.md).
+## Mobile cart follow-up — 2026-11-16
+
+Shortened the mobile cart hero and moved the optional checkout comment into an accessible native disclosure in both PHP and Pages templates. Lint, structural checks, CSS parity, and diff whitespace checks passed. Browser screenshots and the broad cart flow were not rerun in this accelerated pass; details: [mobile cart follow-up](visual-qa/cart-mobile-follow-up-2026-11-16.md).

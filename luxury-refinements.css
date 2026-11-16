@@ -192,3 +192,12 @@
 .omakase-reservation-copy .button{margin-top:10px}
 @media(max-width:800px){.omakase-philosophy-strip{grid-template-columns:1fr;gap:25px}.omakase-reservation-copy{width:min(620px,76%);margin-left:6vw}.omakase-reservation-band{min-height:330px}.omakase-reservation-band:after{background:linear-gradient(90deg,rgba(9,8,7,.72),rgba(10,9,8,.9) 58%,rgba(16,13,11,.93))}}
 @media(max-width:560px){.omakase-philosophy-strip{gap:18px}.omakase-principles article{padding:6px 10px}.omakase-principles article>span{font-size:1.8rem;margin-bottom:8px}.omakase-principles h3{font-size:.9rem}.omakase-principles p{font-size:.68rem}.omakase-reservation-band{min-height:370px;align-items:flex-end}.omakase-reservation-band>img{object-position:65% center}.omakase-reservation-band:after{background:linear-gradient(0deg,rgba(9,8,7,.96),rgba(10,9,8,.82) 57%,rgba(16,13,11,.2))}.omakase-reservation-copy{width:auto;margin:0;padding:24px 22px 28px}.omakase-reservation-copy h2{font-size:clamp(1.85rem,8vw,2.35rem)}.omakase-reservation-copy .button{width:100%}}
+/* Keep the mobile checkout path short while preserving an accessible optional note. */
+.cart-comment-disclosure{border-top:1px solid rgba(199,167,102,.2);padding-top:11px;margin-top:4px}
+.cart-comment-disclosure>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:42px;cursor:pointer;color:#ead9bd;font-size:.88rem;list-style:none}
+.cart-comment-disclosure>summary::-webkit-details-marker{display:none}
+.cart-comment-disclosure>summary:after{content:"+";color:#d7b77a;font-size:1.2rem}
+.cart-comment-disclosure[open]>summary:after{content:"−"}
+.cart-comment-disclosure>summary span{margin-left:auto;color:#a99b87;font-size:.72rem}
+.cart-comment-disclosure .field{margin-top:6px}
+@media(max-width:700px){.editorial-hero.cart-hero{min-height:250px;padding:76px 20px 22px}.cart-comment-disclosure>summary{min-height:44px;font-size:.84rem}}
