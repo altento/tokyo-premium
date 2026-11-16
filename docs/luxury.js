@@ -345,7 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
     event.preventDefault();
     const type = form.dataset.api;
     const status = $('.form-status', form);
-    const button = $('button[type="submit"]', form);
+    const button = event.submitter instanceof HTMLButtonElement ? event.submitter : $('button[type="submit"], input[type="submit"]', form) || [...document.querySelectorAll('button[type="submit"][form], input[type="submit"][form]')].find(control => control.form === form);
     if (form.dataset.submitting === 'true') return;
     if (type === 'order' && !(cart?.get().length || cart?.getCustomSets().length)) {
       if (status) { status.textContent = 'Добавьте блюда или соберите сет перед оформлением.'; status.className = 'form-status error'; }

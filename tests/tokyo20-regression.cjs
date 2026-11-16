@@ -235,15 +235,30 @@ async function run() {
       }
       await page.locator('[data-tp-table]').first().click();
       check((await page.locator('.booking-form .table-selection').innerText()).includes('предпочтительный стол №1'), `${mode.name} table preference can be reselected after visit parameter changes`);
+      await prepareVisual(page);
       await page.screenshot({ path: path.join(evidence, `12-${mode.name}-booking-table-selected.jpg`), fullPage: true, type: 'jpeg', quality: 72 });
       await page.setViewportSize({ width: 390, height: 844 });
+      await prepareVisual(page);
+      const mobileBookingOrder = await page.evaluate(() => {
+        const form = document.querySelector('#full-booking-form');
+        const map = document.querySelector('.table-map-wrap');
+        const caption = map?.querySelector('[data-tp-seat-caption]');
+        const submit = map?.querySelector('button[form="full-booking-form"][type="submit"]');
+        if (!form || !map || !caption || !submit) return null;
+        const formRect = form.getBoundingClientRect();
+        const mapRect = map.getBoundingClientRect();
+        const captionRect = caption.getBoundingClientRect();
+        const submitRect = submit.getBoundingClientRect();
+        return { formBeforeMap: formRect.bottom <= mapRect.top, submitAfterMapCopy: submitRect.top >= captionRect.bottom, submitVisible: getComputedStyle(submit).display !== 'none' && submitRect.width > 0 && submitRect.height > 0 };
+      });
+      check(Boolean(mobileBookingOrder?.formBeforeMap && mobileBookingOrder.submitAfterMapCopy && mobileBookingOrder.submitVisible), `${mode.name} mobile booking puts the preference map before its final submit action`);
       await page.screenshot({ path: path.join(evidence, `12-${mode.name}-booking-mobile.jpg`), fullPage: true, type: 'jpeg', quality: 72 });
       await page.setViewportSize({ width: 1440, height: 1000 });
       if (mode.name === 'static') {
         await page.locator('#full-guest-name').fill('Гость QA');
         await page.locator('#full-guest-phone').fill('+77010000000');
         await bookingEmail.fill('guest@example.test');
-        await page.locator('.booking-form button[type="submit"]').click();
+        await page.locator('#full-booking-form').evaluate(form => form.requestSubmit());
         await page.waitForFunction(() => document.querySelector('.booking-form > .form-status')?.textContent.includes('Email не отправляется'));
         const savedBooking = await page.evaluate(() => JSON.parse(localStorage.getItem('tokyo-demo-bookings') || '[]')[0]);
         check(savedBooking && !Object.hasOwn(savedBooking, 'email'), 'static Pages booking confirms no email is sent and does not retain the guest email locally');

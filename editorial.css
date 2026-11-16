@@ -90,3 +90,5 @@
 }
 
 .zone-booking-link{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;margin-top:12px;padding:8px 0;color:var(--jp-gold);border-top:1px solid var(--jp-line);font-size:.78rem;letter-spacing:.035em;transition:color .2s}.zone-booking-link span{transition:transform .2s}.zone-booking-link:hover,.zone-booking-link:focus-visible{color:var(--jp-cream)}.zone-booking-link:hover span,.zone-booking-link:focus-visible span{transform:translateX(3px)}.zone-booking-link:focus-visible{outline:2px solid var(--jp-gold);outline-offset:3px}
+
+.table-map-wrap>.booking-submit{display:flex;justify-content:center;width:100%;margin-top:14px}

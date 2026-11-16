@@ -365,3 +365,11 @@ The first static-only npm run test:motion exposed an outdated assertion for a 75
 - Tightened `tests/menu-visual-smoke.cjs` so it enforces a 350 px desktop ceiling and 370 px mobile ceiling; screenshot filenames no longer carry a stale date.
 - `npm run test:menu-visual` passed all four PHP and static cases at 1440 px and 390 px. Measured hero heights were 333 px desktop and 369 px mobile; the hero image loaded, catalog controls rendered, and no horizontal overflow was detected.
 - Current captures: `project-docs/visual-qa/menu-hero-compact-2026-11-17/` (`02-menu-current-php-desktop.jpg`, `02-menu-current-static-desktop.jpg`, and mobile counterparts). This focused pass does not complete the full 11-reference visual acceptance.
+
+## 2026-11-17 mobile booking map order
+
+- Moved the booking submit button after the preferred-seat map and its disclosure. The form still owns the fields and browser validation through the button's `form` attribute; the desktop and mobile routes use the same flow.
+- The shared PHP and Pages script now locates an externally associated submit button if a submit event has no `event.submitter` (including `form.requestSubmit()`).
+- `npm run test:tokyo20` passed against an isolated PHP 8.5 + SQLite server and the static export. It checks that the form precedes the map and that the submit control follows the map caption at 390 px, and submits a static booking via `requestSubmit()`.
+- I visually inspected the PHP and static mobile captures and the selected-seat captures in `project-docs/visual-qa/booking-map-order-2026-11-17/`.
+- This targeted regression does not represent full-site acceptance or a public Pages deployment check.

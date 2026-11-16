@@ -222,9 +222,9 @@ async function run(options = {}) {
       }
       await route.continue();
     });
-    await bookingForm.locator('button[type="submit"]').click();
+    await page.locator('button[type="submit"][form="full-booking-form"]').click();
     await page.waitForFunction(() => document.querySelector('#full-booking-form .form-status')?.classList.contains('error'));
-    await bookingForm.locator('button[type="submit"]').click();
+    await page.locator('button[type="submit"][form="full-booking-form"]').click();
     await page.waitForFunction(() => document.querySelector('#full-booking-form .form-status')?.classList.contains('success'));
     await page.unroute('**/api.php');
     check(bookingKeys.length === 2 && bookingKeys[0].length >= 16 && bookingKeys[0] === bookingKeys[1], 'same booking payload reuses its idempotency key after an API rejection');

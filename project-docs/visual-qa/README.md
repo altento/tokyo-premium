@@ -237,3 +237,7 @@ The static motion suite passed after its crop assertion was aligned with the cur
 - Tightened `tests/menu-visual-smoke.cjs` so it enforces a 350 px desktop ceiling and 370 px mobile ceiling; screenshot filenames no longer carry a stale date.
 - `npm run test:menu-visual` passed all four PHP and static cases at 1440 px and 390 px. Measured hero heights were 333 px desktop and 369 px mobile; the hero image loaded, catalog controls rendered, and no horizontal overflow was detected.
 - Current captures: `project-docs/visual-qa/menu-hero-compact-2026-11-17/` (`02-menu-current-php-desktop.jpg`, `02-menu-current-static-desktop.jpg`, and mobile counterparts). This focused pass does not complete the full 11-reference visual acceptance.
+
+## 2026-11-17 mobile booking map order
+
+`booking-map-order-2026-11-17/` contains full-page PHP and static mobile captures plus selected-seat desktop captures. I inspected both mobile versions: the preference map and availability disclosure precede the final submit action. `npm run test:tokyo20` passed against the local PHP/SQLite route and static export, including the 390 px geometry assertion and static `requestSubmit()` path. This is one focused booking check, not full-site visual acceptance.
