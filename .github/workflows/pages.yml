@@ -44,6 +44,8 @@ jobs:
         run: npm run test:cart
       - name: Run PHP and SQLite integrity checks
         run: php tests/php_integrity_integration.php
+      - name: Check threshold gift schedule regression
+        run: npm run test:gift-quantity
       - name: Check PHP syntax
         run: find . -maxdepth 2 -type f -name '*.php' -print0 | xargs -0 -n1 php -l
       - name: Smoke test PHP forms and admin access

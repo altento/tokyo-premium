@@ -303,7 +303,7 @@ This focused pass did not run the full browser suite, complete 11-route PHP visu
 
 - `commerce_quote()` now skips threshold-gift campaigns outside their start/end dates, weekday mask, or time window, then selects the next scheduled campaign.
 - Added focused regression cases for future, expired, disabled-weekday and out-of-window campaigns in `tests/gift-quantity-regression.php`.
-- PHP syntax checks passed. The SQLite regression skipped locally because this CLI lacks `pdo_sqlite`; hosted CI must run it.
+- PHP syntax checks passed. The SQLite regression is wired into the PHP+SQLite GitHub Actions job; this local CLI lacks `pdo_sqlite`, so the hosted result is pending.
 - GitHub Pages set-builder, offer and cart copy now identifies amounts and promo results as local estimates without server validation. Dynamic set-builder and evening messages use the same disclosure.
 - `npm run test:offers-evening` passed in the static browser, including the set-builder interaction and pricing disclosure.
 - No merge or publication was performed in this pass.
