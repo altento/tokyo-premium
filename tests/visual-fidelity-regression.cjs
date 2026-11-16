@@ -184,6 +184,8 @@ async function visit(browser, base, route, mode, capture = false) {
   } else if (route.key === 'cart') {
     assert.equal(await page.locator('.cart-hero h1').count(), 1, `${mode} cart has a dedicated page heading`);
     assert.equal(await page.locator('#checkout-form').count(), 1, `${mode} cart includes checkout`);
+    const cartHeroHeight = await page.locator('.cart-hero').evaluate(hero => hero.getBoundingClientRect().height);
+    assert.ok(cartHeroHeight <= 270, `${mode} cart hero remains compact against the approved reference (${cartHeroHeight}px)`);
     assert.ok(await page.locator('#cart-page-empty').isVisible(), `${mode} fresh browser starts with an honest empty-cart state`);
     assert.equal(await page.locator('.cart-recommendations .dish-card').count(), 3, `${mode} empty cart offers three catalog-backed recommendations`);
   } else if (route.key === 'account') {

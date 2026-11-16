@@ -279,3 +279,13 @@ Compared the current static route with `design-references/05-philosophy.png`. Th
 ## 2026-11-16 account hero refinement
 
 Focused static browser regression: `npm run test:account-demo` passed at 1440 px and 390 px. It checked the stable account title/subtitle, loaded entrance photo, seeded local order/booking/favorites, duplicate prevention, clear-data behavior, mobile title bounds, and zero browser exceptions/overflow. Screenshots: `visual-qa/account-hero-refinement-2026-11-16/`. PHP browser rendering, broad suite, hosted CI, and public deployment were not run.
+
+## 2026-11-16 final focused visual and integrity pass
+
+The cart hero rule had drifted in both PHP and Pages stylesheets, leaving the desktop banner at 430 px. Both copies now use the compact 250 px target, with the mobile spacing kept responsive. The route-focused visual-fidelity regression now asserts that the cart hero stays at or below 270 px in both modes. `TOKYO_VISUAL_MODE=both TOKYO_VISUAL_ROUTES=cart` passed against the local PHP server and current static export.
+
+`npm run test:cart-visual` passed and wrote all eight empty/populated/validation/pickup/delivery captures to `visual-qa/cart-state-final-2026-11-16/`. The populated state contains three distinct catalog dishes, a quantity of two, loaded photos and an exact shared-store total. Those desktop/mobile captures were reviewed beside `design-references/10-cart.png`. `npm run test:account-demo` also passed and produced freshly seeded desktop/mobile account captures in `visual-qa/account-state-final-2026-11-16/`; local-only labels, item snapshots, repeat-seed behavior and clear-data flow passed.
+
+`tests/php_integrity_integration.php` passed 193 assertions against an isolated SQLite database. The packaged SQLite DLLs were enabled through a temporary local `php.ini`; no project configuration or secret was changed. Fresh static desktop/mobile captures cover all 11 route families in `visual-qa/reference-pass-current-2026-11-16/`. The human visual review and remaining differences are recorded in `visual-qa/reference-comparison-current-2026-11-16.md`; it is qualitative, not pixel-difference acceptance.
+
+This focused pass did not run the full browser suite, complete 11-route PHP visual comparison, hosted CI, deployment, or a cache-busted public Pages check. These local checks do not establish the current public site state.
