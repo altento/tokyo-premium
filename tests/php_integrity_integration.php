@@ -295,12 +295,13 @@ try {
  $secretRuleId=(int)$pdo->query('SELECT id FROM secret_menu_rules WHERE required_value='.$pdo->quote($secretRuleValue).' ORDER BY id DESC LIMIT 1')->fetchColumn(); check($secretRuleId>0, 'Secret Menu rule persisted');
  check((int)$pdo->query('SELECT COUNT(*) FROM promo_codes WHERE code='.$pdo->quote($secretRuleValue).' AND campaign_id='.$secretCampaignId.' AND active=1')->fetchColumn()===1, 'saving a code rule provisions its active campaign promo code');
  $secretRuleQuery=$pdo->prepare('SELECT r.*,c.active AS campaign_active,c.starts_at AS campaign_start,c.ends_at AS campaign_end,c.timezone,c.weekday_mask,c.starts_time,c.ends_time FROM secret_menu_rules r JOIN promotion_campaigns c ON c.id=r.campaign_id WHERE r.id=?');$secretRuleQuery->execute([$secretRuleId]);$provisionedSecretRule=$secretRuleQuery->fetch(PDO::FETCH_ASSOC);
- // Finish the read before the HTTP request mutates this row on another SQLite connection.
- // An open PDO cursor can hold a WAL snapshot, making the post-request assertion read stale data.
+ // Finish this read before the HTTP request mutates the row on another SQLite connection.
  $secretRuleQuery->closeCursor();
  check($provisionedSecretRule&&commerce_secret_rule_matches($pdo,$provisionedSecretRule,null,$secretRuleValue,false), 'new admin-created Secret Menu code passes the server access check');
  $marketingCsrf=tokenFrom($marketingHtml); check(str_contains($marketingHtml,'name="id" value="'.$secretRuleId.'"'), 'existing Secret Menu rules expose an edit form');
  [$status,$marketingHtml]=request('/admin-marketing.php',['csrf'=>$marketingCsrf,'action'=>'secret-rule-save','id'=>(string)$secretRuleId,'campaign_id'=>(string)$secretCampaignId,'access_kind'=>'tier','required_value'=>'gold','starts_at'=>'2026-11-16T15:00','ends_at'=>'2027-01-01T00:00','active'=>'on']);
+ // Reopen after the HTTP write so no earlier SQLite WAL read snapshot can mask its commit.
+ $pdo = freshTestDatabase($dbPath);
  $editedSecretRule=$pdo->query("SELECT access_kind,required_value,starts_at FROM secret_menu_rules WHERE id=$secretRuleId")->fetch(PDO::FETCH_ASSOC);
  preg_match('~<p class="form-status error" role="alert">(.*?)</p>~s', $marketingHtml, $secretRuleErrorMatch);
  $secretRuleError = html_entity_decode(strip_tags($secretRuleErrorMatch[1] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');

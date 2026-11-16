@@ -98,7 +98,11 @@ try {
     $assert(!in_array($campaignId,$visibleCampaignIds(),true),'offer card disappears when its only promo code is disabled');
     $pdo->prepare('UPDATE promo_codes SET active=1,uses_count=1 WHERE code=?')->execute(['PERSONALQA']);
     $assert(!in_array($campaignId,$visibleCampaignIds(),true),'offer card disappears when its only promo code reaches its usage limit');
-    $pdo->prepare('UPDATE promo_codes SET uses_count=0 WHERE code=?')->execute(['PERSONALQA']);
+    $pdo->prepare("UPDATE promo_codes SET uses_count=0,ends_at='2000-01-01 00:00:00' WHERE code=?")->execute(['PERSONALQA']);
+    $assert(!in_array($campaignId,$visibleCampaignIds(),true),'offer card disappears when its only promo code has expired');
+    $pdo->prepare("UPDATE promo_codes SET ends_at=NULL,starts_at='2099-01-01 00:00:00' WHERE code=?")->execute(['PERSONALQA']);
+    $assert(!in_array($campaignId,$visibleCampaignIds(),true),'offer card stays hidden before its only promo code starts');
+    $pdo->prepare('UPDATE promo_codes SET starts_at=NULL WHERE code=?')->execute(['PERSONALQA']);
     $otherAccountQuote=commerce_quote($pdo,[['id'=>1,'qty'=>1]],[],'PERSONALQA','pickup',$otherUserId,'other-personal-qa-actor');
     $assert(!$otherAccountQuote['ok']&&str_contains($otherAccountQuote['message'],'вам недоступно'),'an assigned offer is not visible to another account');
 

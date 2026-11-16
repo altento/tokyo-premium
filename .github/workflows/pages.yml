@@ -36,6 +36,7 @@ jobs:
           node-version: 22
           cache: npm
       - name: Install browser test dependencies
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
         run: |
           npm ci
           npx playwright install --with-deps chromium
@@ -93,6 +94,8 @@ jobs:
           grep -q 'не зашифровано' docs/account.html
           grep -q 'href="luxury-refinements.css"' docs/account.html
       - name: Run browser regression and visual QA
+        id: browser_qa
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
         run: |
           set -euo pipefail
           export RESTAURANT_DB=/tmp/tokyo-premium-browser.sqlite
@@ -113,7 +116,7 @@ jobs:
           TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:visual-fidelity
           TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:motion
       - name: Save visual QA screenshots
-        if: always()
+        if: always() && steps.browser_qa.outcome != 'skipped'
         uses: actions/upload-artifact@v4
         with:
           name: tokyo-premium-visual-qa
@@ -122,6 +125,7 @@ jobs:
             project-docs/visual-qa/**/*.png
           if-no-files-found: warn
       - name: Upload site artifact
+        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
           path: docs
