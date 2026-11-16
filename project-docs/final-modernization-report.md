@@ -206,6 +206,10 @@ The code-rule path also provisions an active promo code in the selected Secret M
 
 Changed the static profile's first quick action from an empty cart to the menu, added direct access to privileges, and ordered the four actions as menu, booking, favorites, privileges. Updated the Pages export template as well. At 390 px all four controls fit one line each without overflow, and the favorites action opened the expected panel. Screenshot: [Account quick actions at 390 px](visual-qa/account-quick-actions-390-2026-11-16.png). Exporter PHP syntax and diff whitespace checks passed; the server-authenticated PHP dashboard was not changed in this slice.
 
+### Contacts mobile map card — 2026-11-16
+
+The desktop and mobile contacts page were compared with reference 09. The 390 px view showed the fictional destination label clipped by the schematic-map edge; mobile placement now keeps the complete card inside the map. A focused browser check found no horizontal overflow or page errors. Desktop and mobile captures plus the limited comparison are in [the contacts review](visual-qa/contacts-review-2026-11-16.md). `pages.php` lint and static CSS parity passed; no full regression or authenticated PHP browser pass was run.
+
 ## Account empty-state UX — 2026-11-16
 
 The browser-local account no longer leaves order and booking history blank when there are no records. It explains that saved entries appear after a demo action and links to the corresponding menu or booking route; the empty favorites state also links back to the menu. No fictitious history is preloaded. Source and exported JS/CSS copies are synchronized. A focused local Chromium check covered the static account at 1440 and 390 px, verified all three links, zero horizontal overflow and no page errors; PHP rendering and full visual parity with the populated account reference remain outstanding.
