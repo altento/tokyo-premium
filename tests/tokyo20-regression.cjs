@@ -163,6 +163,7 @@ async function run() {
       check(quoteText.includes(mode.name === 'php' ? 'серверный расчёт' : 'локальная оценка'), `${mode.name} promo quote clearly identifies its authority`);
       check(quoteText.includes('скидка') && quoteText.includes('итог'), `${mode.name} promo quote shows recalculated subtotal, discount, and total`);
       await page.screenshot({ path: path.join(evidence, `${cartPrefix}-promo-quote-desktop.png`), fullPage: true, type: 'png' });
+      await page.locator('.cart-checkout-details > summary').click();
       await page.locator('#fulfillment').selectOption('delivery');
       check(await page.locator('#checkout-address').isVisible() && await page.locator('#checkout-address').isEnabled() && await page.locator('#checkout-address').evaluate(input => input.required), `${mode.name} delivery requires the address`);
       check(!(await page.locator('#checkout-form').evaluate(form => form.checkValidity())), `${mode.name} empty checkout blocks submission`);
