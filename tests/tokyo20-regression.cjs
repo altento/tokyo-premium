@@ -176,6 +176,15 @@ async function run() {
       await page.locator('#fulfillment').selectOption('delivery');
       check(await page.locator('#checkout-address').isVisible() && await page.locator('#checkout-address').isEnabled() && await page.locator('#checkout-address').evaluate(input => input.required), `${mode.name} switching back to delivery restores the address requirement`);
       if (mode.name === 'php') await page.screenshot({ path: path.join(evidence, 'cart-delivery-desktop.png'), fullPage: true, type: 'png' });
+      if (mode.name === 'static') {
+        await page.locator('#fulfillment').selectOption('pickup');
+        await page.locator('#checkout-name').fill('Демо заказа QA');
+        await page.locator('#checkout-phone').fill('+77010000001');
+        await page.locator('#checkout-form button[type="submit"]').click();
+        await page.waitForFunction(() => document.querySelector('#checkout-form > .form-status')?.classList.contains('success'), null, { timeout: 10000 });
+        const savedOrder = await page.evaluate(() => JSON.parse(localStorage.getItem('tokyo-demo-orders') || '[]')[0]);
+        check(savedOrder?.demo === true, 'static order submitted through checkout is tagged as a local demo record');
+      }
 
       await page.goto(mode.base + mode.routes.evening, { waitUntil: 'domcontentloaded' });
       const choices = [
@@ -238,6 +247,7 @@ async function run() {
         await page.waitForFunction(() => document.querySelector('.booking-form > .form-status')?.textContent.includes('Email не отправляется'));
         const savedBooking = await page.evaluate(() => JSON.parse(localStorage.getItem('tokyo-demo-bookings') || '[]')[0]);
         check(savedBooking && !Object.hasOwn(savedBooking, 'email'), 'static Pages booking confirms no email is sent and does not retain the guest email locally');
+        check(savedBooking?.demo === true, 'static booking submitted through the form is tagged as a local demo record');
       }
 
       await page.goto(mode.base + mode.routes.gift, { waitUntil: 'domcontentloaded' });
@@ -264,6 +274,8 @@ async function run() {
         await page.goto(mode.base + mode.routes.account, { waitUntil: 'domcontentloaded' });
         check(await page.locator('[data-tp-demo-loyalty]').count() === 1, 'static profile discloses browser-only loyalty demo');
         check(/^TP-DEMO-[A-Z0-9]{6}$/.test(await page.locator('[data-tp-demo-referral]').innerText()), 'static referral code is browser-generated demo data');
+        check(await page.locator('#demo-orders .account-demo-record-badge').count() === 1, 'static account marks the submitted order as a local educational record');
+        check(await page.locator('#demo-bookings .account-demo-record-badge').count() === 1, 'static account marks the submitted booking as a local educational record');
         await page.screenshot({ path: path.join(evidence, '12-static-account-privilege-desktop.jpg'), fullPage: true, type: 'jpeg', quality: 72 });
       }
 

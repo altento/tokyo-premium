@@ -79,6 +79,7 @@ document.addEventListener('submit', async event => {
       name: data.name,
       date: new Date().toLocaleString('ru-RU'),
       orderId: `DEMO-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      demo: true,
       subtotal,
       discountTotal,
       promoCode,
@@ -90,7 +91,7 @@ document.addEventListener('submit', async event => {
       custom_sets: payload.custom_sets
     });
   } else if (type === 'booking') {
-    rows.unshift({ name: data.name, date: data.date, time: data.time, guests: data.guests, zone: data.zone, table: data.table, format: data.format || '' });
+    rows.unshift({ name: data.name, date: data.date, time: data.time, guests: data.guests, zone: data.zone, table: data.table, format: data.format || '', demo: true });
   } else if (type === 'review') {
     if (String(data.body || '').trim().length < 20) {
       status.textContent = 'Добавьте отзыв не короче 20 символов.';

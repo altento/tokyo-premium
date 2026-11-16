@@ -303,7 +303,7 @@ This focused pass did not run the full browser suite, complete 11-route PHP visu
 
 - `commerce_quote()` now skips threshold-gift campaigns outside their start/end dates, weekday mask, or time window, then selects the next scheduled campaign.
 - Added focused regression cases for future, expired, disabled-weekday and out-of-window campaigns in `tests/gift-quantity-regression.php`.
-- PHP syntax checks passed. The SQLite regression is wired into the PHP+SQLite GitHub Actions job; this local CLI lacks `pdo_sqlite`, so the hosted result is pending.
+- PHP syntax checks passed. The local CLI lacks `pdo_sqlite`; hosted run [#147](https://github.com/altento/tokyo-premium/actions/runs/43914869461) passed PHP/SQLite integrity and the threshold-gift schedule regression.
 - GitHub Pages set-builder, offer and cart copy now identifies amounts and promo results as local estimates without server validation. Dynamic set-builder and evening messages use the same disclosure.
 - `npm run test:offers-evening` passed in the static browser, including the set-builder interaction and pricing disclosure.
 - No merge or publication was performed in this pass.
@@ -314,3 +314,11 @@ This focused pass did not run the full browser suite, complete 11-route PHP visu
 - `tests/account-demo-regression.cjs` checks that all three badges remain inside their buttons and have visible separation from their labels at desktop and 390 px mobile widths.
 - `npm run test:account-demo` passed in the static Pages export. Fresh full-page captures are in `project-docs/visual-qa/account-tab-count-refinement-2026-11-16/` and were visually inspected at both widths.
 - This focused CSS change does not modify or verify PHP account storage/authentication. The account dashboard still has broader structural differences from `design-references/11-account.png`.
+
+## Tokyo Premium 2.0 targeted regressions — 2026-11-16
+
+- `npm run test:offers-evening` passed in the static browser after adding restart-state gating and occasion-sensitive recommendation ranking. Updated captures: `project-docs/visual-qa/ideal-evening-budget-desktop-2026-11-16.png` and `ideal-evening-budget-mobile-2026-11-16.png`; both were visually inspected.
+- `npm run test:tokyo20` passed in PHP and static modes with PHP 8.4 + SQLite, including checkout-created browser-local orders and bookings being marked as educational demo records and shown with local badges in account history.
+- Campaign tier checks now cover promo quote/order, public offer visibility and threshold gifts. Birthday assignment checks cover consent, configured eligibility window, promotion code, account display and the admin path in `tests/gift-quantity-regression.php` and `tests/personal-offer-regression.php`.
+- The project-wide CLI lacks `pdo_sqlite`, so the two focused SQLite regressions were not run locally. The workflow runs both `test:gift-quantity` and `test:personal-offer` in its PHP+SQLite job.
+- Admin notification links now clear the session search before jumping to the counted section. The PHP integration regression covers the positive count, empty filtered list and reset destination; `php -l` passed locally. That database-backed integration runs in the same PHP+SQLite job.

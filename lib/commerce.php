@@ -263,6 +263,24 @@ function commerce_date_window_is_active(?string $startsAt, ?string $endsAt, stri
     return true;
 }
 
+function commerce_campaign_tier_is_eligible(PDO $pdo, array $campaign, ?int $userId): bool
+{
+    $requiredSlug = trim((string)($campaign['required_tier'] ?? ''));
+    if ($requiredSlug === '') return true;
+    if (!$userId || $userId < 1) return false;
+
+    $requiredQuery = $pdo->prepare('SELECT minimum_completed_spend,sort_order FROM loyalty_tiers WHERE slug=? AND active=1');
+    $requiredQuery->execute([$requiredSlug]);
+    $requiredTier = $requiredQuery->fetch();
+    $currentTier = commerce_user_tier($pdo, $userId);
+    if (!$requiredTier || !$currentTier) return false;
+
+    $currentSpend = (int)$currentTier['minimum_completed_spend'];
+    $requiredSpend = (int)$requiredTier['minimum_completed_spend'];
+    return $currentSpend > $requiredSpend
+        || ($currentSpend === $requiredSpend && (int)$currentTier['sort_order'] >= (int)$requiredTier['sort_order']);
+}
+
 function commerce_public_offers(PDO $pdo, ?int $userId = null): array
 {
     $rows = $pdo->query("SELECT c.* FROM promotion_campaigns c
@@ -278,6 +296,7 @@ function commerce_public_offers(PDO $pdo, ?int $userId = null): array
             if ($row['campaign_type']==='birthday' && !commerce_birthday_eligible($pdo,$userId)) continue;
             if (!commerce_campaign_has_usable_promo_code($pdo, (int)$row['id'], (string)$row['timezone'])) continue;
         }
+        if (!commerce_campaign_tier_is_eligible($pdo, $row, $userId)) continue;
         if (!commerce_campaign_is_active($row)) continue;
         $row['demo_only'] = (int)$row['demo_only'] === 1;
         $offers[] = $row;
@@ -612,6 +631,7 @@ function commerce_quote(PDO $pdo, array $items, array $customSets = [], string $
             $q->execute([$promotionCode]);
             $promo = $q->fetch();
             if (!$promo || (int)$promo['code_active'] !== 1 || !commerce_campaign_is_active($promo) || !commerce_date_window_is_active($promo['code_starts_at']??null,$promo['code_ends_at']??null,(string)$promo['timezone'])) throw new DomainException('Промокод не найден, отключён или срок его действия завершён.');
+            if (!commerce_campaign_tier_is_eligible($pdo, $promo, $userId)) throw new DomainException('Это предложение доступно только участникам требуемого уровня.');
             $promoStackable = (int)$promo['stackable'] === 1;
             if ((int)$promo['uses_count'] >= (int)($promo['maximum_uses'] ?? PHP_INT_MAX)) throw new DomainException('Лимит применений промокода исчерпан.');
             if ((int)($promo['minimum_subtotal'] ?? 0) > $subtotal) throw new DomainException('Сумма заказа меньше минимальной для этого предложения.');
@@ -691,7 +711,7 @@ function commerce_quote(PDO $pdo, array $items, array $customSets = [], string $
         $q->execute([$subtotal]);
         $threshold = null;
         foreach ($q->fetchAll() as $candidate) {
-            if (commerce_campaign_is_active($candidate)) {
+            if (commerce_campaign_is_active($candidate) && commerce_campaign_tier_is_eligible($pdo, $candidate, $userId)) {
                 $threshold = $candidate;
                 break;
             }
@@ -1112,10 +1132,14 @@ function commerce_assign_personal_offer(PDO $pdo, int $userId, int $campaignId, 
         $user = $pdo->prepare('SELECT 1 FROM users WHERE id=?');
         $user->execute([$userId]);
         if (!$user->fetchColumn()) throw new DomainException('Аккаунт не найден.');
-        $campaign = $pdo->prepare("SELECT * FROM promotion_campaigns WHERE id=? AND campaign_type='personal' AND active=1");
+        $campaign = $pdo->prepare("SELECT * FROM promotion_campaigns WHERE id=? AND campaign_type IN ('personal','birthday') AND active=1");
         $campaign->execute([$campaignId]);
         $campaignRow=$campaign->fetch();
-        if (!$campaignRow) throw new DomainException('Выберите активную персональную кампанию.');
+        if (!$campaignRow) throw new DomainException('Выберите активную персональную или birthday-кампанию.');
+        if ($campaignRow['campaign_type']==='birthday' && !commerce_birthday_eligible($pdo,$userId)) {
+            throw new DomainException('Для назначения birthday-предложения нужны дата рождения, отдельное согласие и актуальное окно дня рождения.');
+        }
+        if (!commerce_campaign_tier_is_eligible($pdo,$campaignRow,$userId)) throw new DomainException('Аккаунт не соответствует требуемому уровню кампании.');
         $codes=$pdo->prepare('SELECT starts_at,ends_at,uses_count,maximum_uses FROM promo_codes WHERE campaign_id=? AND active=1');
         $codes->execute([$campaignId]); $hasRedeemableCode=false;
         foreach($codes->fetchAll() as $code){

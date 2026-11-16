@@ -205,3 +205,7 @@ The same folder includes the eight populated/empty/checkout-validation/pickup/de
 ## 2026-11-16 account tab count badges
 
 `account-tab-count-refinement-2026-11-16/11-account-seeded-desktop.jpg` and `11-account-seeded-mobile.jpg` show the populated local-demo account after count badges were separated from the History, Favorites, and Addresses labels. I visually inspected both captures. The focused `npm run test:account-demo` pass asserts badge-label spacing and button bounds at desktop and 390 px mobile widths. The wider account dashboard remains less detailed than `11-account.png`; no PHP or public Pages check was performed.
+
+## 2026-11-16 Ideal Evening behavior and local order labeling
+
+`ideal-evening-budget-desktop-2026-11-16.png` and `ideal-evening-budget-mobile-2026-11-16.png` show the current static recommendation result. I inspected both captures; the mobile cost disclosure wraps inside the result card without horizontal overflow. The focused regression confirms restart gating/default values and different rankings for romantic versus special-occasion answers. `npm run test:tokyo20` also passed in PHP and static modes and checked that static form-created orders/bookings keep their local-demo badges in account history. These captures do not claim parity against the 11 restaurant-page references.

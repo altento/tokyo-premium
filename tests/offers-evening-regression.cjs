@@ -6,6 +6,25 @@ const { chromium } = require('playwright');
 const root = path.resolve(__dirname, '..');
 const staticBase = process.env.TOKYO_STATIC_BASE_URL || 'http://127.0.0.1:8765';
 
+async function getRecommendationTitles(page, occasion, preference) {
+  await page.goto(`${staticBase}/perfect-evening.html`, { waitUntil: 'domcontentloaded' });
+  const choices = [
+    ['occasion', occasion],
+    ['preference', preference],
+    null,
+    null,
+    ['atmosphere', 'main']
+  ];
+  for (let index = 0; index < choices.length; index++) {
+    const step = page.locator('[data-tp-evening-step]').nth(index);
+    const choice = choices[index];
+    if (choice) await step.locator(`[data-tp-evening-option][data-field="${choice[0]}"][value="${choice[1]}"]`).click();
+    else await step.locator('[data-tp-evening-input]').fill(index === 2 ? '10000' : '2');
+    await step.locator('[data-tp-evening-next]').click();
+  }
+  return page.locator('.tp-recommendation-card h4').allInnerTexts();
+}
+
 async function main() {
   assert.equal(
     fs.readFileSync(path.join(root, 'experience-ui.js'), 'utf8'),
@@ -66,6 +85,24 @@ async function main() {
     await page.screenshot({ path: path.join(evidenceDir, 'ideal-evening-budget-desktop-2026-11-16.png'), fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.screenshot({ path: path.join(evidenceDir, 'ideal-evening-budget-mobile-2026-11-16.png'), fullPage: true });
+
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.locator('[data-tp-evening-restart]').click();
+    assert.equal(await page.locator('[data-tp-evening-result]').isVisible(), false, 'restart hides the old recommendation');
+    assert.equal(await page.locator('[data-tp-evening-step]').nth(0).isVisible(), true, 'restart returns to the first step');
+    assert.equal(await page.locator('[data-tp-evening-step]').nth(0).locator('[data-tp-evening-next]').isDisabled(), true, 'restart requires a new occasion choice');
+    assert.equal(await page.locator('[data-tp-evening-step]').nth(1).locator('[data-tp-evening-next]').isDisabled(), true, 'restart requires a new taste choice');
+    assert.equal(await page.locator('#evening-budget').inputValue(), '20000', 'restart restores the default per-guest budget');
+    assert.equal(await page.locator('#evening-guests').inputValue(), '2', 'restart restores the default guest count');
+    await page.locator('[data-tp-evening-step]').nth(0).locator('[data-tp-evening-option][value="romantic"]').click();
+    assert.equal(await page.locator('[data-tp-evening-step]').nth(0).locator('[data-tp-evening-next]').isDisabled(), false, 'choosing an occasion re-enables its continue button');
+    await page.locator('[data-tp-evening-step]').nth(0).locator('[data-tp-evening-next]').click();
+    assert.equal(await page.locator('[data-tp-evening-step]').nth(1).locator('[data-tp-evening-next]').isDisabled(), true, 'the taste step remains gated after restart');
+
+    const romanticRecommendations = await getRecommendationTitles(page, 'romantic', 'plant');
+    const celebrationRecommendations = await getRecommendationTitles(page, 'celebration', 'plant');
+    assert.notDeepEqual(romanticRecommendations, celebrationRecommendations, 'romantic and special-occasion answers change the same-preference recommendations');
+
     assert.deepEqual(pageErrors, [], 'static routes produce no browser runtime errors');
     console.log('Focused Offers + Ideal Evening regression passed (static browser, per-guest budget and warning leakage).');
   } finally {

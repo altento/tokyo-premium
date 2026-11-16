@@ -60,6 +60,40 @@ foreach ($scheduledCandidates as $scheduleName => $scheduledCampaignId) {
 }
 $pdo->exec("UPDATE promotion_campaigns SET active=0 WHERE campaign_type='gift_threshold' AND id<>" . $campaignId);
 
+$pdo->prepare('INSERT INTO users(email,full_name,password_hash) VALUES(?,?,?)')->execute(['tier-low+'.bin2hex(random_bytes(4)).'@example.test','Below required tier',password_hash('test-only',PASSWORD_DEFAULT)]);
+$belowTierUserId = (int)$pdo->lastInsertId();
+$pdo->prepare('INSERT INTO users(email,full_name,password_hash) VALUES(?,?,?)')->execute(['tier-gold+'.bin2hex(random_bytes(4)).'@example.test','Required tier',password_hash('test-only',PASSWORD_DEFAULT)]);
+$requiredTierUserId = (int)$pdo->lastInsertId();
+$pdo->prepare("INSERT INTO orders(user_id,customer_name,phone,fulfillment,total,subtotal,discount_total,delivery_fee,status) VALUES(?,?,?,'pickup',150000,150000,0,0,'completed')")
+    ->execute([$requiredTierUserId,'Tier QA','+77010000000']);
+$pdo->prepare('UPDATE promotion_campaigns SET required_tier=? WHERE id=?')->execute(['gold',$campaignId]);
+$belowTierGift = commerce_quote($pdo,$cart,[],'','pickup',$belowTierUserId,'gift-tier-low',$giftDish,0,'',false,1);
+$check(!$belowTierGift['ok'], 'threshold gift requiring Gold is denied to a below-tier account');
+$qualifiedTierGift = commerce_quote($pdo,$cart,[],'','pickup',$requiredTierUserId,'gift-tier-gold',$giftDish,0,'',false,1);
+$check($qualifiedTierGift['ok'] && (int)($qualifiedTierGift['gift_items'][0]['campaign_id'] ?? 0) === $campaignId, 'threshold gift requiring Gold is available to a qualifying account');
+$pdo->prepare('UPDATE promotion_campaigns SET required_tier=NULL WHERE id=?')->execute([$campaignId]);
+
+$tierPromoSlug = 'qa-tier-promo-' . bin2hex(random_bytes(4));
+$tierPromo = $pdo->prepare("INSERT INTO promotion_campaigns(slug,campaign_type,title,reward_type,reward_value,active,stackable,demo_only,required_tier) VALUES(?,'exclusive','QA tier offer','percent',10,1,1,1,'gold')");
+$tierPromo->execute([$tierPromoSlug]);
+$tierPromoCampaignId = (int)$pdo->lastInsertId();
+$pdo->prepare('INSERT INTO promo_codes(code,campaign_id,active) VALUES(?,?,1)')->execute(['QATIER'.$tierPromoCampaignId,$tierPromoCampaignId]);
+$tierPromoCode = 'QATIER'.$tierPromoCampaignId;
+$belowTierPromo = commerce_quote($pdo,$cart,[],$tierPromoCode,'pickup',$belowTierUserId,'promo-tier-low');
+$check(!$belowTierPromo['ok'] && str_contains($belowTierPromo['message'],'требуемого уровня'), 'tier-restricted promo quote rejects an account below Gold');
+$qualifiedTierPromo = commerce_quote($pdo,$cart,[],$tierPromoCode,'pickup',$requiredTierUserId,'promo-tier-gold');
+$check($qualifiedTierPromo['ok'] && $qualifiedTierPromo['discount_total'] > 0, 'tier-restricted promo quote is server-priced for a qualifying Gold account');
+$visibleToBelowTier = array_map(static fn(array $row): int => (int)$row['id'],commerce_public_offers($pdo,$belowTierUserId));
+$visibleToRequiredTier = array_map(static fn(array $row): int => (int)$row['id'],commerce_public_offers($pdo,$requiredTierUserId));
+$check(!in_array($tierPromoCampaignId,$visibleToBelowTier,true) && in_array($tierPromoCampaignId,$visibleToRequiredTier,true), 'tier-restricted offer cards are hidden from below-tier accounts');
+$orderInput = ['name'=>'Гость QA','phone'=>'+77010000000','address'=>'','fulfillment'=>'pickup','items'=>$cart,'custom_sets'=>[],'promo_code'=>$tierPromoCode];
+$pdo->beginTransaction();
+$orderTierRejected = false;
+try { commerce_persist_order($pdo,$orderInput,$belowTierUserId,'promo-tier-low-order'); }
+catch (DomainException $error) { $orderTierRejected = str_contains($error->getMessage(),'требуемого уровня'); }
+finally { if ($pdo->inTransaction()) $pdo->rollBack(); }
+$check($orderTierRejected, 'order persistence rechecks a tier-restricted promo for a below-tier account');
+
 $quote = commerce_quote($pdo,$cart,[],'','pickup',null,$actor,$giftDish,0,'',false,2);
 $gift = $quote['gift_items'][0] ?? null;
 $option = $quote['gift_options'][0] ?? [];

@@ -136,7 +136,7 @@ try {
     $pdo->prepare("INSERT INTO promotion_campaigns(slug,campaign_type,title,reward_type,active) VALUES(?,'exclusive','Not personal','none',1)")->execute(['not-personal-'.bin2hex(random_bytes(5))]);
     $wrongTypeId=(int)$pdo->lastInsertId();
     $wrongTypeRejected=false;
-    try { commerce_assign_personal_offer($pdo,$userId,$wrongTypeId,null); } catch (DomainException $error) { $wrongTypeRejected=str_contains($error->getMessage(),'активную персональную кампанию'); }
+    try { commerce_assign_personal_offer($pdo,$userId,$wrongTypeId,null); } catch (DomainException $error) { $wrongTypeRejected=str_contains($error->getMessage(),'персональную или birthday-кампанию'); }
     $assert($wrongTypeRejected,'exclusive campaigns cannot be assigned through the personal-offer path');
 
     $noCodeSlug='personal-no-code-'.bin2hex(random_bytes(5));
@@ -145,6 +145,49 @@ try {
     $noCodeRejected=false;
     try { commerce_assign_personal_offer($pdo,$userId,$noCodeCampaignId,null); } catch (DomainException $error) { $noCodeRejected=str_contains($error->getMessage(),'действующий промокод'); }
     $assert($noCodeRejected,'campaigns without an active redeemable code cannot be assigned as personal invitations');
+
+    $pdo->exec('UPDATE loyalty_settings SET birthday_window_days=0 WHERE id=1');
+    $today=new DateTimeImmutable('today',new DateTimeZone('Asia/Qyzylorda'));
+    $birthDate=$today->format('Y-m-d');
+    $pdo->prepare('INSERT INTO user_profiles(user_id,birth_date,birthday_offer_consent,birthday_consent_at) VALUES(?,?,1,CURRENT_TIMESTAMP)')->execute([$otherUserId,$birthDate]);
+    $pdo->prepare('INSERT INTO user_profiles(user_id,birth_date,birthday_offer_consent,birthday_consent_at) VALUES(?,?,0,NULL)')->execute([$userId,$birthDate]);
+    $birthdaySlug='birthday-qa-'.bin2hex(random_bytes(4));
+    $pdo->prepare("INSERT INTO promotion_campaigns(slug,campaign_type,title,reward_type,reward_value,active,stackable,demo_only) VALUES(?,'birthday','Birthday QA campaign','percent',10,1,1,1)")->execute([$birthdaySlug]);
+    $birthdayCampaignId=(int)$pdo->lastInsertId();
+    $birthdayCode='BDAYQA'.$birthdayCampaignId;
+    $pdo->prepare('INSERT INTO promo_codes(code,campaign_id,active,maximum_uses) VALUES(?,?,1,10)')->execute([$birthdayCode,$birthdayCampaignId]);
+
+    $noConsentRejected=false;
+    try { commerce_assign_personal_offer($pdo,$userId,$birthdayCampaignId,null); }
+    catch (DomainException $error) { $noConsentRejected=str_contains($error->getMessage(),'отдельное согласие'); }
+    $assert($noConsentRejected && (int)$pdo->query('SELECT COUNT(*) FROM personalized_offers WHERE user_id='.$userId.' AND campaign_id='.$birthdayCampaignId)->fetchColumn()===0, 'birthday assignment rejects an account without separate birthday-offer consent');
+
+    $tomorrow=$today->modify('+1 day');
+    $birthYear=checkdate((int)$tomorrow->format('n'),(int)$tomorrow->format('j'),1990)?1990:1992;
+    $pdo->prepare('UPDATE user_profiles SET birth_date=?,birthday_offer_consent=1,birthday_consent_at=CURRENT_TIMESTAMP WHERE user_id=?')->execute([$birthYear.'-'.$tomorrow->format('m-d'),$userId]);
+    $outsideWindowRejected=false;
+    try { commerce_assign_personal_offer($pdo,$userId,$birthdayCampaignId,null); }
+    catch (DomainException $error) { $outsideWindowRejected=str_contains($error->getMessage(),'актуальное окно'); }
+    $assert($outsideWindowRejected && (int)$pdo->query('SELECT COUNT(*) FROM personalized_offers WHERE user_id='.$userId.' AND campaign_id='.$birthdayCampaignId)->fetchColumn()===0, 'birthday assignment rejects an opted-in account outside the configured birthday window');
+
+    $birthdayOfferId=commerce_assign_personal_offer($pdo,$otherUserId,$birthdayCampaignId,null);
+    $birthdayQuote=commerce_quote($pdo,[['id'=>1,'qty'=>1]],[],$birthdayCode,'pickup',$otherUserId,'birthday-qa-actor');
+    $birthdayOfferIds=array_map(static fn(array $row):int=>(int)$row['id'],commerce_public_offers($pdo,$otherUserId));
+    $assert($birthdayOfferId>0 && $birthdayQuote['ok'] && in_array($birthdayCampaignId,$birthdayOfferIds,true), 'eligible, consented account can receive, see, and redeem an assigned birthday campaign');
+
+    $adminRoute=var_export($root.'/admin-marketing.php',true);
+    $adminGetSessionId='tp'.bin2hex(random_bytes(12));
+    $adminCsrf=bin2hex(random_bytes(16));
+    try {
+        $birthdayAdminPage=$runPhp('session_name("tokyo_session"); session_save_path('.var_export(sys_get_temp_dir(),true).'); session_id('.var_export($adminGetSessionId,true).'); session_start(); $_SESSION["admin_id"]=1; $_SESSION["csrf"]='.var_export($adminCsrf,true).'; session_write_close(); $_SERVER["REQUEST_METHOD"]="GET"; require '.$adminRoute.';');
+        preg_match('/name="action" value="personal-offer-save".*?name="campaign_id".*?<\/select>/s',$birthdayAdminPage,$assignmentForm);
+        $assert(isset($assignmentForm[0]) && str_contains($assignmentForm[0],'Birthday QA campaign') && str_contains($assignmentForm[0],'BIRTHDAY'), 'admin assignment UI exposes active birthday campaigns');
+        $birthdayAdminPost=$runPhp('session_name("tokyo_session"); session_save_path('.var_export(sys_get_temp_dir(),true).'); session_id('.var_export($adminGetSessionId,true).'); session_start(); $_SESSION["admin_id"]=1; session_write_close(); $_SERVER["REQUEST_METHOD"]="POST"; $_POST=["csrf"=>'.var_export($adminCsrf,true).',"action"=>"personal-offer-save","user_id"=>'.var_export((string)$otherUserId,true).',"campaign_id"=>'.var_export((string)$birthdayCampaignId,true).']; require '.$adminRoute.';');
+        $assert(str_contains($birthdayAdminPost,'Персональное предложение назначено') && (int)$pdo->query('SELECT COUNT(*) FROM personalized_offers WHERE user_id='.$otherUserId.' AND campaign_id='.$birthdayCampaignId)->fetchColumn()===1, 'admin route assigns a birthday campaign to the eligible account');
+    } finally {
+        $adminSessionFile=sys_get_temp_dir().DIRECTORY_SEPARATOR.'sess_'.$adminGetSessionId;
+        if(is_file($adminSessionFile))@unlink($adminSessionFile);
+    }
 
     echo "PASS: {$assertions} focused personal-offer assertions.\n";
 } finally {

@@ -315,8 +315,16 @@ The five-stage Omakase selector already uses five distinct catalogue photos and 
 
 ## 2026-11-16 targeted commerce and Pages disclosure repair
 
-Threshold-gift selection now applies the campaign’s date, weekday, and time schedule and can fall through to the next eligible offer. GitHub Pages copy and interactive status messages now clearly describe local estimates and demo-only promo behavior without implying server validation. The focused static browser check passed. PHP lint passed, but the new SQLite schedule regression could not run in the current CLI because `pdo_sqlite` is unavailable; a focused GitHub Actions step now runs it, with the hosted result pending. The PR is still draft and GitHub Pages remains unchanged.
+Threshold-gift selection now applies the campaign’s date, weekday, and time schedule and can fall through to the next eligible offer. GitHub Pages copy and interactive status messages now clearly describe local estimates and demo-only promo behavior without implying server validation. The focused static browser check passed. The local CLI lacks `pdo_sqlite`; hosted run [#147](https://github.com/altento/tokyo-premium/actions/runs/43914869461) passed PHP/SQLite integrity and the threshold-gift schedule regression. The PR is still draft and GitHub Pages remains unchanged.
 
 ## 2026-11-16 account navigation badge spacing
 
 Fixed the seeded account’s tab counts running into the Russian labels by rendering the count as a separate gold badge in both the PHP source stylesheet and checked-in Pages stylesheet. `npm run test:account-demo` passed with desktop and 390 px geometry assertions. The fresh full-page captures in `project-docs/visual-qa/account-tab-count-refinement-2026-11-16/` were visually inspected. This closes the count-label collision only; it does not claim full dashboard parity with the approved account reference or test PHP account persistence.
+
+## 2026-11-16 focused commerce and wizard corrections
+
+The Ideal Evening restart now restores the initial budget/guest values, removes the previous result and booking parameters, and keeps each choice step disabled until the user makes a new selection. Romantic and special-occasion choices now affect ranking independently of the preference answer. `npm run test:offers-evening` passed. Static checkout-created orders and bookings now carry `demo: true`; `npm run test:tokyo20` passed in PHP and Pages modes and verified local-only badges in the account history.
+
+Campaign `required_tier` is now enforced when listing offers, quoting or persisting an order, selecting a threshold gift, and assigning a private offer. Birthday campaigns can be assigned from the admin panel only to an account with a valid birthday, separate consent and an active birthday window; the server still rechecks the code and eligibility at checkout. Focused SQLite regressions were added and `test:personal-offer` is wired into GitHub Actions. The local CLI lacks `pdo_sqlite`, so these database cases are verified by the repository's PHP+SQLite workflow rather than this workstation.
+
+Admin notification links now clear the persisted panel search before jumping to the selected category, so global unread counts lead to visible records. A regression was added to the existing PHP/SQLite integration script and PHP lint passed. These focused changes do not close the broader visual-fidelity and deployment gaps recorded above.

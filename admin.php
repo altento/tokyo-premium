@@ -308,6 +308,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+$notificationTarget = (string)($_GET['notification'] ?? '');
+if ($_SERVER['REQUEST_METHOD'] === 'GET'
+    && !empty($_SESSION['admin_id'])
+    && in_array($notificationTarget, ['orders','bookings','reviews','contact_messages'], true)) {
+    // Counts are global, while the admin search is intentionally session-wide.
+    // Clear that filter before jumping so a positive count cannot lead to an empty list.
+    unset($_SESSION['admin_search']);
+    header('Location: admin.php#' . $notificationTarget);
+    exit;
+}
+
 $logged = !empty($_SESSION['admin_id']);
 $notice = (string)($_SESSION['admin_flash'] ?? '');
 unset($_SESSION['admin_flash']);
@@ -436,7 +447,7 @@ $bookingMailReadiness = match ($bookingMailState) {
     </div>
     <div class="admin-notification-grid">
       <?php foreach ($notificationCounts as $key=>$count): ?>
-        <a class="admin-notification" href="#<?=$key?>">
+        <a class="admin-notification" href="?notification=<?=e($key)?>#<?=$key?>">
           <span><?=e($notificationLabels[$key])?></span><strong class="<?=$count > 0 ? 'has-unread' : ''?>"><?=$count?></strong>
         </a>
       <?php endforeach ?>

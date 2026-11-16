@@ -319,7 +319,8 @@
     if ((signals[preference] || []).some(word => text.includes(word))) score += 5;
     if (preference === 'plant' && /мяс|рыб|лосос|тунец|угор|кревет|сашими/.test(text)) score -= 8;
     if (state.mood === 'light' && signals.light.some(word => text.includes(word))) score += 3;
-    if (state.mood === 'celebration' && /сашими|сэт|сет|десерт|икр|премиум|ассорти/.test(text)) score += 2;
+    if (state.occasion === 'romantic' && /тартар|сашими|десерт|чай|матча|моти|тирамису/.test(text)) score += 3;
+    if (state.occasion === 'celebration' && /сашими|сэт|сет|десерт|икр|премиум|ассорти/.test(text)) score += 3;
     if (state.occasion === 'discovery' && /омак|сашими|сэт|сет|авторск/.test(text)) score += 3;
     if (state.occasion === 'friends' && /сет|сэт|ролл|ассорти/.test(text)) score += 2;
     const price = Math.max(0, Number(dish.price) || 0);
@@ -333,8 +334,19 @@
     started.add(root);
     const steps = many('[data-tp-evening-step]', root);
     const options = many('[data-tp-evening-option]', root);
+    const inputs = many('[data-tp-evening-input]', root);
     const state = Object.create(null);
+    const booking = one('[data-tp-evening-booking]', root);
+    const initialBookingHref = booking instanceof HTMLAnchorElement ? booking.getAttribute('href') || booking.href : '';
     let current = 0;
+    const refreshNextButtons = () => {
+      many('[data-tp-evening-next]', root).forEach(next => {
+        const step = next.closest('[data-tp-evening-step]');
+        const option = step && one('[data-tp-evening-option]', step);
+        const input = step && one('[data-tp-evening-input]', step);
+        next.disabled = option ? !state[option.dataset.field] : input ? !input.checkValidity() : false;
+      });
+    };
     const renderStep = () => {
       steps.forEach((step, index) => { step.hidden = index !== current; step.setAttribute('aria-current', index === current ? 'step' : 'false'); });
       const progress = one('[data-tp-evening-progress]', root);
@@ -349,6 +361,7 @@
       }
       many('[data-tp-evening-back]', root).forEach(back => { back.disabled = current === 0; });
       many('[data-tp-evening-next]', root).forEach(next => { next.textContent = current >= steps.length - 1 ? 'Показать подбор ↗' : 'Продолжить ↗'; });
+      refreshNextButtons();
     };
 
     options.forEach(option => option.addEventListener('click', () => {
@@ -361,15 +374,13 @@
         item.classList.toggle('is-selected', active);
       });
       const step = option.closest('[data-tp-evening-step]');
-      const next = step && one('[data-tp-evening-next]', step);
-      if (next) next.disabled = false;
+      if (step) refreshNextButtons();
     }));
 
-    many('[data-tp-evening-input]', root).forEach(input => {
+    inputs.forEach(input => {
       const update = () => {
         state[input.dataset.tpEveningInput] = input.value;
-        const next = input.closest('[data-tp-evening-step]')?.querySelector('[data-tp-evening-next]');
-        if (next) next.disabled = !input.checkValidity();
+        refreshNextButtons();
       };
       input.addEventListener('input', update);
       input.addEventListener('change', update);
@@ -446,11 +457,11 @@
       result.append(note);
       result.hidden = false;
       steps.forEach(step => { step.hidden = true; });
-      const booking = one('[data-tp-evening-booking]', root);
       if (booking instanceof HTMLAnchorElement) {
-        const url = new URL(booking.href, doc.baseURI);
+        const url = new URL(initialBookingHref || booking.href, doc.baseURI);
         url.searchParams.set('zone', zone);
         if (state.atmosphere === 'omakase') url.searchParams.set('format', 'Сезонный');
+        else url.searchParams.delete('format');
         booking.href = url.pathname + url.search + url.hash;
       }
       setStatus(root, `Подбор готов. Ориентировочная сумма ${money(total)} для ${guestCount} гостей.`);
@@ -472,8 +483,13 @@
       current = 0;
       Object.keys(state).forEach(key => delete state[key]);
       options.forEach(option => { option.setAttribute('aria-pressed', 'false'); option.classList.remove('is-selected'); });
-      const result = one('[data-tp-evening-result]', root); if (result) result.hidden = true;
-      steps.forEach(step => { step.hidden = false; });
+      inputs.forEach(input => {
+        input.value = input.defaultValue;
+        state[input.dataset.tpEveningInput] = input.value;
+      });
+      const result = one('[data-tp-evening-result]', root);
+      if (result) { result.hidden = true; result.replaceChildren(); }
+      if (booking instanceof HTMLAnchorElement) booking.href = initialBookingHref;
       renderStep(); setStatus(root, 'Подбор сброшен.');
     });
     renderStep();
