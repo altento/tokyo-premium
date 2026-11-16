@@ -34,7 +34,7 @@ The focused captures are paired with automated checks in `tests/menu-visual-regr
 
 `11-account-rebalanced-desktop.jpg` and `11-account-rebalanced-mobile.jpg` show the PHP account with one synthetic completed checkout. The dashboard now gives orders and bookings a wide paired row, uses two balanced columns for account panels on desktop, adds a dark garden photograph behind the profile identity and fills the tall section navigation with the same local room image. The long account email truncates visually while its full value remains in the element title and text.
 
-The screenshots were captured in Chromium at 1440 px and 390 px and inspected. The mobile document width equals the viewport, the main heading stays in bounds, and there were no page errors. This is a page-specific visual review, not a rerun of the broad responsive suite or a full comparison against all eleven references.
+The screenshots were captured in Chromium at 1440 px, 390 px and 320 px and inspected. The mobile document width equals the viewport, the main heading stays in bounds, and there were no page errors. This is a page-specific visual review, not a rerun of the broad responsive suite or a full comparison against all eleven references.
 
 ## 2026-11-13 Tokyo 2.0 visual-fidelity pass
 
@@ -172,7 +172,7 @@ The menu now adds six ingredient filters from the approved reference. The focuse
 
 ## 2026-11-16 explicitly seeded account demo
 
-`11-account-seeded-desktop.jpg` and `11-account-seeded-mobile.jpg` show the static profile after the user explicitly creates sample history. Three fictional orders use current catalog names and prices, one booking request and three favorites carry a visible browser-local demo label, and the existing settings action clears them. The account remains empty by default; this action saves only to this browser.
+account-favorites-preview-2026-11-16/11-account-seeded-desktop.jpg and 11-account-seeded-mobile.jpg show the static profile after sample data is explicitly created. The dashboard now surfaces three browser-local favorites directly below order/booking history, with live catalog photos, prices and working quick-add; the full Favorites tab remains available. A focused Playwright regression passed at 1440 px and 390 px, including cart quick-add, mobile overflow and clear-data behavior. This remains a browser-local demo, empty by default; visual hierarchy still differs from the approved reference.
 
 ## 2026-11-16 homepage mobile framing
 

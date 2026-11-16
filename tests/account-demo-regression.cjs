@@ -21,6 +21,8 @@ async function run() {
     assert.equal(await page.locator('#demo-orders .demo-order').count(), 0, 'new browser starts with an empty history');
     assert.equal(await page.locator('[data-account-demo-seed]').count(), 1, 'account offers an explicit sample-data action');
     assert.equal(await page.locator('.account-overview h1').innerText(), 'Личный кабинет', 'account masthead keeps a stable page title');
+    assert.equal(await page.locator('#demo-favorites-preview .dish-card').count(), 0, 'empty profile has no favorite previews');
+    assert.ok(await page.locator('#demo-favorites-preview-empty').isVisible(), 'empty profile explains how to save a favorite');
     assert.equal(await page.locator('.account-overview-lead').innerText(), 'Ваше пространство в Tokyo Premium', 'account masthead follows the approved subtitle hierarchy');
     assert.match(await page.locator('.account-overview-privacy').innerText(), /не зашифровано/i, 'account explains that browser-local demo data is not encrypted');
     assert.equal(await page.locator('.account-overview-art img').getAttribute('src'), 'assets/generated/contact-exterior.webp', 'account uses an entrance photograph rather than a room photo');
@@ -43,6 +45,8 @@ async function run() {
     assert.equal(historyHeadingTops.length, 2, 'history exposes order and booking headings');
     assert.ok(Math.abs(historyHeadingTops[0] - historyHeadingTops[1]) <= 20, `order and booking columns align at the top edge: ${historyHeadingTops.join(', ')}`);
     assert.equal(await page.locator('#demo-favorites .dish-card').count(), 3, 'sample favorites resolve to catalog dishes');
+    assert.equal(await page.locator('#demo-favorites-preview .dish-card').count(), 3, 'dashboard surfaces the saved dishes without opening another tab');
+    assert.ok(await page.locator('#demo-favorites-preview .dish-card img').first().evaluate(image => image.complete && image.naturalWidth > 0), 'dashboard favorite preview uses a loaded dish photograph');
     assert.equal(await page.locator('#demo-orders .account-demo-record-badge').count(), 3, 'every sample order is explicitly labeled');
     assert.equal(await page.locator('#demo-bookings .account-demo-record-badge').count(), 1, 'sample booking is explicitly labeled');
     assert.ok(await page.locator('#demo-orders .demo-order-items li').count() >= 5, 'order history shows item snapshots');
@@ -70,6 +74,13 @@ async function run() {
     assert.ok(await page.evaluate(() => { const title=document.querySelector('.account-overview h1').getBoundingClientRect(); const hero=document.querySelector('.account-overview').getBoundingClientRect(); return title.left >= hero.left && title.right <= hero.right && title.width > 0; }), 'account title stays inside the mobile masthead');
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
     await page.screenshot({ path: path.join(evidence, '11-account-seeded-mobile.jpg'), fullPage: true, type: 'jpeg', quality: 74 });
+    await page.setViewportSize({ width: 320, height: 844 });
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'favorites preview has no overflow at 320 px');
+    assert.ok(await page.locator('#demo-favorites-preview .dish-card').evaluateAll(cards => { const box=document.querySelector('#demo-favorites-preview').getBoundingClientRect(); return cards.every(card => { const rect=card.getBoundingClientRect(); return rect.width>0 && rect.left>=box.left && rect.right<=box.right; }); }), 'favorite cards stay within their panel at 320 px');
+    await page.setViewportSize({ width: 390, height: 844 });
+
+    await page.locator('#demo-favorites-preview .add-to-cart').first().click();
+    assert.equal(await page.evaluate(() => window.TokyoCart.get().length), 1, 'quick add works from the dashboard favorite preview');
 
     await page.locator('[data-account-tab="settings"]').click();
     await page.locator('#demo-clear-data').click();

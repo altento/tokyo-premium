@@ -133,7 +133,25 @@ $accountSeedCallout = <<<'HTML'
 <aside class="account-demo-seed"><div><strong>Посмотрите заполненный кабинет</strong><p>Создайте вымышленные учебные заказы, запрос на бронь и избранные блюда. Они останутся только в этом браузере; удалить всё можно в настройках.</p><p class="form-status" data-account-demo-seed-status aria-live="polite"></p></div><button class="button secondary" type="button" data-account-demo-seed>Заполнить учебный пример</button></aside>
 HTML;
 $overview = str_replace('<div class="account-quick-actions">', $accountSeedCallout.'<div class="account-quick-actions">', $overview);
+$accountFavoritesPreview = <<<'HTML'
+<section class="account-favorites-overview" aria-labelledby="account-favorites-overview-title">
+  <div class="account-favorites-overview-heading">
+    <div><span class="kicker">СОХРАНЁННЫЕ ВЫБОРЫ · В ЭТОМ БРАУЗЕРЕ</span><h2 id="account-favorites-overview-title">Избранные блюда</h2></div>
+    <button class="button secondary" type="button" data-account-quick-target="favorites" aria-controls="demo-favorites">Все избранное ↗</button>
+  </div>
+  <div id="demo-favorites-preview" class="account-favorites-overview-grid" data-account-favorites-list data-account-favorites-limit="3" aria-live="polite"></div>
+  <p id="demo-favorites-preview-empty" class="account-favorites-overview-empty" hidden>Пока нет сохранённых блюд. <a class="text-link" href="menu.html">Посмотреть меню ↗</a></p>
+</section>
+HTML;
 $account = str_replace('<section class="section"><div class="account-demo-layout">', $overview, $account);
+$favoritesPanelInsertionCount = 0;
+$account = str_replace(
+    '</div></section><section class="account-demo-panel" data-account-panel="favorites"',
+    '</div>' . $accountFavoritesPreview . '</section><section class="account-demo-panel" data-account-panel="favorites"',
+    $account,
+    $favoritesPanelInsertionCount
+);
+if ($favoritesPanelInsertionCount !== 1) throw new RuntimeException('Could not place account favorites after the order history.');
 $accountPromo = <<<'HTML'
 <section class="account-promo"><div><div class="kicker">Следующий вечер · учебный сценарий</div><h2>Пусть сезон задаст настроение</h2><p>Выберите дату и формат вечера. Бронирование в демоверсии сохраняется только как запрос и не резервирует стол.</p><a class="button" href="booking.html">Перейти к бронированию ↗</a></div><span class="kicker">SEASONAL · TOKYO PREMIUM</span></section>
 HTML;

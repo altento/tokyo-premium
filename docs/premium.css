@@ -659,6 +659,46 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .account-demo-page .account-demo-panel h2:after{content:"";display:block;width:36px;height:2px;margin-top:9px;background:linear-gradient(90deg,#ed2430,#a30e19)}
 .account-demo-page .account-demo-panel[data-account-panel="history"]>.intro-grid{align-items:start;gap:clamp(16px,3vw,38px)}
 .account-demo-page .account-list article{border-radius:7px;background:linear-gradient(110deg,#191410,#11100e)}
+.account-demo-page .account-favorites-overview{display:grid;gap:14px;margin:8px 0 clamp(20px,3vw,34px);padding:clamp(18px,2.4vw,28px);border:1px solid rgba(202,165,107,.25);border-radius:9px;background:radial-gradient(ellipse at 95% 0,rgba(111,43,24,.17),transparent 40%),linear-gradient(145deg,#15120f,#0d0c0a)}
+.account-favorites-overview-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:16px}
+.account-favorites-overview-heading .kicker{color:var(--gold);font-size:.62rem;letter-spacing:.12em}
+.account-favorites-overview-heading h2{margin:5px 0 0;color:var(--ivory);font:500 clamp(1.35rem,2.2vw,1.85rem)/1.12 'Playfair Display',Georgia,serif}
+.account-favorites-overview-heading h2:after{content:"";display:block;width:36px;height:2px;margin-top:9px;background:linear-gradient(90deg,#ed2430,#a30e19)}
+.account-favorites-overview-heading .button{min-height:38px;padding:8px 12px;font-size:.7rem}
+.account-favorites-overview-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.account-favorites-overview-grid:empty{display:none}
+.account-demo-page .account-favorites-overview-grid .dish-card{display:grid;grid-template-columns:minmax(0,1fr);min-width:0;overflow:hidden;border:1px solid rgba(202,165,107,.2);border-radius:8px;background:linear-gradient(145deg,#191510,#100e0c)}
+.account-favorites-overview-grid .editorial-product-image{display:block;aspect-ratio:1.55;overflow:hidden}
+.account-favorites-overview-grid .editorial-product-image img{width:100%;height:100%;object-fit:cover;transition:transform .45s ease}
+.account-favorites-overview-grid .dish-card:hover .editorial-product-image img{transform:scale(1.035)}
+.account-favorites-overview-grid .dish-meta{position:relative;min-width:0;padding:12px}
+.account-favorites-overview-grid .dish-meta>small{display:block;padding-right:28px;color:var(--muted);font-size:.64rem}
+.account-favorites-overview-grid .dish-meta h3{margin:6px 0;color:var(--ivory);font:500 1.02rem/1.22 'Playfair Display',Georgia,serif}
+.account-favorites-overview-grid .dish-meta>p{margin:4px 0;color:#b7ab99;font-size:.69rem;line-height:1.45}
+.account-favorites-overview-grid .favorite-btn{position:absolute;top:8px;right:8px;width:27px;height:27px}
+.account-favorites-overview-grid .dish-bottom{display:flex;align-items:center;justify-content:space-between;gap:9px;margin-top:10px}
+.account-favorites-overview-grid .dish-price{color:#f1d5a0;font-size:.78rem}
+.account-favorites-overview-grid .add-to-cart{min-height:33px;padding:5px 9px;font-size:.68rem}
+.account-favorites-overview-empty{margin:0;color:var(--muted);font-size:.78rem;line-height:1.55}
+.account-favorites-overview-empty[hidden]{display:none}
+@media(max-width:680px){
+  .account-demo-page .account-favorites-overview{gap:12px;padding:16px 13px}
+  .account-favorites-overview-heading{align-items:flex-start}
+  .account-favorites-overview-heading h2{font-size:1.38rem}
+  .account-favorites-overview-heading .kicker{font-size:.55rem}
+  .account-favorites-overview-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .account-favorites-overview-grid .dish-meta{padding:9px}
+  .account-favorites-overview-grid .dish-meta>p{display:none}
+  .account-favorites-overview-grid .dish-meta h3{font-size:.88rem}
+  .account-favorites-overview-grid .dish-bottom{flex-wrap:nowrap;gap:5px}
+  .account-favorites-overview-grid .dish-price{font-size:.67rem;white-space:nowrap}
+  .account-favorites-overview-grid .add-to-cart{min-height:30px;flex:0 0 auto;padding-inline:5px;font-size:.55rem;white-space:nowrap}
+}
+@media(max-width:370px){
+  .account-favorites-overview-grid{grid-template-columns:minmax(0,1fr)}
+}
+@media(prefers-reduced-motion:reduce){.account-favorites-overview-grid .editorial-product-image img{transition:none}}
+
 
 @media(max-width:1100px){
   .account-dashboard-content{grid-template-columns:minmax(0,1fr)}
