@@ -18,7 +18,7 @@ The page has one real dish image, a clear product summary, quantity/cart control
 
 ### 04 — Omakase
 
-The current page has five distinct course images, a selectable course detail, three set tiers and booking handoff. It reads as a complete editorial experience, but the mock's red/black collage, course-card proportions and closing image bands are more decorative. No video is presented because no real video asset is available. Current screenshot: `reference-pass-current-2026-11-16/omakase-static-desktop.jpg`; focused review: `omakase-latest-review-2026-11-16/`.
+The current page has five distinct course images, a selectable course detail, three set tiers and booking handoff. It reads as a complete editorial experience, but the mock's red/black collage, course-card proportions and closing image bands are more decorative. The fifth preview now centers below the two-column mobile selector. Fresh static captures and a stage/keyboard regression are in `omakase-current-2026-11-16/`; no video is presented because no real video asset is available. PHP browser rendering and public deployment were not rechecked in this pass.
 
 ### 05 — Philosophy
 

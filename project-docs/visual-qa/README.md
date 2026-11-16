@@ -132,6 +132,10 @@ The existing original chef photograph is now mirrored only in the Omakase hero, 
 
 `omakase-compact-hero-2026-11-16/` contains desktop and 320 px full-page captures, focused hero captures, and a comparison against `design-references/04-omakase.png`. The desktop hero is 460 px high and the 320 px hero is 449 px; title/copy bounds fit, five course tabs remain visible, the mirrored chef image is active, and a focused static-browser check reported HTTP 200 with no errors, failed requests, or horizontal overflow. The complete lower page remains an adaptation of the concept. PHP browser rendering, a full export, broad suite, hosted CI, and public deployment were not run.
 
+## 2026-11-16 Omakase stage selector balance
+
+`omakase-current-2026-11-16/` contains fresh 1440 px desktop and 390 px mobile static captures. The fifth course preview now centers beneath the two-column mobile selector rather than sitting alone at the left edge. The route-filtered visual-fidelity check passed for the static export: all five distinct course photographs loaded, clicking a stage displayed its matching panel, ArrowRight moved selection and focus, all tabs remained visible, and the page had no horizontal overflow or console errors. The source and exported `tokyo20.css` hashes match. PHP browser mode could not be used in this environment because its built-in server served `.php` as a download; PHP/SQLite acceptance and public deployment were not repeated.
+
 ## 2026-11-16 static account refinement delivery
 
 The custom Pages account template had omitted `luxury-refinements.css`; the exporter now includes it and the Pages workflow checks the generated account HTML for the link. The checked-in static route mirrors the template fix. One focused local browser check passed at 1440 px and 390 px: stylesheet loaded, overview uses two columns on desktop and one on mobile, no horizontal overflow, console errors, or failed requests. Captures and a reference comparison are in `visual-qa/account-refinement-static-2026-11-16/`. This is a focused account styling fix; full profile fidelity, PHP rendering, hosted CI, and public deployment were not verified.

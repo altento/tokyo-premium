@@ -308,3 +308,7 @@ PHP routes and the checked-in GitHub Pages export now emit route-specific Open G
 ## Static account history alignment — 2026-11-16
 
 The local demo account placed the shorter booking column vertically in the middle of the longer order history because it reused the generic centered intro grid. Scoped the history grid to align both section headings at the top in the source and Pages CSS. The focused `npm run test:account-demo` now asserts their vertical offset is at most 20 px after the sample data is seeded; it passed and wrote full-page desktop/mobile captures to `project-docs/visual-qa/account-history-alignment-2026-11-16/`. The dashboard is still simpler than the approved account reference, so this closes one visible composition defect rather than claiming full fidelity.
+
+## Omakase mobile preview balance — 2026-11-16
+
+The five-stage Omakase selector already uses five distinct catalogue photos and supports arrow-key selection. In the 390 px capture, its fifth card sat alone at the left edge; the mobile grid now centers that odd final card. The route-focused static Playwright check passed at 1440 px and 390 px, including stage click, ArrowRight focus/selection, matched detail panel, loaded unique photos, no overflow, and no browser errors. Fresh captures are in `project-docs/visual-qa/omakase-current-2026-11-16/`. PHP browser rendering was not confirmed in this local runtime because `php -S` served `.php` source as a download. Full 11-reference acceptance, hosted browser CI, and Pages publication remain outstanding.

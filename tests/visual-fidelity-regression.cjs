@@ -166,6 +166,16 @@ async function visit(browser, base, route, mode, capture = false) {
     assert.equal(coursePreviews.length, 5, `${mode} Omakase shows a photo preview for every stage`);
     assert.equal(new Set(coursePreviews).size, 5, `${mode} Omakase previews five distinct course photographs`);
     assert.equal(await page.locator('.tp20-course-tabs [data-tp-course] img').evaluateAll(images => images.every(image => image.naturalWidth > 0)), true, `${mode} all course previews load`);
+    const secondCourse = page.locator('.tp20-course-tabs [data-tp-course][data-step="2"]');
+    await secondCourse.click();
+    assert.equal(await secondCourse.getAttribute('aria-selected'), 'true', `${mode} selecting a course updates its tab state`);
+    assert.equal(await page.locator('[data-tp-course-panel][data-step="2"]').isVisible(), true, `${mode} selecting a course reveals its matching story`);
+    await secondCourse.press('ArrowRight');
+    const thirdCourse = page.locator('.tp20-course-tabs [data-tp-course][data-step="3"]');
+    assert.equal(await thirdCourse.getAttribute('aria-selected'), 'true', `${mode} ArrowRight selects the next course tab`);
+    assert.equal(await thirdCourse.evaluate(node => document.activeElement === node), true, `${mode} ArrowRight moves keyboard focus with the selected course`);
+    assert.equal(await page.locator('[data-tp-course-panel][data-step="3"]').isVisible(), true, `${mode} keyboard selection reveals the matching course story`);
+    await page.locator('.tp20-course-tabs [data-tp-course][data-step="1"]').click();
     assert.equal(counts.duplicateCourseGrid, false, `${mode} Omakase does not repeat the same course photos in a second grid`);
     assert.equal(counts.orderIsEditorial, true, `${mode} Omakase follows philosophy, interactive journey, tiers and booking order`);
     assert.ok(counts.heroHeight <= 370, `${mode} Omakase desktop hero stays close to the reference height (${counts.heroHeight}px)`);
@@ -220,6 +230,15 @@ async function visit(browser, base, route, mode, capture = false) {
           return r.left >= bounds.left - 1 && r.right <= bounds.right + 1;
         });
     })(),
+    omakaseLastStageCentered: (() => {
+      const tabs = document.querySelector('.tp20-omakase-experience .tp20-course-tabs');
+      if (!tabs) return true;
+      const buttons = [...tabs.querySelectorAll('button')];
+      if (buttons.length !== 5) return false;
+      const bounds = tabs.getBoundingClientRect();
+      const last = buttons[4].getBoundingClientRect();
+      return Math.abs((last.left + last.right) / 2 - (bounds.left + bounds.right) / 2) <= 2;
+    })(),
     heroTitleVisible: [...document.querySelectorAll('h1')].every(title => {
       const r = title.getBoundingClientRect();
       return r.left >= -1 && r.right <= innerWidth + 1 && r.bottom > 0;
@@ -238,6 +257,7 @@ async function visit(browser, base, route, mode, capture = false) {
     assert.ok(mobileBookingHero <= 460, `${mode} booking hero remains compact on mobile`);
   }
   assert.equal(mobile.omakaseTabsVisible, true, "Omakase keeps all stages visible without horizontal scrolling");
+  if (route.key === 'omakase') assert.equal(mobile.omakaseLastStageCentered, true, `${mode} Omakase centers the fifth mobile course preview`);
   assert.equal(mobile.heroTitleVisible, true, `${mode} ${route.key} mobile heading remains in the viewport`);
   assert.equal(mobile.contactPanelsVisible, true, `${mode} ${route.key} contact panels fit the mobile viewport`);
   if (capture) await page.screenshot({ path: path.join(evidenceDir, `${route.key}-${mode}-mobile.jpg`), fullPage: true, type: 'jpeg', quality: 72 });
