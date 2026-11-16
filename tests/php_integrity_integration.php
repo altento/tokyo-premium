@@ -300,6 +300,9 @@ try {
  check($provisionedSecretRule&&commerce_secret_rule_matches($pdo,$provisionedSecretRule,null,$secretRuleValue,false), 'new admin-created Secret Menu code passes the server access check');
  $marketingCsrf=tokenFrom($marketingHtml); check(str_contains($marketingHtml,'name="id" value="'.$secretRuleId.'"'), 'existing Secret Menu rules expose an edit form');
  [$status,$marketingHtml]=request('/admin-marketing.php',['csrf'=>$marketingCsrf,'action'=>'secret-rule-save','id'=>(string)$secretRuleId,'campaign_id'=>(string)$secretCampaignId,'access_kind'=>'tier','required_value'=>'gold','starts_at'=>'2026-11-16T15:00','ends_at'=>'2027-01-01T00:00','active'=>'on']);
+ // Reopen after this HTTP write to release any earlier WAL snapshot held by the rule matcher.
+ unset($pdo, $secretRuleQuery);
+ $pdo = freshTestDatabase($dbPath);
  $editedSecretRule=$pdo->query("SELECT access_kind,required_value,starts_at FROM secret_menu_rules WHERE id=$secretRuleId")->fetch(PDO::FETCH_ASSOC);
  preg_match('~<p class="form-status error" role="alert">(.*?)</p>~s', $marketingHtml, $secretRuleErrorMatch);
  $secretRuleError = html_entity_decode(strip_tags($secretRuleErrorMatch[1] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
