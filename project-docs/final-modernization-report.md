@@ -285,3 +285,7 @@ Moved the first-scene mobile image framing from 75% to 82% in both the PHP style
 ## Space page section rhythm — 2026-11-16
 
 Reduced excess vertical padding around the room cards and gallery in the PHP and Pages stylesheets. Current static captures at 1440 px and 390 px show the section flow at 54 px and 44 px between the room cards and gallery heading, respectively; content remains aligned to its container, with no horizontal overflow or browser errors. Captures: `project-docs/visual-qa/space-gap-followup-2026-11-16/gallery-{desktop,mobile}.png`. This is a focused visual correction, not a full reference acceptance pass.
+
+## Menu set-builder story rhythm — 2026-11-16
+
+Reduced the three-image set-builder story from a 310 px minimum desktop frame to a compact 250 px target, tightened copy sizing, and hid the secondary platter image on narrow screens while retaining the chef image and working set-builder CTA. Static Chromium captures measured 326 px at 1440 wide and 449 px at 390 wide; CTA destination remained `set-builder-signature.html`, with no page errors, failed requests, or horizontal overflow. Captures: `project-docs/visual-qa/menu-set-story-compact-2026-11-16/menu-{desktop,mobile}.png`. This is a focused alignment improvement; the full menu reference pass remains open.
