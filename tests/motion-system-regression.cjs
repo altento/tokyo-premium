@@ -79,7 +79,7 @@ async function runMode(browser, name, base, route, capture) {
   assert.match(builderHref, name === 'static' ? /set-builder\.html$/ : /set-builder\.php$/, `${name} Omakase scene links to the live set-builder route`);
 
   await page.locator('[data-home-hero-step="-1"]').click();
-  await waitForScene(page, 'Вкус, которому');
+  await waitForScene(page, 'TOKYO');
   assert.equal(await dots.nth(0).getAttribute('aria-pressed'), 'true', `${name} previous arrow returns to the first scene`);
   await dots.nth(1).focus();
   await page.keyboard.press('ArrowRight');
@@ -90,7 +90,7 @@ async function runMode(browser, name, base, route, capture) {
   await page.waitForTimeout(1400);
   assert.equal(await dots.nth(2).getAttribute('aria-pressed'), 'true', `${name} carousel does not autoplay`);
   await dots.nth(0).click();
-  await waitForScene(page, 'Вкус, которому');
+  await waitForScene(page, 'TOKYO');
 
   for (const width of [320, 360, 390, 430, 768, 1024, 1440, 1920]) {
     await page.setViewportSize({ width, height: width < 600 ? 844 : 1000 });

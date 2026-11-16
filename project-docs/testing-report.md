@@ -373,3 +373,11 @@ The first static-only npm run test:motion exposed an outdated assertion for a 75
 - `npm run test:tokyo20` passed against an isolated PHP 8.5 + SQLite server and the static export. It checks that the form precedes the map and that the submit control follows the map caption at 390 px, and submits a static booking via `requestSubmit()`.
 - I visually inspected the PHP and static mobile captures and the selected-seat captures in `project-docs/visual-qa/booking-map-order-2026-11-17/`.
 - This targeted regression does not represent full-site acceptance or a public Pages deployment check.
+
+## 2026-11-17 home hero reference pass
+
+- Replaced the oversized three-line Russian hero title with the approved TOKYO PREMIUM brand lockup, shortened the supporting copy, and reduced the desktop/tablet hero height to a width-based scale closer to reference 01. The mobile crop and scene controls remain intact.
+- Regenerated only the static homepage and its stylesheet into `docs/` from the PHP exporter.
+- `npm run test:motion` passed in PHP and static modes: scene controls, keyboard interaction, reduced motion, image framing and eight responsive widths.
+- PHP/static hero captures at desktop and 390 px mobile are in `project-docs/visual-qa/home-hero-reference-2026-11-17/`; I inspected all four and compared the desktop framing with `design-references/01-home.png`.
+- This is a focused first-screen improvement; the remaining homepage sections have not been brought to full pixel parity with the reference.

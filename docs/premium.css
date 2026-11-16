@@ -69,13 +69,13 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .form-status.success{color:#b8d9a3}.form-status.error{color:#ffc0ad}
 .reveal{transform:translateY(24px)}
 .home-premium{overflow:clip;background:var(--lacquer);color:var(--ivory)}
-.home-hero{min-height:min(740px,calc(100svh - 76px));height:min(740px,calc(100svh - 76px));position:relative;isolation:isolate;display:flex;align-items:center;overflow:hidden;background:#0d0a08}
+.home-hero{min-height:min(clamp(440px,40vw,620px),calc(100svh - 76px));height:min(clamp(440px,40vw,620px),calc(100svh - 76px));position:relative;isolation:isolate;display:flex;align-items:center;overflow:hidden;background:#0d0a08}
 .home-hero-photo,.home-hero-shade{position:absolute;inset:0;width:100%;height:100%;z-index:-2;object-fit:cover;object-position:center 51%}
 .home-hero-shade{z-index:-1;background:linear-gradient(90deg,rgba(8,7,6,.94) 0%,rgba(8,7,6,.82) 31%,rgba(8,7,6,.34) 61%,rgba(8,7,6,.08) 100%),linear-gradient(0deg,rgba(9,8,7,.68),transparent 28%)}
 .home-hero:after{content:"";position:absolute;z-index:-1;inset:0;pointer-events:none;opacity:.18;background:repeating-radial-gradient(ellipse at -5% 110%,transparent 0 14px,rgba(202,165,107,.7) 15px 16px,transparent 17px 30px);mask-image:linear-gradient(90deg,#000,transparent 35%)}
 .home-hero-copy{width:min(660px,52vw);margin-left:max(7vw,calc((100vw - var(--page-width))/2));padding:80px 0 70px;position:relative;z-index:1}
 .home-hero .eyebrow{color:#e4c78e;font-size:10px;letter-spacing:.24em}
-.home-hero h1{margin:22px 0 18px;color:#f7ecd8;font:500 clamp(56px,7.2vw,104px)/.94 'Playfair Display',Georgia,serif;letter-spacing:-.035em;text-wrap:balance}
+.home-hero h1{margin:22px 0 18px;color:#f7ecd8;font:500 clamp(48px,5.3vw,82px)/.98 'Playfair Display',Georgia,serif;letter-spacing:-.025em;text-wrap:balance}
 .home-hero h1 em,.home-section-head h2 em,.philosophy-copy h2 em,.space-copy h2 em,.home-omakase-strip h2 em,.booking-intro h2 em{color:var(--gold);font-weight:400}
 .home-hero-lead{max-width:455px;color:#e1d4c0;font-size:15px;line-height:1.75}
 .home-hero .button-row{margin-top:28px}
@@ -178,7 +178,7 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
   .main-nav.open a:after{display:none}
 }
 @media(max-width:900px){
-  .home-hero{height:min(720px,calc(100svh - 70px));min-height:600px}.home-hero-copy{width:min(610px,68vw);margin-left:6vw}
+  .home-hero{height:min(660px,calc(100svh - 70px));min-height:min(540px,calc(100svh - 70px))}.home-hero-copy{width:min(610px,68vw);margin-left:6vw}
   .home-hero-photo{object-position:59% center}.home-hero-shade{background:linear-gradient(90deg,rgba(8,7,6,.95),rgba(8,7,6,.72) 45%,rgba(8,7,6,.22)),linear-gradient(0deg,rgba(9,8,7,.72),transparent 34%)}
   .home-values{padding-inline:24px;grid-template-columns:repeat(2,1fr);row-gap:17px}.home-values>div:nth-child(2){border:0}.home-values>div:nth-child(3){padding-left:0}
   .home-philosophy{grid-template-columns:1fr 1fr}.philosophy-copy{padding-inline:10px 25px}.enso{width:190px;height:190px}

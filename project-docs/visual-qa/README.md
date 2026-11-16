@@ -241,3 +241,7 @@ The static motion suite passed after its crop assertion was aligned with the cur
 ## 2026-11-17 mobile booking map order
 
 `booking-map-order-2026-11-17/` contains full-page PHP and static mobile captures plus selected-seat desktop captures. I inspected both mobile versions: the preference map and availability disclosure precede the final submit action. `npm run test:tokyo20` passed against the local PHP/SQLite route and static export, including the 390 px geometry assertion and static `requestSubmit()` path. This is one focused booking check, not full-site visual acceptance.
+
+## 2026-11-17 home hero reference pass
+
+`home-hero-reference-2026-11-17/` contains PHP and static hero captures at desktop and mobile widths. The title now follows reference 01's TOKYO PREMIUM hierarchy and the hero is shorter on desktop and tablet. I inspected all four captures. `npm run test:motion` passed across PHP and Pages modes, including reduced motion and eight responsive widths. This pass covers the hero only, not full homepage reference parity.
