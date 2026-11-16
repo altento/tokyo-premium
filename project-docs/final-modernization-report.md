@@ -269,3 +269,11 @@ Verification: focused static Playwright regression passed for both static routes
 Applied scene-specific mobile image framing to the existing cinematic hero and compacted the homepage visit form without removing fields or changing its submission route. The salmon scene now brings the dish into view above the copy; the seasonal and chef scenes have their own focal positions. On mobile, name/phone, date/time and guest count/zone are paired; email, submit and status remain full-width.
 
 The focused `npm run test:motion` run passed in static-only mode at eight viewport widths, including scene selection, keyboard controls, reduced motion, reveal completion and horizontal overflow checks. Screenshots are in `project-docs/visual-qa/home-mobile-booking-quickfix-2026-11-16/`. Local PHP rendering was not included because `pdo_sqlite` is unavailable. Tokyo Premium 2.0 and full 11-reference visual acceptance remain in progress.
+
+## Booking and static-account visual follow-up — 2026-11-16
+
+The booking hero now uses the existing sakura-lit interior image in both PHP and the GitHub Pages export, replacing the unrelated private-room image. A focused Chromium check at 390 px confirmed the hero asset loaded, the heading remained visible, page width matched the viewport, and no JavaScript errors occurred. PHP syntax and `git diff --check` passed.
+
+The static account now places its orders and booking dashboard directly after the profile overview, moving local loyalty/referral cards below the useful history. The same order is applied by `tools/export-pages.php` and the checked-in static page. Seeded Playwright captures at 1440 and 390 px verified three local example orders, one booking request, the intended section order, no horizontal overflow, and no page errors. Updated captures: `project-docs/visual-qa/11-account-static-desktop.jpg` and `11-account-static-mobile.jpg`.
+
+This was a focused UI slice. The PHP SQLite exporter was not run locally because the available PHP CLI lacks `pdo_sqlite`; full pixel comparison of all 11 references, hosted CI, and a public Pages update are still open. The current PR remains a draft.

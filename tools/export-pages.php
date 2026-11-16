@@ -93,6 +93,12 @@ $overview = <<<'HTML'
 <section class="account-overview"><div class="account-overview-art"><img src="assets/generated/room-garden-terrace.webp" alt="Садовая терраса учебной концепции Tokyo Premium" loading="lazy"><span class="account-demo-seal">東京 · ПАМЯТЬ ВЕЧЕРА</span></div><div class="account-overview-body"><div class="kicker">Личный кабинет · данные только в этом браузере</div><h1 id="demo-display-name">Ваш профиль</h1><p>Заказы, бронирования и избранное остаются только в этом браузере. Профиль не защищён серверной авторизацией, а хранилище браузера не зашифровано — используйте вымышленные данные.</p><div class="account-metrics"><article><strong data-account-stat="orders">0</strong><span>сохранённых заказов</span></article><article><strong data-account-stat="bookings">0</strong><span>запросов на бронь</span></article><article><strong data-account-stat="favorites">0</strong><span>избранных блюд</span></article></div><div class="account-quick-actions"><a href="menu.html">Открыть меню ↗</a><a href="booking.html">Бронирование ↗</a><button type="button" data-account-quick-target="favorites">Избранное ♡</button><a href="offers.html">Привилегии ↗</a></div></div></section>
 <section class="section tp20-static-privilege" data-tp-demo-loyalty aria-label="Демонстрационная программа Tokyo Privilege"><article class="tp20-loyalty-card" data-tp-loyalty-card data-tier="Silver"><span class="kicker">TOKYO PRIVILEGE · ЛОКАЛЬНАЯ ДЕМО</span><h2 data-tp-loyalty-tier>Silver</h2><p>Уровень рассчитан только по учебным заказам, сохранённым в этом браузере. Баллы не имеют денежной стоимости и не передаются ресторану.</p><div class="tp20-loyalty-balance"><strong data-tp-loyalty-points>0</strong><span>демо-баллов</span></div><label>Прогресс к следующему уровню<progress data-tp-loyalty-progress max="100" value="0">0%</progress></label><small data-tp-loyalty-progress-label>Статус появится после сохранённого учебного заказа.</small></article><article class="tp20-referral-card"><span class="kicker">INVITE · ONLY THIS BROWSER</span><h3>Пригласить друга</h3><p>Локальный код нужен только для показа интерфейса. Переход по нему не регистрирует гостя и не начисляет вознаграждение.</p><code data-tp-demo-referral>TP-DEMO</code><button class="button secondary" type="button" data-tp-copy-referral>Скопировать код</button></article></section><section class="section account-dashboard"><div class="account-demo-layout">
 HTML;
+$privilegeMatch = [];
+if (!preg_match('/<section class="section tp20-static-privilege"[^>]*>.*?<\/section>/s', $overview, $privilegeMatch)) {
+    throw new RuntimeException('Static account privilege section was not found.');
+}
+$privilege = $privilegeMatch[0];
+$overview = str_replace($privilege, '', $overview);
 $accountSeedCallout = <<<'HTML'
 <aside class="account-demo-seed"><div><strong>Посмотрите заполненный кабинет</strong><p>Создайте вымышленные учебные заказы, запрос на бронь и избранные блюда. Они останутся только в этом браузере; удалить всё можно в настройках.</p><p class="form-status" data-account-demo-seed-status aria-live="polite"></p></div><button class="button secondary" type="button" data-account-demo-seed>Заполнить учебный пример</button></aside>
 HTML;
@@ -102,6 +108,7 @@ $accountPromo = <<<'HTML'
 <section class="account-promo"><div><div class="kicker">Следующий вечер · учебный сценарий</div><h2>Пусть сезон задаст настроение</h2><p>Выберите дату и формат вечера. Бронирование в демоверсии сохраняется только как запрос и не резервирует стол.</p><a class="button" href="booking.html">Перейти к бронированию ↗</a></div><span class="kicker">SEASONAL · TOKYO PREMIUM</span></section>
 HTML;
 $account = str_replace('</section></main><footer class="footer">', '</section>'.$accountPromo.'</main><footer class="footer">', $account);
+$account = str_replace('</section>'.$accountPromo, '</section>'.$privilege.$accountPromo, $account);
 $account = preg_replace('/<header class="site-header">.*?<\/header>/s', '', $account, 1) ?? $account;
 ob_start(); header_html('account'); $sharedHeader = (string)ob_get_clean();
 $sharedHeader = str_replace(
