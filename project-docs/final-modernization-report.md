@@ -316,3 +316,7 @@ The five-stage Omakase selector already uses five distinct catalogue photos and 
 ## 2026-11-16 targeted commerce and Pages disclosure repair
 
 Threshold-gift selection now applies the campaign’s date, weekday, and time schedule and can fall through to the next eligible offer. GitHub Pages copy and interactive status messages now clearly describe local estimates and demo-only promo behavior without implying server validation. The focused static browser check passed. PHP lint passed, but the new SQLite schedule regression could not run in the current CLI because `pdo_sqlite` is unavailable; a focused GitHub Actions step now runs it, with the hosted result pending. The PR is still draft and GitHub Pages remains unchanged.
+
+## 2026-11-16 account navigation badge spacing
+
+Fixed the seeded account’s tab counts running into the Russian labels by rendering the count as a separate gold badge in both the PHP source stylesheet and checked-in Pages stylesheet. `npm run test:account-demo` passed with desktop and 390 px geometry assertions. The fresh full-page captures in `project-docs/visual-qa/account-tab-count-refinement-2026-11-16/` were visually inspected. This closes the count-label collision only; it does not claim full dashboard parity with the approved account reference or test PHP account persistence.

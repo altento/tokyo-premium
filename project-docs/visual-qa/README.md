@@ -201,3 +201,7 @@ The same folder includes the eight populated/empty/checkout-validation/pickup/de
 ## 2026-11-16 static account hero refinement
 
 `account-hero-refinement-2026-11-16/` contains seeded full-page static captures at 1440 px and 390 px. The desktop hero was visually compared side by side with `design-references/11-account.png`: the entrance image, title/subtitle hierarchy, and local-demo privacy explanation now follow the reference more closely. The dashboard and navigation remain structurally simpler than the approved concept; this is a focused improvement, not full account parity. `npm run test:account-demo` passed at both widths, checking the decoded image, title bounds, sample history/favorites, idempotent seeding, local-only notice, clear-data flow, and no page errors or mobile overflow. PHP rendering and public Pages were not checked.
+
+## 2026-11-16 account tab count badges
+
+`account-tab-count-refinement-2026-11-16/11-account-seeded-desktop.jpg` and `11-account-seeded-mobile.jpg` show the populated local-demo account after count badges were separated from the History, Favorites, and Addresses labels. I visually inspected both captures. The focused `npm run test:account-demo` pass asserts badge-label spacing and button bounds at desktop and 390 px mobile widths. The wider account dashboard remains less detailed than `11-account.png`; no PHP or public Pages check was performed.

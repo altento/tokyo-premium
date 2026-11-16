@@ -307,3 +307,10 @@ This focused pass did not run the full browser suite, complete 11-route PHP visu
 - GitHub Pages set-builder, offer and cart copy now identifies amounts and promo results as local estimates without server validation. Dynamic set-builder and evening messages use the same disclosure.
 - `npm run test:offers-evening` passed in the static browser, including the set-builder interaction and pricing disclosure.
 - No merge or publication was performed in this pass.
+
+## Account demo navigation badge spacing — 2026-11-16
+
+- The static account navigation now lays out each tab label and its order/favorite/address count as separate flex items with a compact gold badge.
+- `tests/account-demo-regression.cjs` checks that all three badges remain inside their buttons and have visible separation from their labels at desktop and 390 px mobile widths.
+- `npm run test:account-demo` passed in the static Pages export. Fresh full-page captures are in `project-docs/visual-qa/account-tab-count-refinement-2026-11-16/` and were visually inspected at both widths.
+- This focused CSS change does not modify or verify PHP account storage/authentication. The account dashboard still has broader structural differences from `design-references/11-account.png`.

@@ -160,6 +160,9 @@
 .account-dashboard.section{padding-top:clamp(28px,4vw,54px)}
 .account-dashboard .account-demo-layout{grid-template-columns:220px minmax(0,1fr);gap:18px}
 .account-dashboard .account-demo-nav button{position:relative;padding:16px 16px 16px 42px;text-transform:none;font-size:.88rem}
+.account-dashboard .account-demo-nav button{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.account-dashboard .account-demo-tab-count{display:inline-grid;place-items:center;flex:0 0 auto;min-width:1.7em;height:1.7em;padding:0 .3em;border:1px solid rgba(199,167,102,.46);border-radius:999px;color:#d5b26f;font:500 .7rem/1 'Manrope',sans-serif}
+.account-dashboard .account-demo-nav button.active .account-demo-tab-count{border-color:rgba(255,255,255,.55);color:#fff}
 .account-dashboard .account-demo-nav button:before{position:absolute;left:16px;color:#d5b26f;font-size:1rem}
 .account-dashboard .account-demo-nav button[data-account-tab=history]:before{content:'◷'}.account-dashboard .account-demo-nav button[data-account-tab=favorites]:before{content:'♡'}.account-dashboard .account-demo-nav button[data-account-tab=profile]:before{content:'◉'}.account-dashboard .account-demo-nav button[data-account-tab=addresses]:before{content:'⌖'}.account-dashboard .account-demo-nav button[data-account-tab=settings]:before{content:'⚙'}
 .account-dashboard .account-demo-panel{min-height:330px;border-color:rgba(199,167,102,.34);background:linear-gradient(145deg,#17130f,#100e0c)}

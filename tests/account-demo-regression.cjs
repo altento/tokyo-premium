@@ -30,6 +30,15 @@ async function run() {
     await page.locator('[data-account-demo-seed]').click();
     assert.equal(await page.locator('#demo-orders .demo-order').count(), 3, 'sample action adds three orders');
     assert.equal(await page.locator('#demo-bookings article').count(), 1, 'sample action adds one booking request');
+    const tabBadgeLayout = await page.locator('.account-demo-nav [data-account-tab]').evaluateAll(buttons => buttons.filter(button => button.querySelector('.account-demo-tab-count')).map(button => {
+      const labelNode = [...button.childNodes].find(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
+      const range = document.createRange();
+      range.selectNodeContents(labelNode);
+      const labelRight = Math.max(...[...range.getClientRects()].map(rect => rect.right));
+      const badge = button.querySelector('.account-demo-tab-count').getBoundingClientRect();
+      return getComputedStyle(button).display === 'flex' && badge.left - labelRight >= 8 && badge.right <= button.getBoundingClientRect().right;
+    }));
+    assert.deepEqual(tabBadgeLayout, [true, true, true], 'history, favorites and address counts are separated from their labels');
     const historyHeadingTops = await page.locator('.account-demo-panel[data-account-panel="history"] .intro-grid h2').evaluateAll(headings => headings.map(heading => heading.getBoundingClientRect().top));
     assert.equal(historyHeadingTops.length, 2, 'history exposes order and booking headings');
     assert.ok(Math.abs(historyHeadingTops[0] - historyHeadingTops[1]) <= 20, `order and booking columns align at the top edge: ${historyHeadingTops.join(', ')}`);
@@ -49,6 +58,15 @@ async function run() {
     await page.screenshot({ path: path.join(evidence, '11-account-seeded-desktop.jpg'), fullPage: true, type: 'jpeg', quality: 74 });
     await page.setViewportSize({ width: 390, height: 844 });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'seeded account has no mobile horizontal overflow');
+    const mobileTabBadges = await page.locator('.account-demo-nav [data-account-tab]').evaluateAll(buttons => buttons.filter(button => button.querySelector('.account-demo-tab-count')).map(button => {
+      const labelNode = [...button.childNodes].find(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
+      const range = document.createRange();
+      range.selectNodeContents(labelNode);
+      const labelRight = Math.max(...[...range.getClientRects()].map(rect => rect.right));
+      const badge = button.querySelector('.account-demo-tab-count').getBoundingClientRect();
+      return badge.left - labelRight >= 6 && badge.right <= button.getBoundingClientRect().right;
+    }));
+    assert.deepEqual(mobileTabBadges, [true, true, true], 'mobile account tab counts remain legible and inside their buttons');
     assert.ok(await page.evaluate(() => { const title=document.querySelector('.account-overview h1').getBoundingClientRect(); const hero=document.querySelector('.account-overview').getBoundingClientRect(); return title.left >= hero.left && title.right <= hero.right && title.width > 0; }), 'account title stays inside the mobile masthead');
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
     await page.screenshot({ path: path.join(evidence, '11-account-seeded-mobile.jpg'), fullPage: true, type: 'jpeg', quality: 74 });
