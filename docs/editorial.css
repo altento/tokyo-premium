@@ -67,7 +67,7 @@
 
 /* Keep long Russian titles and editorial captions inside their visible boxes. */
 .editorial-hero-copy{min-width:0;max-width:min(590px,100%)}
-.editorial-hero h1,.detail-title h1,.about-hero h1,.page-hero h1{max-width:100%;line-height:1.04;hyphens:auto;overflow-wrap:anywhere;word-break:normal}
+.editorial-hero h1,.detail-title h1,.about-hero h1,.page-hero h1{max-width:100%;line-height:1.04;hyphens:none;overflow-wrap:anywhere;word-break:normal}
 .editorial-page .gallery-grid{height:auto}
 .editorial-page > .booking-benefits-section{padding-block:30px}
 .editorial-page > #booking-form{padding-block:62px}

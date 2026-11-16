@@ -218,3 +218,8 @@ The paired `gallery-caption-followup-2026-11-16/gallery-caption-mobile.png` capt
 ## 2026-11-16 targeted route follow-up
 
 `dish-related-grid-2026-11-16/` contains the dish-detail recommendation grid at 1440, 900 and 390 px after matching the CSS selector to the actual page class. `reviews-density-follow-up-2026-11-16/` contains refreshed current-export screenshots; the stale preview that prompted the review was not representative of the exported Pages route. `10-cart-compact-2026-11-16/` contains refreshed cart screenshots, including the populated state compared with `10-cart.png`. `11-account-seeded-desktop.jpg` and `11-account-seeded-mobile.jpg` show the revised account hierarchy and live local-demo points after seeding three sample orders. Focused route regressions passed; PHP browser and public deployment checks remain separate.
+## 2026-11-17 booking title and motion follow-up
+
+The booking heading repair has full-page browser captures at 320 and 390 CSS px in 07-booking-heading-fix-2026-11-17/; its focused check passed nine widths from 320 to 1920 px. The screenshot comparison confirms the heading remains one line with no hyphenation and stays inside the viewport.
+
+The static motion suite passed after its crop assertion was aligned with the current visually reviewed 82% salmon framing. Home desktop/mobile, hero desktop/mobile and the Omakase scene captures are in 2.0-motion-2026-11-17/. Hosted PHP responsive verification is pending for the current repair.

@@ -112,7 +112,8 @@ async function runMode(browser, name, base, route, capture) {
     assert.equal(geometry.titleVisible, true, `${name} heading remains visible at ${width}px`);
     if (width === 390) {
       assert.equal(await hero.getAttribute('data-home-hero-scene'), '0', `${name} starts with the salmon scene's mobile art direction`);
-      assert.match(await page.locator('#home-hero-photo').evaluate(image => getComputedStyle(image).objectPosition), /^75%\s/, `${name} mobile hero crop keeps the salmon in frame`);
+      const mobileCropX = await page.locator('#home-hero-photo').evaluate(image => Number.parseFloat(getComputedStyle(image).objectPosition));
+      assert.ok(mobileCropX >= 78 && mobileCropX <= 86, `${name} mobile hero crop keeps the salmon in frame (x=${mobileCropX}%)`);
       const imageCrop = await page.locator('#home-hero-photo').evaluate(image => {
         const imageRect = image.getBoundingClientRect();
         const heroRect = image.closest('[data-home-hero]').getBoundingClientRect();

@@ -346,3 +346,8 @@ Fixed a mismatch where multiple custom-set order lines could each receive the fu
 ## Admin account search and existing-member invitations — 2026-11-16
 
 Fixed Cyrillic case-insensitive search for marketing-account actions and kept a validated referral code through the existing-member login redirect so it can be explicitly attached afterward. A focused PHP/SQLite HTTP regression passed 8 assertions under PHP 8.4 + SQLite; PHP lint passed. GitHub Actions is configured to repeat it. This is a targeted account/admin repair, not a full 2.0 acceptance claim.
+## 2026-11-17 booking heading and motion follow-up
+
+The hosted gate 43937788170 confirmed that the inline page-transition opt-in removed the earlier Chromium page-error; the browser regression completed across 11 routes and 20 dish details, and the cart visual suite saved all eight states. The same run isolated a responsive assertion failure on booking at 320 px: the editorial heading rule allowed automatic hyphenation. Both PHP and Pages heading styles now disable automatic hyphenation. A focused static Playwright check passed at nine widths, keeping the heading on one line and within viewport bounds.
+
+The static motion regression passed after the expected mobile hero crop was changed from a stale 75% value to a reviewed 78–86% range centered on the current 82% crop. Captures and comparison notes are in project-docs/visual-qa/07-booking-heading-fix-2026-11-17/ and 2.0-motion-2026-11-17/. The hosted workflow for these latest responsive fixes has not yet completed.

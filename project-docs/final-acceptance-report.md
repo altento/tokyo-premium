@@ -142,3 +142,8 @@
 ## Добавление — форма бронирования на главной — 2026-11-16
 
 Сначала гость выбирает дату, время, количество гостей и желаемую зону; контактные поля появляются перед отправкой. Серверная форма и статическая локальная демо-форма сохраняют прежнюю обработку. Отдельная Playwright-проверка прошла на 1440 и 390 px, включая проверку пустых контактов, сохранение демо-запроса и сброс к первому шагу. PHP-рендер и публикация Pages этой правкой не проверялись.
+## Latest acceptance delta — 2026-11-17
+
+The previous hosted run 43937788170 passed PHP/SQLite, the full browser regression, and all eight cart states, then failed on the 320 px booking-title hyphenation assertion. The source and Pages editorial styles now set hyphens: none. Focused static-browser checks passed at nine widths (320–1920 px), including visible text bounds and no horizontal overflow. The static motion regression also passed after its 82% hero-crop assertion was aligned with the visually inspected image. Evidence: project-docs/visual-qa/07-booking-heading-fix-2026-11-17/ and project-docs/visual-qa/2.0-motion-2026-11-17/.
+
+Status: CSS repair is locally verified; hosted PHP + SQLite/responsive regression for the new head is pending. This does not change the previously recorded outstanding all-reference visual review, draft PR state, or public Pages deployment status.
