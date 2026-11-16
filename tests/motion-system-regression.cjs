@@ -88,6 +88,8 @@ async function runMode(browser, name, base, route, capture) {
   assert.match(galleryHref, name === 'static' ? /gallery\.html$/ : /page=gallery$/, `${name} secondary action follows the selected story and static route map`);
   await page.waitForTimeout(1400);
   assert.equal(await dots.nth(2).getAttribute('aria-pressed'), 'true', `${name} carousel does not autoplay`);
+  await dots.nth(0).click();
+  await waitForScene(page, 'Вкус, которому');
 
   for (const width of [320, 360, 390, 430, 768, 1024, 1440, 1920]) {
     await page.setViewportSize({ width, height: width < 600 ? 844 : 1000 });
@@ -107,6 +109,18 @@ async function runMode(browser, name, base, route, capture) {
     assert.equal(geometry.titleInsideHero, true, `${name} heading fits its hero at ${width}px`);
     assert.equal(geometry.controlsInsideHero, true, `${name} controls fit their hero at ${width}px`);
     assert.equal(geometry.titleVisible, true, `${name} heading remains visible at ${width}px`);
+    if (width === 390) {
+      assert.equal(await hero.getAttribute('data-home-hero-scene'), '0', `${name} starts with the salmon scene's mobile art direction`);
+      assert.match(await page.locator('#home-hero-photo').evaluate(image => getComputedStyle(image).objectPosition), /^75%\s/, `${name} mobile hero crop keeps the salmon in frame`);
+      const imageCrop = await page.locator('#home-hero-photo').evaluate(image => {
+        const imageRect = image.getBoundingClientRect();
+        const heroRect = image.closest('[data-home-hero]').getBoundingClientRect();
+        return { imageHeight: imageRect.height, heroHeight: heroRect.height, imageTopOffset: imageRect.top - heroRect.top };
+      });
+      assert.ok(imageCrop.imageHeight > imageCrop.heroHeight * 1.15 && imageCrop.imageTopOffset < -100, `${name} mobile salmon crop brings the nigiri above the copy`);
+      const bookingColumns = await page.locator('.home-booking-form').evaluate(form => getComputedStyle(form).gridTemplateColumns.split(' ').length);
+      assert.equal(bookingColumns, 2, `${name} mobile visit form uses a compact two-column layout`);
+    }
   }
 
   if (capture) {
@@ -134,6 +148,7 @@ async function runMode(browser, name, base, route, capture) {
 async function runReducedMotion(browser, name, base, route) {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
   const page = await context.newPage();
+  const hero = page.locator('[data-home-hero]');
   await page.goto(`${base}${route}`, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => !document.querySelector('[data-home-hero-controls]')?.hidden);
   assert.equal(await page.evaluate(() => matchMedia('(prefers-reduced-motion: no-preference)').matches), false, `${name} reduced-motion mode disables the page-transition opt-in media query`);
@@ -142,6 +157,7 @@ async function runReducedMotion(browser, name, base, route) {
   assert.ok(duration.split(',').every(value => Number.parseFloat(value) <= 0.01), `${name} respects prefers-reduced-motion`);
   await page.locator('[data-home-hero-step="1"]').click();
   await waitForScene(page, 'Позвольте вечеру');
+  assert.equal(await hero.getAttribute('data-home-hero-scene'), '1', `${name} updates art direction when changing scenes`);
   assert.equal(await page.locator('#home-hero-photo').evaluate(image => image.naturalWidth > 0), true, `${name} reduced-motion scene still works`);
   await context.close();
 }
@@ -149,11 +165,14 @@ async function runReducedMotion(browser, name, base, route) {
 (async () => {
   fs.mkdirSync(evidenceDir, { recursive: true });
   const browser = await chromium.launch({ headless: true });
+  const staticOnly = process.env.TOKYO_MOTION_STATIC_ONLY === '1';
   try {
-    await runMode(browser, 'php', phpBase, '/', true);
-    await runReducedMotion(browser, 'php', phpBase, '/');
+    if (!staticOnly) {
+      await runMode(browser, 'php', phpBase, '/', true);
+      await runReducedMotion(browser, 'php', phpBase, '/');
+    }
     await runMode(browser, 'static', staticBase, '/index.html', true);
     await runReducedMotion(browser, 'static', staticBase, '/index.html');
-    console.log(`PASS: cinematic hero and scroll story, scene controls, keyboard, reduced motion, no autoplay, and eight responsive widths in PHP and static modes; screenshots saved to ${evidenceDir}`);
+    console.log(`PASS: cinematic hero and scroll story, scene controls, keyboard, reduced motion, no autoplay, and eight responsive widths${staticOnly ? ' in static mode' : ' in PHP and static modes'}; screenshots saved to ${evidenceDir}`);
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

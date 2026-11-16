@@ -161,3 +161,9 @@ The menu now adds six ingredient filters from the approved reference. The focuse
 ## 2026-11-16 explicitly seeded account demo
 
 `11-account-seeded-desktop.jpg` and `11-account-seeded-mobile.jpg` show the static profile after the user explicitly creates sample history. Three fictional orders use current catalog names and prices, one booking request and three favorites carry a visible browser-local demo label, and the existing settings action clears them. The account remains empty by default; this action saves only to this browser.
+
+## 2026-11-16 homepage mobile framing
+
+`home-mobile-booking-quickfix-2026-11-16/static-hero-mobile.jpg` and `static-mobile.jpg` show the mobile-specific image framing and compact visit form. The crop follows the active hero scene so the salmon, seasonal set and chef each stay in frame. The homepage form keeps every field; name/phone, date/time and guests/zone are paired, while email and submit span the form width.
+
+The existing motion regression passed in static-only mode at eight viewport widths, including hero controls, keyboard use, reduced motion, reveal completion and overflow checks. The PHP version was not exercised because this local PHP CLI lacks `pdo_sqlite`. The captures document a focused homepage pass, not a full visual comparison of all 11 references.

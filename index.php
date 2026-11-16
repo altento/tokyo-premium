@@ -11,7 +11,7 @@ $heroScenes=[
 ];
 ?>
 <main class="home-premium">
-  <section class="home-hero" aria-labelledby="home-title" data-home-hero data-story-chapter="hero" aria-roledescription="carousel" aria-label="Истории Tokyo Premium">
+  <section class="home-hero" aria-labelledby="home-title" data-home-hero data-home-hero-scene="0" data-story-chapter="hero" aria-roledescription="carousel" aria-label="Истории Tokyo Premium">
     <img class="home-hero-photo home-hero-photo--active" id="home-hero-photo" src="assets/generated/home-hero-salmon-nigiri-v3.webp" width="1672" height="944" fetchpriority="high" alt="Нигири с лососем, которое подают японскими палочками при свете фонарей">
     <img class="home-hero-photo home-hero-photo--next" data-home-hero-next width="1672" height="944" alt="" aria-hidden="true">
     <div class="home-hero-shade" aria-hidden="true"></div>

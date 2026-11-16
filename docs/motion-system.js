@@ -180,6 +180,7 @@
       await delay(reducedMotion.matches ? 0 : 120);
       updateCopy(scene);
       activeIndex = target;
+      hero.dataset.homeHeroScene = String(activeIndex);
       syncControls();
       if (status) status.textContent = `Сцена ${activeIndex + 1} из ${scenes.length}: ${scene.eyebrow}.`;
       requestAnimationFrame(() => hero.classList.remove('is-text-changing'));
