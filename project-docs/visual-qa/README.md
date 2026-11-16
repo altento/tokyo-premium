@@ -145,3 +145,7 @@ The category controls now omit empty categories and expose “Собрать с�
 `menu-grid-list-2026-11-16/` contains desktop and mobile crops of the new catalog list mode. The static focused test toggles both modes, checks the list card layout, and verifies that search still hides nonmatching cards in list mode.
 
 The menu now adds six ingredient filters from the approved reference. The focused route test checks the category + ingredient + search combination and the empty state when changing category under the same filters. Current menu screenshots are refreshed by the same browser pass.
+
+## 2026-11-16 Omakase panorama replacement
+
+`omakase-latest-review-2026-11-16/` contains current full-page desktop and mobile screenshots plus the focused comparison note. This supersedes the earlier mirrored-portrait hero treatment: the hero now uses a newly generated, wide chef-at-counter photograph, responsive WebP variants, and a right-anchored mobile crop. The static page was opened once at 1440×1000 and 390×844; both layouts had no horizontal overflow, the mobile title and all five course tabs stayed in bounds, and there were no page/console errors or failed requests. This is a one-page local static check; it does not claim PHP browser coverage, pixel-perfect full-page fidelity, hosted CI, or publication.

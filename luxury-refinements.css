@@ -163,10 +163,11 @@
 @media(prefers-reduced-motion:reduce){.omakase-course-card,.omakase-course-photo img{transition:none}}
 .cart-page-controls [data-cart-remove]{width:auto;min-width:68px;padding-inline:10px;color:#dc9e93}
 
-/* Mirror the existing chef photograph so the Omakase title keeps clear space. */
-.editorial-hero.omakase-hero .editorial-hero-photo{transform:scaleX(-1)}
+/* The original panoramic photo places the chef on the right and leaves calm title space on the left. */
+.editorial-hero.omakase-hero .editorial-hero-photo{transform:none;object-position:center}
 .editorial-hero.omakase-hero{box-sizing:border-box;min-height:clamp(390px,33vw,460px);height:auto;padding-block:clamp(32px,3vw,46px);align-items:center}
 .editorial-hero.omakase-hero .editorial-hero-copy{max-width:min(570px,50vw)}
 .editorial-hero.omakase-hero h1{font-size:clamp(3.2rem,6vw,5.35rem);line-height:1;letter-spacing:.035em;text-transform:uppercase}
+@media(max-width:640px){.editorial-hero.omakase-hero .editorial-hero-photo{object-position:right center}}
 .editorial-hero.omakase-hero .editorial-sub{font-size:clamp(1.3rem,2.4vw,1.8rem);margin:.18em 0 .6em}
 @media(max-width:700px){.editorial-hero.omakase-hero{min-height:clamp(390px,106vw,440px);padding:58px 22px 20px;align-items:flex-end}.editorial-hero.omakase-hero .editorial-hero-copy{max-width:100%}.editorial-hero.omakase-hero h1{font-size:clamp(2.7rem,11vw,3.5rem);line-height:1.02}.editorial-hero.omakase-hero .editorial-sub{font-size:clamp(1.1rem,5.2vw,1.38rem)}}

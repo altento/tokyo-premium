@@ -8,8 +8,14 @@ $detailDish=null;
 if($view==='dish'){ $dishId=filter_var($_GET['id']??null,FILTER_VALIDATE_INT); $detailDish=$dishId?($allById[(int)$dishId]??null):null; }
 if($view==='dish'&&!$detailDish) http_response_code(404);
 function ep_price(int $amount): string { return number_format($amount,0,'.',' '); }
-function ep_hero(string $kanji,string $eyebrow,string $title,string $sub,string $copy,string $image,string $alt,string $primary,string $href,string $secondary='',string $extraClass=''): void { ?>
-<section class="editorial-hero<?= $extraClass?' '.e($extraClass):'' ?>"><img class="editorial-hero-photo" src="<?=e($image)?>" srcset="<?=e(image_srcset($image))?>" sizes="100vw" width="1800" height="1100" fetchpriority="high" alt="<?=e($alt)?>"><div class="editorial-hero-shade"></div><div class="editorial-kanji" lang="ja"><?=e($kanji)?></div><div class="editorial-hero-copy"><div class="kicker"><?=e($eyebrow)?></div><h1><?=e($title)?></h1><p class="editorial-sub"><?=e($sub)?></p><p><?=e($copy)?></p><div class="button-row"><a class="button" href="<?=e($href)?>"><?=e($primary)?> ↗</a><?php if($secondary): ?><a class="button secondary" href="menu.php"><?=e($secondary)?> ↗</a><?php endif ?></div><span class="school-note">Учебная концепция · все бизнес-данные вымышлены</span></div></section>
+function ep_hero(string $kanji,string $eyebrow,string $title,string $sub,string $copy,string $image,string $alt,string $primary,string $href,string $secondary='',string $extraClass=''): void {
+    $panoramic = str_contains($image, 'omakase-chef-panorama-');
+    $srcset = image_srcset($image);
+    if ($panoramic) $srcset = 'assets/generated/omakase-chef-panorama-640.webp 640w, assets/generated/omakase-chef-panorama-1024.webp 1024w, assets/generated/omakase-chef-panorama-1920.webp 1920w';
+    $width = $panoramic ? 1920 : 1800;
+    $height = $panoramic ? 640 : 1100;
+?>
+<section class="editorial-hero<?= $extraClass?' '.e($extraClass):'' ?>"><img class="editorial-hero-photo" src="<?=e($image)?>" srcset="<?=e($srcset)?>" sizes="100vw" width="<?=$width?>" height="<?=$height?>" fetchpriority="high" alt="<?=e($alt)?>"><div class="editorial-hero-shade"></div><div class="editorial-kanji" lang="ja"><?=e($kanji)?></div><div class="editorial-hero-copy"><div class="kicker"><?=e($eyebrow)?></div><h1><?=e($title)?></h1><p class="editorial-sub"><?=e($sub)?></p><p><?=e($copy)?></p><div class="button-row"><a class="button" href="<?=e($href)?>"><?=e($primary)?> ↗</a><?php if($secondary): ?><a class="button secondary" href="menu.php"><?=e($secondary)?> ↗</a><?php endif ?></div><span class="school-note">Учебная концепция · все бизнес-данные вымышлены</span></div></section>
 <?php }
 function ep_heading(string $eyebrow,string $title,string $copy=''): void { ?><div class="editorial-heading"><div class="kicker"><?=e($eyebrow)?></div><h2><?=e($title)?></h2><?php if($copy): ?><p><?=e($copy)?></p><?php endif ?></div><?php }
 function ep_card(array $d,string $label=''): void { ?>
@@ -53,7 +59,7 @@ header_html($view);
 <section class="section"><div class="editorial-heading"><div class="kicker">Состав и подача</div><h2>Что создаёт характер блюда</h2></div><div class="detail-ingredients"><article><span>01</span><h3>Основа</h3><p><?=e($dish['description'])?></p></article><article><span>02</span><h3>Текстура</h3><p>Контраст нежного, упругого и хрустящего раскрывает каждый компонент постепенно.</p></article><article><span>03</span><h3>Ритм</h3><p>Подавайте сразу после приготовления; точная подача здесь важнее спешки.</p></article></div></section>
 <section class="section dark"><div class="section-head"><div><div class="kicker">Продолжить знакомство · <?=e($dish['category_name'])?></div><h2>Другие блюда раздела</h2></div><a class="button secondary" href="menu.php">Все меню ↗</a></div><div class="dish-grid dish-grid-related"><?php foreach($recommend as $d) ep_card($d); ?></div></section>
 <?php } elseif($view==='omakase'): ?>
-<?php ep_hero('お任せ','ВЫБОР ШЕФА · РИТУАЛ ВКУСА','Omakase','Ужин от шефа','Доверить выбор шефу — значит позволить сезону вести вас от первой лёгкой подачи к глубокому финалу.','assets/generated/chef-at-counter.webp','Шеф готовит дегустационное меню','Выбрать вечер','pages.php?page=booking','Открыть меню','omakase-hero'); ?>
+<?php ep_hero('お任せ','ВЫБОР ШЕФА · РИТУАЛ ВКУСА','Omakase','Ужин от шефа','Доверить выбор шефу — значит позволить сезону вести вас от первой лёгкой подачи к глубокому финалу.','assets/generated/omakase-chef-panorama-1920.webp','Шеф готовит нигири для дегустационного меню в камерном японском ресторане','Выбрать вечер','pages.php?page=booking','Открыть меню','omakase-hero'); ?>
 <?php
 $omakasePlan=[
  ['Знакомство',12],
