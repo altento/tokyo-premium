@@ -250,4 +250,4 @@ Added an in-place editor for existing marketing campaigns and two regression ass
 
 ## Delivery tariff configuration — 2026-11-16
 
-The protected site settings now validate and persist a delivery tariff from 0 to 100,000 ₸. The focused integration assertions cover saving a positive rate, rejecting a negative rate without overwriting it, and applying the configured amount to a server-quoted free-delivery promotion. PHP lint and `git diff --check` passed; the SQLite integration suite was not run locally because `pdo_sqlite` is unavailable.
+The protected site settings now validate and persist a delivery tariff from 0 to 100,000 ₸, and the campaign creation form exposes the existing free-delivery reward. The focused integration assertions cover saving a positive rate, rejecting a negative rate without overwriting it, and applying the configured amount to a server-quoted free-delivery promotion. PHP lint and `git diff --check` passed; the SQLite integration suite was not run locally because `pdo_sqlite` is unavailable.

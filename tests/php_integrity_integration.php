@@ -501,7 +501,7 @@ try {
   [$status,$history]=request('/account.php');
   check($status===200 && str_contains($history,'Бронь подтверждена') && str_contains($history,'role="status"'), 'confirmed booking is clearly shown in the guest account');
   [$status,$marketingHtml]=request('/admin-marketing.php'); $marketingCsrf=tokenFrom($marketingHtml);
-  check($status===200 && str_contains($marketingHtml,'Цели включения') && str_contains($marketingHtml,'dish:12, category:rolls'), 'marketing admin exposes campaign include and exclusion targeting');
+  check($status===200 && str_contains($marketingHtml,'Цели включения') && str_contains($marketingHtml,'dish:12, category:rolls') && str_contains($marketingHtml,'<option value="free_delivery">Бесплатная доставка</option>'), 'marketing admin exposes targeting and the free-delivery campaign reward');
   $campaignSlug='qa-target-'.bin2hex(random_bytes(4));
   $campaignFields=['csrf'=>$marketingCsrf,'action'=>'campaign-save','slug'=>$campaignSlug,'campaign_type'=>'exclusive','reward_type'=>'percent','title'=>'Проверка целей QA','description'=>'Проверка ограничений кампании.','reward_value'=>'10','gift_dish_id'=>'','gift_quantity'=>'0','minimum_subtotal'=>'0','maximum_discount'=>'1000','starts_at'=>'','ends_at'=>'','starts_time'=>'','ends_time'=>'','image_url'=>'assets/generated/room-main-hall.webp','required_tier'=>'','sort_order'=>'50','active'=>'on','target_include'=>'category:rolls','target_exclude'=>'dish:1'];
   [$status,$campaignResponse]=request('/admin-marketing.php',$campaignFields); check($status===200 && str_contains($campaignResponse,'Кампания создана как учебная демонстрация'), 'campaign create accepts validated target rules');

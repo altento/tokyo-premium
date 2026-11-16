@@ -216,4 +216,4 @@ Marketing campaign records can now be edited in place from the admin list with t
 
 ## Delivery tariff configuration — 2026-11-16
 
-The protected site settings now expose a bounded delivery charge, so the existing free-delivery promotion works when a positive rate is configured. A zero rate remains free and the server remains authoritative. Focused integration assertions were added; PHP syntax and whitespace checks passed, while the SQLite HTTP assertions could not run locally without `pdo_sqlite`.
+The protected site settings now expose a bounded delivery charge, and new campaigns can select the free-delivery reward; the promotion works when a positive rate is configured. A zero rate remains free and the server remains authoritative. Focused integration assertions were added; PHP syntax and whitespace checks passed, while the SQLite HTTP assertions could not run locally without `pdo_sqlite`.
