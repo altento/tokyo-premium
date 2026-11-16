@@ -711,3 +711,22 @@ body.story-motion-gsap [data-story-reveal].story-visible img{animation:none}
 .editorial-page .section.detail-feature--product{padding-block:clamp(32px,4vw,56px)}
 .editorial-page .section.dish-chef-section{padding-block:clamp(28px,4vw,54px)}
 @media(max-width:900px){.editorial-page .section.detail-feature--product{padding-top:24px;padding-bottom:32px}}
+
+/* Cart commerce hierarchy — compact hero, checkout-first flow, and full-width recommendations. */
+.editorial-hero.cart-hero{box-sizing:border-box;min-height:clamp(270px,22vw,310px);padding:32px clamp(24px,5vw,76px);align-items:center}
+.editorial-hero.cart-hero .editorial-hero-copy{max-width:min(620px,62vw)}
+.editorial-hero.cart-hero h1{font-size:clamp(3rem,6vw,5.2rem);line-height:.98;margin-block:8px 12px}
+.cart-page.section{padding-top:clamp(18px,2.2vw,28px);padding-bottom:clamp(48px,6vw,76px)}
+.cart-page-head{align-items:center;margin-bottom:18px;padding-bottom:14px}
+.cart-page-head>div:first-child{position:relative;padding-left:48px}
+.cart-page-head>div:first-child::before{content:"";position:absolute;left:0;top:50%;width:36px;height:2px;transform:translateY(-50%);background:var(--jp-red,#d20a17)}
+.cart-page-head h2{font-size:clamp(1.9rem,3vw,2.7rem)}
+.cart-layout{grid-template-columns:minmax(0,1.24fr) minmax(330px,.76fr);gap:22px}
+.cart-lines{min-width:0}
+.cart-checkout{top:18px;padding:clamp(18px,2vw,25px)}
+.cart-checkout h2{font-size:clamp(1.8rem,2.8vw,2.35rem);margin:8px 0 17px}
+.cart-recommendation-heading{margin-top:30px;padding-top:22px;border-top:1px solid var(--jp-line)}
+.cart-recommendations{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:17px}
+@media(max-width:1050px){.cart-layout{grid-template-columns:1fr}.cart-checkout{position:static}.cart-recommendations{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){.editorial-hero.cart-hero{min-height:290px;padding:92px 22px 30px;align-items:end}.editorial-hero.cart-hero .editorial-hero-copy{max-width:100%}.editorial-hero.cart-hero h1{font-size:clamp(2.55rem,12vw,3.65rem);line-height:1.02;overflow-wrap:anywhere}.cart-page.section{padding-top:20px}.cart-page-head{gap:12px;margin-bottom:14px}.cart-page-head>div:first-child{padding-left:34px}.cart-page-head>div:first-child::before{width:24px}.cart-page-head h2{font-size:clamp(1.55rem,7vw,2.15rem)}.cart-page-head .text-button{font-size:.8rem}.cart-layout{gap:17px}.cart-checkout{padding:17px}.cart-recommendation-heading{margin-top:24px;padding-top:18px}.cart-recommendations{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
+@media(max-width:390px){.cart-recommendations{grid-template-columns:1fr}.cart-page-head{align-items:flex-start}.cart-page-head .text-button{max-width:110px;text-align:right}}

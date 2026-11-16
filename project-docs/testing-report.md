@@ -191,3 +191,7 @@ One focused visual-fidelity run passed for the Omakase route in PHP and exported
 - The account-only PHP/static browser run captured authenticated desktop and mobile states, checked the PHP hero and heading/page bounds at 390 px, seeded a local static demo order/booking, and reported no JavaScript errors. The PHP fixture had no persisted orders/bookings, so its empty history is genuine for that isolated database.
 - The reviews-only PHP/static desktop/mobile browser run verified HTTP routes, four demo review cards, cuisine filtering, sort control, title bounds, 370 px hero height and absence of page errors/overflow. A narrow mobile follow-up verified that all five category filters are visible at 390 px and that Omakase filtering returns the expected card.
 - `php -l account.php`, `php -l reviews.php`, and `git diff --check` passed. Broad suites, CI and public Pages deployment were not run for these visual-only changes.
+
+## 2026-11-16 cart layout follow-up
+
+The cart-only static browser regression passed and saved eight states after recommendations were moved below the order/checkout grid. The populated case contains three catalog items with one quantity of two and a 12,700 ₸ subtotal; empty, pickup, delivery and validation states were also refreshed. The PHP template passed syntax lint, and `premium.css` is synchronized with `docs/premium.css`. PHP browser rendering was not verified in this runtime because the active PHP executable reports `could not find driver` for PDO SQLite. No broad suite, hosted CI or Pages deployment was run.
