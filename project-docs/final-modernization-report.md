@@ -202,6 +202,10 @@ Completed the existing partial Secret Menu admin flow: rules can now be edited i
 
 The code-rule path also provisions an active promo code in the selected Secret Menu campaign atomically with the rule. Existing codes cannot be silently reassigned across campaigns; enabling a rule checks that its code was not separately disabled. Focused assertions cover provisioned code storage and the server unlock decision, but the PHP/SQLite integration file could not be executed in this local runtime because `pdo_sqlite` is missing.
 
+### Account quick actions — 2026-11-16
+
+Changed the static profile's first quick action from an empty cart to the menu, added direct access to privileges, and ordered the four actions as menu, booking, favorites, privileges. Updated the Pages export template as well. At 390 px all four controls fit one line each without overflow, and the favorites action opened the expected panel. Screenshot: [Account quick actions at 390 px](visual-qa/account-quick-actions-390-2026-11-16.png). Exporter PHP syntax and diff whitespace checks passed; the server-authenticated PHP dashboard was not changed in this slice.
+
 ## Account empty-state UX — 2026-11-16
 
 The browser-local account no longer leaves order and booking history blank when there are no records. It explains that saved entries appear after a demo action and links to the corresponding menu or booking route; the empty favorites state also links back to the menu. No fictitious history is preloaded. Source and exported JS/CSS copies are synchronized. A focused local Chromium check covered the static account at 1440 and 390 px, verified all three links, zero horizontal overflow and no page errors; PHP rendering and full visual parity with the populated account reference remain outstanding.
