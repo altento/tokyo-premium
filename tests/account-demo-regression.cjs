@@ -22,6 +22,7 @@ async function run() {
     assert.equal(await page.locator('[data-account-demo-seed]').count(), 1, 'account offers an explicit sample-data action');
     assert.equal(await page.locator('.account-overview h1').innerText(), 'Личный кабинет', 'account masthead keeps a stable page title');
     assert.equal(await page.locator('.account-overview-lead').innerText(), 'Ваше пространство в Tokyo Premium', 'account masthead follows the approved subtitle hierarchy');
+    assert.match(await page.locator('.account-overview-privacy').innerText(), /не зашифровано/i, 'account explains that browser-local demo data is not encrypted');
     assert.equal(await page.locator('.account-overview-art img').getAttribute('src'), 'assets/generated/contact-exterior.webp', 'account uses an entrance photograph rather than a room photo');
     assert.ok(await page.locator('.account-overview-art img').evaluate(image => image.complete && image.naturalWidth > 0), 'account entrance photograph is decoded');
     assert.ok(await page.locator('.account-overview').evaluate(hero => hero.getBoundingClientRect().height <= 420), 'desktop account masthead remains a compact introduction');
