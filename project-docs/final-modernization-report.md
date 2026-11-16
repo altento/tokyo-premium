@@ -227,3 +227,4 @@ Shortened the mobile cart hero and moved the optional checkout comment into an a
 ## Reviews density follow-up — 2026-11-16
 
 Made review cards denser and responsive, and added an editorial still-photo interlude with an explicit no-video disclosure. The Pages exporter now keeps the gallery anchor on the converted static route. Focused PHP lint, exporter lint, structural checks, CSS parity, and diff whitespace checks passed; no browser visual review or full reviews interaction run is claimed. Details: [reviews follow-up](visual-qa/reviews-density-follow-up-2026-11-16.md).
+Omakase follow-up correction: the Pages route was opened in the in-app browser at a narrow viewport. The accessibility tree confirmed the updated section order and five stage tabs; the screenshot review caught a malformed stage heading, which was corrected in both PHP and Pages. No screenshot file was persisted, and the PHP view remains unrendered without `pdo_sqlite`.
