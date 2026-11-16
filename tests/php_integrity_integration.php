@@ -299,7 +299,9 @@ try {
  $marketingCsrf=tokenFrom($marketingHtml); check(str_contains($marketingHtml,'name="id" value="'.$secretRuleId.'"'), 'existing Secret Menu rules expose an edit form');
  [$status,$marketingHtml]=request('/admin-marketing.php',['csrf'=>$marketingCsrf,'action'=>'secret-rule-save','id'=>(string)$secretRuleId,'campaign_id'=>(string)$secretCampaignId,'access_kind'=>'tier','required_value'=>'gold','starts_at'=>'2026-11-16T15:00','ends_at'=>'2027-01-01T00:00','active'=>'on']);
  $editedSecretRule=$pdo->query("SELECT access_kind,required_value,starts_at FROM secret_menu_rules WHERE id=$secretRuleId")->fetch(PDO::FETCH_ASSOC);
- check($status===200 && $editedSecretRule && $editedSecretRule['access_kind']==='tier' && $editedSecretRule['required_value']==='gold' && $editedSecretRule['starts_at']==='2026-11-16 15:00:00', 'admin can edit rule type and validates local schedule values (HTTP '.$status.'; row='.json_encode($editedSecretRule,JSON_UNESCAPED_UNICODE).'; response='.substr(strip_tags($marketingHtml),0,240).')');
+ preg_match('~<p class="form-status error" role="alert">(.*?)</p>~s', $marketingHtml, $secretRuleErrorMatch);
+ $secretRuleError = html_entity_decode(strip_tags($secretRuleErrorMatch[1] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+ check($status===200 && $editedSecretRule && $editedSecretRule['access_kind']==='tier' && $editedSecretRule['required_value']==='gold' && $editedSecretRule['starts_at']==='2026-11-16 15:00:00', 'admin can edit rule type and validates local schedule values (HTTP '.$status.'; row='.json_encode($editedSecretRule,JSON_UNESCAPED_UNICODE).'; error='.$secretRuleError.')');
  $marketingCsrf=tokenFrom($marketingHtml);
  [$status,$marketingError]=request('/admin-marketing.php',['csrf'=>$marketingCsrf,'action'=>'secret-rule-save','id'=>(string)$secretRuleId,'campaign_id'=>(string)$secretCampaignId,'access_kind'=>'tier','required_value'=>'gold','starts_at'=>'2026-02-30T12:00','ends_at'=>'2027-01-01T00:00','active'=>'on']);
  check($status===200 && str_contains($marketingError,'корректные местные дату и время'), 'invalid calendar dates cannot be stored for Secret Menu rules');
