@@ -24,3 +24,8 @@ No actual address or restaurant availability is claimed. The decorative map is e
 - Offers, campaign defaults and seasonal collections are educational data and can be edited by an authenticated PHP administrator.
 - `perfect-evening.php` uses transparent catalog rules, not a claim of AI assistance.
 - The static loyalty/referral views are browser-local examples. Certificate creation produces a preview record only, not a payment receipt or redeemable stored value.
+
+## 2026-11-16 selected visual assets
+
+- The menu hero now selects `assets/generated/menu-hero-sushi-assortment-v1.webp`, an original AI-generated text-free food composition distinct from the homepage hero. Its dimensions are declared in markup to preserve layout space.
+- The Omakase stage selector displays five different catalog photos linked to the same five educational stages shown in the interactive detail panel. These are menu photographs reused as truthful previews of those catalog items, not fabricated additional camera angles.

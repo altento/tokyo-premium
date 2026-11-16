@@ -76,7 +76,7 @@ async function visit(browser, base, route, mode, capture = false) {
     assert.equal(await page.locator('.home-dish-grid img').evaluateAll(images => images.filter(image => image.naturalWidth > 0).length), 4, `${mode} all featured dish photos load`);
   } else if (route.key === 'menu') {
     const image = page.locator('.menu-hero > img');
-    assert.match(await image.getAttribute('src'), /menu-hero-japanese-garden-v2-1600\.webp$/);
+    assert.match(await image.getAttribute('src'), /menu-hero-sushi-assortment-v1\.webp$/);
     assert.equal(await image.evaluate(node => node.naturalWidth > 0), true, `${mode} menu hero image loads`);
     assert.notEqual(await image.getAttribute('src'), 'assets/generated/home-hero-salmon-nigiri-v3.webp', 'menu hero is a distinct photograph');
     assert.equal(await page.locator('.menu-breadcrumbs [aria-current="page"]').innerText(), 'Меню', `${mode} menu includes the current breadcrumb`);
@@ -160,6 +160,10 @@ async function visit(browser, base, route, mode, capture = false) {
     }));
     assert.equal(counts.interactiveStages, 5, `${mode} Omakase presents five interactive catalog-backed stages`);
     assert.equal(counts.stagePanels, 5, `${mode} each Omakase stage has a matching story panel`);
+    const coursePreviews = await page.locator('.tp20-course-tabs [data-tp-course] img').evaluateAll(images => images.map(image => image.currentSrc || image.src));
+    assert.equal(coursePreviews.length, 5, `${mode} Omakase shows a photo preview for every stage`);
+    assert.equal(new Set(coursePreviews).size, 5, `${mode} Omakase previews five distinct course photographs`);
+    assert.equal(await page.locator('.tp20-course-tabs [data-tp-course] img').evaluateAll(images => images.every(image => image.naturalWidth > 0)), true, `${mode} all course previews load`);
     assert.equal(counts.duplicateCourseGrid, false, `${mode} Omakase does not repeat the same course photos in a second grid`);
     assert.equal(counts.orderIsEditorial, true, `${mode} Omakase follows philosophy, interactive journey, tiers and booking order`);
     assert.ok(counts.heroHeight <= 370, `${mode} Omakase desktop hero stays close to the reference height (${counts.heroHeight}px)`);
@@ -170,9 +174,6 @@ async function visit(browser, base, route, mode, capture = false) {
     }));
     assert.equal(hero.transform, 'none', `${mode} Omakase panorama is not mirrored`);
     assert.match(hero.source, /omakase-chef-panorama-/);
-    await page.setViewportSize({ width: 390, height: 844 });
-    const mobileObjectPosition = await page.locator('.omakase-hero .editorial-hero-photo').evaluate(image => getComputedStyle(image).objectPosition);
-    assert.equal(mobileObjectPosition, '100% 50%', `${mode} mobile Omakase crop keeps the chef in frame`);
   } else if (route.key === 'reviews') {
     assert.equal(await page.locator('.reviews-hero h1').innerText(), 'Отзывы гостей', `${mode} reviews page has its own editorial heading`);
     assert.equal(await page.locator('#review-grid [data-review-card]').count(), 4, `${mode} reviews page renders its disclosed demo stories`);
@@ -190,10 +191,16 @@ async function visit(browser, base, route, mode, capture = false) {
   }
 
   assert.deepEqual(errors, [], `${mode} ${route.key} has no JavaScript or console errors`);
+  assert.equal(await page.evaluate(() => innerWidth), route.width, `${mode} ${route.key} desktop capture uses the configured ${route.width}px viewport`);
   if (capture) await page.screenshot({ path: path.join(evidenceDir, `${route.key}-${mode}-desktop.jpg`), fullPage: true, type: 'jpeg', quality: 76 });
 
   await page.setViewportSize({ width: 390, height: 844 });
   await revealAll();
+  if (route.key === 'omakase') {
+    const mobileObjectPosition = await page.locator('.omakase-hero .editorial-hero-photo').evaluate(image => getComputedStyle(image).objectPosition);
+    assert.equal(mobileObjectPosition, '100% 50%', `${mode} mobile Omakase crop keeps the chef in frame`);
+    assert.equal(await page.locator('.tp20-course-tabs [data-tp-course] img').evaluateAll(images => images.every(image => image.naturalWidth > 0)), true, `${mode} mobile course preview photos load`);
+  }
   const mobile = await page.evaluate(() => ({
     width: innerWidth,
     scrollWidth: document.documentElement.scrollWidth,
