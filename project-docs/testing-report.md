@@ -1,5 +1,11 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-17 cart checkout and booking notification follow-up
+
+The cart checkout/contact section is now a native disclosure to keep the populated order summary compact. PHP and Pages markup use the same structure; the delivery/pickup selector and total remain visible. The browser regression opens the disclosure before filling checkout fields, then checks pickup reset, repeated delivery validation, and state after route changes/reload. Restaurant booking notification email status and retry are now visible in the admin booking row; the PHP integration suite includes an outbox fixture and retry-action assertion.
+
+Focused verification: `npm run test:cart-visual` passed and captured eight desktop/mobile cart states under `visual-qa/cart-progressive-checkout-2026-11-17/`. `npm run test:browser` passed across 11 routes, 20 dish details, cart/checkout, favorites, navigation, filters, and six viewport widths; captures are under `visual-qa/cart-checkout-browser-2026-11-17/`. PHP syntax, JS syntax, and `git diff --check` passed. PHP/SQLite integration could not run on this machine because its PHP CLI has no `pdo_sqlite`; the added assertion is pending hosted CI.
+
 ## 2026-11-16 route-specific social previews
 
 PHP routes and the checked-in GitHub Pages export now emit route-specific Open Graph and Twitter preview images. The existing 11-route static visual regression asserts both metadata values for every route and passed in static mode. PHP syntax and JavaScript syntax checks passed. PHP rendering/export could not be run locally because this PHP CLI lacks `pdo_sqlite`; hosted CI and public deployment remain unverified for this patch.

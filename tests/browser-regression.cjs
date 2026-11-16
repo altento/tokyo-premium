@@ -172,6 +172,7 @@ async function run(options = {}) {
     await addCustomSet(page);
     check(await page.locator('#cart-page-items .cart-page-custom-set').count() === 1, 'custom set can be combined with a dish');
     check(await page.locator('#cart-page-items .cart-page-item:not(.cart-page-custom-set)').count() === 1, 'add after clear does not restore old dish lines');
+    await page.locator('.cart-checkout-details > summary').click();
     await page.locator('#fulfillment').selectOption('pickup');
     check(await page.locator('#checkout-address').isDisabled(), 'pickup disables address');
     await page.locator('#checkout-name').fill('Гость QA');
@@ -234,6 +235,7 @@ async function run(options = {}) {
     await page.goto(base + '/pages.php?page=cart');
     check(await page.locator('#cart-page-items .cart-page-item').count() === 1, 'cart survives route change before repeat checkout');
     await page.reload();
+    await page.locator('.cart-checkout-details > summary').click();
     check(await page.locator('#fulfillment').inputValue() === 'delivery' && await page.locator('#checkout-address').isVisible() && await isRequired(page.locator('#checkout-address')), 'delivery and address validation are consistent after reload');
     await page.locator('#cart-clear').click();
     await page.goto(base + '/account.php');
@@ -277,6 +279,7 @@ async function run(options = {}) {
     const staticCustomSet = await addCustomSet(page);
     check(staticCustomSet.handled, 'static custom set event is handled by the same cart API');
     check(await page.locator('#cart-page-items .cart-page-custom-set').count() === 1, 'static cart renders custom set lines');
+    await page.locator('.cart-checkout-details > summary').click();
     await page.locator('#fulfillment').selectOption('pickup');
     await page.locator('#checkout-name').fill('Демо-гость');
     await page.locator('#checkout-phone').fill('+77010000000');
@@ -310,7 +313,9 @@ async function run(options = {}) {
     await page.goto(staticBase + '/cart.html');
     check(await page.locator('#cart-page-items .cart-page-item').count() === 1, 'static cart survives route change');
     await page.reload();
-    check(await page.locator('#fulfillment').inputValue() === 'delivery' && await page.locator('#checkout-address').isVisible() && await isRequired(page.locator('#checkout-address')), 'static delivery state is consistent after reload');
+    check(await page.locator('#fulfillment').inputValue() === 'delivery' && await isRequired(page.locator('#checkout-address')), 'static delivery validation is consistent after reload');
+    await page.locator('.cart-checkout-details > summary').click();
+    check(await page.locator('#checkout-address').isVisible(), 'static delivery address is visible when checkout is expanded after reload');
     await page.locator('#cart-clear').click();
 
     await page.goto(staticBase + '/account.html');

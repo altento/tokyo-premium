@@ -57,6 +57,14 @@ async function run(options = {}) {
     const displayedTotal = Number((await page.locator('#cart-page-total').innerText()).replace(/\D/g, ''));
     assert.equal(displayedTotal, computedTotal, 'visible total matches the shared cart store');
     assert.equal(await page.locator('.cart-recommendations .dish-card').count(), 3, 'real recommendations remain available');
+    const desktopCartFlow = await page.evaluate(() => {
+      const rect = selector => { const value = document.querySelector(selector).getBoundingClientRect(); return { top: value.top, left: value.left, bottom: value.bottom }; };
+      return { items: rect('#cart-page-items'), checkout: rect('.cart-checkout'), recommendations: rect('.cart-recommendation-heading'), detailsOpen: document.querySelector('.cart-checkout-details').open, nameVisible: document.querySelector('#checkout-name').checkVisibility() };
+    });
+    assert.ok(desktopCartFlow.recommendations.top >= desktopCartFlow.items.bottom, 'recommendations follow the product list in the cart column');
+    assert.ok(desktopCartFlow.recommendations.left < desktopCartFlow.checkout.left, 'desktop recommendations stay beside the compact checkout panel');
+    assert.equal(desktopCartFlow.detailsOpen, false, 'contact fields begin collapsed until checkout intent');
+    assert.equal(desktopCartFlow.nameVisible, false, 'collapsed checkout fields do not occupy the default cart layout');
     assert.equal(await page.locator('[data-tp-gift-choice]').isHidden(), true, 'gift selector stays hidden until a server-validated offer makes it available');
     assert.equal(await page.locator('.cart-recommendations .add-to-cart').evaluateAll((buttons, ids) => buttons.every(button => !ids.includes(Number(button.dataset.id))), await page.evaluate(() => window.TokyoCart.get().map(item => Number(item.id)))), true, 'recommendations exclude dishes already in the cart');
     await screenshot(page, 'cart-populated-desktop.png');
@@ -66,8 +74,11 @@ async function run(options = {}) {
     await page.setViewportSize({ width: 390, height: 844 });
     const mobileHeroHeight = await page.locator('.cart-hero').evaluate(hero => hero.getBoundingClientRect().height);
     assert.ok(mobileHeroHeight <= 270, `mobile cart hero stays compact without clipping (height ${mobileHeroHeight}px)`);
+    const mobileFlow = await page.evaluate(() => ({ checkoutTop: document.querySelector('.cart-checkout').getBoundingClientRect().top, recommendationsTop: document.querySelector('.cart-recommendation-heading').getBoundingClientRect().top }));
+    assert.ok(mobileFlow.checkoutTop < mobileFlow.recommendationsTop, 'mobile checkout appears before upsell recommendations');
     await screenshot(page, 'cart-populated-mobile.png');
 
+    await page.locator('.cart-checkout-details > summary').click();
     await page.locator('#checkout-name').fill('Демо-гость');
     await page.locator('#checkout-phone').fill('+77010000000');
     await page.locator('#checkout-address').fill('ул. Сакура, 12');
@@ -94,6 +105,7 @@ async function run(options = {}) {
 
     await page.locator('#cart-clear').click();
     assert.equal(await page.locator('#cart-page-empty').isVisible(), true);
+    await page.locator('.cart-checkout-details > summary').click();
     await page.setViewportSize({ width: 1440, height: 1000 });
     await screenshot(page, 'cart-empty-desktop.png');
     await page.setViewportSize({ width: 390, height: 844 });

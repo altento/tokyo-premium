@@ -370,6 +370,8 @@ $bookingFilter = admin_search_where(['CAST(b.id AS TEXT)','b.guest_name','b.gues
 $bookings = admin_rows($pdo, "SELECT b.*,
     (SELECT m.id FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':request:guest' ORDER BY m.id DESC LIMIT 1) AS request_mail_id,
     (SELECT m.status FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':request:guest' ORDER BY m.id DESC LIMIT 1) AS request_mail_status,
+    (SELECT m.id FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':request:restaurant' ORDER BY m.id DESC LIMIT 1) AS restaurant_mail_id,
+    (SELECT m.status FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':request:restaurant' ORDER BY m.id DESC LIMIT 1) AS restaurant_mail_status,
     (SELECT m.id FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':confirmed:guest' ORDER BY m.id DESC LIMIT 1) AS confirmation_mail_id,
     (SELECT m.status FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':confirmed:guest' ORDER BY m.id DESC LIMIT 1) AS confirmation_mail_status
     FROM bookings b" . $bookingFilter[0] . ' ORDER BY b.booking_date DESC,b.booking_time DESC,b.id DESC LIMIT 100', $bookingFilter[1]);
@@ -597,7 +599,7 @@ $bookingMailReadiness = match ($bookingMailState) {
         </div>
         <?php if ($table === 'bookings'): ?>
         <div class="admin-booking-emails">
-            <?php foreach ([['Заявка',$row['request_mail_id']??null,$row['request_mail_status']??null],['Подтверждение',$row['confirmation_mail_id']??null,$row['confirmation_mail_status']??null]] as [$mailLabel,$mailId,$mailStatus]): if ($mailStatus !== null): ?>
+            <?php foreach ([['Заявка гостю',$row['request_mail_id']??null,$row['request_mail_status']??null],['Уведомление ресторану',$row['restaurant_mail_id']??null,$row['restaurant_mail_status']??null],['Подтверждение гостю',$row['confirmation_mail_id']??null,$row['confirmation_mail_status']??null]] as [$mailLabel,$mailId,$mailStatus]): if ($mailStatus !== null): ?>
               <div class="admin-booking-email-row"><span class="admin-status status-<?=e($mailStatus)?>">Email · <?=e($mailLabel)?> · <?=e(booking_mail_status_label((string)$mailStatus))?></span>
                 <?php if (in_array($mailStatus,['pending','failed'],true)): ?><form method="post"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="mail-retry"><input type="hidden" name="id" value="<?=(int)$mailId?>"><button class="button secondary admin-mail-retry" type="submit">Повторить email</button></form><?php endif ?>
               </div>
