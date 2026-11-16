@@ -18,11 +18,16 @@ const routes = [
   { key: 'space', php: '/pages.php?page=gallery', static: '/gallery.html', width: 1440 },
   { key: 'booking', php: '/pages.php?page=booking', static: '/booking.html', width: 1440 },
   { key: 'contacts', php: '/pages.php?page=contacts', static: '/contacts.html', width: 1440 },
-  { key: 'omakase', php: '/pages.php?page=omakase', static: '/omakase.html', width: 1440 }
+  { key: 'omakase', php: '/pages.php?page=omakase', static: '/omakase.html', width: 1440 },
+  { key: 'reviews', php: '/reviews.php', static: '/reviews.html', width: 1440 },
+  { key: 'cart', php: '/pages.php?page=cart', static: '/cart.html', width: 1440 },
+  { key: 'account', php: '/account.php', static: '/account.html', width: 1440 }
 ];
 
 const requestedRoutes = (process.env.TOKYO_VISUAL_ROUTES || '').split(',').map(value => value.trim()).filter(Boolean);
 const routesToRun = requestedRoutes.length ? routes.filter(route => requestedRoutes.includes(route.key)) : routes;
+const requestedMode = process.env.TOKYO_VISUAL_MODE || 'both';
+if (!['php', 'static', 'both'].includes(requestedMode)) throw new Error(`Unknown visual mode: ${requestedMode}`);
 if (requestedRoutes.length && routesToRun.length !== requestedRoutes.length) {
   throw new Error(`Unknown visual route filter: ${requestedRoutes.join(', ')}`);
 }
@@ -54,7 +59,7 @@ async function visit(browser, base, route, mode, capture = false) {
       window.scrollTo({ top: 0, behavior: 'instant' });
     });
     await page.waitForTimeout(850);
-    const hiddenReveals = await page.evaluate(() => [...document.querySelectorAll('.reveal,[data-tp-reveal]')].filter(node => {
+      const hiddenReveals = await page.evaluate(() => [...document.querySelectorAll('.reveal,[data-tp-reveal],[data-story-reveal]')].filter(node => {
       const rect = node.getBoundingClientRect();
       const style = getComputedStyle(node);
       return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity) < 0.95;
@@ -131,7 +136,7 @@ async function visit(browser, base, route, mode, capture = false) {
     assert.equal(await page.locator('#contact-email').getAttribute('required'), '', `${mode} contact form keeps required email validation`);
     assert.equal(await page.locator('#contact-message').getAttribute('required'), '', `${mode} contact form keeps required message validation`);
     const contactOrder = await page.evaluate(() => {
-      const nodes = ['.contact-overview', '#contact-form', '.contact-footnotes'].map(selector => document.querySelector(selector));
+      const nodes = ['.contact-overview', '#contact-form', '.contact-visit-section'].map(selector => document.querySelector(selector));
       return Boolean(nodes.every(Boolean) && (nodes[0].compareDocumentPosition(nodes[1]) & Node.DOCUMENT_POSITION_FOLLOWING)
         && (nodes[1].compareDocumentPosition(nodes[2]) & Node.DOCUMENT_POSITION_FOLLOWING));
     });
@@ -168,6 +173,20 @@ async function visit(browser, base, route, mode, capture = false) {
     await page.setViewportSize({ width: 390, height: 844 });
     const mobileObjectPosition = await page.locator('.omakase-hero .editorial-hero-photo').evaluate(image => getComputedStyle(image).objectPosition);
     assert.equal(mobileObjectPosition, '100% 50%', `${mode} mobile Omakase crop keeps the chef in frame`);
+  } else if (route.key === 'reviews') {
+    assert.equal(await page.locator('.reviews-hero h1').innerText(), 'Отзывы гостей', `${mode} reviews page has its own editorial heading`);
+    assert.equal(await page.locator('#review-grid [data-review-card]').count(), 4, `${mode} reviews page renders its disclosed demo stories`);
+    assert.equal(await page.locator('#review-form').count(), 1, `${mode} reviews page includes the submission form`);
+    assert.equal(await page.locator('#review-sort').count(), 1, `${mode} reviews page exposes sorting`);
+  } else if (route.key === 'cart') {
+    assert.equal(await page.locator('.cart-hero h1').count(), 1, `${mode} cart has a dedicated page heading`);
+    assert.equal(await page.locator('#checkout-form').count(), 1, `${mode} cart includes checkout`);
+    assert.ok(await page.locator('#cart-page-empty').isVisible(), `${mode} fresh browser starts with an honest empty-cart state`);
+    assert.equal(await page.locator('.cart-recommendations .dish-card').count(), 3, `${mode} empty cart offers three catalog-backed recommendations`);
+  } else if (route.key === 'account') {
+    assert.equal(await page.locator('.account-overview h1').count(), 1, `${mode} account dashboard has a profile heading`);
+    assert.ok(await page.locator('.account-demo-nav').isVisible(), `${mode} account dashboard exposes its demo navigation`);
+    assert.ok(await page.locator('[data-tp-loyalty-card]').isVisible(), `${mode} account dashboard shows the clearly labelled browser-demo loyalty card`);
   }
 
   assert.deepEqual(errors, [], `${mode} ${route.key} has no JavaScript or console errors`);
@@ -217,10 +236,10 @@ async function visit(browser, base, route, mode, capture = false) {
 (async () => {
   const browser = await chromium.launch({ headless: true });
   try {
-    for (const route of routesToRun) await visit(browser, phpBase, route, 'php', true);
     const captureStatic = process.env.TOKYO_CAPTURE_STATIC === '1';
-    for (const route of routesToRun) await visit(browser, staticBase, route, 'static', captureStatic);
-    console.log(`PASS: ${routesToRun.length} visual-fidelity route${routesToRun.length === 1 ? '' : 's'} validated in PHP and static mode; screenshots saved to ${evidenceDir}`);
+    if (requestedMode !== 'static') for (const route of routesToRun) await visit(browser, phpBase, route, 'php', true);
+    if (requestedMode !== 'php') for (const route of routesToRun) await visit(browser, staticBase, route, 'static', captureStatic);
+    console.log(`PASS: ${routesToRun.length} visual-fidelity route${routesToRun.length === 1 ? '' : 's'} validated in ${requestedMode} mode; screenshots saved to ${evidenceDir}`);
   } finally {
     await browser.close();
   }

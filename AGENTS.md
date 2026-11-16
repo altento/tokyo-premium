@@ -8,4 +8,5 @@
 - Keep Tokyo Premium 2.0 in the existing PHP/SQLite and static-export architecture. PHP is authoritative for prices, promotion limits, loyalty ledger events and account ownership; GitHub Pages scenarios must be labeled and stored as browser-local demonstrations.
 - When cart, promotion, profile, booking or image behavior changes, run `test:tokyo20` and the focused existing browser/cart tests, then update the evidence index and report with actual results.
 - Homepage motion changes also require `test:motion`, the current visual-fidelity suite, reduced-motion coverage and PHP/static route verification.
+- When the official `gemini-api` CLI is installed and authorized, use it for focused independent code or visual reviews where it saves time. Keep API credentials out of prompts, output, source files and commits; treat model feedback as advisory and verify changes in the browser/tests.
 - Workflow: GitHub Actions exports `docs/` and deploys it to Pages after pushes to `main`.
