@@ -46,7 +46,7 @@ The cart supports catalog items, quantity controls, recommendations, delivery/pi
 
 ### 11 — Account
 
-The account demo has an explicit seed action and shows three itemized sample orders, one booking request, favorites, local-only loyalty and referral cards. Compared with the reference, the dashboard is simpler and its order cards are more text-heavy. Empty-by-default behavior is intentional; no fictitious history is preloaded. The fresh seeded comparison is in `account-state-final-2026-11-16/`.
+The account demo has an explicit seed action and shows three itemized sample orders, one booking request, favorites, local-only loyalty and referral cards. Compared with the reference, the dashboard is simpler and its order cards are more text-heavy. Empty-by-default behavior is intentional; no fictitious history is preloaded. The history columns now share a top edge instead of vertically centering the shorter booking column beside three orders. Fresh seeded desktop/mobile captures and the geometry regression are in `account-history-alignment-2026-11-16/`.
 
 ## Verification boundary
 

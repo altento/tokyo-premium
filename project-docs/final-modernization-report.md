@@ -305,3 +305,6 @@ The static account page now has a compact entrance-led masthead, stable “Ли�
 ## 2026-11-16 route-specific social previews
 
 PHP routes and the checked-in GitHub Pages export now emit route-specific Open Graph and Twitter preview images. The existing 11-route static visual regression asserts both metadata values and passed in static mode. PHP/JavaScript syntax checks passed. This focused metadata fix does not close the remaining full visual-fidelity, PHP runtime, hosted CI or publication work.
+## Static account history alignment — 2026-11-16
+
+The local demo account placed the shorter booking column vertically in the middle of the longer order history because it reused the generic centered intro grid. Scoped the history grid to align both section headings at the top in the source and Pages CSS. The focused `npm run test:account-demo` now asserts their vertical offset is at most 20 px after the sample data is seeded; it passed and wrote full-page desktop/mobile captures to `project-docs/visual-qa/account-history-alignment-2026-11-16/`. The dashboard is still simpler than the approved account reference, so this closes one visible composition defect rather than claiming full fidelity.

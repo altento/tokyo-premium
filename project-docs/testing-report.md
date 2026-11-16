@@ -289,3 +289,8 @@ The cart hero rule had drifted in both PHP and Pages stylesheets, leaving the de
 `tests/php_integrity_integration.php` passed 193 assertions against an isolated SQLite database. The packaged SQLite DLLs were enabled through a temporary local `php.ini`; no project configuration or secret was changed. Fresh static desktop/mobile captures cover all 11 route families in `visual-qa/reference-pass-current-2026-11-16/`. The human visual review and remaining differences are recorded in `visual-qa/reference-comparison-current-2026-11-16.md`; it is qualitative, not pixel-difference acceptance.
 
 This focused pass did not run the full browser suite, complete 11-route PHP visual comparison, hosted CI, deployment, or a cache-busted public Pages check. These local checks do not establish the current public site state.
+## Focused account history alignment — 2026-11-16
+
+- `npm run test:account-demo` passed against a freshly served static export.
+- Added a desktop geometry assertion for the top alignment of the orders and bookings headings after seeding; existing assertions also covered empty-by-default state, itemized demo orders, local labels, persistence/idempotency, clear-data, mobile overflow and browser errors.
+- Fresh captures: `project-docs/visual-qa/account-history-alignment-2026-11-16/11-account-seeded-{desktop,mobile}.jpg`. PHP account behavior was not changed or re-tested in this focused CSS pass.

@@ -30,6 +30,9 @@ async function run() {
     await page.locator('[data-account-demo-seed]').click();
     assert.equal(await page.locator('#demo-orders .demo-order').count(), 3, 'sample action adds three orders');
     assert.equal(await page.locator('#demo-bookings article').count(), 1, 'sample action adds one booking request');
+    const historyHeadingTops = await page.locator('.account-demo-panel[data-account-panel="history"] .intro-grid h2').evaluateAll(headings => headings.map(heading => heading.getBoundingClientRect().top));
+    assert.equal(historyHeadingTops.length, 2, 'history exposes order and booking headings');
+    assert.ok(Math.abs(historyHeadingTops[0] - historyHeadingTops[1]) <= 20, `order and booking columns align at the top edge: ${historyHeadingTops.join(', ')}`);
     assert.equal(await page.locator('#demo-favorites .dish-card').count(), 3, 'sample favorites resolve to catalog dishes');
     assert.equal(await page.locator('#demo-orders .account-demo-record-badge').count(), 3, 'every sample order is explicitly labeled');
     assert.equal(await page.locator('#demo-bookings .account-demo-record-badge').count(), 1, 'sample booking is explicitly labeled');
