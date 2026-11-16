@@ -799,3 +799,13 @@ body.story-motion-gsap [data-story-reveal].story-visible img{animation:none}
 @media(max-width:980px){.reviews-page .review-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){.reviews-page .review-grid{grid-template-columns:1fr;gap:12px}.reviews-page .review-card figure{aspect-ratio:1.85}.review-moment{grid-template-columns:1fr;gap:22px;padding-inline:20px}.review-moment figure{aspect-ratio:1.55}.review-moment h2{font-size:clamp(1.8rem,8vw,2.35rem)}}
 @media(max-width:760px){.about-story{grid-template-columns:1fr;gap:30px;padding:58px 22px}.about-story .about-intro{display:contents}.about-story .about-intro-image img{height:clamp(240px,72vw,360px)}.about-story .about-timeline{grid-column:auto;padding:0}.about-story .timeline-list{grid-template-columns:1fr;margin-top:24px}.about-story .timeline-list:before{left:6px;right:auto;top:7px;bottom:7px;width:1px;height:auto}.about-story .timeline-list li{padding:0 0 18px 30px}.about-story .timeline-list li:before{top:5px;left:0}}
+
+/* Approved philosophy reference: gold Japanese medallions and a warm editorial quote strip. */
+.about-page .principle-grid article{display:grid;justify-items:center;align-content:start;text-align:center}
+.about-page .principle-grid article>span.principle-medallion{display:grid;width:64px;aspect-ratio:1;place-items:center;border:1px solid rgba(220,184,125,.82);border-radius:50%;background:radial-gradient(circle at 50% 42%,rgba(210,172,111,.2),rgba(36,25,15,.56) 68%,#100d0a 100%);box-shadow:inset 0 0 0 4px rgba(220,184,125,.08),0 0 20px rgba(202,165,107,.1);color:#e9c58d;font:500 31px/1 'Playfair Display',Georgia,serif}
+.about-page .principle-grid p{max-width:27ch}
+.about-page .about-quote{overflow:hidden;padding:clamp(50px,6vw,78px) max(22px,7vw);border-color:rgba(91,66,43,.26);background:radial-gradient(ellipse at 8% 100%,rgba(158,43,36,.1),transparent 28%),radial-gradient(ellipse at 92% 0%,rgba(158,43,36,.08),transparent 28%),linear-gradient(105deg,#e9dec9,#f4ead8 52%,#e5d4bc)}
+.about-page .about-quote>span{color:#9c252a}
+.about-page .about-quote blockquote{color:#2d2117}
+.about-page .about-quote p{color:#745b3b}
+@media(max-width:760px){.about-page .principle-grid article>span.principle-medallion{width:54px;font-size:27px}.about-page .about-quote{padding:54px 24px}}

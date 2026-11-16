@@ -154,6 +154,10 @@ The menu now adds six ingredient filters from the approved reference. The focuse
 
 `contacts-visit-strip-2026-11-16/` contains the refreshed static contact page at 1440 px and 390 px. A garden image and booking CTA introduce a compact visit-planning section; transport, parking and accessibility are explicitly marked as unknown in this fictional training concept. A focused local Chromium check confirmed the image loaded, all three disclosures are present, there is no page overflow, and no console/page errors occurred. PHP browser rendering and Pages deployment were not run.
 
+## 2026-11-16 philosophy medallions and quote band
+
+`philosophy-visual-pass-2026-11-16/` contains updated 1440 px and 390 px captures reviewed against `design-references/05-philosophy.png`. Four principles now use gold Japanese medallions and the chef quote has a warm editorial band, closer to the reference. A focused static Chromium check confirmed all four marks, loaded photos, no horizontal overflow, and no browser errors. The full page still differs from the reference in its editorial photography and composition; no PHP browser render or Pages deployment was run.
+
 ## 2026-11-16 Omakase panorama replacement
 
 `omakase-latest-review-2026-11-16/` contains current full-page desktop and mobile screenshots plus the focused comparison note. This supersedes the earlier mirrored-portrait hero treatment: the hero now uses a newly generated, wide chef-at-counter photograph, responsive WebP variants, and a right-anchored mobile crop. The static page was opened once at 1440×1000 and 390×844; both layouts had no horizontal overflow, the mobile title and all five course tabs stayed in bounds, and there were no page/console errors or failed requests. This is a one-page local static check; it does not claim PHP browser coverage, pixel-perfect full-page fidelity, hosted CI, or publication.
