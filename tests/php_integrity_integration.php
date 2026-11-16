@@ -301,7 +301,7 @@ try {
  check($status===200 && (int)$pdo->query("SELECT COUNT(*) FROM secret_menu_rules WHERE id=$secretRuleId AND access_kind='tier' AND required_value='gold' AND starts_at='2026-11-16 15:00:00'")->fetchColumn()===1, 'admin can edit rule type and validates local schedule values');
  $marketingCsrf=tokenFrom($marketingHtml);
  [$status,$marketingError]=request('/admin-marketing.php',['csrf'=>$marketingCsrf,'action'=>'secret-rule-save','id'=>(string)$secretRuleId,'campaign_id'=>(string)$secretCampaignId,'access_kind'=>'tier','required_value'=>'gold','starts_at'=>'2026-02-30T12:00','ends_at'=>'2027-01-01T00:00','active'=>'on']);
- check($status===200 && str_contains($marketingError,'корректные местные даты'), 'invalid calendar dates cannot be stored for Secret Menu rules');
+ check($status===200 && str_contains($marketingError,'корректные местные дату и время'), 'invalid calendar dates cannot be stored for Secret Menu rules');
  $marketingCsrf=tokenFrom($marketingError);
  [$status,$marketingHtml]=request('/admin-marketing.php',['csrf'=>$marketingCsrf,'action'=>'secret-rule-toggle','id'=>(string)$secretRuleId]);
  check($status===200 && (int)$pdo->query("SELECT active FROM secret_menu_rules WHERE id=$secretRuleId")->fetchColumn()===0, 'admin can disable an existing Secret Menu rule');
