@@ -137,3 +137,9 @@ On mobile, the horizontal course selector exposed only part of the third stage a
 ## Omakase hero composition — 2026-11-16
 
 The existing generated chef photograph now faces into the Omakase page: a route-specific class mirrors it in the hero, moving the chef to the right while preserving clear text space on the left. The lower editorial preparation photograph is unchanged. The prior mobile-stage grid remains in place. One filtered Playwright run passed in PHP and static modes at desktop and 390 px; screenshots were reviewed. The five-stage navigation and loaded course images remain intact. The overall route still differs from the reference in section order and density, so full visual acceptance remains open.
+
+## Focused account and reviews visual refinements — 2026-11-16
+
+The account masthead now follows the editorial photo/title/subtitle hierarchy in `11-account.png` while keeping authenticated identity, logout, and the existing orders, bookings, favorites, loyalty, address, referral and settings panels. Fresh PHP and static desktop/mobile captures are saved under `project-docs/visual-qa/account-hero-2026-11-16/`; an account-only Playwright pass checked 1440/390 layouts, a seeded static order/booking, PHP heading bounds and browser errors.
+
+The reviews hero was shortened from an approximately 800 px opening to a 370 px image-led panel, with a single-line desktop title and tighter score band. At 390 px the five category filters wrap visibly into two columns; cuisine/Omakase filters and sorting remain operable. Four PHP/static desktop/mobile captures and comparison notes are under `project-docs/visual-qa/08-reviews-compact-hero-2026-11-16/`. The focused route checks passed; PHP lint and diff hygiene passed. The comparison is still partial: the reviews cards and video section differ from the reference, and the complete visual comparison of all eleven PNGs, broad suites, hosted CI and Pages deployment remain outstanding.

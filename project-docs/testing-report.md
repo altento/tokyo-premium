@@ -185,3 +185,9 @@ One focused visual-fidelity run passed for the Omakase route in PHP and exported
 - Added per-tier editing in `/admin-marketing.php`; the focused `tests/loyalty-tier-admin-regression.php` passed 8 assertions for authorized update, CSRF, bounded values, stable slug, and rollback. PHP lint and diff hygiene passed.
 - Added an optional native cross-document View Transition fade, enabled only when `prefers-reduced-motion: no-preference`; browsers without support keep regular navigation. The focused `npm run test:motion` passed in PHP and exported Pages mode, including the new opt-in and reduced-motion assertions plus the existing hero/story checks at eight widths.
 - This accelerated pass used focused tests only. It did not run the full regression matrix, hosted CI, or a new public deployment check.
+
+## 2026-11-16 account and reviews visual follow-up
+
+- The account-only PHP/static browser run captured authenticated desktop and mobile states, checked the PHP hero and heading/page bounds at 390 px, seeded a local static demo order/booking, and reported no JavaScript errors. The PHP fixture had no persisted orders/bookings, so its empty history is genuine for that isolated database.
+- The reviews-only PHP/static desktop/mobile browser run verified HTTP routes, four demo review cards, cuisine filtering, sort control, title bounds, 370 px hero height and absence of page errors/overflow. A narrow mobile follow-up verified that all five category filters are visible at 390 px and that Omakase filtering returns the expected card.
+- `php -l account.php`, `php -l reviews.php`, and `git diff --check` passed. Broad suites, CI and public Pages deployment were not run for these visual-only changes.
