@@ -49,6 +49,17 @@ async function visit(browser, base, route, mode, capture = false) {
       await image.decode().catch(() => {});
     }
   });
+  if (route.key === 'account' && mode === 'php' && !(await page.locator('#account-dashboard-title').count())) {
+    // The PHP account is private and has a different dashboard from the static
+    // browser demo. Register a synthetic QA user so the capture verifies the real
+    // authenticated dashboard instead of comparing the login screen to demo markup.
+    const registration = page.locator('.account-auth-grid form').nth(1);
+    await registration.locator('[name="name"]').fill('Visual QA Guest');
+    await registration.locator('[name="email"]').fill(`visual-qa-${Date.now()}@example.test`);
+    await registration.locator('[name="password"]').fill('Visual-QA-password-2026!');
+    await registration.locator('button[type="submit"]').click();
+    await page.locator('#account-dashboard-title').waitFor({ state: 'visible' });
+  }
   const revealAll = async () => {
     await page.evaluate(async () => {
       document.documentElement.style.scrollBehavior = 'auto';
@@ -199,9 +210,12 @@ async function visit(browser, base, route, mode, capture = false) {
     assert.ok(await page.locator('#cart-page-empty').isVisible(), `${mode} fresh browser starts with an honest empty-cart state`);
     assert.equal(await page.locator('.cart-recommendations .dish-card').count(), 3, `${mode} empty cart offers three catalog-backed recommendations`);
   } else if (route.key === 'account') {
-    assert.equal(await page.locator('.account-overview h1').count(), 1, `${mode} account dashboard has a profile heading`);
-    assert.ok(await page.locator('.account-demo-nav').isVisible(), `${mode} account dashboard exposes its demo navigation`);
-    assert.ok(await page.locator('[data-tp-loyalty-card]').isVisible(), `${mode} account dashboard shows the clearly labelled browser-demo loyalty card`);
+    const heading = mode === 'php' ? '#account-dashboard-title' : '.account-overview h1';
+    const accountNavigation = mode === 'php' ? '.account-dashboard-nav' : '.account-demo-nav';
+    const loyaltyCard = mode === 'php' ? '.account-dashboard-loyalty' : '[data-tp-loyalty-card]';
+    assert.equal(await page.locator(heading).count(), 1, `${mode} account dashboard has a profile heading`);
+    assert.ok(await page.locator(accountNavigation).isVisible(), `${mode} account dashboard exposes its navigation`);
+    assert.ok(await page.locator(loyaltyCard).isVisible(), `${mode} account dashboard shows its correctly labelled loyalty card`);
   }
 
   assert.deepEqual(errors, [], `${mode} ${route.key} has no JavaScript or console errors`);
