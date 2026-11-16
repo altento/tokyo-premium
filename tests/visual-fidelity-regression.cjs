@@ -115,8 +115,23 @@ async function visit(browser, base, route, mode, capture = false) {
     assert.equal(await page.locator('[data-tp-floorplan-selection]').count(), 1, `${mode} floorplan clearly labels selection as a preference`);
   } else if (route.key === 'contacts') {
     assert.equal(await page.locator('.fictional-map[role="img"]').count(), 1, `${mode} contact map is labelled as a decorative schematic`);
+    assert.equal(await page.locator('.fictional-map svg.contact-map-art').count(), 1, `${mode} contact map has its own vector illustration`);
+    assert.match(await page.locator('.fictional-map').getAttribute('aria-label'), /не является реальной картой/i, `${mode} map clearly disclaims real navigation`);
     assert.equal(await page.locator('form.contact-form').count(), 1, `${mode} contact form is present`);
-    assert.equal(await page.locator('.editorial-hero img').evaluate(image => image.naturalWidth > 0), true, `${mode} contact hero image loads`);
+    assert.equal(await page.locator('.editorial-hero.contact-hero img').evaluate(image => image.naturalWidth > 0), true, `${mode} contact exterior photo loads`);
+    assert.ok(await page.locator('.editorial-hero.contact-hero').evaluate(node => node.getBoundingClientRect().height <= 500), `${mode} contact hero stays compact`);
+    assert.equal(await page.locator('.contact-facts li').count(), 3, `${mode} contact summary has phone, email and address`);
+    assert.equal(await page.locator('.contact-hours-panel').count(), 1, `${mode} hours and booking action have a dedicated panel`);
+    assert.equal(await page.locator('.contact-interior img').evaluate(image => image.naturalWidth > 0), true, `${mode} contact page loads its separate interior photograph`);
+    assert.equal(await page.locator('#contact-name').getAttribute('required'), '', `${mode} contact form keeps required name validation`);
+    assert.equal(await page.locator('#contact-email').getAttribute('required'), '', `${mode} contact form keeps required email validation`);
+    assert.equal(await page.locator('#contact-message').getAttribute('required'), '', `${mode} contact form keeps required message validation`);
+    const contactOrder = await page.evaluate(() => {
+      const nodes = ['.contact-overview', '#contact-form', '.contact-footnotes'].map(selector => document.querySelector(selector));
+      return Boolean(nodes.every(Boolean) && (nodes[0].compareDocumentPosition(nodes[1]) & Node.DOCUMENT_POSITION_FOLLOWING)
+        && (nodes[1].compareDocumentPosition(nodes[2]) & Node.DOCUMENT_POSITION_FOLLOWING));
+    });
+    assert.equal(contactOrder, true, `${mode} contact summary, message panel and visit notes follow the reference order`);
   } else if (route.key === 'omakase') {
     const counts = await page.evaluate(() => ({
       selectedStages: document.querySelectorAll('[data-tp-course]').length,
@@ -153,11 +168,19 @@ async function visit(browser, base, route, mode, capture = false) {
     heroTitleVisible: [...document.querySelectorAll('h1')].every(title => {
       const r = title.getBoundingClientRect();
       return r.left >= -1 && r.right <= innerWidth + 1 && r.bottom > 0;
-    })
+    }),
+    contactPanelsVisible: (() => {
+      const grid = document.querySelector('.contact-response-grid');
+      if (!grid) return true;
+      const bounds = grid.getBoundingClientRect();
+      return bounds.left >= -1 && bounds.right <= innerWidth + 1
+        && [...grid.children].every(child => { const r = child.getBoundingClientRect(); return r.left >= -1 && r.right <= innerWidth + 1; });
+    })()
   }));
   assert.ok(mobile.scrollWidth <= mobile.width, `${mode} ${route.key} has no mobile horizontal overflow`);
   assert.equal(mobile.omakaseTabsVisible, true, "Omakase keeps all stages visible without horizontal scrolling");
   assert.equal(mobile.heroTitleVisible, true, `${mode} ${route.key} mobile heading remains in the viewport`);
+  assert.equal(mobile.contactPanelsVisible, true, `${mode} ${route.key} contact panels fit the mobile viewport`);
   if (capture) await page.screenshot({ path: path.join(evidenceDir, `${route.key}-${mode}-mobile.jpg`), fullPage: true, type: 'jpeg', quality: 72 });
   await page.close();
 }

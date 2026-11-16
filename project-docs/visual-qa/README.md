@@ -95,3 +95,7 @@ The mobile capture showed that the five-stage selector clipped the third stage a
 ## 2026-11-16 Omakase hero composition pass
 
 The existing original chef photograph is now mirrored only in the Omakase hero, placing the chef on the right and leaving calm copy space on the left, closer to design-references/04-omakase.png. The later editorial chef photograph remains unmirrored. The five mobile stage tabs also remain fully visible in a two-column layout. Current PHP and static captures: omakase-php-desktop.jpg, omakase-php-mobile.jpg, omakase-static-desktop.jpg and omakase-static-mobile.jpg. The wider page section order and layout still differ from the reference; this is a focused comparison, not a pixel-perfect match.
+
+## 2026-11-16 contacts focused layout pass
+
+`contacts-redesign-2026-11-16/contacts-php-desktop.jpg`, `contacts-php-mobile.jpg`, `contacts-static-desktop.jpg` and `contacts-static-mobile.jpg` are fresh full-page captures from a contacts-only Playwright run. The page now has a compact hero, a left contact summary beside an original vector schematic, and a desktop form/hours/interior-photo row that stacks on mobile. PHP and static contacts checks passed with no page/console errors or horizontal overflow. Since the address is fictional, the map is explicitly decorative; the aerial map and route-banner details in `09-contacts.png` are not reproduced as real navigation. See `contacts-comparison-2026-11-16.md` for comparison notes and remaining differences.

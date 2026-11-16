@@ -41,6 +41,15 @@ async function runMode(browser, name, base, route, capture) {
   await page.evaluate(() => document.fonts.ready);
   assert.equal(await page.evaluate(() => Boolean(window.gsap && window.ScrollTrigger)), true, `${name} loads the locally vendored GSAP motion engine`);
   assert.ok(await page.evaluate(() => window.ScrollTrigger.getAll().length > 0), `${name} registers ScrollTrigger for scroll storytelling`);
+  assert.equal(await page.evaluate(() => {
+    const sheet = [...document.styleSheets].find(item => item.href && new URL(item.href).pathname.endsWith('/tokyo20.css'));
+    if (!sheet) return false;
+    const hasNavigationOptIn = rules => [...rules].some(rule => {
+      if (rule.cssText.startsWith('@view-transition')) return rule.navigation === 'auto';
+      return rule.cssRules ? hasNavigationOptIn(rule.cssRules) : false;
+    });
+    try { return hasNavigationOptIn(sheet.cssRules); } catch { return false; }
+  }), true, `${name} opts into native same-origin page transitions`);
   assert.equal(await page.locator('.story-scroll-progress').count(), 1, `${name} has a single quiet story progress bar`);
   await page.evaluate(() => {
     const chapter = document.querySelector('[data-story-chapter="space"]');
@@ -127,6 +136,7 @@ async function runReducedMotion(browser, name, base, route) {
   const page = await context.newPage();
   await page.goto(`${base}${route}`, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => !document.querySelector('[data-home-hero-controls]')?.hidden);
+  assert.equal(await page.evaluate(() => matchMedia('(prefers-reduced-motion: no-preference)').matches), false, `${name} reduced-motion mode disables the page-transition opt-in media query`);
   assert.equal(await page.evaluate(() => window.ScrollTrigger?.getAll().length || 0), 0, `${name} creates no scroll animations when reduced motion is requested`);
   const duration = await page.locator('#home-hero-photo').evaluate(image => getComputedStyle(image).transitionDuration);
   assert.ok(duration.split(',').every(value => Number.parseFloat(value) <= 0.01), `${name} respects prefers-reduced-motion`);

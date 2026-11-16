@@ -179,3 +179,9 @@ A single focused visual-fidelity run checked the Omakase route in PHP and static
 ## 2026-11-16 Omakase hero follow-up
 
 One focused visual-fidelity run passed for the Omakase route in PHP and exported static mode at desktop and 390 px mobile. It verifies the hero uses its Omakase-only mirrored composition, preserves the five course photos, exposes all five mobile stage tabs without horizontal scrolling, and has no page overflow or browser errors. Four updated full-page captures were visually inspected. No full suite, CI run, or Pages deployment was performed.
+
+## 2026-11-16 accelerated follow-up
+
+- Added per-tier editing in `/admin-marketing.php`; the focused `tests/loyalty-tier-admin-regression.php` passed 8 assertions for authorized update, CSRF, bounded values, stable slug, and rollback. PHP lint and diff hygiene passed.
+- Added an optional native cross-document View Transition fade, enabled only when `prefers-reduced-motion: no-preference`; browsers without support keep regular navigation. The focused `npm run test:motion` passed in PHP and exported Pages mode, including the new opt-in and reduced-motion assertions plus the existing hero/story checks at eight widths.
+- This accelerated pass used focused tests only. It did not run the full regression matrix, hosted CI, or a new public deployment check.
