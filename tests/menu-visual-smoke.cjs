@@ -54,6 +54,14 @@ const viewports = [
               const rect = card.getBoundingClientRect();
               return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
             }).length,
+            emptyCategoryButtons: [...document.querySelectorAll('.menu-category-list button[data-category]')].filter(button => Number(button.querySelector('b')?.textContent.trim()) === 0).length,
+            setBuilderShortcut: document.querySelector('.menu-category-list .menu-set-link')?.getAttribute('href'),
+            setBuilderShortcutInViewport: (() => {
+              const link = document.querySelector('.menu-category-list .menu-set-link');
+              if (!link) return false;
+              const rect = link.getBoundingClientRect();
+              return rect.left >= 0 && rect.right <= innerWidth && rect.width > 0 && rect.height > 0;
+            })(),
             storyPhotoCount: storyImages.length,
             loadedStoryPhotos: storyImages.filter(image => image.naturalWidth > 0).length,
             setBuilderLink: document.querySelector('.menu-set-story a[href*="set-builder"]')?.getAttribute('href')
@@ -65,6 +73,9 @@ const viewports = [
         assert.equal(metrics.heroImageLoaded, true, `${route.mode} ${viewport.name} hero image loads`);
         assert.equal(metrics.breadcrumb, 'Меню', `${route.mode} ${viewport.name} shows the current breadcrumb`);
         assert.equal(metrics.firstPageCards, 6, `${route.mode} ${viewport.name} renders the first six catalog cards`);
+        assert.equal(metrics.emptyCategoryButtons, 0, `${route.mode} ${viewport.name} does not present an empty catalog filter`);
+        assert.match(metrics.setBuilderShortcut || '', /set-builder/, `${route.mode} ${viewport.name} links directly to the set builder from categories`);
+        assert.equal(metrics.setBuilderShortcutInViewport, true, `${route.mode} ${viewport.name} keeps the set-builder shortcut visible in the category controls`);
         assert.equal(metrics.storyPhotoCount, 2, `${route.mode} ${viewport.name} has two authored-set photographs`);
         assert.equal(metrics.loadedStoryPhotos, 2, `${route.mode} ${viewport.name} loads both authored-set photographs`);
         assert.match(metrics.setBuilderLink || '', /set-builder/, `${route.mode} ${viewport.name} links to the set builder`);

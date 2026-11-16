@@ -14,6 +14,8 @@
 .menu-sidebar-heading h2{margin:7px 0 18px;color:#f3e5cc;font:500 clamp(1.45rem,2.3vw,2rem)/1.15 'Playfair Display',serif}
 .menu-category-list{display:grid;gap:4px}
 .menu-category-list .filter-btn{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:42px;padding:8px 11px;border:1px solid transparent;background:transparent;color:#e4d7c4;text-align:left;cursor:pointer;transition:background .2s,border-color .2s,color .2s}
+.menu-category-list .menu-set-link{margin:3px 0 7px;border-color:rgba(199,167,102,.35);color:#d8bd83;text-decoration:none}
+.menu-category-list .menu-set-link:hover{background:linear-gradient(100deg,rgba(137,20,28,.55),rgba(23,19,15,.9))}
 .menu-category-list .filter-btn:hover{border-color:rgba(199,167,102,.35);background:#17130f}
 .menu-category-list .filter-btn.active{border-color:rgba(210,167,93,.58);background:linear-gradient(90deg,#88141c,#541015);color:#fff}
 .menu-category-list .filter-btn b{display:grid;place-items:center;min-width:25px;height:23px;padding:0 6px;border-radius:20px;background:rgba(0,0,0,.25);color:#e7cda0;font-size:.68rem;font-weight:500}

@@ -17,7 +17,8 @@ $cats=db()->query('SELECT slug,name FROM categories ORDER BY sort_order')->fetch
         <div class="menu-sidebar-heading"><span class="kicker">Выберите настроение</span><h2>Категории</h2></div>
         <nav class="menu-category-list" aria-label="Фильтр по категории">
           <button class="filter-btn active" data-category="all"><span>Все блюда</span><b><?=count($all)?></b></button>
-          <?php foreach($cats as $c): $categoryCount=count(array_filter($all,static fn($d)=>$d['category']===$c['slug'])); ?><button class="filter-btn" data-category="<?=e($c['slug'])?>"><span><?=e($c['name'])?></span><b><?=$categoryCount?></b></button><?php endforeach ?>
+          <a class="filter-btn menu-set-link" href="set-builder.php" aria-label="Перейти к конструктору японских сетов"><span>Собрать сет</span><b aria-hidden="true">↗</b></a>
+          <?php foreach($cats as $c): $categoryCount=count(array_filter($all,static fn($d)=>$d['category']===$c['slug'])); if($categoryCount===0) continue; ?><button class="filter-btn" data-category="<?=e($c['slug'])?>"><span><?=e($c['name'])?></span><b><?=$categoryCount?></b></button><?php endforeach ?>
         </nav>
         <article class="menu-tea-card"><img src="assets/food/04-matcha-latte.webp" alt="Матча латте из демонстрационного меню" loading="lazy" decoding="async"><div><span class="kicker">Чайная пауза</span><h3>Японский чай</h3><p>Найдите спокойный финал вечера в разделе напитков.</p><a href="#menu-catalog" data-category-link="drinks">К напиткам ↗</a></div></article>
       </aside>

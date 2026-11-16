@@ -227,3 +227,5 @@ The custom Pages account template had omitted `luxury-refinements.css`; the expo
 ## 2026-11-16 menu spacing and visual comparison
 
 `menu-visual-follow-up-2026-11-16/` contains eager-loaded 1440 px and 390 px captures compared against `02-menu.png`. The first full-page capture showed blank lower-card images because the manual screenshot did not scroll to trigger native lazy loading; the replacement capture explicitly decoded all 22 images before taking the screenshot. No asset was missing. Menu-section bottom padding is now limited to 58 px desktop / 32 px mobile. The focused static route had HTTP 200, no overflow, browser errors, or HTTP failures. PHP rendering, full interaction regression, CI, and Pages deployment were not checked.
+
+Follow-up browser check: the category rail was captured at 1440 px and 390 px, has no zero-result filter, and displays the set-builder shortcut within the initial viewport at both widths. The 390 px flow followed the shortcut to `set-builder.html` successfully with no page or console errors. The strip itself remains horizontally scrollable by design. No broad suite or PHP browser render was repeated.

@@ -177,3 +177,7 @@ The custom Pages account template had omitted `luxury-refinements.css`; the expo
 ## 2026-11-16 menu spacing and visual comparison
 
 `menu-visual-follow-up-2026-11-16/` contains eager-loaded 1440 px and 390 px captures compared against `02-menu.png`. The first full-page capture showed blank lower-card images because the manual screenshot did not scroll to trigger native lazy loading; the replacement capture explicitly decoded all 22 images before taking the screenshot. No asset was missing. Menu-section bottom padding is now limited to 58 px desktop / 32 px mobile. The focused static route had HTTP 200, no overflow, browser errors, or HTTP failures. PHP rendering, full interaction regression, CI, and Pages deployment were not checked.
+
+### Menu category and set-builder shortcut follow-up
+
+Removed the empty “Сеты 0” filter and added a direct “Собрать сет” link beside “Все блюда” in the PHP template and static export. The focused browser check captured the category rail at 1440 px and 390 px, confirmed the link is initially visible at both widths and opens the set-builder page, and found no browser errors. Crops are in `visual-qa/menu-visual-follow-up-2026-11-16/category-controls-{1440,390}.png`. PHP rendering, full suite, hosted CI and Pages deployment were not verified in this follow-up.
