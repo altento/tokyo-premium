@@ -57,7 +57,7 @@ async function visit(browser, base, route, mode, capture = false) {
     await registration.locator('[name="name"]').fill('Visual QA Guest');
     await registration.locator('[name="email"]').fill(`visual-qa-${Date.now()}@example.test`);
     await registration.locator('[name="password"]').fill('Visual-QA-password-2026!');
-    await registration.locator('button[type="submit"]').click();
+    await registration.getByRole('button', { name: 'Регистрация', exact: true }).click();
     await page.locator('#account-dashboard-title').waitFor({ state: 'visible' });
   }
   const revealAll = async () => {
