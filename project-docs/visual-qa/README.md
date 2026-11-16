@@ -189,3 +189,7 @@ The same folder includes the eight populated/empty/checkout-validation/pickup/de
 ## 2026-11-16 menu and Omakase focused comparison
 
 `visual-fidelity-followup-2026-11-16/` contains static GitHub Pages captures at 1440 px and 390 px for menu and Omakase. Both pages were visually checked alongside `design-references/02-menu.png` and `design-references/04-omakase.png`. The menu now leads with a distinct sushi assortment photograph. Omakase shows five catalog-backed course previews in its interactive selector. The focused static test checks all five distinct photo sources load, mobile tabs remain in bounds, and the “desktop” capture is actually 1440 CSS px. This pass is not full PHP coverage or full pixel parity for all 11 references.
+
+## 2026-11-16 philosophy refinement evidence
+
+`philosophy-refinement-2026-11-16/philosophy-static-desktop.jpg` and `philosophy-static-mobile.jpg` show the route after aligning its hero photo and editorial color rhythm with `05-philosophy.png`. The story copy now leads the photo/timeline row on desktop and mobile; the chef and ingredient sections use dark backgrounds; only the quote remains on a warm cream band. The route-specific Playwright check passed at 1440 and 390 px and asserts the entrance photograph, visible heading bounds, loaded images and no horizontal overflow or browser errors. Visible differences remain in the exact page proportions and decorative Fuji/sakura artwork; no complete 11-reference parity is claimed.

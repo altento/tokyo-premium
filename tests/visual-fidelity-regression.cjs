@@ -94,7 +94,7 @@ async function visit(browser, base, route, mode, capture = false) {
     assert.match(await page.locator('.dish-grid-related').innerText(), /Юдзу-лимонад|Нигири с тунцом/, `${mode} dish recommendations use the configured pairing records`);
   } else if (route.key === 'philosophy') {
     const background = await page.locator('.about-hero').evaluate(node => getComputedStyle(node).backgroundImage);
-    assert.match(background, /room-garden-terrace\.webp/, `${mode} philosophy hero uses its garden photograph`);
+    assert.match(background, /contact-exterior\.webp/, `${mode} philosophy hero uses the sakura entrance photograph`);
   } else if (route.key === 'space') {
     const geometry = await page.locator('[data-tp-gallery] .gallery-grid').evaluate(grid => {
       const section = grid.closest('[data-tp-gallery]');

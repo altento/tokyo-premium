@@ -815,3 +815,23 @@ body.story-motion-gsap [data-story-reveal].story-visible img{animation:none}
 .about-page .about-quote blockquote{color:#2d2117}
 .about-page .about-quote p{color:#745b3b}
 @media(max-width:760px){.about-page .principle-grid article>span.principle-medallion{width:54px;font-size:27px}.about-page .about-quote{padding:54px 24px}}
+
+/* Philosophy reference pass: sakura entrance, dark editorial blocks, and copy-first rhythm. */
+.about-page .about-hero{background:linear-gradient(90deg,rgba(9,8,7,.94) 0%,rgba(9,8,7,.78) 35%,rgba(9,8,7,.28) 70%,rgba(9,8,7,.12) 100%),linear-gradient(0deg,rgba(9,8,7,.34),transparent 56%),url("assets/generated/contact-exterior.webp") 66% 52%/cover no-repeat}
+.about-page .about-story .about-copy{order:1}
+.about-page .about-story .about-intro-image{order:2}
+.about-page .about-story .about-timeline{order:3}
+.about-page .about-chef{background:radial-gradient(ellipse at 88% 40%,rgba(127,20,27,.22),transparent 34%),linear-gradient(115deg,#100d0a,#17110d 54%,#0c0b09);color:var(--ivory)}
+.about-page .about-chef .about-copy .kicker{color:var(--gold)}
+.about-page .about-chef .about-copy h2{color:var(--ivory)}
+.about-page .about-chef .about-copy p{color:#bdb09d}
+.about-page .about-chef .about-copy .about-lead{color:#eadcc4}
+.about-page .chef-portrait img{height:clamp(340px,34vw,500px);object-position:50% 42%}
+.about-page .chef-signature span{color:#cbb896}
+.about-page .about-source{grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);background:linear-gradient(115deg,#100d0a,#17110d 54%,#0c0b09);color:var(--ivory)}
+.about-page .about-source .source-images{order:-1}
+.about-page .about-source .source-copy h2{color:var(--ivory)}
+.about-page .about-source .source-copy p{color:#bdb09d}
+.about-page .about-source .source-copy .text-link{color:#e0bd7b}
+.about-page .about-source .source-images figcaption{color:#cbb896}
+@media(max-width:760px){.about-page .about-hero{background-position:61% center}.about-page .about-source{grid-template-columns:1fr}}

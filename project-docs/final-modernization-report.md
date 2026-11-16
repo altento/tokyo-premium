@@ -293,3 +293,7 @@ Reduced the three-image set-builder story from a 310 px minimum desktop frame to
 ## Homepage booking conversion — 2026-11-16
 
 The homepage reservation form now reveals contact fields only after the guest selects a date, time, party size and preferred zone. The existing server or static-demo submission path is preserved, including validation and honest pending/demo messaging; successful demo submission resets the form. One focused browser check passed on Pages at desktop and mobile widths. Evidence: `project-docs/visual-qa/home-booking-progressive-2026-11-16/`. Full PHP browser validation and public release are still pending.
+
+## 2026-11-16 philosophy visual pass
+
+A focused comparison against `design-references/05-philosophy.png` corrected the section background rhythm and image sequence: a sakura-lit entrance opens the page, the story text precedes the room photo and timeline, the chef and product sections are dark, and the cream band is reserved for the quote. The shared PHP/Pages stylesheet was synchronized. Static Playwright passed at desktop/mobile sizes and fresh screenshots were visually inspected. PHP rendering and broad regression were not repeated; remaining decorative and proportion differences are recorded in the visual QA index.
