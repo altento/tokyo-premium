@@ -85,9 +85,10 @@ $base = 'http://127.0.0.1:' . $port;
 $env = null; // Inherit SystemRoot and PHP configuration on Windows as well as PATH on Unix.
 $pipes = [];
 $serverLog = $dbPath . '.server.log';
-// The PHP CLI server supports multiple workers on Unix; this makes HTTP requests genuinely concurrent in CI.
+// Keep the general integration server single-worker so it does not retain extra
+// SQLite WAL handles while the test process prepares database fixtures.
 $previousWorkers = getenv('PHP_CLI_SERVER_WORKERS');
-if (PHP_OS_FAMILY !== 'Windows') putenv('PHP_CLI_SERVER_WORKERS=4');
+putenv('PHP_CLI_SERVER_WORKERS');
 $serverCommand = [PHP_BINARY, '-d', 'extension_dir=' . ini_get('extension_dir')];
 if (PHP_OS_FAMILY === 'Windows') {
     if (!extension_loaded('sqlite3')) array_push($serverCommand, '-d', 'extension=php_sqlite3.dll');
@@ -549,12 +550,30 @@ try {
   $personalCsrf=tokenFrom($personalAdminHtml);[$status,$revokeHtml]=request('/admin-marketing.php',['csrf'=>$personalCsrf,'action'=>'personal-offer-revoke','offer_id'=>(string)$personalOfferId]);check($status===200&&str_contains($revokeHtml,'отозвано')&&(int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM personalized_offers WHERE id=?',[$personalOfferId])===0,'admin revokes an unused personal offer');
   [$status,$adminHtml]=request('/admin.php'); $csrf=tokenFrom($adminHtml);
   adminPost(['csrf'=>$csrf,'action'=>'dish-delete','id'=>(string)$dish]); check((int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM dishes WHERE id=?',[$dish])===0, 'dish deleted'); check((int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM order_items WHERE order_id=? AND item_name=?',[(int)$first['id'],'Тестовый ролл'])===1, 'order item snapshot survives dish deletion');
-   $concurrentKey='integration-concurrent-order-'.bin2hex(random_bytes(8));$parallel=parallelOrderRequests($orderFields,$concurrentKey,6);$parallelIds=[];
-   foreach($parallel as [$parallelStatus,$parallelBody]){$parallelResult=json_decode($parallelBody,true);check($parallelStatus===201&&$parallelResult['ok'],'concurrent same-key order request returns the committed result');$parallelIds[]=(int)$parallelResult['id'];}
-   check(count(array_unique($parallelIds))===1,'six concurrent requests with one key resolve to one order id');
-   $concurrentId=$parallelIds[0];$concurrentReadPdo=freshTestDatabase($dbPath);check((int)$concurrentReadPdo->query('SELECT COUNT(*) FROM orders WHERE id='.$concurrentId)->fetchColumn()===1,'concurrent key creates exactly one order');check((int)$concurrentReadPdo->query('SELECT COUNT(*) FROM order_items WHERE order_id='.$concurrentId)->fetchColumn()===1,'concurrent key creates one order line snapshot');
-   $concurrentToken=hash('sha256',substr($cookie,strlen('tokyo_session=')).'|order|'.$concurrentKey);$idem=$concurrentReadPdo->prepare('SELECT order_id,response_status FROM api_order_requests WHERE token=?');$idem->execute([$concurrentToken]);$idemRow=$idem->fetch();$idem->closeCursor();check((int)$idemRow['order_id']===$concurrentId&&(int)$idemRow['response_status']===201,'idempotency reservation and replay result point to the one committed order');
-   $independentKey='integration-independent-order-'.bin2hex(random_bytes(8));[$status,$independentBody]=request('/api.php',$orderFields,['Idempotency-Key'=>$independentKey]);$independent=json_decode($independentBody,true);check($status===201&&$independent['ok']&&(int)$independent['id']!==$concurrentId,'independent idempotency key creates a separate order');
+    // Use workers only for the one scenario that tests concurrent HTTP requests. Keeping
+    // them alive during fixture writes made SQLite/WAL intermittently fail with disk I/O
+    // errors on CI, despite the application requests themselves succeeding.
+    $concurrentServer=null;$concurrentPipes=[];$concurrentServerLog=$dbPath.'.parallel.server.log';$previousBase=$base;
+    try {
+     if(PHP_OS_FAMILY!=='Windows') {
+      $concurrentServerCommand=$serverCommand;$concurrentServerBind=array_search('-S',$concurrentServerCommand,true);if($concurrentServerBind===false)throw new RuntimeException('Could not locate the PHP server bind argument for the concurrency regression.');
+      $concurrentServerPort=random_int(21000,45000);$concurrentServerCommand[$concurrentServerBind+1]='127.0.0.1:'.$concurrentServerPort;$previousRestaurantDb=getenv('RESTAURANT_DB');$previousConcurrentWorkers=getenv('PHP_CLI_SERVER_WORKERS');putenv('RESTAURANT_DB='.$dbPath);putenv('PHP_CLI_SERVER_WORKERS=4');
+      try{$concurrentServer=proc_open($concurrentServerCommand,[0=>['pipe','r'],1=>['file',$concurrentServerLog,'a'],2=>['file',$concurrentServerLog,'a']],$concurrentPipes,dirname(__DIR__),null);}
+      finally{if($previousRestaurantDb===false)putenv('RESTAURANT_DB');else putenv('RESTAURANT_DB='.$previousRestaurantDb);if($previousConcurrentWorkers===false)putenv('PHP_CLI_SERVER_WORKERS');else putenv('PHP_CLI_SERVER_WORKERS='.$previousConcurrentWorkers);}
+      if(!is_resource($concurrentServer))throw new RuntimeException('Could not start the dedicated PHP server for the concurrency regression.');
+      $base='http://127.0.0.1:'.$concurrentServerPort;$concurrentReady=false;for($wait=0;$wait<30;$wait++){[$probeStatus]=request('/cart.php');if($probeStatus===200){$concurrentReady=true;break;}usleep(100000);}if(!$concurrentReady)throw new RuntimeException('Four-worker PHP server did not become ready for the concurrency regression.');
+     }
+     $concurrentKey='integration-concurrent-order-'.bin2hex(random_bytes(8));$parallel=parallelOrderRequests($orderFields,$concurrentKey,6);$parallelIds=[];
+     foreach($parallel as [$parallelStatus,$parallelBody]){$parallelResult=json_decode($parallelBody,true);check($parallelStatus===201&&$parallelResult['ok'],'concurrent same-key order request returns the committed result');$parallelIds[]=(int)$parallelResult['id'];}
+     check(count(array_unique($parallelIds))===1,'six concurrent requests with one key resolve to one order id');
+     $concurrentId=$parallelIds[0];$concurrentReadPdo=freshTestDatabase($dbPath);check((int)$concurrentReadPdo->query('SELECT COUNT(*) FROM orders WHERE id='.$concurrentId)->fetchColumn()===1,'concurrent key creates exactly one order');check((int)$concurrentReadPdo->query('SELECT COUNT(*) FROM order_items WHERE order_id='.$concurrentId)->fetchColumn()===1,'concurrent key creates one order line snapshot');
+     $concurrentToken=hash('sha256',substr($cookie,strlen('tokyo_session=')).'|order|'.$concurrentKey);$idem=$concurrentReadPdo->prepare('SELECT order_id,response_status FROM api_order_requests WHERE token=?');$idem->execute([$concurrentToken]);$idemRow=$idem->fetch();$idem->closeCursor();check((int)$idemRow['order_id']===$concurrentId&&(int)$idemRow['response_status']===201,'idempotency reservation and replay result point to the one committed order');
+     $independentKey='integration-independent-order-'.bin2hex(random_bytes(8));[$status,$independentBody]=request('/api.php',$orderFields,['Idempotency-Key'=>$independentKey]);$independent=json_decode($independentBody,true);check($status===201&&$independent['ok']&&(int)$independent['id']!==$concurrentId,'independent idempotency key creates a separate order');
+    } finally {
+     $base=$previousBase;
+     if(is_resource($concurrentServer)){proc_terminate($concurrentServer);foreach($concurrentPipes as $pipe)if(is_resource($pipe))fclose($pipe);proc_close($concurrentServer);}
+     if(is_file($concurrentServerLog))@unlink($concurrentServerLog);
+    }
    unset($concurrentReadPdo,$idem);$primaryOrdersBeforeRollback=(int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM orders');$rollbackKey='integration-rollback-order-'.bin2hex(random_bytes(8));$rollbackDbPath=sys_get_temp_dir().DIRECTORY_SEPARATOR.'tokyo-rollback-'.bin2hex(random_bytes(6)).'.sqlite';$rollbackServerLog=$rollbackDbPath.'.server.log';$rollbackPipes=[];$rollbackServer=null;
   try {
    $rollbackInitCommand=[PHP_BINARY];if(PHP_OS_FAMILY==='Windows'){array_push($rollbackInitCommand,'-d','extension_dir='.ini_get('extension_dir'));if(!extension_loaded('sqlite3'))array_push($rollbackInitCommand,'-d','extension=php_sqlite3.dll');if(!extension_loaded('pdo_sqlite'))array_push($rollbackInitCommand,'-d','extension=php_pdo_sqlite.dll');}array_push($rollbackInitCommand,'-r','require $argv[1]; db(); echo "rollback-db-ready";',dirname(__DIR__).'/bootstrap.php');
