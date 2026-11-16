@@ -211,3 +211,7 @@ One focused static route check passed at 1440 px and 320 px. It verified the tit
 ## 2026-11-16 space-zone content follow-up
 
 One static route check passed at 1440 px and 390 px. It verified the four reference-aligned zone names, four distinct descriptions, HTTP 200, no browser errors, and no horizontal overflow. Full-page screenshots were visually inspected. This was a content-only follow-up; no broad suite, PHP browser render, CI run, or deployment was repeated.
+
+## 2026-11-16 Omakase style delivery fix
+
+One static Omakase route check passed at 1440 px and 390 px. It verified that `luxury-refinements.css` returns HTTP 200, the hero image receives its horizontal mirror transform, all five tabs fit at mobile width, and the document has no browser errors or horizontal overflow. `php -l bootstrap.php` passed. No broad suite, full Pages re-export, PHP browser render, hosted CI or deployment was run.

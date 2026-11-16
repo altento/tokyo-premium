@@ -123,3 +123,7 @@ The existing original chef photograph is now mirrored only in the Omakase hero, 
 `space-page-refine-2026-11-16/` contains full static page screenshots at 1440 px and 320 px. The hero now follows the compact title/subtitle/CTA hierarchy in `06-gallery.png`, its desktop title stays on one line, and the CTA targets an explicit gallery anchor. The zone cards, photo filters, and honest “no 360° tour” note remain. One focused Playwright check reported HTTP 200, no console/page errors or failed requests, and no horizontal overflow at both widths; PHP lint and static/source CSS parity passed. The lower page remains an adaptation; see `comparison.md`.
 
 `space-zones-2026-11-16/` adds fresh 1440 px and 390 px captures after matching the four zone labels to the reference and replacing repeated generic card copy with distinct descriptions. A single focused static check confirmed labels, copy, and mobile page width. Capacity values are explicitly illustrative within the existing educational-concept disclosure.
+
+## 2026-11-16 Omakase refinement stylesheet fix
+
+`omakase-refinement-css-2026-11-16/` records a shared-template omission: `luxury-refinements.css` was copied by the exporter but not linked by PHP pages. The shared head now loads it; the current static Omakase route also links it pending a database-backed full re-export. Focused static checks at 1440/390 px confirm the chef-facing hero treatment, all five mobile course tabs, HTTP 200 stylesheet load, no browser errors and no horizontal overflow. See the comparison note for limits.
