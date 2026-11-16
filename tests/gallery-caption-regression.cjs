@@ -29,6 +29,8 @@ async function main() {
       await dialog.locator('[data-tp-gallery-next]').click();
       assert.equal((await caption.innerText()).trim(), 'Суши-бар', `${target.label} updates the caption with the next image`);
       assert.ok(await caption.isVisible(), `${target.label} caption remains visible in the lightbox`);
+      await dialog.locator('[data-tp-gallery-prev]').click();
+      assert.equal((await caption.innerText()).trim(), 'Зал и сервировка', `${target.label} updates the caption with the previous image`);
       if (target.screenshot) {
         const evidence = path.join(root, 'project-docs', 'visual-qa', 'gallery-caption-followup-2026-11-16');
         fs.mkdirSync(evidence, { recursive: true });
