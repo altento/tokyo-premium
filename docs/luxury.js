@@ -203,6 +203,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const categoryButtons = $$('.filter-btn[data-category]');
   const search = $('.menu-search[type="search"]');
   const sort = $('#sort-menu');
+  const menuViewButtons = $$('[data-menu-view]');
+  const menuGrid = $('.menu-page .dish-grid');
   const favoriteOnly = $('#favorites-only');
   const menuPagination = $('#menu-pagination');
   const originalDishOrder = new Map($$('.dish-card[data-category]').map((card, index) => [card, index]));
@@ -276,6 +278,11 @@ document.addEventListener('DOMContentLoaded', () => {
     button?.click();
   }));
   search?.addEventListener('input', filterMenu);
+  menuViewButtons.forEach(button => button.addEventListener('click', () => {
+    if (!menuGrid || !['grid', 'list'].includes(button.dataset.menuView)) return;
+    menuGrid.dataset.view = button.dataset.menuView;
+    menuViewButtons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+  }));
   favoriteOnly?.addEventListener('click', () => { favoriteOnly.classList.toggle('active'); filterMenu(); });
   sort?.addEventListener('change', () => {
     const grid = $('.dish-grid');
