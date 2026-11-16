@@ -60,6 +60,23 @@ const viewports = [
             emptyCategoryButtons: [...document.querySelectorAll('.menu-category-list button[data-category]')].filter(button => Number(button.querySelector('b')?.textContent.trim()) === 0).length,
             setBuilderShortcut: document.querySelector('.menu-category-list .menu-set-link')?.getAttribute('href'),
             menuViewButtons: document.querySelectorAll('[data-menu-view]').length,
+            ingredientFilterButtons: [...document.querySelectorAll('.menu-subfilter[data-menu-ingredient]')].filter(button => !button.hidden).length,
+            ingredientFilterCountsMatch: (() => {
+              const matchers = {
+                tuna: /тун(ец|ца|цу|цом|ц)/u,
+                salmon: /лосос/u,
+                eel: /угор/u,
+                shrimp: /кревет/u,
+                scallop: /гребеш/u,
+                roe: /икр/u
+              };
+              const cards = [...document.querySelectorAll('.dish-card[data-category]')];
+              return [...document.querySelectorAll('.menu-subfilter[data-menu-ingredient]')].every(button => {
+                const ingredient = button.dataset.menuIngredient;
+                const count = ingredient === 'all' ? cards.length : cards.filter(card => matchers[ingredient]?.test((card.dataset.search || card.textContent).toLocaleLowerCase('ru'))).length;
+                return Number(button.dataset.matchCount) === count && button.hidden === (ingredient !== 'all' && count === 0);
+              });
+            })(),
             setBuilderShortcutInViewport: (() => {
               const link = document.querySelector('.menu-category-list .menu-set-link');
               if (!link) return false;
@@ -80,6 +97,8 @@ const viewports = [
         assert.equal(metrics.emptyCategoryButtons, 0, `${route.mode} ${viewport.name} does not present an empty catalog filter`);
         assert.match(metrics.setBuilderShortcut || '', /set-builder/, `${route.mode} ${viewport.name} links directly to the set builder from categories`);
         assert.equal(metrics.menuViewButtons, 2, `${route.mode} ${viewport.name} exposes grid and list view controls`);
+        assert.ok(metrics.ingredientFilterButtons > 1, `${route.mode} ${viewport.name} exposes filters for ingredients available in the menu`);
+        assert.equal(metrics.ingredientFilterCountsMatch, true, `${route.mode} ${viewport.name} shows only ingredient filters with matching dishes and correct counts`);
         assert.equal(metrics.setBuilderShortcutInViewport, true, `${route.mode} ${viewport.name} keeps the set-builder shortcut visible in the category controls`);
         assert.equal(metrics.storyPhotoCount, 2, `${route.mode} ${viewport.name} has two authored-set photographs`);
         assert.equal(metrics.loadedStoryPhotos, 2, `${route.mode} ${viewport.name} loads both authored-set photographs`);
@@ -101,6 +120,15 @@ const viewports = [
         await page.locator('.menu-search').fill('');
         await page.locator('[data-menu-view="grid"]').click();
         assert.equal(await page.locator('.menu-page .dish-grid').getAttribute('data-view'), 'grid', `${route.mode} ${viewport.name} returns to the default grid`);
+        await page.locator('.menu-category-list [data-category="rolls"]').click();
+        await page.locator('[data-menu-ingredient="salmon"]').click();
+        await page.locator('.menu-search').fill('Филадельфия');
+        assert.equal(await page.locator('.menu-page .dish-card:not([hidden])').count(), 1, `${route.mode} ${viewport.name} combines category, ingredient, and search filters`);
+        await page.locator('.menu-category-list [data-category="sushi"]').click();
+        assert.equal(await page.locator('.menu-page .dish-card:not([hidden])').count(), 0, `${route.mode} ${viewport.name} applies category and ingredient filters together`);
+        await page.locator('.menu-category-list [data-category="all"]').click();
+        await page.locator('[data-menu-ingredient="all"]').click();
+        await page.locator('.menu-search').fill('');
         const builderResponse = await page.request.get(new URL(metrics.setBuilderLink, page.url()).href);
         assert.equal(builderResponse.status(), 200, `${route.mode} ${viewport.name} set-builder route loads`);
 

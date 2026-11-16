@@ -201,6 +201,27 @@ document.addEventListener('DOMContentLoaded', () => {
   }));
 
   const categoryButtons = $$('.filter-btn[data-category]');
+  const menuIngredientButtons = $$('.menu-subfilter[data-menu-ingredient]');
+  const menuIngredientMatchers = {
+    tuna: /тун(ец|ца|цу|цом|ц)/u,
+    salmon: /лосос/u,
+    eel: /угор/u,
+    shrimp: /кревет/u,
+    scallop: /гребеш/u,
+    roe: /икр/u
+  };
+  const menuCards = $$('.dish-card[data-category]');
+  const matchesMenuIngredient = (card, ingredient) => {
+    if (!ingredient || ingredient === 'all') return true;
+    const matcher = menuIngredientMatchers[ingredient];
+    return Boolean(matcher?.test((card.dataset.search || card.textContent).toLocaleLowerCase('ru')));
+  };
+  menuIngredientButtons.forEach(button => {
+    const ingredient = button.dataset.menuIngredient;
+    const matchingCount = ingredient === 'all' ? menuCards.length : menuCards.filter(card => matchesMenuIngredient(card, ingredient)).length;
+    button.dataset.matchCount = String(matchingCount);
+    button.hidden = ingredient !== 'all' && matchingCount === 0;
+  });
   const search = $('.menu-search[type="search"]');
   const sort = $('#sort-menu');
   const menuViewButtons = $$('[data-menu-view]');
@@ -224,14 +245,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (resetPage) menuPage = 1;
     const matches = [];
     const category = $('.filter-btn.active[data-category]')?.dataset.category || 'all';
+    const ingredient = $('.menu-subfilter[aria-pressed="true"]')?.dataset.menuIngredient || 'all';
     const query = (search?.value || '').toLocaleLowerCase('ru');
     const favoriteIds = new Set(cart?.getFavorites() || []);
-    const cards = $$('.dish-card[data-category]');
+    const cards = menuCards;
     cards.forEach(card => {
       const id = Number(card.querySelector('[data-favorite]')?.dataset.favorite || card.querySelector('.add-to-cart')?.dataset.id);
       const text = (card.dataset.search || card.textContent).toLocaleLowerCase('ru');
       const show = (category === 'all' || card.dataset.category === category)
         && text.includes(query)
+        && matchesMenuIngredient(card, ingredient)
         && (!favoriteOnly?.classList.contains('active') || favoriteIds.has(id));
       if (show) matches.push(card);
     });
@@ -264,6 +287,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   categoryButtons.forEach(button => button.addEventListener('click', () => {
     categoryButtons.forEach(item => item.classList.toggle('active', item === button));
+    filterMenu();
+  }));
+  menuIngredientButtons.forEach(button => button.addEventListener('click', () => {
+    menuIngredientButtons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
     filterMenu();
   }));
   menuPagination?.addEventListener('click', event => {

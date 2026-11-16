@@ -143,3 +143,5 @@ The custom Pages account template had omitted `luxury-refinements.css`; the expo
 The category controls now omit empty categories and expose “Собрать сет” beside “Все блюда”. Cropped static captures `category-controls-1440.png` and `category-controls-390.png` show the visible shortcut on desktop and mobile. A focused browser check found zero empty category filters, loaded the linked `set-builder.html`, and reported no browser errors. The mobile category strip intentionally scrolls horizontally; the page itself remains within the viewport in the preceding full-page check.
 
 `menu-grid-list-2026-11-16/` contains desktop and mobile crops of the new catalog list mode. The static focused test toggles both modes, checks the list card layout, and verifies that search still hides nonmatching cards in list mode.
+
+The menu now adds six ingredient filters from the approved reference. The focused route test checks the category + ingredient + search combination and the empty state when changing category under the same filters. Current menu screenshots are refreshed by the same browser pass.
