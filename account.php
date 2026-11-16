@@ -41,7 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($account && password_verify((string)($_POST['password'] ?? ''), $account['password_hash'])) {
             $_SESSION['user_id'] = (int)$account['id'];
             session_regenerate_id(true);
-            header('Location: account.php');
+            $redirect = $incomingReferralCode !== '' ? 'account.php?ref='.rawurlencode($incomingReferralCode).'#account-referrals' : 'account.php';
+            header('Location: '.$redirect);
             exit;
         }
         $err = 'Неверный email или пароль.';
@@ -195,6 +196,7 @@ header_html();
           <h2>Войти</h2>
           <input type="hidden" name="csrf" value="<?=e(csrf())?>">
           <input type="hidden" name="action" value="login">
+          <input type="hidden" name="referral_code" value="<?=e($incomingReferralCode)?>">
           <label>Email<input type="email" name="email" required autocomplete="email"></label>
           <label>Пароль<input type="password" name="password" required autocomplete="current-password"></label>
           <button class="button">Войти</button>

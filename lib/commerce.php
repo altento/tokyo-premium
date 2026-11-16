@@ -622,6 +622,7 @@ function commerce_quote(PDO $pdo, array $items, array $customSets = [], string $
         if ($subtotal < 1 || $subtotal > 500000) throw new DomainException('Проверьте сумму заказа.');
         $deliveryFee = $fulfillment === 'delivery' ? max(0, (int)setting('delivery_fee','0')) : 0;
         $discount = 0;
+        $promotionDiscount = 0;
         $adjustments = [];
         $appliedCampaign = null;
         $promoStackable = true;
@@ -665,14 +666,35 @@ function commerce_quote(PDO $pdo, array $items, array $customSets = [], string $
             if ($type === 'percent') $amount = (int)floor($eligible * min(100, $value) / 100);
             elseif ($type === 'fixed') $amount = min($eligible, $value);
             elseif ($type === 'set_price') {
-                foreach ($sets as &$set) {
+                $desiredSetDiscounts = [];
+                $desiredTotal = 0;
+                foreach ($sets as $index => $set) {
                     if (!commerce_item_is_targeted($set, $targets, true)) continue;
-                    $reduction = max(0, $set['subtotal'] - $value);
-                    if ((int)$promo['maximum_discount'] > 0) $reduction = min($reduction, (int)$promo['maximum_discount']);
-                    $set['discount'] = $reduction;
+                    $desiredSetDiscounts[$index] = max(0, (int)$set['subtotal'] - $value);
+                    $desiredTotal += $desiredSetDiscounts[$index];
+                }
+                $maximumDiscount = (int)$promo['maximum_discount'];
+                if ($maximumDiscount > 0 && $desiredTotal > $maximumDiscount) {
+                    $remaining = $maximumDiscount;
+                    foreach ($desiredSetDiscounts as $index => $desired) {
+                        $allocated = intdiv($desired * $maximumDiscount, $desiredTotal);
+                        $desiredSetDiscounts[$index] = $allocated;
+                        $remaining -= $allocated;
+                    }
+                    // Distribute rounding remainder in set order so the saved
+                    // line prices carry exactly the same total discount.
+                    foreach ($desiredSetDiscounts as $index => $allocated) {
+                        if ($remaining < 1) break;
+                        $desired = max(0, (int)$sets[$index]['subtotal'] - $value);
+                        if ($allocated >= $desired) continue;
+                        $desiredSetDiscounts[$index]++;
+                        $remaining--;
+                    }
+                }
+                foreach ($desiredSetDiscounts as $index => $reduction) {
+                    $sets[$index]['discount'] = $reduction;
                     $amount += $reduction;
                 }
-                unset($set);
             } elseif ($type === 'free_delivery') {
                 if ($deliveryFee < 1) throw new DomainException('Бесплатная доставка недоступна: стоимость доставки не настроена.');
                 $amount = $deliveryFee;
@@ -693,6 +715,7 @@ function commerce_quote(PDO $pdo, array $items, array $customSets = [], string $
             if ((int)$promo['maximum_discount'] > 0 && $amount > 0) $amount = min($amount, (int)$promo['maximum_discount']);
             if ($amount > 0) {
                 $discount += $amount;
+                $promotionDiscount += $amount;
                 $adjustments[] = ['type'=>$type==='free_delivery'?'free_delivery':($type==='set_price'?'set_price':'discount'),'code'=>$promotionCode,'label'=>(string)$promo['title'],'amount'=>$amount,'campaign_id'=>(int)$promo['campaign_id']];
             }
             $appliedCampaign = ['id'=>(int)$promo['campaign_id'],'code'=>$promotionCode,'reward_type'=>$type,'title'=>(string)$promo['title'],'bonus_points'=>$type==='bonus_points'?$value:0];
@@ -763,7 +786,7 @@ function commerce_quote(PDO $pdo, array $items, array $customSets = [], string $
         if ($total > 500000) throw new DomainException('Сумма заказа превышает допустимый предел.');
         $requiresGiftChoice = $threshold && count($giftOptions) > 1 && !$giftDishId;
         return [
-            'ok'=>true,'subtotal'=>$subtotal,'discount_total'=>$discount,'delivery_fee'=>$deliveryFee,'total'=>$total,
+            'ok'=>true,'subtotal'=>$subtotal,'discount_total'=>$discount,'promotion_discount'=>$promotionDiscount,'delivery_fee'=>$deliveryFee,'total'=>$total,
             'items'=>$catalog,'custom_sets'=>$sets,'gift_items'=>$giftItems,'gift_options'=>$giftOptions,
             'requires_gift_choice'=>(bool)$requiresGiftChoice,'promo_code'=>$promotionCode,
             'points_to_redeem'=>$pointsToRedeem,'points_discount'=>$pointsDiscount,
@@ -838,7 +861,7 @@ function commerce_persist_order(PDO $pdo, array $input, ?int $userId, string $ac
         $update->execute([$quote['promo_code']]);
         if ($update->rowCount()!==1) throw new DomainException('Лимит применений промокода исчерпан.');
         $q=$pdo->prepare('INSERT INTO promo_redemptions(promo_code,campaign_id,user_id,actor_key,order_id,discount_amount) VALUES(?,?,?,?,?,?)');
-        $q->execute([$quote['promo_code'],$promo['resolved_campaign_id'],$userId,$actorKey,$orderId,$quote['discount_total']]);
+        $q->execute([$quote['promo_code'],$promo['resolved_campaign_id'],$userId,$actorKey,$orderId,(int)($quote['promotion_discount']??0)]);
     }
     if ($quote['points_to_redeem']>0 && $userId) {
         $q=$pdo->prepare("INSERT INTO loyalty_ledger(user_id,order_id,event_key,transaction_type,points,note) VALUES(?,?,?,'redeem',?,?)");

@@ -48,6 +48,10 @@ jobs:
         run: npm run test:gift-quantity
       - name: Check birthday offers and tier restrictions
         run: npm run test:personal-offer
+      - name: Check capped set pricing and promo attribution
+        run: npm run test:commerce-pricing
+      - name: Check Cyrillic admin search and referral login
+        run: npm run test:admin-account-search-referral
       - name: Check PHP syntax
         run: find . -maxdepth 2 -type f -name '*.php' -print0 | xargs -0 -n1 php -l
       - name: Smoke test PHP forms and admin access
@@ -113,6 +117,7 @@ jobs:
             sleep 1
           done
           TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:browser
+          TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:gallery-caption
           TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:account-demo
           TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:tokyo20
           TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:offers-evening

@@ -322,3 +322,13 @@ This focused pass did not run the full browser suite, complete 11-route PHP visu
 - Campaign tier checks now cover promo quote/order, public offer visibility and threshold gifts. Birthday assignment checks cover consent, configured eligibility window, promotion code, account display and the admin path in `tests/gift-quantity-regression.php` and `tests/personal-offer-regression.php`.
 - The project-wide CLI lacks `pdo_sqlite`, so the two focused SQLite regressions were not run locally. The workflow runs both `test:gift-quantity` and `test:personal-offer` in its PHP+SQLite job.
 - Admin notification links now clear the session search before jumping to the counted section. The PHP integration regression covers the positive count, empty filtered list and reset destination; `php -l` passed locally. That database-backed integration runs in the same PHP+SQLite job.
+
+## Gallery lightbox caption repair — 2026-11-16
+
+The gallery lightbox now has an accessible live caption. It uses the visible tile label or room title and updates when navigating images. `npm run test:gallery-caption` passed against the static Pages export; the test checks both the selected caption and next-image update, and saves `project-docs/visual-qa/gallery-caption-followup-2026-11-16/gallery-caption-desktop.png`. The same focused test is configured to check PHP and Pages modes in browser CI. The screenshot was visually inspected. No public deployment was performed.
+## Commerce pricing integrity follow-up — 2026-11-16
+
+`commerce_quote()` now allocates a campaign-wide `maximum_discount` across all targeted custom sets before the order lines are stored. Promo redemption rows now record only the promotion portion when loyalty points are also redeemed. `tests/commerce-pricing-regression.php` covers two capped set lines, authoritative total reconciliation, and stackable promo-plus-points attribution. PHP lint passed; the focused SQLite test skipped locally because this CLI lacks `pdo_sqlite`. The workflow now runs it in the PHP+SQLite job. No broad local suite was repeated.
+## Admin Cyrillic search and referral login — 2026-11-16
+
+The admin account finder now compares Russian and Kazakh Cyrillic names without case sensitivity using a local SQLite scalar function; referral codes from validated invite links now survive an existing member's login and remain available for explicit attachment. The focused HTTP regression passed with 8 assertions under PHP 8.4 + SQLite, and PHP lint passed. The test is wired into the PHP+SQLite workflow. No broad suite was run.

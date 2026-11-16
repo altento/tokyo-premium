@@ -45,3 +45,10 @@ Administrative point adjustments now serialize the balance check and ledger inse
 ## Configurable threshold gift quantities — 2026-11-16
 
 The `max_per_order` configured for a threshold gift now controls the checkout quantity input and server quote. The API returns each eligible gift's current stock and per-order limit; quote and order persistence reject quantities above either bound. The order line records the selected quantity, and the stock decrement subtracts that quantity inside the existing order transaction. GitHub Pages has no authoritative gift stock, so it continues to show no server gift inventory. `php tests/gift-quantity-regression.php` is the short isolated SQLite regression; the full PHP integration suite remains broader regression coverage.
+
+### Pricing attribution and set-price caps — 2026-11-16
+
+A `set_price` campaign's `maximum_discount` applies across the order's targeted custom sets, not independently to each line. The quote allocates that cap across eligible sets and persists the same per-set reductions, keeping order-line merchandise values consistent with the quoted total. Promo redemption history records the campaign discount separately from loyalty-point redemption. The PHP+SQLite regression is `tests/commerce-pricing-regression.php`; Pages remains an estimate-only client demo.
+### Existing-member referral flow and account lookup — 2026-11-16
+
+The private admin account lookup performs Cyrillic-aware case-insensitive matching for name/email search. A validated invitation code survives login for an existing member and is prefilled for explicit account attachment; referral rewards still follow the existing completed-order rule. The PHP/SQLite regression is `tests/admin-account-search-referral-regression.php`.

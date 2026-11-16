@@ -18,6 +18,23 @@ $localDateTime = static function ($value): ?string {
     return $date->format('Y-m-d H:i:s');
 };
 
+function marketing_unicode_lower(string $value): string
+{
+    static $map = [
+        'А'=>'а','Б'=>'б','В'=>'в','Г'=>'г','Д'=>'д','Е'=>'е','Ё'=>'ё','Ж'=>'ж','З'=>'з','И'=>'и','Й'=>'й',
+        'К'=>'к','Л'=>'л','М'=>'м','Н'=>'н','О'=>'о','П'=>'п','Р'=>'р','С'=>'с','Т'=>'т','У'=>'у','Ф'=>'ф',
+        'Х'=>'х','Ц'=>'ц','Ч'=>'ч','Ш'=>'ш','Щ'=>'щ','Ъ'=>'ъ','Ы'=>'ы','Ь'=>'ь','Э'=>'э','Ю'=>'ю','Я'=>'я',
+        'Ә'=>'ә','Ғ'=>'ғ','Қ'=>'қ','Ң'=>'ң','Ө'=>'ө','Ұ'=>'ұ','Ү'=>'ү','Һ'=>'һ','І'=>'і',
+    ];
+    return strtr(strtolower($value), $map);
+}
+
+if (method_exists($pdo, 'createFunction')) {
+    $pdo->createFunction('tp_marketing_lower', static fn($value): string => marketing_unicode_lower((string)($value ?? '')), 1);
+} elseif (method_exists($pdo, 'sqliteCreateFunction')) {
+    $pdo->sqliteCreateFunction('tp_marketing_lower', static fn($value): string => marketing_unicode_lower((string)($value ?? '')), 1);
+}
+
 if (!$adminId) {
     http_response_code(403);
     page_start('Marketing & Loyalty — Tokyo Premium', 'Управление учебными предложениями Tokyo Premium.');
@@ -219,7 +236,7 @@ $campaignGiftInventory=[]; $campaignGiftLimits=[]; foreach($giftOptions as $gift
 $giftStocks=[]; foreach($pdo->query('SELECT campaign_id,SUM(remaining_quantity) AS quantity FROM campaign_gift_options GROUP BY campaign_id')->fetchAll() as $stockRow) $giftStocks[(int)$stockRow['campaign_id']]=(int)$stockRow['quantity'];
 $loyaltySettings=$pdo->query('SELECT * FROM loyalty_settings WHERE id=1')->fetch();
 $userSearch=trim((string)($_GET['user_search']??''));if(strlen($userSearch)>240)$userSearch=substr($userSearch,0,240);
-if($userSearch!==''){$userPattern='%'.str_replace(['!','%','_'],['!!','!%','!_'],$userSearch).'%';$userQuery=$pdo->prepare("SELECT id,email,full_name FROM users WHERE full_name COLLATE NOCASE LIKE ? ESCAPE '!' OR email COLLATE NOCASE LIKE ? ESCAPE '!' OR CAST(id AS TEXT)=? ORDER BY id DESC LIMIT 200");$userQuery->execute([$userPattern,$userPattern,$userSearch]);$users=$userQuery->fetchAll();}
+if($userSearch!==''){$userPattern='%'.str_replace(['!','%','_'],['!!','!%','!_'],marketing_unicode_lower($userSearch)).'%';$userQuery=$pdo->prepare("SELECT id,email,full_name FROM users WHERE tp_marketing_lower(full_name) LIKE ? ESCAPE '!' OR tp_marketing_lower(email) LIKE ? ESCAPE '!' OR CAST(id AS TEXT)=? ORDER BY id DESC LIMIT 200");$userQuery->execute([$userPattern,$userPattern,$userSearch]);$users=$userQuery->fetchAll();}
 else $users=$pdo->query('SELECT id,email,full_name FROM users ORDER BY id DESC LIMIT 200')->fetchAll();
 $assignableCampaigns=array_values(array_filter($campaigns,static fn(array $campaign):bool=>in_array($campaign['campaign_type'],['personal','birthday'],true)&&!empty($campaign['active'])&&(int)$campaign['code_count']>0));
 $personalOffers=$pdo->query('SELECT po.id,po.assigned_at,po.expires_at,po.used_order_id,u.full_name,u.email,c.title FROM personalized_offers po JOIN users u ON u.id=po.user_id JOIN promotion_campaigns c ON c.id=po.campaign_id ORDER BY po.assigned_at DESC,po.id DESC LIMIT 100')->fetchAll();

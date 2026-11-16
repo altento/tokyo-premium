@@ -692,7 +692,9 @@
       image.src = src;
       image.alt = thumb?.alt || trigger.getAttribute('aria-label') || 'Иллюстративная фотография учебной концепции';
       const caption = one('[data-tp-gallery-caption]', dialog);
-      safeText(caption, trigger.dataset.caption || thumb?.alt || `Кадр ${active + 1} из ${list.length}`);
+      const tileCaption = trigger.matches('.gallery-tile') ? trigger.querySelector(':scope > span')?.textContent?.trim() : '';
+      const zoneCaption = trigger.closest('.zone-card')?.querySelector('h3')?.textContent?.trim();
+      safeText(caption, trigger.dataset.caption?.trim() || tileCaption || zoneCaption || trigger.getAttribute('aria-label')?.replace(/^Увеличить(?: фото)?:\s*/i, '').trim() || thumb?.alt || `Кадр ${active + 1} из ${list.length}`);
     };
     let previous = one('[data-tp-gallery-prev]', dialog);
     let next = one('[data-tp-gallery-next]', dialog);

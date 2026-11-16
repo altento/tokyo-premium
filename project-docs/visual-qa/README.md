@@ -209,3 +209,8 @@ The same folder includes the eight populated/empty/checkout-validation/pickup/de
 ## 2026-11-16 Ideal Evening behavior and local order labeling
 
 `ideal-evening-budget-desktop-2026-11-16.png` and `ideal-evening-budget-mobile-2026-11-16.png` show the current static recommendation result. I inspected both captures; the mobile cost disclosure wraps inside the result card without horizontal overflow. The focused regression confirms restart gating/default values and different rankings for romantic versus special-occasion answers. `npm run test:tokyo20` also passed in PHP and static modes and checked that static form-created orders/bookings keep their local-demo badges in account history. These captures do not claim parity against the 11 restaurant-page references.
+
+## 2026-11-16 gallery lightbox caption
+
+`gallery-caption-followup-2026-11-16/gallery-caption-desktop.png` shows the lightbox after advancing to the second image, with the “Суши-бар” caption visible below the photo. I inspected the screenshot. `npm run test:gallery-caption` also confirmed the initial “Зал и сервировка” caption, its update on next-image navigation, Escape dismissal, and no browser errors in the static Pages route. CI is configured to run this narrow check against both PHP and Pages routes.
+The paired `gallery-caption-followup-2026-11-16/gallery-caption-mobile.png` capture was also inspected at 390 px; the caption remains inside the dialog viewport.
