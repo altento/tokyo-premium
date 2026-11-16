@@ -470,7 +470,8 @@ try {
  setTestOrderStatus($dbPath,(int)$bonusOrderResult['id'],'completed'); $afterBonusBalance=testLoyaltyBalance($dbPath,$profileUserId); check($afterBonusBalance===$restoredBalance+50+(int)floor((int)$pdo->query('SELECT price FROM dishes WHERE id='.$dish)->fetchColumn()*5/100),'completed promo order awards both base and advertised bonus points');
  setTestOrderStatus($dbPath,(int)$bonusOrderResult['id'],'ready'); setTestOrderStatus($dbPath,(int)$bonusOrderResult['id'],'completed'); check(testLoyaltyBalance($dbPath,$profileUserId)===$afterBonusBalance,'bonus-points promo is not re-awarded after a completed status toggle');
  setTestOrderStatus($dbPath,(int)$bonusOrderResult['id'],'cancelled'); check(testLoyaltyBalance($dbPath,$profileUserId)===$restoredBalance,'cancelling the bonus-points order reverses base and campaign points');
- $pdo->exec('UPDATE loyalty_settings SET enabled=1,points_per_100=0,referral_inviter_points=100,referral_friend_points=50,referral_minimum_order=500 WHERE id=1');
+  unset($q,$pdo); gc_collect_cycles(); $pdo=freshTestDatabase($dbPath);
+  $pdo->exec('UPDATE loyalty_settings SET enabled=1,points_per_100=0,referral_inviter_points=100,referral_friend_points=50,referral_minimum_order=500 WHERE id=1');
  $referralInsert=$pdo->prepare("INSERT INTO orders(user_id,customer_name,phone,address,fulfillment,comment,total,status,subtotal,discount_total,delivery_fee,promo_code) VALUES(?,?,?,'','pickup','',?,'new',?,0,0,'')");
  $referralInsert->execute([$referredFriendId,'Приглашённый гость','+77010000001',1000,1000]); $referralOrderId=(int)$pdo->lastInsertId();
  $inviterBalanceBefore=testLoyaltyBalance($dbPath,$profileUserId); $friendBalanceBefore=testLoyaltyBalance($dbPath,$referredFriendId);
@@ -482,7 +483,8 @@ try {
  check(testLoyaltyBalance($dbPath,$profileUserId)===$inviterBalanceBefore&&testLoyaltyBalance($dbPath,$referredFriendId)===$friendBalanceBefore&&(string)testDatabaseValue($dbPath,'SELECT status FROM referrals WHERE referred_user_id=?',[$referredFriendId])==='cancelled','cancelling a qualifying order reverses referral rewards for both accounts');
  setTestOrderStatus($dbPath,$referralOrderId,'completed');
  check(testLoyaltyBalance($dbPath,$profileUserId)===$inviterBalanceBefore+100&&testLoyaltyBalance($dbPath,$referredFriendId)===$friendBalanceBefore+50,'restoring a qualifying order reapplies referral rewards once');
- $pdo->exec('UPDATE loyalty_settings SET points_per_100=5,referral_inviter_points=0,referral_friend_points=0,referral_minimum_order=0 WHERE id=1');
+  unset($referralInsert,$pdo); gc_collect_cycles(); $pdo=freshTestDatabase($dbPath);
+  $pdo->exec('UPDATE loyalty_settings SET points_per_100=5,referral_inviter_points=0,referral_friend_points=0,referral_minimum_order=0 WHERE id=1');
  [$status,$history]=request('/account.php');
  check($status===200 && str_contains($history,'Тестовый ролл') && str_contains($history,'2 × 3 750') && str_contains($history,'Самовывоз'), 'profile history shows snapshot items, quantities, unit prices, line totals, and fulfillment');
  $birthdayCsrf=tokenFrom($history); $invalidBirth='1992-02-30';
@@ -491,15 +493,15 @@ try {
  check($status===200&&str_contains($birthdayPage,'Укажите корректную дату рождения')&&($storedBirth===''||$storedBirth===null),'invalid birth date and consent are rejected without storing invalid data');
  $localToday=new DateTimeImmutable('today',commerce_timezone()); $nearBirthday=$localToday->modify('+3 days'); $birthYear=(int)$localToday->format('Y')-25; $birthDate=$nearBirthday->setDate($birthYear,(int)$nearBirthday->format('m'),(int)$nearBirthday->format('d'))->format('Y-m-d');
   $birthdayBalanceBefore=testLoyaltyBalance($dbPath,$profileUserId);
-  $pdo->exec('UPDATE loyalty_settings SET enabled=1,birthday_window_days=7,birthday_reward_points=75 WHERE id=1');
- $birthdayCsrf=tokenFrom($birthdayPage); [$status,$birthdayPage]=request('/account.php',['csrf'=>$birthdayCsrf,'action'=>'profile-save','birth_date'=>$birthDate,'birthday_offer_consent'=>'1']);
+   unset($pdo); gc_collect_cycles(); $pdo=freshTestDatabase($dbPath); $pdo->exec('UPDATE loyalty_settings SET enabled=1,birthday_window_days=7,birthday_reward_points=75 WHERE id=1');
+  $birthdayCsrf=tokenFrom($birthdayPage); [$status,$birthdayPage]=request('/account.php',['csrf'=>$birthdayCsrf,'action'=>'profile-save','birth_date'=>$birthDate,'birthday_offer_consent'=>'1']); unset($pdo); gc_collect_cycles(); $pdo=freshTestDatabase($dbPath);
   check($status===200&&str_contains($birthdayPage,'начислено 75 учебных бонусов')&&commerce_birthday_eligible($pdo,$profileUserId)&&testLoyaltyBalance($dbPath,$profileUserId)===$birthdayBalanceBefore+75&&(int)testDatabaseValue($dbPath,"SELECT COUNT(*) FROM loyalty_ledger WHERE user_id=? AND transaction_type='birthday'",[$profileUserId])===1,'valid date and consent award the configured birthday points once');
   [$status,$birthdayPage]=request('/account.php');
   check($status===200&&testLoyaltyBalance($dbPath,$profileUserId)===$birthdayBalanceBefore+75&&(int)testDatabaseValue($dbPath,"SELECT COUNT(*) FROM loyalty_ledger WHERE user_id=? AND transaction_type='birthday'",[$profileUserId])===1,'reopening the account does not duplicate birthday points');
  $farBirthday=$localToday->modify('+20 days'); $farBirthDate=$farBirthday->setDate($birthYear,(int)$farBirthday->format('m'),(int)$farBirthday->format('d'))->format('Y-m-d');
- $birthdayCsrf=tokenFrom($birthdayPage); [$status,$birthdayPage]=request('/account.php',['csrf'=>$birthdayCsrf,'action'=>'profile-save','birth_date'=>$farBirthDate,'birthday_offer_consent'=>'1']);
+  $birthdayCsrf=tokenFrom($birthdayPage); [$status,$birthdayPage]=request('/account.php',['csrf'=>$birthdayCsrf,'action'=>'profile-save','birth_date'=>$farBirthDate,'birthday_offer_consent'=>'1']); unset($pdo); gc_collect_cycles(); $pdo=freshTestDatabase($dbPath);
  check($status===200&&!commerce_birthday_eligible($pdo,$profileUserId),'birthday eligibility follows the configured window rather than any saved birthday');
- $birthdayCsrf=tokenFrom($birthdayPage); [$status,$birthdayPage]=request('/account.php',['csrf'=>$birthdayCsrf,'action'=>'profile-save','birth_date'=>$farBirthDate]);
+  $birthdayCsrf=tokenFrom($birthdayPage); [$status,$birthdayPage]=request('/account.php',['csrf'=>$birthdayCsrf,'action'=>'profile-save','birth_date'=>$farBirthDate]); unset($pdo); gc_collect_cycles(); $pdo=freshTestDatabase($dbPath);
  check($status===200&&!commerce_birthday_eligible($pdo,$profileUserId)&&testDatabaseValue($dbPath,'SELECT birthday_consent_at FROM user_profiles WHERE user_id=?',[$profileUserId])===null,'withdrawing birthday-offer consent disables eligibility and clears its timestamp');
  foreach ([0,21] as $qty) { $badOrder=$orderFields; $badOrder['items']=json_encode([['id'=>$dish,'qty'=>$qty]]); [$status]=request('/api.php',$badOrder); check($status===422, 'invalid quantity rejected: '.$qty); }
  $badOrder=$orderFields; $badOrder['items']='{"id":1,"qty":2}'; [$status]=request('/api.php',$badOrder); check($status===422, 'non-list item payload rejected');
