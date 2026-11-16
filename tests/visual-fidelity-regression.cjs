@@ -111,6 +111,8 @@ async function visit(browser, base, route, mode, capture = false) {
     assert.equal(geometry.allTilesWithinSection, true, `${mode} every gallery tile stays inside its section`);
     assert.equal(geometry.imageCount, 8, `${mode} all gallery images load`);
   } else if (route.key === 'booking') {
+    const heroHeight = await page.locator('.editorial-hero.booking-hero').evaluate(node => node.getBoundingClientRect().height);
+    assert.ok(heroHeight <= 420, `${mode} booking hero stays compact and brings the booking content closer`);
     assert.equal(await page.locator('#full-booking-form').count(), 1, `${mode} booking form is present`);
     assert.equal(await page.locator('#full-guest-email').getAttribute('required'), '', `${mode} booking requests an email for status updates`);
     assert.equal(await page.locator('[data-tp-floorplan] svg').count(), 1, `${mode} preference floorplan renders as SVG`);
@@ -188,6 +190,10 @@ async function visit(browser, base, route, mode, capture = false) {
     })()
   }));
   assert.ok(mobile.scrollWidth <= mobile.width, `${mode} ${route.key} has no mobile horizontal overflow`);
+  if (route.key === 'booking') {
+    const mobileBookingHero = await page.locator('.editorial-hero.booking-hero').evaluate(node => node.getBoundingClientRect().height);
+    assert.ok(mobileBookingHero <= 460, `${mode} booking hero remains compact on mobile`);
+  }
   assert.equal(mobile.omakaseTabsVisible, true, "Omakase keeps all stages visible without horizontal scrolling");
   assert.equal(mobile.heroTitleVisible, true, `${mode} ${route.key} mobile heading remains in the viewport`);
   assert.equal(mobile.contactPanelsVisible, true, `${mode} ${route.key} contact panels fit the mobile viewport`);

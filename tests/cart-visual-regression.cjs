@@ -45,6 +45,9 @@ async function run(options = {}) {
     await add.nth(2).click();
     await page.goto(`${base}/docs/cart.html`, { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => document.querySelectorAll('#cart-page-items .cart-page-item').length === 3);
+    const desktopHeroHeight = await page.locator('.cart-hero').evaluate(hero => hero.getBoundingClientRect().height);
+    assert.ok(desktopHeroHeight <= 270, `desktop cart hero stays compact against the approved reference (height ${desktopHeroHeight}px)`);
+    assert.equal(await page.locator('.cart-hero .button-row').isHidden(), true, 'cart hero keeps the reference title/copy hierarchy without a duplicate CTA');
     const seededItems = await page.evaluate(() => window.TokyoCart.snapshot().map(item => ({ id: Number(item.id), qty: Number(item.qty) })));
     assert.equal(new Set(seededItems.map(item => item.id)).size, 3, 'populated cart contains three different dishes');
     await page.locator('[data-cart-step="1"]').first().click();
@@ -60,6 +63,8 @@ async function run(options = {}) {
     assert.equal(await page.locator('.cart-recommendations .dish-card img').evaluateAll(images => images.length === 3 && images.every(image => image.complete && image.naturalWidth > 0)), true, 'each recommendation has a loaded food photograph');
     assert.equal(await page.locator('.cart-recommendations .dish-card').first().isVisible(), true, 'recommendations are visible in populated screenshot');
     await page.setViewportSize({ width: 390, height: 844 });
+    const mobileHeroHeight = await page.locator('.cart-hero').evaluate(hero => hero.getBoundingClientRect().height);
+    assert.ok(mobileHeroHeight <= 270, `mobile cart hero stays compact without clipping (height ${mobileHeroHeight}px)`);
     await screenshot(page, 'cart-populated-mobile.png');
 
     await page.locator('#checkout-name').fill('Демо-гость');
