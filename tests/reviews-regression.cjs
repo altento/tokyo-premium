@@ -23,6 +23,7 @@ async function run(options = {}) {
       hasPhotoMoment: Boolean(document.querySelector('.review-moment figure img'))
     }));
     assert.deepEqual(seededLayout, { columns: 3, cards: 4, disclosed: 4, hasPhotoMoment: true }, 'desktop review route shows all four seeded demo records in three columns and uses a photo interlude instead of fictional video reviews');
+    assert.equal(await page.locator('#review-more').isVisible(), false, 'load-more stays hidden when every seeded review is already visible');
 
     const hostileName = '<img src=x onerror=window.__reviewXss=1> QA';
     const hostileBody = 'Интерфейс понравился. <img src=x onerror=window.__reviewXss=2> Очень уютно.';

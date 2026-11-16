@@ -90,7 +90,7 @@ const viewports = [
         });
 
         assert.ok(metrics.scrollWidth <= viewport.width, `${route.mode} ${viewport.name} has no horizontal page overflow`);
-        assert.ok(metrics.heroHeight > 0 && metrics.heroHeight <= 460, `${route.mode} ${viewport.name} has the compact menu hero`);
+        assert.ok(metrics.heroHeight > 0 && metrics.heroHeight <= (viewport.width > 700 ? 350 : 370), `${route.mode} ${viewport.name} keeps the compact responsive menu hero`);
         assert.equal(metrics.heroImageLoaded, true, `${route.mode} ${viewport.name} hero image loads`);
         assert.equal(metrics.breadcrumb, 'Меню', `${route.mode} ${viewport.name} shows the current breadcrumb`);
         assert.equal(metrics.firstPageCards, 6, `${route.mode} ${viewport.name} renders the first six catalog cards`);
@@ -133,7 +133,7 @@ const viewports = [
         assert.equal(builderResponse.status(), 200, `${route.mode} ${viewport.name} set-builder route loads`);
 
         await page.screenshot({
-          path: path.join(evidenceDir, `02-menu-current-${route.mode}-${viewport.name}-2026-11-16.jpg`),
+          path: path.join(evidenceDir, `02-menu-current-${route.mode}-${viewport.name}.jpg`),
           type: 'jpeg',
           quality: viewport.name === 'desktop' ? 74 : 72,
           fullPage: true

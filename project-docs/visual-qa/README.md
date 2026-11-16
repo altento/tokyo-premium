@@ -223,3 +223,17 @@ The paired `gallery-caption-followup-2026-11-16/gallery-caption-mobile.png` capt
 The booking heading repair has full-page browser captures at 320 and 390 CSS px in 07-booking-heading-fix-2026-11-17/; its focused check passed nine widths from 320 to 1920 px. The screenshot comparison confirms the heading remains one line with no hyphenation and stays inside the viewport.
 
 The static motion suite passed after its crop assertion was aligned with the current visually reviewed 82% salmon framing. Home desktop/mobile, hero desktop/mobile and the Omakase scene captures are in 2.0-motion-2026-11-17/. Hosted PHP responsive verification is pending for the current repair.
+## 2026-11-17 review load-more visibility
+
+- Confirmed the review page showed `Показать ещё` while only four seeded demo reviews were present. The button had the `hidden` attribute, but its `.button` display rule overrode the browser default.
+- Added an explicit hidden-state rule to the PHP source stylesheet and the committed Pages stylesheet. Added a Playwright assertion for the four-review state in `tests/reviews-regression.cjs`.
+- `npm run test:reviews` passed against the local static route: review submission, browser-local persistence, XSS-safe rendering, clearing, unchanged public score, and hidden load-more state. Captures are in `project-docs/visual-qa/reviews-load-more-fix-2026-11-17/`.
+- This is a focused review-page regression check, not full-site acceptance or a public deployment check.
+- The PHP `reviews.php` route was also checked in Chromium with SQLite enabled for the isolated local server: four cards, `hidden=true`, computed `display:none`, no JavaScript errors. Screenshot: `project-docs/visual-qa/reviews-load-more-fix-2026-11-17/08-reviews-php-desktop.jpg`.
+
+## 2026-11-17 compact menu hero
+
+- The menu hero was oversized against approved reference 02. Reduced the desktop minimum/height scale and headline/subtitle scale while preserving the mobile composition.
+- Tightened `tests/menu-visual-smoke.cjs` so it enforces a 350 px desktop ceiling and 370 px mobile ceiling; screenshot filenames no longer carry a stale date.
+- `npm run test:menu-visual` passed all four PHP and static cases at 1440 px and 390 px. Measured hero heights were 333 px desktop and 369 px mobile; the hero image loaded, catalog controls rendered, and no horizontal overflow was detected.
+- Current captures: `project-docs/visual-qa/menu-hero-compact-2026-11-17/` (`02-menu-current-php-desktop.jpg`, `02-menu-current-static-desktop.jpg`, and mobile counterparts). This focused pass does not complete the full 11-reference visual acceptance.

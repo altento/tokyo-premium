@@ -1,10 +1,10 @@
 .omakase-intro{display:grid;grid-template-columns:minmax(230px,.72fr) minmax(0,1.7fr);gap:clamp(28px,5vw,72px);align-items:start}
-.menu-hero{position:relative;isolation:isolate;display:flex;align-items:center;min-height:clamp(320px,30vw,440px);padding:clamp(42px,6vw,76px) max(6vw,calc((100vw - 1320px)/2));overflow:hidden;background:#090807;color:#f5e9d4;border-bottom:1px solid rgba(199,167,102,.25)}
+.menu-hero{position:relative;isolation:isolate;display:flex;align-items:center;min-height:clamp(280px,20vw,320px);padding:clamp(32px,3.5vw,50px) max(6vw,calc((100vw - 1320px)/2));overflow:hidden;background:#090807;color:#f5e9d4;border-bottom:1px solid rgba(199,167,102,.25)}
 .menu-hero>img,.menu-hero-shade{position:absolute;z-index:-2;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 58%}
 .menu-hero-shade{z-index:-1;background:linear-gradient(90deg,rgba(8,7,6,.96),rgba(8,7,6,.78) 36%,rgba(8,7,6,.14) 76%),linear-gradient(0deg,rgba(8,7,6,.38),transparent 45%)}
 .menu-hero-copy{width:min(520px,72%)}
-.menu-hero-copy h1{margin:9px 0 0;color:#f7e9d3;font:500 clamp(3.4rem,6.3vw,5.8rem)/.98 'Playfair Display',Georgia,serif;letter-spacing:.035em}
-.menu-hero-sub{margin:8px 0 13px;color:#dfbd7d;font:italic 500 clamp(1.25rem,2.7vw,2rem)/1.22 'Playfair Display',Georgia,serif}
+.menu-hero-copy h1{margin:9px 0 0;color:#f7e9d3;font:500 clamp(3rem,4.8vw,4.5rem)/.98 'Playfair Display',Georgia,serif;letter-spacing:.035em}
+.menu-hero-sub{margin:8px 0 13px;color:#dfbd7d;font:italic 500 clamp(1.2rem,2vw,1.6rem)/1.22 'Playfair Display',Georgia,serif}
 .menu-hero-copy>p:not(.menu-hero-sub){max-width:390px;color:#d7c8b0;line-height:1.65}
 .menu-hero .school-note{display:block;margin-top:18px;color:#c7b99f;font-size:.65rem;letter-spacing:.12em}
 .menu-hero-kanji{position:absolute;right:max(5vw,calc((100vw - 1380px)/2));top:18%;writing-mode:vertical-rl;color:#efd7a5;font:500 clamp(1.4rem,3vw,2.5rem)/1 'Playfair Display',serif;letter-spacing:.3em;text-shadow:0 2px 20px #000}

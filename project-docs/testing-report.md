@@ -351,3 +351,17 @@ Hosted run 43937788170 (https://github.com/altento/tokyo-premium/actions/runs/43
 The shared rule in editorial.css and the Pages copy now uses hyphens: none while preserving overflow-wrap: anywhere. A focused static browser check passed at 320, 360, 375, 390, 430, 768, 1024, 1440 and 1920 px: one-line title, in-viewport text bounds, no horizontal overflow. Captures are in project-docs/visual-qa/07-booking-heading-fix-2026-11-17/.
 
 The first static-only npm run test:motion exposed an outdated assertion for a 75% hero image crop; the current CSS and screenshot show 82%, with the salmon clearly in frame. The assertion now accepts a narrow 78–86% framing window and also checks image geometry. The static motion regression passed; five captures are in project-docs/visual-qa/2.0-motion-2026-11-17/. Hosted PHP responsive verification for the heading repair is pending.
+## 2026-11-17 review load-more visibility
+
+- Confirmed the review page showed `Показать ещё` while only four seeded demo reviews were present. The button had the `hidden` attribute, but its `.button` display rule overrode the browser default.
+- Added an explicit hidden-state rule to the PHP source stylesheet and the committed Pages stylesheet. Added a Playwright assertion for the four-review state in `tests/reviews-regression.cjs`.
+- `npm run test:reviews` passed against the local static route: review submission, browser-local persistence, XSS-safe rendering, clearing, unchanged public score, and hidden load-more state. Captures are in `project-docs/visual-qa/reviews-load-more-fix-2026-11-17/`.
+- This is a focused review-page regression check, not full-site acceptance or a public deployment check.
+- The PHP `reviews.php` route was also checked in Chromium with SQLite enabled for the isolated local server: four cards, `hidden=true`, computed `display:none`, no JavaScript errors. Screenshot: `project-docs/visual-qa/reviews-load-more-fix-2026-11-17/08-reviews-php-desktop.jpg`.
+
+## 2026-11-17 compact menu hero
+
+- The menu hero was oversized against approved reference 02. Reduced the desktop minimum/height scale and headline/subtitle scale while preserving the mobile composition.
+- Tightened `tests/menu-visual-smoke.cjs` so it enforces a 350 px desktop ceiling and 370 px mobile ceiling; screenshot filenames no longer carry a stale date.
+- `npm run test:menu-visual` passed all four PHP and static cases at 1440 px and 390 px. Measured hero heights were 333 px desktop and 369 px mobile; the hero image loaded, catalog controls rendered, and no horizontal overflow was detected.
+- Current captures: `project-docs/visual-qa/menu-hero-compact-2026-11-17/` (`02-menu-current-php-desktop.jpg`, `02-menu-current-static-desktop.jpg`, and mobile counterparts). This focused pass does not complete the full 11-reference visual acceptance.
