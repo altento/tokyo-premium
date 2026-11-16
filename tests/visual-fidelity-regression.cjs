@@ -85,6 +85,8 @@ async function visit(browser, base, route, mode, capture = false) {
     assert.equal(await page.locator('#dish-main-image').evaluate(image => image.naturalWidth > 0), true, `${mode} dish photo loads`);
     assert.equal(await page.locator('.dish-chef-story img').evaluate(image => image.naturalWidth > 0), true, `${mode} chef editorial photo loads`);
     assert.equal(await page.locator('.detail-actions .add-to-cart').count(), 1, `${mode} dish retains its add-to-cart action`);
+    assert.equal(await page.locator('.dish-grid-related .dish-card').count(), 4, `${mode} dish shows four complementary items`);
+    assert.match(await page.locator('.dish-grid-related').innerText(), /Юдзу-лимонад|Нигири с тунцом/, `${mode} dish recommendations use the configured pairing records`);
   } else if (route.key === 'philosophy') {
     const background = await page.locator('.about-hero').evaluate(node => getComputedStyle(node).backgroundImage);
     assert.match(background, /room-garden-terrace\.webp/, `${mode} philosophy hero uses its garden photograph`);
@@ -140,8 +142,16 @@ async function visit(browser, base, route, mode, capture = false) {
     }));
     assert.equal(counts.overviewCards, counts.selectedStages, `${mode} overview and interactive course stages agree`);
     assert.equal(counts.overviewCards, 5, `${mode} overview presents the five catalog-backed stages`);
-    const heroTransform = await page.locator('.omakase-hero .editorial-hero-photo').evaluate(image => getComputedStyle(image).transform);
-    assert.match(heroTransform, /^matrix\(-1,/);
+    const hero = await page.locator('.omakase-hero .editorial-hero-photo').evaluate(image => ({
+      transform: getComputedStyle(image).transform,
+      source: image.currentSrc,
+      mobileObjectPosition: getComputedStyle(image).objectPosition
+    }));
+    assert.equal(hero.transform, 'none', `${mode} Omakase panorama is not mirrored`);
+    assert.match(hero.source, /omakase-chef-panorama-/);
+    await page.setViewportSize({ width: 390, height: 844 });
+    const mobileObjectPosition = await page.locator('.omakase-hero .editorial-hero-photo').evaluate(image => getComputedStyle(image).objectPosition);
+    assert.equal(mobileObjectPosition, '100% 50%', `${mode} mobile Omakase crop keeps the chef in frame`);
     assert.equal(counts.loadedOverviewPhotos, 5, `${mode} all overview photographs load`);
   }
 

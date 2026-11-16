@@ -14,6 +14,7 @@ The app runs `schema.sql` with `CREATE TABLE/INDEX IF NOT EXISTS`, then records 
 | 6 | Add optional booking guest email and a unique-event SMTP outbox. Existing bookings are preserved and receive an empty default email; delivery remains disabled until the PHP service is configured. |
 | 7 | Add transactional booking idempotency reservations and hashed email/IP rate-limit buckets. Existing bookings and outbox rows are preserved. |
 | 8 | Add account-owned delivery addresses, a single-default partial unique index, and owner-scoped address operations. Existing accounts are unchanged and begin with no saved addresses. |
+| 9 | Seed editable drink, dish and dessert pairings for the educational catalogue. Inserts are transactional and idempotent; existing relationships are preserved. Product detail pages resolve active, viewable pairings from SQLite and fill remaining slots from the catalogue. Admins can create, edit, reorder and remove pairings in the menu management panel. |
 
 `schema.sql` declares the normalized entities for campaigns and targets, gift options, promo-code redemptions, collection membership, set variants, Secret Menu rules, personalized offers, loyalty settings/tiers/ledger, order set components, referral relationships/rewards, certificate previews and status-event idempotency. Foreign keys, unique event constraints, indexes and `CHECK` constraints are used where the domain supports them.
 

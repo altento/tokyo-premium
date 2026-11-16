@@ -420,6 +420,18 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .admin-dashboard .admin-form input[type=checkbox]{width:18px;height:18px;accent-color:#a81922}
 .admin-dashboard .admin-form .button{justify-self:start;min-height:42px}
 .admin-dish-list,.admin-record-list{display:grid;gap:11px}
+.admin-pairing-groups{display:grid;gap:10px}
+.admin-pairing-group{overflow:hidden;border:1px solid rgba(200,164,99,.2);border-radius:10px;background:rgba(255,255,255,.018)}
+.admin-pairing-group>summary{display:flex;align-items:center;gap:12px;min-height:48px;padding:11px 15px;color:#f3e5ca;font:500 1.05rem/1.35 'Playfair Display',Georgia,serif;cursor:pointer;list-style:none}
+.admin-pairing-group>summary::-webkit-details-marker{display:none}
+.admin-pairing-group>summary:after{content:'+';margin-left:auto;color:#e8c77e;font:400 1.2rem/1 'DM Sans',sans-serif}
+.admin-pairing-group[open]>summary:after{content:'−'}
+.admin-pairing-group>summary span{color:var(--muted);font:400 .78rem/1.4 'DM Sans',sans-serif}
+.admin-pairing-rows{display:grid;gap:10px;padding:0 12px 12px}
+.admin-pairing-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:4px 16px}
+.admin-pairing-row>h3{grid-column:1/-1;margin:0 0 4px;font:500 1rem/1.35 'Playfair Display',Georgia,serif}
+.admin-pairing-row .admin-edit-form{grid-template-columns:repeat(3,minmax(0,1fr));align-items:end;margin:0}
+.admin-pairing-row>form:last-child{margin:0}
 .admin-dish-row{display:grid;grid-template-columns:76px minmax(130px,1fr) auto auto;align-items:center;gap:14px;padding:12px;border:1px solid rgba(200,164,99,.2);border-radius:10px;background:rgba(255,255,255,.018)}
 .admin-dish-row>img{display:block;width:76px;height:72px;object-fit:cover;border-radius:7px;background:#201b15}
 .admin-dish-summary{display:grid;gap:4px;min-width:0}
@@ -484,6 +496,11 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
   .admin-dish-row>form{grid-column:3;grid-row:2}
   .admin-edit-details[open]{grid-column:1/-1;grid-row:auto}
   .admin-record{padding:14px}
+  .admin-pairing-row{grid-template-columns:minmax(0,1fr) auto;gap:8px}
+  .admin-pairing-row .admin-edit-form{grid-column:1/-1;grid-template-columns:1fr 1fr;align-items:end;margin:0}
+  .admin-pairing-row .admin-edit-form .button{grid-column:1/-1;width:100%}
+  .admin-pairing-row>form:last-child{grid-column:1/-1}
+  .admin-pairing-row>form:last-child .admin-danger{width:100%}
   .admin-record-actions,.admin-status-form{align-items:stretch;flex-direction:column}
   .admin-status-form select,.admin-status-form .button,.admin-record-actions>form .button{width:100%}
   .admin-record-top{align-items:flex-start}

@@ -39,9 +39,17 @@ header_html($view);
   if(!$dish){ ?>
 <section class="page-hero"><div class="kicker">Tokyo Premium</div><h1>Блюдо не найдено</h1><p>Вернитесь в меню, чтобы выбрать другую позицию.</p><a class="button" href="menu.php">Открыть меню ↗</a></section>
 <?php } else {
-  $recommend=array_values(array_filter($all,fn($d)=>(int)$d['id']!==(int)$dish['id']&&$d['category']===$dish['category']));
-  if(!$recommend) $recommend=array_values(array_filter($all,fn($d)=>(int)$d['id']!==(int)$dish['id']));
-  $recommend=array_slice($recommend,0,4);
+  $pairingQuery=db()->prepare("SELECT dp.pairing_type,dp.paired_dish_id FROM dish_pairings dp JOIN dishes paired ON paired.id=dp.paired_dish_id AND paired.active=1 WHERE dp.dish_id=? ORDER BY CASE dp.pairing_type WHEN 'drink' THEN 0 WHEN 'sauce' THEN 1 WHEN 'dish' THEN 2 WHEN 'dessert' THEN 3 ELSE 4 END,dp.sort_order,paired.sort_order,paired.id LIMIT 4");
+  $pairingQuery->execute([(int)$dish['id']]);
+  $pairingRows=$pairingQuery->fetchAll();
+  $pairingTypeLabels=['drink'=>'Напиток к блюду','sauce'=>'Соус к блюду','dish'=>'В пару к блюду','dessert'=>'Десерт к блюду'];
+  $recommend=[]; $recommendLabels=[]; $recommendIds=[];
+  foreach($pairingRows as $pairing){$pairedId=(int)$pairing['paired_dish_id'];if(!isset($allById[$pairedId])||$pairedId===(int)$dish['id'])continue;$recommend[]=$allById[$pairedId];$recommendIds[]=$pairedId;$recommendLabels[$pairedId]=$pairingTypeLabels[(string)$pairing['pairing_type']]??'Подходит к блюду';}
+  $categoryFallback=array_values(array_filter($all,fn($d)=>(int)$d['id']!==(int)$dish['id']&&!in_array((int)$d['id'],$recommendIds,true)&&$d['category']===$dish['category']));
+  foreach($categoryFallback as $candidate){$recommend[]=$candidate;if(count($recommend)>=4)break;}
+  if(count($recommend)<4){foreach($all as $candidate){$candidateId=(int)$candidate['id'];if($candidateId===(int)$dish['id']||in_array($candidateId,$recommendIds,true)||array_filter($recommend,fn($d)=>(int)$d['id']===$candidateId))continue;$recommend[]=$candidate;if(count($recommend)>=4)break;}}
+  $hasPairings=count($recommendIds)>0;
+  $recommendHeading=$hasPairings?'Подходящие сочетания':'Другие блюда раздела';
 
 ?>
 <nav class="breadcrumbs" aria-label="Навигация"><a href="index.php">Главная</a><span>›</span><a href="menu.php">Меню</a><span>›</span><span aria-current="page"><?=e($dish['name'])?></span></nav>
@@ -57,7 +65,7 @@ header_html($view);
 </section>
 <section class="section dish-chef-section"><div class="dish-chef-story"><img src="assets/generated/chef-at-counter.webp" width="1480" height="1000" alt="Иллюстративный кадр учебной концепции: шеф-повар готовит нигири" loading="lazy" decoding="async"><div class="editorial-note"><div class="kicker">Подача от шефа концепции</div><blockquote>Точная подача помогает раскрыть продукт — спокойно, без лишних акцентов.</blockquote><p class="menu-note">Редакционный текст и фотография относятся к учебной концепции и не описывают реального сотрудника.</p></div></div></section>
 <section class="section"><div class="editorial-heading"><div class="kicker">Состав и подача</div><h2>Что создаёт характер блюда</h2></div><div class="detail-ingredients"><article><span>01</span><h3>Основа</h3><p><?=e($dish['description'])?></p></article><article><span>02</span><h3>Текстура</h3><p>Контраст нежного, упругого и хрустящего раскрывает каждый компонент постепенно.</p></article><article><span>03</span><h3>Ритм</h3><p>Подавайте сразу после приготовления; точная подача здесь важнее спешки.</p></article></div></section>
-<section class="section dark"><div class="section-head"><div><div class="kicker">Продолжить знакомство · <?=e($dish['category_name'])?></div><h2>Другие блюда раздела</h2></div><a class="button secondary" href="menu.php">Все меню ↗</a></div><div class="dish-grid dish-grid-related"><?php foreach($recommend as $d) ep_card($d); ?></div></section>
+<section class="section dark"><div class="section-head"><div><div class="kicker"><?=$hasPairings?'Рекомендуем дополнить':'Продолжить знакомство · '.e($dish['category_name'])?></div><h2><?=e($recommendHeading)?></h2></div><a class="button secondary" href="menu.php">Все меню ↗</a></div><div class="dish-grid dish-grid-related"><?php foreach($recommend as $d) ep_card($d,$recommendLabels[(int)$d['id']]??''); ?></div></section>
 <?php } elseif($view==='omakase'): ?>
 <?php ep_hero('お任せ','ВЫБОР ШЕФА · РИТУАЛ ВКУСА','Omakase','Ужин от шефа','Доверить выбор шефу — значит позволить сезону вести вас от первой лёгкой подачи к глубокому финалу.','assets/generated/omakase-chef-panorama-1920.webp','Шеф готовит нигири для дегустационного меню в камерном японском ресторане','Выбрать вечер','pages.php?page=booking','Открыть меню','omakase-hero'); ?>
 <?php

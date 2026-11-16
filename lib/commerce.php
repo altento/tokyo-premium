@@ -170,6 +170,51 @@ function commerce_migrate(PDO $pdo): void
             throw $error;
         }
     }
+
+    // v9 seeds editable educational pairings for the existing catalogue.
+    // INSERT OR IGNORE preserves any pairings an administrator has already set.
+    if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=9')->fetchColumn()) {
+        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        try {
+            $pdo->exec("CREATE TABLE IF NOT EXISTS dish_pairings (
+                dish_id INTEGER NOT NULL REFERENCES dishes(id) ON DELETE CASCADE,
+                paired_dish_id INTEGER NOT NULL REFERENCES dishes(id) ON DELETE CASCADE,
+                pairing_type TEXT NOT NULL CHECK(pairing_type IN ('drink','sauce','dish','dessert')),
+                sort_order INTEGER NOT NULL DEFAULT 0,
+                PRIMARY KEY(dish_id,paired_dish_id,pairing_type),
+                CHECK(dish_id<>paired_dish_id)
+            )");
+            $pairings = [
+                [1,4,'drink',10],[1,19,'dessert',20],
+                [2,20,'drink',10],[2,8,'dessert',20],
+                [3,20,'drink',10],[3,6,'dish',20],
+                [4,8,'dessert',10],[4,19,'dessert',20],
+                [5,20,'drink',10],[5,19,'dessert',20],
+                [6,20,'drink',10],[6,3,'dish',20],
+                [7,4,'drink',10],[7,8,'dessert',20],
+                [8,4,'drink',10],[8,19,'dessert',20],
+                [9,4,'drink',10],[9,14,'dish',20],
+                [10,20,'drink',10],[10,3,'dish',20],
+                [11,20,'drink',10],[11,8,'dessert',20],
+                [12,20,'drink',10],[12,15,'dish',20],
+                [13,20,'drink',10],[13,14,'dish',20],
+                [14,4,'drink',10],[14,6,'dish',20],
+                [15,20,'drink',10],[15,14,'dish',20],
+                [16,4,'drink',10],[16,19,'dessert',20],
+                [17,20,'drink',10],[17,19,'dessert',20],
+                [18,20,'drink',10],[18,19,'dessert',20],
+                [19,4,'drink',10],[19,8,'dessert',20],
+                [20,12,'dish',10],[20,15,'dish',20],
+            ];
+            $insertPairing = $pdo->prepare('INSERT OR IGNORE INTO dish_pairings(dish_id,paired_dish_id,pairing_type,sort_order) VALUES(?,?,?,?)');
+            foreach ($pairings as $pairing) $insertPairing->execute($pairing);
+            $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(9)');
+            $pdo->commit();
+        } catch (Throwable $error) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $error;
+        }
+    }
 }
 
 function commerce_actor_key(?int $userId, string $sessionId): string

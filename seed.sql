@@ -47,3 +47,25 @@ UPDATE reviews SET theme='Кухня' WHERE id=1;
 UPDATE reviews SET theme='Омакасе' WHERE id=2;
 UPDATE reviews SET theme='Атмосфера' WHERE id=3;
 UPDATE reviews SET theme='Сервис' WHERE id=4;
+
+INSERT OR IGNORE INTO dish_pairings(dish_id,paired_dish_id,pairing_type,sort_order) VALUES
+(1,4,'drink',10),(1,19,'dessert',20),
+(2,20,'drink',10),(2,8,'dessert',20),
+(3,20,'drink',10),(3,6,'dish',20),
+(4,8,'dessert',10),(4,19,'dessert',20),
+(5,20,'drink',10),(5,19,'dessert',20),
+(6,20,'drink',10),(6,3,'dish',20),
+(7,4,'drink',10),(7,8,'dessert',20),
+(8,4,'drink',10),(8,19,'dessert',20),
+(9,4,'drink',10),(9,14,'dish',20),
+(10,20,'drink',10),(10,3,'dish',20),
+(11,20,'drink',10),(11,8,'dessert',20),
+(12,20,'drink',10),(12,15,'dish',20),
+(13,20,'drink',10),(13,14,'dish',20),
+(14,4,'drink',10),(14,6,'dish',20),
+(15,20,'drink',10),(15,14,'dish',20),
+(16,4,'drink',10),(16,19,'dessert',20),
+(17,20,'drink',10),(17,19,'dessert',20),
+(18,20,'drink',10),(18,19,'dessert',20),
+(19,4,'drink',10),(19,8,'dessert',20),
+(20,12,'dish',10),(20,15,'dish',20);

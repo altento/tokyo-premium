@@ -149,3 +149,7 @@ The menu now adds six ingredient filters from the approved reference. The focuse
 ## 2026-11-16 Omakase panorama replacement
 
 `omakase-latest-review-2026-11-16/` contains current full-page desktop and mobile screenshots plus the focused comparison note. This supersedes the earlier mirrored-portrait hero treatment: the hero now uses a newly generated, wide chef-at-counter photograph, responsive WebP variants, and a right-anchored mobile crop. The static page was opened once at 1440×1000 and 390×844; both layouts had no horizontal overflow, the mobile title and all five course tabs stayed in bounds, and there were no page/console errors or failed requests. This is a one-page local static check; it does not claim PHP browser coverage, pixel-perfect full-page fidelity, hosted CI, or publication.
+
+## 2026-11-16 catalog-backed product pairings
+
+`dish-pairings-2026-11-16/` contains full-page captures of the static salmon-nigiri detail route at 1440 px and 390 px, plus a page-specific comparison note. The page shows configured active catalogue pairings (including yuzu lemonade and tuna nigiri), then fills the remaining four-card layout from active menu items. Screenshot review confirmed the images load and the mobile page stays within 390 px. The focused static browser interaction also confirmed add-to-order still increments the shared cart count. PHP browser rendering and the PDO SQLite migration regression are not claimed in this local runtime.

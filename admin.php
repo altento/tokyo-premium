@@ -5,6 +5,7 @@ require __DIR__ . '/bootstrap.php';
 
 $pdo = db();
 $error = '';
+$adminPairingTypes = ['drink'=>'Напиток','sauce'=>'Соус','dish'=>'Блюдо','dessert'=>'Десерт'];
 
 function admin_valid_dish_image(string $image): bool
 {
@@ -164,6 +165,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $query->execute([$category,$name,$description,$weight,$price,$image,$featured,$active,$sort]);
                 }
                 $_SESSION['admin_flash'] = $id > 0 ? 'Изменения блюда сохранены.' : 'Блюдо добавлено в меню.';
+            } elseif ($action === 'pairing-save') {
+                $dishId = filter_var($_POST['dish_id'] ?? null, FILTER_VALIDATE_INT);
+                $pairedDishId = filter_var($_POST['paired_dish_id'] ?? null, FILTER_VALIDATE_INT);
+                $sortOrder = filter_var($_POST['sort_order'] ?? 0, FILTER_VALIDATE_INT);
+                $pairingType = (string)($_POST['pairing_type'] ?? '');
+                $oldType = (string)($_POST['old_type'] ?? '');
+                if (!$dishId || !$pairedDishId || $dishId === $pairedDishId
+                    || $sortOrder === false || $sortOrder < -10000 || $sortOrder > 10000
+                    || !isset($adminPairingTypes[$pairingType])
+                    || ($oldType !== '' && !isset($adminPairingTypes[$oldType]))) {
+                    throw new RuntimeException('Выберите два разных блюда и допустимый тип сочетания.');
+                }
+                $dishCheck = $pdo->prepare('SELECT COUNT(*) FROM dishes WHERE id IN (?,?)');
+                $dishCheck->execute([$dishId, $pairedDishId]);
+                if ((int)$dishCheck->fetchColumn() !== 2) throw new RuntimeException('Одно из выбранных блюд не найдено.');
+                $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+                try {
+                    if ($oldType !== '') {
+                        $removeOld = $pdo->prepare('DELETE FROM dish_pairings WHERE dish_id=? AND paired_dish_id=? AND pairing_type=?');
+                        $removeOld->execute([$dishId, $pairedDishId, $oldType]);
+                        if ($removeOld->rowCount() !== 1) throw new RuntimeException('Сочетание уже изменено или удалено. Обновите страницу.');
+                    }
+                    $savePairing = $pdo->prepare('INSERT INTO dish_pairings(dish_id,paired_dish_id,pairing_type,sort_order) VALUES(?,?,?,?) ON CONFLICT(dish_id,paired_dish_id,pairing_type) DO UPDATE SET sort_order=excluded.sort_order');
+                    $savePairing->execute([$dishId, $pairedDishId, $pairingType, $sortOrder]);
+                    $pdo->commit();
+                } catch (Throwable $exception) {
+                    if ($pdo->inTransaction()) $pdo->rollBack();
+                    throw $exception;
+                }
+                $_SESSION['admin_flash'] = $oldType === '' ? 'Сочетание добавлено.' : 'Сочетание обновлено.';
+            } elseif ($action === 'pairing-delete') {
+                $dishId = filter_var($_POST['dish_id'] ?? null, FILTER_VALIDATE_INT);
+                $pairedDishId = filter_var($_POST['paired_dish_id'] ?? null, FILTER_VALIDATE_INT);
+                $pairingType = (string)($_POST['pairing_type'] ?? '');
+                if (!$dishId || !$pairedDishId || !isset($adminPairingTypes[$pairingType])) throw new RuntimeException('Сочетание не найдено.');
+                $removePairing = $pdo->prepare('DELETE FROM dish_pairings WHERE dish_id=? AND paired_dish_id=? AND pairing_type=?');
+                $removePairing->execute([$dishId, $pairedDishId, $pairingType]);
+                if ($removePairing->rowCount() !== 1) throw new RuntimeException('Сочетание уже удалено. Обновите страницу.');
+                $_SESSION['admin_flash'] = 'Сочетание удалено.';
             } elseif ($action === 'dish-delete') {
                 $query = $pdo->prepare('DELETE FROM dishes WHERE id=?');
                 $query->execute([(int)($_POST['id'] ?? 0)]);
@@ -286,6 +326,18 @@ $items = admin_rows($pdo,
     'SELECT d.*,c.name AS category_name FROM dishes d LEFT JOIN categories c ON c.slug=d.category'
     . $dishFilter[0] . ' ORDER BY d.sort_order,d.id DESC LIMIT 100',
     $dishFilter[1]);
+$pairingWhere = admin_search_where([
+    'CAST(source.id AS TEXT)','source.name','CAST(paired.id AS TEXT)','paired.name',
+    "CASE dp.pairing_type WHEN 'drink' THEN 'Напиток' WHEN 'sauce' THEN 'Соус' WHEN 'dish' THEN 'Блюдо' WHEN 'dessert' THEN 'Десерт' ELSE dp.pairing_type END",
+], $search);
+$pairingRows = admin_rows($pdo,
+    'SELECT dp.dish_id,dp.paired_dish_id,dp.pairing_type,dp.sort_order,source.name AS source_name,paired.name AS paired_name
+     FROM dish_pairings dp JOIN dishes source ON source.id=dp.dish_id JOIN dishes paired ON paired.id=dp.paired_dish_id'
+     . $pairingWhere[0] . ' ORDER BY source.sort_order,source.id,dp.sort_order,paired.name LIMIT 200',
+    $pairingWhere[1]);
+$pairingsByDish = [];
+foreach ($pairingRows as $pairingRow) $pairingsByDish[(int)$pairingRow['dish_id']][] = $pairingRow;
+$pairingDishOptions = $pdo->query('SELECT id,name,active FROM dishes ORDER BY active DESC,sort_order,id')->fetchAll(PDO::FETCH_ASSOC);
 $orderFilter = admin_search_where(['CAST(o.id AS TEXT)','o.customer_name','o.phone','o.address','o.fulfillment','o.status','CAST(o.total AS TEXT)','oi.item_name'], $search);
 $orders = admin_rows($pdo,
     "SELECT o.*,GROUP_CONCAT(oi.item_name || ' × ' || oi.quantity,' · ') AS items_summary
@@ -335,7 +387,7 @@ $notificationLabels = ['orders'=>'Новые заказы','bookings'=>'Новы
   <?php if ($error !== ''): ?><p class="form-status error admin-notice" role="alert"><?=e($error)?></p><?php endif ?>
 
   <nav class="admin-jump-nav" aria-label="Разделы панели">
-    <a href="#notifications">Уведомления</a><a href="#menu">Меню</a><a href="#orders">Заказы</a>
+    <a href="#notifications">Уведомления</a><a href="#menu">Меню</a><a href="#pairings">Сочетания</a><a href="#orders">Заказы</a>
     <a href="#bookings">Брони</a><a href="#reviews">Отзывы</a><a href="#contact_messages">Сообщения</a><a href="#settings">Настройки</a>
   </nav>
 
@@ -419,6 +471,53 @@ $notificationLabels = ['orders'=>'Новые заказы','bookings'=>'Новы
         </article>
       <?php endforeach ?>
       <?php if (!$items): ?><p class="admin-empty">По этому запросу блюда не найдены.</p><?php endif ?>
+    </div>
+  </section>
+
+  <section class="admin-card" id="pairings" aria-labelledby="admin-pairings-title">
+    <h2 id="admin-pairings-title">Гастрономические сочетания <span class="admin-result-count"><?=$search !== '' ? count($pairingRows) . ' найдено' : count($pairingRows) . ' настроено'?></span></h2>
+    <p class="admin-muted">Связанные активные блюда появятся в рекомендациях на страницах товаров. Сочетания доступны гостям только вместе с блюдами, которые разрешено показывать в их режиме доступа.</p>
+    <form method="post" class="admin-form admin-create-form admin-pairing-create">
+      <input type="hidden" name="csrf" value="<?=e(csrf())?>">
+      <input type="hidden" name="action" value="pairing-save">
+      <label>Основное блюдо<select name="dish_id" required><?php foreach ($pairingDishOptions as $option): ?><option value="<?=(int)$option['id']?>"><?=e($option['name'])?><?=$option['active'] ? '' : ' · скрыто'?></option><?php endforeach ?></select></label>
+      <label>Рекомендуемое блюдо<select name="paired_dish_id" required><?php foreach ($pairingDishOptions as $option): ?><option value="<?=(int)$option['id']?>"><?=e($option['name'])?><?=$option['active'] ? '' : ' · скрыто'?></option><?php endforeach ?></select></label>
+      <label>Тип сочетания<select name="pairing_type" required><?php foreach ($adminPairingTypes as $key=>$label): ?><option value="<?=e($key)?>"><?=e($label)?></option><?php endforeach ?></select></label>
+      <label>Порядок показа<input type="number" name="sort_order" value="10" min="-10000" max="10000"></label>
+      <button class="button" type="submit">Добавить сочетание</button>
+    </form>
+    <?php if (!$pairingsByDish): ?><p class="admin-empty">Сочетания пока не настроены.</p><?php endif ?>
+    <div class="admin-pairing-groups">
+      <?php foreach ($pairingsByDish as $sourceId=>$dishPairings): ?>
+        <details class="admin-pairing-group">
+          <summary><?=e($dishPairings[0]['source_name'])?><span><?=count($dishPairings)?> сочет.</span></summary>
+          <div class="admin-pairing-rows">
+            <?php foreach ($dishPairings as $pairing): ?>
+              <article class="admin-record admin-pairing-row">
+                <h3><?=e($pairing['source_name'])?> <span aria-hidden="true">→</span> <?=e($pairing['paired_name'])?></h3>
+                <form method="post" class="admin-form admin-edit-form">
+                  <input type="hidden" name="csrf" value="<?=e(csrf())?>">
+                  <input type="hidden" name="action" value="pairing-save">
+                  <input type="hidden" name="dish_id" value="<?=(int)$pairing['dish_id']?>">
+                  <input type="hidden" name="paired_dish_id" value="<?=(int)$pairing['paired_dish_id']?>">
+                  <input type="hidden" name="old_type" value="<?=e($pairing['pairing_type'])?>">
+                  <label>Тип сочетания<select name="pairing_type"><?php foreach ($adminPairingTypes as $key=>$label): ?><option value="<?=e($key)?>" <?=$pairing['pairing_type'] === $key ? 'selected' : ''?>><?=e($label)?></option><?php endforeach ?></select></label>
+                  <label>Порядок<input type="number" name="sort_order" value="<?=(int)$pairing['sort_order']?>" min="-10000" max="10000"></label>
+                  <button class="button secondary" type="submit">Сохранить</button>
+                </form>
+                <form method="post" onsubmit="return confirm('Удалить это сочетание?')">
+                  <input type="hidden" name="csrf" value="<?=e(csrf())?>">
+                  <input type="hidden" name="action" value="pairing-delete">
+                  <input type="hidden" name="dish_id" value="<?=(int)$pairing['dish_id']?>">
+                  <input type="hidden" name="paired_dish_id" value="<?=(int)$pairing['paired_dish_id']?>">
+                  <input type="hidden" name="pairing_type" value="<?=e($pairing['pairing_type'])?>">
+                  <button class="admin-danger" type="submit">Удалить</button>
+                </form>
+              </article>
+            <?php endforeach ?>
+          </div>
+        </details>
+      <?php endforeach ?>
     </div>
   </section>
 

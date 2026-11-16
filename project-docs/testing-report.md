@@ -24,6 +24,12 @@ Updated 2026-11-13
 
 The Playwright evidence suite writes to `TOKYO_EVIDENCE_DIR` when set; by default it writes into `project-docs/visual-qa/`. This keeps the checks reproducible in restricted workspaces without changing what CI captures. Secret Menu unlock desktop/mobile captures are included alongside the route and checkout states.
 
+## 2026-11-16 focused product-pairing check
+
+For the catalogue-pairing change, only the affected dish route and its PHP/schema syntax were checked. PHP lint, JS syntax, and diff hygiene passed. A Python SQLite check executed the canonical schema and seed, verified 40 pairings, and found no foreign-key violations. The static salmon-nigiri page showed four recommendations at desktop and mobile widths; configured yuzu and tuna pairings were present, add-to-order updated the shared count, and no browser errors or horizontal overflow were observed. The machine's PHP build has no `pdo_sqlite`, so `php_integrity_integration.php` was not run. No broad regression, hosted CI, or public deployment was repeated.
+
+The same focused change adds HTTP regression assertions for admin create/reorder, type edit, self-pair rejection and deletion. Those assertions are included in `php_integrity_integration.php` but remain unexecuted locally because the PHP SQLite PDO driver is unavailable.
+
 ## Visual inspection performed
 
 Full-page browser captures were inspected for the populated cart on desktop and mobile, the Tokyo set builder, offers, static account/Privilege, and the 320 px booking heading. The single active campaign card was changed from a narrow third-column card into a centered editorial feature. The set in the cart uses a collage of the actual selected dish photos; it does not invent a final dish image.

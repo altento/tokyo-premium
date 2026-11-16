@@ -51,15 +51,16 @@ function db(): PDO
         }
         if ($journalMode !== 'wal') error_log('SQLite WAL mode is unavailable; using ' . ($journalMode ?: 'default journal mode') . '.');
 
-        // Workers can skip DDL once the latest user-address and booking
-        // idempotency migrations are present.
+        // Workers can skip DDL once the latest commerce and content migrations
+        // are present.
         $ready = false;
         try {
-            $ready = (bool)$connection->query("SELECT 1 FROM app_migrations WHERE version=8")->fetchColumn()
+            $ready = (bool)$connection->query("SELECT 1 FROM app_migrations WHERE version=9")->fetchColumn()
                 && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='api_order_requests'")->fetchColumn()
                 && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='api_booking_requests'")->fetchColumn()
                 && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='booking_email_rate_limits'")->fetchColumn()
-                && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='user_addresses'")->fetchColumn();
+                && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='user_addresses'")->fetchColumn()
+                && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='dish_pairings'")->fetchColumn();
         } catch (Throwable) {
             $ready = false;
         }
