@@ -773,6 +773,11 @@ body.story-motion-gsap [data-story-reveal].story-visible img{animation:none}
 @media(max-width:700px){.editorial-hero.gallery-hero{min-height:clamp(360px,104vw,420px);padding:90px 22px 26px;align-items:flex-end}.gallery-hero .editorial-hero-copy{max-width:100%}.gallery-hero h1{font-size:clamp(2.3rem,10.8vw,3.4rem);line-height:1.02;white-space:normal}.gallery-hero .editorial-sub{font-size:clamp(1.1rem,5.1vw,1.35rem)}.gallery-hero .editorial-hero-copy>p:not(.editorial-sub){max-width:30rem;font-size:.88rem;line-height:1.5}.gallery-hero .button-row{margin-top:14px}.gallery-hero .school-note{margin-top:12px}}
 @media(max-width:360px){.editorial-hero.gallery-hero{min-height:370px;padding-inline:18px}.gallery-hero h1{font-size:2.28rem}}
 
+/* Keep the room cards visually connected to the gallery that follows. */
+.editorial-page #spaces{padding-top:clamp(40px,5vw,64px);padding-bottom:24px}
+.editorial-page #gallery{padding-top:30px}
+@media(max-width:600px){.editorial-page #spaces{padding-top:40px;padding-bottom:20px}.editorial-page #gallery{padding-top:24px}}
+
 /* Compact editorial review cards and a still-image interlude; no faux video testimonials. */
 .reviews-page .review-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
 .reviews-page .review-card{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 1fr;min-height:0}

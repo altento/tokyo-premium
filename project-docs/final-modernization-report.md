@@ -281,3 +281,7 @@ This was a focused UI slice. The PHP SQLite exporter was not run locally because
 ## Mobile homepage hero crop — 2026-11-16
 
 Moved the first-scene mobile image framing from 75% to 82% in both the PHP stylesheet and Pages copy so the nigiri is visible behind the hero copy on a narrow screen. Chromium at 390 px confirmed the correct image loaded, the crop rule was active, the page had no horizontal overflow, and no browser errors occurred. Screenshot: `project-docs/visual-qa/01-home-hero-mobile-390-2026-11-16.png`.
+
+## Space page section rhythm — 2026-11-16
+
+Reduced excess vertical padding around the room cards and gallery in the PHP and Pages stylesheets. Current static captures at 1440 px and 390 px show the section flow at 54 px and 44 px between the room cards and gallery heading, respectively; content remains aligned to its container, with no horizontal overflow or browser errors. Captures: `project-docs/visual-qa/space-gap-followup-2026-11-16/gallery-{desktop,mobile}.png`. This is a focused visual correction, not a full reference acceptance pass.
