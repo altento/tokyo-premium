@@ -117,3 +117,7 @@ The existing original chef photograph is now mirrored only in the Omakase hero, 
 ## 2026-11-16 booking hero copy follow-up
 
 `07-booking-subtitle-2026-11-16/` contains current desktop/mobile hero crops after shortening the booking subtitle to the wording in `07-reservation.png`. The static route was checked once at 320, 390 and 1440 px: title, subtitle, lead, CTA and page bounds fit; both page images loaded without browser errors or failed resources. PHP syntax lint passed; the PHP route was not browser-rendered. See its comparison note.
+
+## 2026-11-16 space gallery hero follow-up
+
+`space-page-refine-2026-11-16/` contains full static page screenshots at 1440 px and 320 px. The hero now follows the compact title/subtitle/CTA hierarchy in `06-gallery.png`, its desktop title stays on one line, and the CTA targets an explicit gallery anchor. The zone cards, photo filters, and honest “no 360° tour” note remain. One focused Playwright check reported HTTP 200, no console/page errors or failed requests, and no horizontal overflow at both widths; PHP lint and static/source CSS parity passed. The lower page remains an adaptation; see `comparison.md`.

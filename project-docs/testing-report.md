@@ -203,3 +203,7 @@ One focused static Playwright route check passed at 320, 390, 768 and 1440 px: t
 ## 2026-11-16 booking hero copy follow-up
 
 One focused static route check passed at 320, 390 and 1440 px. It verified the title, subtitle, description and CTA remain inside the viewport, the booking anchor is present, both images load, and there are no console errors, failed resources or horizontal overflow. `php -l pages.php` and `git diff --check` passed. PHP browser rendering, broad suites, hosted CI and public Pages were not checked.
+
+## 2026-11-16 space gallery hero follow-up
+
+One focused static route check passed at 1440 px and 320 px. It verified the title fits its copy area, the desktop title stays single-line, the gallery anchor exists, and the page has no horizontal overflow, console/page errors or failed requests. Both full-page captures were visually inspected against `design-references/06-gallery.png`. `php -l pages.php`, equality of `premium.css` and `docs/premium.css`, and `git diff --check` passed. PHP browser rendering, the broad suite, hosted CI and public Pages were not checked.

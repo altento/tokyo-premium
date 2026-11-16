@@ -155,3 +155,7 @@ The philosophy hero now uses the reference's short title and italic subtitle, pr
 ## Booking hero copy follow-up — 2026-11-16
 
 The booking hero now uses “Забронируйте свой столик”, replacing a longer subtitle that nearly touched the right edge on phones and aligning the copy with the approved reservation concept. A route-focused static browser check passed at 320, 390 and 1440 px: hero text, button, anchor and page bounds fit, both photos loaded, and no browser errors or failed requests occurred. `php -l pages.php` passed. The PHP route was not browser-rendered, and no broad suite, CI or public deployment was run.
+
+## Space gallery hero follow-up — 2026-11-16
+
+The Space hero now follows the reference's “Пространство / Атмосфера современной Японии” hierarchy, has a compact desktop composition, and uses a CTA that resolves to the gallery section. The 320 px title remains in bounds. Existing zone and gallery content, fictional-data disclosure, and the explicit absence of a 360° tour remain intact. Static full-page captures and the comparison note are in `project-docs/visual-qa/space-page-refine-2026-11-16/`. This is a focused hero refinement; the complete lower-page layout still differs from the approved PNG, PHP browser rendering remains unavailable without `pdo_sqlite`, and Pages was not deployed.
