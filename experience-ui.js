@@ -567,6 +567,9 @@
         item.classList.toggle('is-selected', active);
         item.setAttribute('aria-pressed', String(active));
       });
+      many('[data-tp-floorplan-zone-options]', root).forEach(item => {
+        item.hidden = item.dataset.tpFloorplanZoneOptions !== zone;
+      });
       many('[data-tp-zone]', root).forEach(item => {
         if (!item.hasAttribute('data-tp-table')) item.classList.toggle('is-selected', item.dataset.tpZone === zone);
       });
@@ -629,6 +632,72 @@
     if (initialZone) applyZone(initialZone, false);
   }
 
+  function appendMobileFloorplanPicker(root, svg) {
+    const tables = many('[data-tp-table]', svg);
+    const zones = new Map();
+    tables.forEach(table => {
+      const zone = table.dataset.tpZone;
+      if (!zone) return;
+      if (!zones.has(zone)) zones.set(zone, []);
+      zones.get(zone).push(table);
+    });
+    if (!zones.size) return;
+
+    const picker = doc.createElement('section');
+    picker.className = 'tp-floorplan-mobile-picker';
+    picker.setAttribute('aria-label', 'Выбор зоны и предпочтительного столика');
+    const hint = doc.createElement('p');
+    hint.className = 'tp-floorplan-mobile-hint';
+    safeText(hint, 'На телефоне выберите зону, затем крупную кнопку столика. Это пожелание, не проверка наличия.');
+    const zoneNav = doc.createElement('div');
+    zoneNav.className = 'tp-floorplan-mobile-zones';
+    zoneNav.setAttribute('role', 'group');
+    zoneNav.setAttribute('aria-label', 'Зона ресторана');
+    const panels = [];
+
+    zones.forEach((zoneTables, zone) => {
+      const zoneButton = doc.createElement('button');
+      zoneButton.type = 'button';
+      zoneButton.className = 'tp-floorplan-mobile-zone';
+      zoneButton.dataset.tpZoneSelect = zone;
+      zoneButton.setAttribute('aria-pressed', 'false');
+      safeText(zoneButton, zone);
+      zoneNav.append(zoneButton);
+
+      const panel = doc.createElement('div');
+      panel.className = 'tp-floorplan-mobile-zone-options';
+      panel.dataset.tpFloorplanZoneOptions = zone;
+      panel.hidden = true;
+      panel.setAttribute('role', 'group');
+      panel.setAttribute('aria-label', `Предпочтительный столик · ${zone}`);
+      const title = doc.createElement('h3');
+      title.className = 'tp-floorplan-mobile-zone-title';
+      safeText(title, `${zone} · выберите номер`);
+      const buttons = doc.createElement('div');
+      buttons.className = 'tp-floorplan-mobile-table-grid';
+      zoneTables.forEach(table => {
+        const number = table.dataset.tpTable;
+        const capacity = table.dataset.capacity || '';
+        const button = doc.createElement('button');
+        button.type = 'button';
+        button.className = 'tp-floorplan-mobile-table';
+        button.dataset.tpSeatButton = '';
+        button.dataset.tpTable = number;
+        button.dataset.tpZone = zone;
+        if (capacity) button.dataset.capacity = capacity;
+        button.setAttribute('aria-pressed', 'false');
+        button.setAttribute('aria-label', `Выбрать предпочтительный стол ${number}, ${zone}${capacity ? `, до ${capacity} гостей по учебной схеме` : ''}`);
+        safeText(button, `Стол ${number}`);
+        buttons.append(button);
+      });
+      panel.append(title, buttons);
+      panels.push(panel);
+    });
+
+    picker.append(hint, zoneNav, ...panels);
+    root.append(picker);
+  }
+
   async function initFloorplan(root) {
     if (started.has(root)) return;
     started.add(root);
@@ -658,6 +727,7 @@
         hit.setAttribute('aria-label', `Выбрать зону «${zone}»`);
       });
       root.replaceChildren(imported);
+      appendMobileFloorplanPicker(root, imported);
       imported.querySelectorAll('[data-tp-table]').forEach((seat, index) => {
         seat.setAttribute('role', 'button');
         seat.setAttribute('tabindex', '0');

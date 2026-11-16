@@ -385,3 +385,10 @@ The first static-only npm run test:motion exposed an outdated assertion for a 75
 ## 2026-11-17 order-history photo previews
 
 The PHP account query now joins order items to the current catalogue image while preserving saved order names, quantities, prices, and totals. The static browser demo resolves thumbnails from catalogue dish IDs and never trusts a persisted image URL. The focused static account regression passed with three sample records and verified a loaded catalogue photograph; `php -l account.php`, `node --check account-demo.js`, and `git diff --check` passed. Desktop (1440 px) and mobile (390 px) seeded account screenshots were inspected in `visual-qa/account-order-previews-2026-11-17/`. PHP browser rendering and public Pages publication were not exercised in this pass.
+
+## 2026-11-17 booking floorplan preference picker
+
+- Expanded the booking SVG into four clearly labeled zones with 42 illustrative table choices: 20 main hall, 8 sushi bar, 4 private room, and 10 terrace. These are preferences only; neither static nor PHP mode claims real-time availability.
+- Added a mobile-friendly zone/table picker derived from the same SVG data. Choosing a zone or table updates the existing booking preference state; touch controls are at least 44 px high.
+- `npm run test:floorplan` passed against both the local PHP app and GitHub Pages static export. It checks all four zone counts, selection propagation, availability disclosure, mobile control size, and horizontal overflow. `node --check`, `php -l pages.php`, and `git diff --check` passed.
+- Desktop and mobile screenshots were visually inspected in `visual-qa/booking-floorplan-42-2026-11-17/`. Full booking-page parity, live table availability, and public GitHub Pages deployment were not tested.

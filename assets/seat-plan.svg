@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" role="img" aria-labelledby="title desc">
   <title id="title">Схема залов Tokyo Premium</title>
-  <desc id="desc">Декоративный план четырёх учебных зон и столиков. Выбор указывает пожелание и не проверяет доступность.</desc>
+  <desc id="desc">Условный план четырёх зон с 42 вариантами столов. Любой выбор — пожелание; схема не проверяет доступность.</desc>
   <defs>
     <linearGradient id="floor" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#191611"/><stop offset="1" stop-color="#0d0d0c"/></linearGradient>
     <pattern id="wood" width="16" height="16" patternUnits="userSpaceOnUse"><path d="M0 4h16M0 12h16" stroke="#b9935c" stroke-opacity=".07"/><path d="M4 0v16" stroke="#e6c27e" stroke-opacity=".025"/></pattern>
@@ -13,7 +13,7 @@
   <g data-tp-zone="Основной зал" data-tp-photo="assets/generated/room-main-hall.webp" aria-label="Основной зал">
     <rect class="tp-zone-fill" data-tp-zone-hit="" x="38" y="38" width="440" height="484" rx="18"/>
     <text class="tp-floor-label" x="61" y="70">Основной зал</text>
-    <text class="tp-floor-note" x="61" y="91">предпочтение · учебная схема</text>
+    <text class="tp-floor-note" x="61" y="91">20 вариантов · учебный план</text>
     <path d="M65 118h384M65 273h384M66 310h384M66 492h384" stroke="#d0ad73" stroke-opacity=".12" stroke-width="1"/>
     <g fill="url(#garden)" stroke="#697653" stroke-opacity=".7"><circle cx="80" cy="204" r="25"/><circle cx="434" cy="210" r="22"/><circle cx="270" cy="464" r="19"/></g>
     <g fill="#d0a968" fill-opacity=".72"><circle cx="80" cy="204" r="4"/><circle cx="434" cy="210" r="4"/><circle cx="270" cy="464" r="4"/></g>
@@ -24,38 +24,124 @@
     <text class="tp-floor-label" x="535" y="69">Суши-бар</text>
     <rect x="550" y="103" width="332" height="54" rx="13" fill="#31271a" stroke="#b9935c" stroke-opacity=".65"/>
     <path d="M569 117h294M569 143h294" stroke="#e0c187" stroke-opacity=".24"/>
-    <text class="tp-floor-note" x="568" y="134">стойка шефа · иллюстративный план</text>
+    <text class="tp-floor-note" x="568" y="134">8 мест у стойки · доступность не проверяется</text>
   </g>
 
   <g data-tp-zone="Приватная комната" data-tp-photo="assets/generated/room-private-dining.webp" aria-label="Приватная комната">
     <rect class="tp-zone-fill" data-tp-zone-hit="" x="510" y="270" width="412" height="132" rx="18"/>
     <text class="tp-floor-label" x="535" y="301">Приватная комната</text>
-    <path d="M528 319h376" stroke="#e0c187" stroke-opacity=".1"/>
+    <path d="M528 322h376" stroke="#e0c187" stroke-opacity=".1"/><text class="tp-floor-note" x="535" y="317">4 варианта · предпочтительная зона</text>
     <rect x="826" y="280" width="62" height="9" rx="4" fill="#8e2530" fill-opacity=".7"/>
   </g>
 
   <g data-tp-zone="Летняя терраса" data-tp-photo="assets/generated/room-garden-terrace.webp" aria-label="Летняя терраса">
     <rect class="tp-zone-fill" data-tp-zone-hit="" x="510" y="432" width="412" height="90" rx="18"/>
     <text class="tp-floor-label" x="535" y="464">Летняя терраса</text>
-    <text class="tp-floor-note" x="535" y="487">предпочтительная зона · наличие не проверяется</text>
+    <text class="tp-floor-note" x="535" y="487">10 вариантов · предпочтение без проверки наличия</text>
     <path d="M840 454c17 7 27 20 28 42m-40-44c9 13 12 27 10 44" fill="none" stroke="#c6a269" stroke-opacity=".4" stroke-width="2"/>
   </g>
 
-  <g data-tp-table="1" data-tp-zone="Основной зал" data-capacity="2"><rect class="tp-seat-shape" x="128" y="130" width="74" height="54" rx="18"/><text class="tp-seat-number" x="165" y="157">01</text></g>
-  <g data-tp-table="2" data-tp-zone="Основной зал" data-capacity="4"><rect class="tp-seat-shape" x="282" y="130" width="74" height="54" rx="18"/><text class="tp-seat-number" x="319" y="157">02</text></g>
-  <g data-tp-table="3" data-tp-zone="Основной зал" data-capacity="2"><rect class="tp-seat-shape" x="128" y="214" width="74" height="54" rx="18"/><text class="tp-seat-number" x="165" y="241">03</text></g>
-  <g data-tp-table="4" data-tp-zone="Основной зал" data-capacity="4"><rect class="tp-seat-shape" x="282" y="214" width="74" height="54" rx="18"/><text class="tp-seat-number" x="319" y="241">04</text></g>
-  <g data-tp-table="5" data-tp-zone="Основной зал" data-capacity="4"><rect class="tp-seat-shape" x="128" y="344" width="74" height="54" rx="18"/><text class="tp-seat-number" x="165" y="371">05</text></g>
-  <g data-tp-table="6" data-tp-zone="Основной зал" data-capacity="2"><rect class="tp-seat-shape" x="282" y="344" width="74" height="54" rx="18"/><text class="tp-seat-number" x="319" y="371">06</text></g>
-
-  <g data-tp-table="7" data-tp-zone="Суши-бар" data-capacity="1"><circle class="tp-seat-shape" cx="625" cy="199" r="18"/><text class="tp-seat-number" x="625" y="199">07</text></g>
-  <g data-tp-table="8" data-tp-zone="Суши-бар" data-capacity="1"><circle class="tp-seat-shape" cx="716" cy="199" r="18"/><text class="tp-seat-number" x="716" y="199">08</text></g>
-  <g data-tp-table="9" data-tp-zone="Суши-бар" data-capacity="1"><circle class="tp-seat-shape" cx="807" cy="199" r="18"/><text class="tp-seat-number" x="807" y="199">09</text></g>
-
-  <g data-tp-table="10" data-tp-zone="Приватная комната" data-capacity="4"><rect class="tp-seat-shape" x="603" y="325" width="74" height="52" rx="18"/><text class="tp-seat-number" x="640" y="351">10</text></g>
-  <g data-tp-table="11" data-tp-zone="Приватная комната" data-capacity="4"><rect class="tp-seat-shape" x="758" y="325" width="74" height="52" rx="18"/><text class="tp-seat-number" x="795" y="351">11</text></g>
-  <g data-tp-table="12" data-tp-zone="Летняя терраса" data-capacity="2"><rect class="tp-seat-shape" x="713" y="450" width="64" height="48" rx="16"/><text class="tp-seat-number" x="745" y="474">12</text></g>
-  <g data-tp-table="13" data-tp-zone="Летняя терраса" data-capacity="4"><rect class="tp-seat-shape" x="808" y="450" width="64" height="48" rx="16"/><text class="tp-seat-number" x="840" y="474">13</text></g>
-
   <g fill="#ba9154" fill-opacity=".36"><path d="M62 460c13-14 24-14 37 0-13 14-24 14-37 0Zm332-264c12-13 23-13 36 0-13 13-24 13-36 0Z"/><circle cx="78" cy="470" r="3"/><circle cx="419" cy="204" r="3"/></g>
+  <g data-tp-table="1" data-tp-zone="Основной зал" data-capacity="4">
+    <circle class="tp-seat-chair" cx="82" cy="115" r="5"/><circle class="tp-seat-chair" cx="82" cy="165" r="5"/>
+    <rect class="tp-seat-shape" x="58" y="123" width="48" height="34" rx="9"/><text class="tp-seat-number" x="82" y="140">01</text>
+  </g>
+  <g data-tp-table="2" data-tp-zone="Основной зал" data-capacity="2">
+    <circle class="tp-seat-chair" cx="164" cy="115" r="5"/><circle class="tp-seat-chair" cx="164" cy="165" r="5"/>
+    <rect class="tp-seat-shape" x="140" y="123" width="48" height="34" rx="9"/><text class="tp-seat-number" x="164" y="140">02</text>
+  </g>
+  <g data-tp-table="3" data-tp-zone="Основной зал" data-capacity="4">
+    <circle class="tp-seat-chair" cx="246" cy="115" r="5"/><circle class="tp-seat-chair" cx="246" cy="165" r="5"/>
+    <rect class="tp-seat-shape" x="222" y="123" width="48" height="34" rx="9"/><text class="tp-seat-number" x="246" y="140">03</text>
+  </g>
+  <g data-tp-table="4" data-tp-zone="Основной зал" data-capacity="2">
+    <circle class="tp-seat-chair" cx="328" cy="115" r="5"/><circle class="tp-seat-chair" cx="328" cy="165" r="5"/>
+    <rect class="tp-seat-shape" x="304" y="123" width="48" height="34" rx="9"/><text class="tp-seat-number" x="328" y="140">04</text>
+  </g>
+  <g data-tp-table="5" data-tp-zone="Основной зал" data-capacity="4">
+    <circle class="tp-seat-chair" cx="410" cy="115" r="5"/><circle class="tp-seat-chair" cx="410" cy="165" r="5"/>
+    <rect class="tp-seat-shape" x="386" y="123" width="48" height="34" rx="9"/><text class="tp-seat-number" x="410" y="140">05</text>
+  </g>
+  <g data-tp-table="6" data-tp-zone="Основной зал" data-capacity="2">
+    <circle class="tp-seat-chair" cx="82" cy="197" r="5"/><circle class="tp-seat-chair" cx="82" cy="247" r="5"/>
+    <rect class="tp-seat-shape" x="58" y="205" width="48" height="34" rx="9"/><text class="tp-seat-number" x="82" y="222">06</text>
+  </g>
+  <g data-tp-table="7" data-tp-zone="Основной зал" data-capacity="4">
+    <circle class="tp-seat-chair" cx="164" cy="197" r="5"/><circle class="tp-seat-chair" cx="164" cy="247" r="5"/>
+    <rect class="tp-seat-shape" x="140" y="205" width="48" height="34" rx="9"/><text class="tp-seat-number" x="164" y="222">07</text>
+  </g>
+  <g data-tp-table="8" data-tp-zone="Основной зал" data-capacity="2">
+    <circle class="tp-seat-chair" cx="246" cy="197" r="5"/><circle class="tp-seat-chair" cx="246" cy="247" r="5"/>
+    <rect class="tp-seat-shape" x="222" y="205" width="48" height="34" rx="9"/><text class="tp-seat-number" x="246" y="222">08</text>
+  </g>
+  <g data-tp-table="9" data-tp-zone="Основной зал" data-capacity="4">
+    <circle class="tp-seat-chair" cx="328" cy="197" r="5"/><circle class="tp-seat-chair" cx="328" cy="247" r="5"/>
+    <rect class="tp-seat-shape" x="304" y="205" width="48" height="34" rx="9"/><text class="tp-seat-number" x="328" y="222">09</text>
+  </g>
+  <g data-tp-table="10" data-tp-zone="Основной зал" data-capacity="2">
+    <circle class="tp-seat-chair" cx="410" cy="197" r="5"/><circle class="tp-seat-chair" cx="410" cy="247" r="5"/>
+    <rect class="tp-seat-shape" x="386" y="205" width="48" height="34" rx="9"/><text class="tp-seat-number" x="410" y="222">10</text>
+  </g>
+  <g data-tp-table="11" data-tp-zone="Основной зал" data-capacity="4">
+    <circle class="tp-seat-chair" cx="82" cy="315" r="5"/><circle class="tp-seat-chair" cx="82" cy="365" r="5"/>
+    <rect class="tp-seat-shape" x="58" y="323" width="48" height="34" rx="9"/><text class="tp-seat-number" x="82" y="340">11</text>
+  </g>
+  <g data-tp-table="12" data-tp-zone="Основной зал" data-capacity="2">
+    <circle class="tp-seat-chair" cx="164" cy="315" r="5"/><circle class="tp-seat-chair" cx="164" cy="365" r="5"/>
+    <rect class="tp-seat-shape" x="140" y="323" width="48" height="34" rx="9"/><text class="tp-seat-number" x="164" y="340">12</text>
+  </g>
+  <g data-tp-table="13" data-tp-zone="Основной зал" data-capacity="4">
+    <circle class="tp-seat-chair" cx="246" cy="315" r="5"/><circle class="tp-seat-chair" cx="246" cy="365" r="5"/>
+    <rect class="tp-seat-shape" x="222" y="323" width="48" height="34" rx="9"/><text class="tp-seat-number" x="246" y="340">13</text>
+  </g>
+  <g data-tp-table="14" data-tp-zone="Основной зал" data-capacity="2">
+    <circle class="tp-seat-chair" cx="328" cy="315" r="5"/><circle class="tp-seat-chair" cx="328" cy="365" r="5"/>
+    <rect class="tp-seat-shape" x="304" y="323" width="48" height="34" rx="9"/><text class="tp-seat-number" x="328" y="340">14</text>
+  </g>
+  <g data-tp-table="15" data-tp-zone="Основной зал" data-capacity="4">
+    <circle class="tp-seat-chair" cx="410" cy="315" r="5"/><circle class="tp-seat-chair" cx="410" cy="365" r="5"/>
+    <rect class="tp-seat-shape" x="386" y="323" width="48" height="34" rx="9"/><text class="tp-seat-number" x="410" y="340">15</text>
+  </g>
+  <g data-tp-table="16" data-tp-zone="Основной зал" data-capacity="2">
+    <circle class="tp-seat-chair" cx="82" cy="397" r="5"/><circle class="tp-seat-chair" cx="82" cy="447" r="5"/>
+    <rect class="tp-seat-shape" x="58" y="405" width="48" height="34" rx="9"/><text class="tp-seat-number" x="82" y="422">16</text>
+  </g>
+  <g data-tp-table="17" data-tp-zone="Основной зал" data-capacity="4">
+    <circle class="tp-seat-chair" cx="164" cy="397" r="5"/><circle class="tp-seat-chair" cx="164" cy="447" r="5"/>
+    <rect class="tp-seat-shape" x="140" y="405" width="48" height="34" rx="9"/><text class="tp-seat-number" x="164" y="422">17</text>
+  </g>
+  <g data-tp-table="18" data-tp-zone="Основной зал" data-capacity="2">
+    <circle class="tp-seat-chair" cx="246" cy="397" r="5"/><circle class="tp-seat-chair" cx="246" cy="447" r="5"/>
+    <rect class="tp-seat-shape" x="222" y="405" width="48" height="34" rx="9"/><text class="tp-seat-number" x="246" y="422">18</text>
+  </g>
+  <g data-tp-table="19" data-tp-zone="Основной зал" data-capacity="4">
+    <circle class="tp-seat-chair" cx="328" cy="397" r="5"/><circle class="tp-seat-chair" cx="328" cy="447" r="5"/>
+    <rect class="tp-seat-shape" x="304" y="405" width="48" height="34" rx="9"/><text class="tp-seat-number" x="328" y="422">19</text>
+  </g>
+  <g data-tp-table="20" data-tp-zone="Основной зал" data-capacity="2">
+    <circle class="tp-seat-chair" cx="410" cy="397" r="5"/><circle class="tp-seat-chair" cx="410" cy="447" r="5"/>
+    <rect class="tp-seat-shape" x="386" y="405" width="48" height="34" rx="9"/><text class="tp-seat-number" x="410" y="422">20</text>
+  </g>
+  <g data-tp-table="21" data-tp-zone="Суши-бар" data-capacity="1"><circle class="tp-seat-shape" cx="570" cy="194" r="13"/><text class="tp-seat-number tp-seat-number--small" x="570" y="194">21</text></g>
+  <g data-tp-table="22" data-tp-zone="Суши-бар" data-capacity="1"><circle class="tp-seat-shape" cx="615" cy="194" r="13"/><text class="tp-seat-number tp-seat-number--small" x="615" y="194">22</text></g>
+  <g data-tp-table="23" data-tp-zone="Суши-бар" data-capacity="1"><circle class="tp-seat-shape" cx="660" cy="194" r="13"/><text class="tp-seat-number tp-seat-number--small" x="660" y="194">23</text></g>
+  <g data-tp-table="24" data-tp-zone="Суши-бар" data-capacity="1"><circle class="tp-seat-shape" cx="705" cy="194" r="13"/><text class="tp-seat-number tp-seat-number--small" x="705" y="194">24</text></g>
+  <g data-tp-table="25" data-tp-zone="Суши-бар" data-capacity="1"><circle class="tp-seat-shape" cx="750" cy="194" r="13"/><text class="tp-seat-number tp-seat-number--small" x="750" y="194">25</text></g>
+  <g data-tp-table="26" data-tp-zone="Суши-бар" data-capacity="1"><circle class="tp-seat-shape" cx="795" cy="194" r="13"/><text class="tp-seat-number tp-seat-number--small" x="795" y="194">26</text></g>
+  <g data-tp-table="27" data-tp-zone="Суши-бар" data-capacity="1"><circle class="tp-seat-shape" cx="840" cy="194" r="13"/><text class="tp-seat-number tp-seat-number--small" x="840" y="194">27</text></g>
+  <g data-tp-table="28" data-tp-zone="Суши-бар" data-capacity="1"><circle class="tp-seat-shape" cx="885" cy="194" r="13"/><text class="tp-seat-number tp-seat-number--small" x="885" y="194">28</text></g>
+  <g data-tp-table="29" data-tp-zone="Приватная комната" data-capacity="4"><circle class="tp-seat-chair" cx="628" cy="328" r="4"/><circle class="tp-seat-chair" cx="628" cy="364" r="4"/><rect class="tp-seat-shape" x="597" y="334" width="62" height="24" rx="8"/><text class="tp-seat-number tp-seat-number--small" x="628" y="346">29</text></g>
+  <g data-tp-table="30" data-tp-zone="Приватная комната" data-capacity="4"><circle class="tp-seat-chair" cx="804" cy="328" r="4"/><circle class="tp-seat-chair" cx="804" cy="364" r="4"/><rect class="tp-seat-shape" x="773" y="334" width="62" height="24" rx="8"/><text class="tp-seat-number tp-seat-number--small" x="804" y="346">30</text></g>
+  <g data-tp-table="31" data-tp-zone="Приватная комната" data-capacity="4"><circle class="tp-seat-chair" cx="628" cy="363" r="4"/><circle class="tp-seat-chair" cx="628" cy="399" r="4"/><rect class="tp-seat-shape" x="597" y="369" width="62" height="24" rx="8"/><text class="tp-seat-number tp-seat-number--small" x="628" y="381">31</text></g>
+  <g data-tp-table="32" data-tp-zone="Приватная комната" data-capacity="4"><circle class="tp-seat-chair" cx="804" cy="363" r="4"/><circle class="tp-seat-chair" cx="804" cy="399" r="4"/><rect class="tp-seat-shape" x="773" y="369" width="62" height="24" rx="8"/><text class="tp-seat-number tp-seat-number--small" x="804" y="381">32</text></g>
+  <g data-tp-table="33" data-tp-zone="Летняя терраса" data-capacity="4"><circle class="tp-seat-shape" cx="540" cy="503" r="11"/><text class="tp-seat-number tp-seat-number--small" x="540" y="503">33</text></g>
+  <g data-tp-table="34" data-tp-zone="Летняя терраса" data-capacity="2"><circle class="tp-seat-shape" cx="580" cy="503" r="11"/><text class="tp-seat-number tp-seat-number--small" x="580" y="503">34</text></g>
+  <g data-tp-table="35" data-tp-zone="Летняя терраса" data-capacity="2"><circle class="tp-seat-shape" cx="620" cy="503" r="11"/><text class="tp-seat-number tp-seat-number--small" x="620" y="503">35</text></g>
+  <g data-tp-table="36" data-tp-zone="Летняя терраса" data-capacity="4"><circle class="tp-seat-shape" cx="660" cy="503" r="11"/><text class="tp-seat-number tp-seat-number--small" x="660" y="503">36</text></g>
+  <g data-tp-table="37" data-tp-zone="Летняя терраса" data-capacity="2"><circle class="tp-seat-shape" cx="700" cy="503" r="11"/><text class="tp-seat-number tp-seat-number--small" x="700" y="503">37</text></g>
+  <g data-tp-table="38" data-tp-zone="Летняя терраса" data-capacity="2"><circle class="tp-seat-shape" cx="740" cy="503" r="11"/><text class="tp-seat-number tp-seat-number--small" x="740" y="503">38</text></g>
+  <g data-tp-table="39" data-tp-zone="Летняя терраса" data-capacity="4"><circle class="tp-seat-shape" cx="780" cy="503" r="11"/><text class="tp-seat-number tp-seat-number--small" x="780" y="503">39</text></g>
+  <g data-tp-table="40" data-tp-zone="Летняя терраса" data-capacity="2"><circle class="tp-seat-shape" cx="820" cy="503" r="11"/><text class="tp-seat-number tp-seat-number--small" x="820" y="503">40</text></g>
+  <g data-tp-table="41" data-tp-zone="Летняя терраса" data-capacity="2"><circle class="tp-seat-shape" cx="860" cy="503" r="11"/><text class="tp-seat-number tp-seat-number--small" x="860" y="503">41</text></g>
+  <g data-tp-table="42" data-tp-zone="Летняя терраса" data-capacity="4"><circle class="tp-seat-shape" cx="900" cy="503" r="11"/><text class="tp-seat-number tp-seat-number--small" x="900" y="503">42</text></g>
 </svg>

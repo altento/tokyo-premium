@@ -30,7 +30,7 @@ Four individually photographed room cards and a distinct-image gallery provide a
 
 ### 07 — Booking
 
-The form, room preference and schematic table selector are visible, and the page clearly states that the map does not confirm live availability. The current map is a restrained preference diagram rather than the mock's detailed illustrated dining-room plan; the decorative supporting sections are also less dense. Current screenshots: `reference-pass-current-2026-11-16/booking-static-{desktop,mobile}.jpg`.
+The booking map now contains 42 preference markers across the four requested room zones, with a dedicated touch-sized zone/table picker on mobile. This improves the reservation flow and makes the zone counts explicit, but it remains a diagram rather than the reference's fully illustrated room plan. Availability is not checked or reserved. Focused desktop/mobile captures and the PHP/static regression are in `booking-floorplan-42-2026-11-17/`; the decorative supporting sections still differ from the reference.
 
 ### 08 — Reviews
 
