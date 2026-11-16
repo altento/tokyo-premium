@@ -328,7 +328,7 @@ async function run(options = {}) {
     check(await page.locator('.dish-card:visible').evaluateAll(cards => cards.every(card => (card.dataset.search || card.textContent).toLocaleLowerCase('ru').includes('нигири'))), 'menu search removes non-matching dishes, including cards left from the previous page');
     const matchingCategory = await page.locator('.dish-card:visible').first().getAttribute('data-category');
     await page.locator(`.menu-category-list [data-category="${matchingCategory}"]`).click();
-    check(await page.locator('.dish-card:visible').evaluateAll((cards, category) => cards.every(card => card.dataset.category === category && card.textContent.toLocaleLowerCase('ru').includes('нигири')), matchingCategory), 'category and search filters combine');
+    check(await page.locator('.dish-card:visible').evaluateAll((cards, category) => cards.every(card => card.dataset.category === category && (card.dataset.search || card.textContent).toLocaleLowerCase('ru').includes('нигири')), matchingCategory), 'category and search filters combine against the same catalog metadata used by search');
     await page.locator('.menu-search').fill('');
     await page.locator('.menu-category-list [data-category="all"]').click();
     await page.goto(staticBase + '/menu.html');
