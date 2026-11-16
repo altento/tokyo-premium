@@ -33,10 +33,10 @@ $requestKey=(string)($_SERVER['HTTP_IDEMPOTENCY_KEY']??'');
 if($requestKey!==''){
  if(!preg_match('/^[A-Za-z0-9._:-]{16,128}$/',$requestKey))answer(422,['ok'=>false,'message'=>'Ключ повтора имеет неверный формат.']);
  $GLOBALS['api_idempotency_token']=hash('sha256',session_id().'|'.$type.'|'.$requestKey);
- $q=db()->prepare('SELECT response_json,response_status FROM api_idempotency WHERE token=?');$q->execute([$GLOBALS['api_idempotency_token']]);$cached=$q->fetch();
+ $q=db()->prepare('SELECT response_json,response_status FROM api_idempotency WHERE token=?');$q->execute([$GLOBALS['api_idempotency_token']]);$cached=$q->fetch();$q->closeCursor();
  if($cached){http_response_code((int)$cached['response_status']);echo $cached['response_json'];exit;}
- if($type==='order'){$q=db()->prepare('SELECT response_json,response_status FROM api_order_requests WHERE token=?');$q->execute([$GLOBALS['api_idempotency_token']]);$cached=$q->fetch();if($cached&&$cached['response_json']!==null){http_response_code((int)$cached['response_status']);echo $cached['response_json'];exit;}}
- if($type==='booking'){$q=db()->prepare('SELECT response_json,response_status FROM api_booking_requests WHERE token=?');$q->execute([$GLOBALS['api_idempotency_token']]);$cached=$q->fetch();if($cached&&$cached['response_json']!==null){http_response_code((int)$cached['response_status']);echo $cached['response_json'];exit;}}
+ if($type==='order'){$q=db()->prepare('SELECT response_json,response_status FROM api_order_requests WHERE token=?');$q->execute([$GLOBALS['api_idempotency_token']]);$cached=$q->fetch();$q->closeCursor();if($cached&&$cached['response_json']!==null){http_response_code((int)$cached['response_status']);echo $cached['response_json'];exit;}}
+ if($type==='booking'){$q=db()->prepare('SELECT response_json,response_status FROM api_booking_requests WHERE token=?');$q->execute([$GLOBALS['api_idempotency_token']]);$cached=$q->fetch();$q->closeCursor();if($cached&&$cached['response_json']!==null){http_response_code((int)$cached['response_status']);echo $cached['response_json'];exit;}}
 }
 $sessionUserId=isset($_SESSION['user_id'])?(int)$_SESSION['user_id']:null;
 $sessionAdminId=isset($_SESSION['admin_id'])?(int)$_SESSION['admin_id']:null;
