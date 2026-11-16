@@ -277,3 +277,7 @@ The booking hero now uses the existing sakura-lit interior image in both PHP and
 The static account now places its orders and booking dashboard directly after the profile overview, moving local loyalty/referral cards below the useful history. The same order is applied by `tools/export-pages.php` and the checked-in static page. Seeded Playwright captures at 1440 and 390 px verified three local example orders, one booking request, the intended section order, no horizontal overflow, and no page errors. Updated captures: `project-docs/visual-qa/11-account-static-desktop.jpg` and `11-account-static-mobile.jpg`.
 
 This was a focused UI slice. The PHP SQLite exporter was not run locally because the available PHP CLI lacks `pdo_sqlite`; full pixel comparison of all 11 references, hosted CI, and a public Pages update are still open. The current PR remains a draft.
+
+## Mobile homepage hero crop — 2026-11-16
+
+Moved the first-scene mobile image framing from 75% to 82% in both the PHP stylesheet and Pages copy so the nigiri is visible behind the hero copy on a narrow screen. Chromium at 390 px confirmed the correct image loaded, the crop rule was active, the page had no horizontal overflow, and no browser errors occurred. Screenshot: `project-docs/visual-qa/01-home-hero-mobile-390-2026-11-16.png`.
