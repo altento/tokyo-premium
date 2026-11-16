@@ -765,3 +765,21 @@ body.story-motion-gsap [data-story-reveal].story-visible img{animation:none}
 .gallery-hero .school-note{margin-top:12px}
 @media(max-width:700px){.editorial-hero.gallery-hero{min-height:clamp(360px,104vw,420px);padding:90px 22px 26px;align-items:flex-end}.gallery-hero .editorial-hero-copy{max-width:100%}.gallery-hero h1{font-size:clamp(2.3rem,10.8vw,3.4rem);line-height:1.02;white-space:normal}.gallery-hero .editorial-sub{font-size:clamp(1.1rem,5.1vw,1.35rem)}.gallery-hero .editorial-hero-copy>p:not(.editorial-sub){max-width:30rem;font-size:.88rem;line-height:1.5}.gallery-hero .button-row{margin-top:14px}.gallery-hero .school-note{margin-top:12px}}
 @media(max-width:360px){.editorial-hero.gallery-hero{min-height:370px;padding-inline:18px}.gallery-hero h1{font-size:2.28rem}}
+
+/* Compact editorial review cards and a still-image interlude; no faux video testimonials. */
+.reviews-page .review-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
+.reviews-page .review-card{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 1fr;min-height:0}
+.reviews-page .review-card figure{aspect-ratio:1.75;min-height:0}
+.reviews-page .review-card figure img{height:100%;min-height:0}
+.reviews-page .review-card-copy{padding:16px}
+.reviews-page .review-card-copy .review-stars{margin:10px 0 5px}
+.reviews-page .review-card-copy>p{margin:.45em 0 .8em;font-size:.9rem;line-height:1.5}
+.review-moment{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(280px,.92fr);align-items:center;gap:clamp(28px,6vw,86px);padding:clamp(32px,5vw,66px) clamp(20px,6vw,86px);border-block:1px solid var(--jp-line);background:radial-gradient(ellipse at 86% 20%,rgba(112,23,26,.2),transparent 44%),#100e0c}
+.review-moment figure{position:relative;margin:0;aspect-ratio:16/9;overflow:hidden;border:1px solid var(--jp-line);background:#191410}
+.review-moment figure img{display:block;width:100%;height:100%;object-fit:cover;object-position:center 55%}
+.review-moment figcaption{position:absolute;inset:auto 0 0;padding:24px 14px 10px;background:linear-gradient(transparent,rgba(0,0,0,.78));color:#eadcc4;font-size:.72rem}
+.review-moment h2{margin:.5rem 0;color:var(--jp-cream);font:500 clamp(1.8rem,3.3vw,2.9rem)/1.12 'Playfair Display',Georgia,serif}
+.review-moment p{max-width:52ch;color:#c7baaa;line-height:1.7}
+.review-moment .button{margin-top:8px}
+@media(max-width:980px){.reviews-page .review-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.reviews-page .review-grid{grid-template-columns:1fr;gap:12px}.reviews-page .review-card figure{aspect-ratio:1.85}.review-moment{grid-template-columns:1fr;gap:22px;padding-inline:20px}.review-moment figure{aspect-ratio:1.55}.review-moment h2{font-size:clamp(1.8rem,8vw,2.35rem)}}

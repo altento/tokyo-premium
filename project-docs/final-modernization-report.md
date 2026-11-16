@@ -224,3 +224,6 @@ Reordered the Omakase content toward reference 04: philosophy/principles, course
 ## Mobile cart follow-up — 2026-11-16
 
 Shortened the mobile cart hero and moved the optional checkout comment into an accessible native disclosure in both PHP and Pages templates. Lint, structural checks, CSS parity, and diff whitespace checks passed. Browser screenshots and the broad cart flow were not rerun in this accelerated pass; details: [mobile cart follow-up](visual-qa/cart-mobile-follow-up-2026-11-16.md).
+## Reviews density follow-up — 2026-11-16
+
+Made review cards denser and responsive, and added an editorial still-photo interlude with an explicit no-video disclosure. The Pages exporter now keeps the gallery anchor on the converted static route. Focused PHP lint, exporter lint, structural checks, CSS parity, and diff whitespace checks passed; no browser visual review or full reviews interaction run is claimed. Details: [reviews follow-up](visual-qa/reviews-density-follow-up-2026-11-16.md).

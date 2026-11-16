@@ -50,6 +50,7 @@ foreach ($routes as $route => $filename) {
       $html
     );
     $html = str_replace(['href="offers.php"','href="set-builder.php"','href="perfect-evening.php"','href="gift-certificates.php"'], ['href="offers.html"','href="set-builder.html"','href="perfect-evening.html"','href="gift-certificates.html"'], $html);
+    $html = preg_replace('/href="pages\.php\?page=gallery#([^"]*)"/', 'href="gallery.html#$1"', $html) ?? $html;
     $html = preg_replace_callback('/href="set-builder\.php\?variant=([^"&]+)(?:&amp;[^\"]*)?"/', static function (array $match): string {
         $slug = rawurldecode($match[1]);
         return preg_match('/^[a-z0-9][a-z0-9-]{1,50}$/', $slug) ? 'href="set-builder-' . $slug . '.html"' : 'href="set-builder.html"';
