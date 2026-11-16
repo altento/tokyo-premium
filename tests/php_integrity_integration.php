@@ -100,7 +100,7 @@ if (!is_resource($server)) throw new RuntimeException('Could not start PHP test 
 $cookie = '';
 function check(bool $ok, string $message): void { global $checks; if (!$ok) throw new RuntimeException('FAIL: ' . $message); $checks++; }
 function request(string $path, array $fields = [], array $headers = []): array {
- global $base, $cookie, $pdo, $dbPath;
+ global $base, $cookie;
  $headerLines = ['Accept: text/html,application/json'];
  if ($cookie !== '') $headerLines[] = 'Cookie: ' . $cookie;
  foreach ($headers as $k => $v) $headerLines[] = $k . ': ' . $v;
@@ -110,9 +110,6 @@ function request(string $path, array $fields = [], array $headers = []): array {
  $responseHeaders = $http_response_header ?? [];
  foreach ($responseHeaders as $line) if (stripos($line, 'Set-Cookie: tokyo_session=') === 0) $cookie = explode(';', substr($line, 12))[0];
  preg_match('/\s(\d{3})\s/', $responseHeaders[0] ?? '', $m);
- // The PHP server writes through a separate PDO connection. Reopen the fixture connection
- // after POSTs so later assertions do not reuse a stale SQLite WAL read snapshot.
- if ($fields && isset($pdo, $dbPath) && $pdo instanceof PDO && !$pdo->inTransaction()) $pdo = freshTestDatabase($dbPath);
  return [(int)($m[1] ?? 0), (string)$body, $responseHeaders];
 }
 function adminPost(array $fields): array {
@@ -311,11 +308,15 @@ try {
  $campaignSecretRules = $pdo->prepare('SELECT id,access_kind,required_value,starts_at FROM secret_menu_rules WHERE campaign_id=? ORDER BY id');
  $campaignSecretRules->execute([$secretCampaignId]);
  check($status===200 && $editedSecretRule && $editedSecretRule['access_kind']==='tier' && $editedSecretRule['required_value']==='gold' && $editedSecretRule['starts_at']==='2026-11-16 15:00:00', 'admin can edit rule type and validates local schedule values (HTTP '.$status.'; target='.json_encode($editedSecretRule,JSON_UNESCAPED_UNICODE).'; campaign_rules='.json_encode($campaignSecretRules->fetchAll(PDO::FETCH_ASSOC),JSON_UNESCAPED_UNICODE).'; error='.$secretRuleError.'; notice='.$secretRuleNotice.')');
+ $campaignSecretRules->closeCursor();
  $marketingCsrf=tokenFrom($marketingHtml);
  [$status,$marketingError]=request('/admin-marketing.php',['csrf'=>$marketingCsrf,'action'=>'secret-rule-save','id'=>(string)$secretRuleId,'campaign_id'=>(string)$secretCampaignId,'access_kind'=>'tier','required_value'=>'gold','starts_at'=>'2026-02-30T12:00','ends_at'=>'2027-01-01T00:00','active'=>'on']);
  check($status===200 && str_contains($marketingError,'корректные местные дату и время'), 'invalid calendar dates cannot be stored for Secret Menu rules');
  $marketingCsrf=tokenFrom($marketingError);
  [$status,$marketingHtml]=request('/admin-marketing.php',['csrf'=>$marketingCsrf,'action'=>'secret-rule-toggle','id'=>(string)$secretRuleId]);
+ // Drop this segment's read snapshot before checking the update from the HTTP worker.
+ unset($pdo, $campaignSecretRules);
+ $pdo = freshTestDatabase($dbPath);
  check($status===200 && (int)$pdo->query("SELECT active FROM secret_menu_rules WHERE id=$secretRuleId")->fetchColumn()===0, 'admin can disable an existing Secret Menu rule');
  $csrf=tokenFrom($html);
  [$status,$settingsHtml]=request('/admin.php');$settingsCsrf=tokenFrom($settingsHtml);$settingsKeys=['site_name','meta_title','meta_description','hero_eyebrow','hero_title','hero_text','address','phone','hours','instagram'];$settingsFields=['csrf'=>$settingsCsrf,'action'=>'settings'];foreach($settingsKeys as $settingsKey)$settingsFields[$settingsKey]=(string)testDatabaseValue($dbPath,'SELECT value FROM settings WHERE key=?',[$settingsKey]);$originalDeliveryFee=(string)testDatabaseValue($dbPath,'SELECT value FROM settings WHERE key=?',['delivery_fee']);$settingsFields['delivery_fee']='1450';[$status,$savedSettingsHtml]=adminPost($settingsFields);check($status===200&&(string)testDatabaseValue($dbPath,'SELECT value FROM settings WHERE key=?',['delivery_fee'])==='1450'&&str_contains($savedSettingsHtml,'Стоимость доставки'),'admin can configure the server-authoritative delivery tariff');
