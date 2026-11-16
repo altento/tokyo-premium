@@ -2,6 +2,7 @@
   'use strict';
 
   const doc = global.document;
+  const staticDemo = Boolean(global.TOKYO_STATIC_DEMO);
   const started = new WeakSet();
   const quickViewRoots = new WeakSet();
   const transitionRoots = new WeakSet();
@@ -216,7 +217,7 @@
       if (delta > 0 && !current && selected.size >= maxDistinct) { setStatus(root, `В этом варианте не больше ${maxDistinct} разных блюд.`); return; }
       if (next) selected.set(id, next); else selected.delete(id);
       persistDraft();
-      if (status) status.textContent = `${dish.name}: ${next ? `выбрано ${next}` : 'удалено из сета'}. Черновик сохранён в этом браузере; цена ориентировочная и перепроверяется сервером.`;
+      if (status) status.textContent = `${dish.name}: ${next ? `выбрано ${next}` : 'удалено из сета'}. Черновик сохранён в этом браузере; ${staticDemo ? 'стоимость — локальная оценка без серверной проверки.' : 'цена ориентировочная и перепроверяется сервером.'}`;
       render();
     };
 
@@ -265,7 +266,9 @@
           selected.clear();
           persistDraft();
           render();
-          setStatus(root, 'Сет добавлен в общую корзину. Итоговая цена будет подтверждена сервером.');
+          setStatus(root, staticDemo
+            ? 'Сет добавлен в локальную корзину браузера. Стоимость остаётся демонстрационной и не проверяется сервером.'
+            : 'Сет добавлен в общую корзину. Итоговая цена будет подтверждена сервером.');
           return;
         }
         const reason = result && typeof result === 'object' && typeof result.message === 'string' ? result.message : 'Корзина отклонила этот состав. Проверьте ограничения сета и попробуйте ещё раз.';
@@ -295,7 +298,7 @@
     });
 
     render();
-    if (selected.size && status) status.textContent = `Черновик восстановлен из этого браузера · ${selected.size} блюд. Сумма ориентировочная; сервер проверит состав и цену.`;
+    if (selected.size && status) status.textContent = `Черновик восстановлен из этого браузера · ${selected.size} блюд. ${staticDemo ? 'Сумма ориентировочная; серверной проверки в этой демоверсии нет.' : 'Сумма ориентировочная; сервер проверит состав и цену.'}`;
   }
 
   const signals = {
@@ -430,7 +433,7 @@
       result.append(list);
       const totalNode = doc.createElement('p');
       totalNode.className = 'tp-evening-estimate';
-      safeText(totalNode, `Ориентир на выбранные позиции для ${guestCount} гостей: ${money(total)}. Стоимость учебная; сервер проверяет цены при заказе.`);
+      safeText(totalNode, `Ориентир на выбранные позиции для ${guestCount} гостей: ${money(total)}. ${staticDemo ? 'Демо-стоимость рассчитана в браузере и не проверяется сервером.' : 'Стоимость учебная; сервер проверяет цены при заказе.'}`);
       result.append(totalNode);
       if (budget && total > groupBudget) {
         const budgetNote = doc.createElement('p');

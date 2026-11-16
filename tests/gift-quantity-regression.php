@@ -21,8 +21,44 @@ $campaign = $pdo->prepare("INSERT INTO promotion_campaigns(slug,campaign_type,ti
 $campaign->execute([$campaignSlug]);
 $campaignId = (int)$pdo->lastInsertId();
 $pdo->prepare('INSERT INTO campaign_gift_options(campaign_id,dish_id,remaining_quantity,max_per_order,active) VALUES(?,?,3,2,1)')->execute([$campaignId, $giftDish]);
+$createScheduledCampaign = static function (string $suffix, array $schedule) use ($pdo, $campaignSlug, $giftDish): int {
+    $insert = $pdo->prepare("INSERT INTO promotion_campaigns(slug,campaign_type,title,reward_type,minimum_subtotal,active,stackable,demo_only,sort_order,starts_at,ends_at,weekday_mask,starts_time,ends_time,timezone)
+        VALUES(?,'gift_threshold',?,'gift_dish',1,1,0,1,-100,?,?,?,?,?,'Asia/Qyzylorda')");
+    $insert->execute([
+        $campaignSlug . '-' . $suffix,
+        'QA scheduled gift ' . $suffix,
+        $schedule['starts_at'] ?? null,
+        $schedule['ends_at'] ?? null,
+        $schedule['weekday_mask'] ?? 127,
+        $schedule['starts_time'] ?? null,
+        $schedule['ends_time'] ?? null,
+    ]);
+    $id = (int)$pdo->lastInsertId();
+    $pdo->prepare('INSERT INTO campaign_gift_options(campaign_id,dish_id,remaining_quantity,max_per_order,active) VALUES(?,?,3,2,1)')->execute([$id, $giftDish]);
+    return $id;
+};
+$nowInRestaurantZone = new DateTimeImmutable('now', new DateTimeZone('Asia/Qyzylorda'));
+$scheduledCandidates = [
+    'future' => $createScheduledCampaign('future', ['starts_at'=>'2099-01-01 00:00:00']),
+    'expired' => $createScheduledCampaign('expired', ['starts_at'=>'2000-01-01 00:00:00','ends_at'=>'2000-01-02 00:00:00']),
+    'weekday' => $createScheduledCampaign('weekday', ['weekday_mask'=>0]),
+    'time' => $createScheduledCampaign('time', [
+        'starts_time'=>$nowInRestaurantZone->modify('+2 hours')->format('H:i'),
+        'ends_time'=>$nowInRestaurantZone->modify('+3 hours')->format('H:i'),
+    ]),
+];
 $cart = [['id'=>$eligibleDish,'qty'=>1]];
 $actor = 'gift-quantity-regression';
+
+$scheduledCampaignActive = $pdo->prepare('UPDATE promotion_campaigns SET active=? WHERE id=?');
+foreach ($scheduledCandidates as $scheduleName => $scheduledCampaignId) {
+    $pdo->exec("UPDATE promotion_campaigns SET active=0 WHERE campaign_type='gift_threshold' AND id<>" . $campaignId);
+    $scheduledCampaignActive->execute([1, $scheduledCampaignId]);
+    $scheduledQuote = commerce_quote($pdo,$cart,[],'','pickup',null,$actor,$giftDish,0,'',false,2);
+    $selectedCampaignId = (int)($scheduledQuote['gift_items'][0]['campaign_id'] ?? 0);
+    $check($scheduledQuote['ok'] && $selectedCampaignId === $campaignId, "{$scheduleName} threshold-gift campaign is skipped in favor of the active campaign");
+}
+$pdo->exec("UPDATE promotion_campaigns SET active=0 WHERE campaign_type='gift_threshold' AND id<>" . $campaignId);
 
 $quote = commerce_quote($pdo,$cart,[],'','pickup',null,$actor,$giftDish,0,'',false,2);
 $gift = $quote['gift_items'][0] ?? null;

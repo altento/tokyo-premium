@@ -298,3 +298,12 @@ This focused pass did not run the full browser suite, complete 11-route PHP visu
 - `npm run test:account-demo` passed against a freshly served static export.
 - Added a desktop geometry assertion for the top alignment of the orders and bookings headings after seeding; existing assertions also covered empty-by-default state, itemized demo orders, local labels, persistence/idempotency, clear-data, mobile overflow and browser errors.
 - Fresh captures: `project-docs/visual-qa/account-history-alignment-2026-11-16/11-account-seeded-{desktop,mobile}.jpg`. PHP account behavior was not changed or re-tested in this focused CSS pass.
+
+## Threshold gift schedule and static pricing disclosure — 2026-11-16
+
+- `commerce_quote()` now skips threshold-gift campaigns outside their start/end dates, weekday mask, or time window, then selects the next scheduled campaign.
+- Added focused regression cases for future, expired, disabled-weekday and out-of-window campaigns in `tests/gift-quantity-regression.php`.
+- PHP syntax checks passed. The SQLite regression skipped locally because this CLI lacks `pdo_sqlite`; hosted CI must run it.
+- GitHub Pages set-builder, offer and cart copy now identifies amounts and promo results as local estimates without server validation. Dynamic set-builder and evening messages use the same disclosure.
+- `npm run test:offers-evening` passed in the static browser, including the set-builder interaction and pricing disclosure.
+- No merge or publication was performed in this pass.

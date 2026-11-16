@@ -687,9 +687,15 @@ function commerce_quote(PDO $pdo, array $items, array $customSets = [], string $
             JOIN dishes d ON d.id=g.dish_id AND d.active=1
             WHERE c.campaign_type='gift_threshold' AND c.active=1 AND g.active=1
               AND g.remaining_quantity>0 AND c.minimum_subtotal<=?
-            ORDER BY c.minimum_subtotal DESC,c.sort_order,c.id LIMIT 1");
+            ORDER BY c.minimum_subtotal DESC,c.sort_order,c.id");
         $q->execute([$subtotal]);
-        $threshold = $q->fetch();
+        $threshold = null;
+        foreach ($q->fetchAll() as $candidate) {
+            if (commerce_campaign_is_active($candidate)) {
+                $threshold = $candidate;
+                break;
+            }
+        }
         if ($threshold) {
             $thresholdStackable = (int)$threshold['stackable'] === 1;
             $canCombineThresholdGift = ($promotionCode === '' || ($promoStackable && $thresholdStackable)) && ($pointsToRedeem === 0 || $thresholdStackable);

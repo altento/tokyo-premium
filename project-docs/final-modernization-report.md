@@ -312,3 +312,7 @@ The local demo account placed the shorter booking column vertically in the middl
 ## Omakase mobile preview balance — 2026-11-16
 
 The five-stage Omakase selector already uses five distinct catalogue photos and supports arrow-key selection. In the 390 px capture, its fifth card sat alone at the left edge; the mobile grid now centers that odd final card. The route-focused static Playwright check passed at 1440 px and 390 px, including stage click, ArrowRight focus/selection, matched detail panel, loaded unique photos, no overflow, and no browser errors. Fresh captures are in `project-docs/visual-qa/omakase-current-2026-11-16/`. PHP browser rendering was not confirmed in this local runtime because `php -S` served `.php` source as a download. Full 11-reference acceptance, hosted browser CI, and Pages publication remain outstanding.
+
+## 2026-11-16 targeted commerce and Pages disclosure repair
+
+Threshold-gift selection now applies the campaign’s date, weekday, and time schedule and can fall through to the next eligible offer. GitHub Pages copy and interactive status messages now clearly describe local estimates and demo-only promo behavior without implying server validation. The focused static browser check passed. PHP lint passed, but the new SQLite schedule regression could not run in the current CLI because `pdo_sqlite` is unavailable; this item remains unverified locally until CI runs it. The PR is still draft and GitHub Pages remains unchanged.

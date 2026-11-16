@@ -25,6 +25,15 @@ async function main() {
     const offersHtml = await page.locator('body').innerText();
     assert.doesNotMatch(offersHtml, /Undefined array key|<b>Warning<\/b>/, 'static offers contain no leaked PHP warning');
     assert.ok(await page.locator('.tp20-offer-card').count() > 0, 'offers retain their rendered campaign card');
+    assert.match(offersHtml, /локальную корзину и предварительный расчёт в браузере/, 'static offer copy describes local promo behavior');
+    assert.match(offersHtml, /серверной проверки скидки и итоговой стоимости нет/, 'static offer copy does not promise server validation');
+
+    const builderResponse = await page.goto(`${staticBase}/set-builder.html`, { waitUntil: 'domcontentloaded' });
+    assert.equal(builderResponse.status(), 200, 'static set-builder route loads');
+    const builder = page.locator('[data-tp-set-builder]');
+    assert.match(await page.locator('body').innerText(), /локальная оценка без серверной проверки/, 'static set builder explains price limitations');
+    await builder.locator('[data-tp-set-dish]').first().locator('[data-tp-set-step="1"]').click();
+    assert.match(await builder.locator('[data-tp-status]').innerText(), /стоимость — локальная оценка без серверной проверки/, 'set-builder interaction keeps static pricing disclosure');
 
     const eveningResponse = await page.goto(`${staticBase}/perfect-evening.html`, { waitUntil: 'domcontentloaded' });
     assert.equal(eveningResponse.status(), 200, 'static recommendation route loads');
@@ -47,6 +56,7 @@ async function main() {
     }
     assert.equal(await page.locator('[data-tp-evening-result]').isVisible(), true, 'recommendation result appears');
     assert.ok(await page.locator('.tp-recommendation-card').count() > 0, 'recommendations use current catalog items');
+    assert.match(await page.locator('.tp-evening-estimate').innerText(), /не проверяется сервером/, 'static recommendation labels its total as a browser estimate');
     const summary = await page.locator('.tp-evening-budget-summary').innerText();
     assert.match(summary, /10[\s\u00a0\u202f]*000.+на гостя/, 'summary shows the per-guest budget');
     assert.match(summary, /30[\s\u00a0\u202f]*000.+на компанию/, 'summary shows the multiplied group allowance');
