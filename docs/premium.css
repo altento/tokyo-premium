@@ -479,14 +479,19 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 /* Tokyo Premium account dashboard — scoped to account pages only. */
 .account-dashboard.account-shell{max-width:1400px;margin:clamp(24px,4vw,58px) auto;padding-inline:clamp(12px,2.4vw,34px)}
 .account-dashboard .account-dashboard-card{padding:clamp(18px,2.8vw,38px);border-radius:14px;background:radial-gradient(ellipse at 88% 0,rgba(111,43,24,.16),transparent 40%),linear-gradient(145deg,#171411,#0c0b09 72%);overflow:visible}
-.account-dashboard-hero{position:relative;isolation:isolate;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;min-height:190px;margin:-8px -8px 0;padding:24px 20px 30px;overflow:hidden;border:1px solid rgba(202,165,107,.2);border-radius:9px;background:#100e0c;border-bottom:1px solid var(--hairline)}
-.account-dashboard-hero:before{position:absolute;z-index:0;inset:0;content:"";background-image:linear-gradient(90deg,rgba(12,11,9,.98) 0%,rgba(12,11,9,.91) 38%,rgba(12,11,9,.48) 100%),url("assets/generated/room-garden-terrace.webp");background-position:center 46%;background-size:cover;opacity:.92;pointer-events:none}
+.account-dashboard-hero{position:relative;isolation:isolate;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;min-height:clamp(250px,23vw,310px);margin:-8px -8px 4px;padding:clamp(24px,3vw,38px) clamp(20px,3vw,38px);overflow:hidden;border:1px solid rgba(202,165,107,.28);border-radius:10px;background:#100e0c;border-bottom:1px solid var(--hairline)}
+.account-dashboard-hero:before{position:absolute;z-index:0;inset:0;content:"";background-image:linear-gradient(90deg,rgba(12,11,9,.97) 0%,rgba(12,11,9,.88) 38%,rgba(12,11,9,.48) 74%,rgba(12,11,9,.28) 100%),url("assets/generated/room-garden-terrace.webp");background-position:center 46%;background-size:cover;opacity:.98;pointer-events:none}
 .account-dashboard-hero>*{position:relative;z-index:1}
-.account-dashboard-identity{position:relative;min-width:0;padding-left:82px}
+.account-dashboard-identity{position:relative;min-width:0;max-width:760px;padding-left:82px}
 .account-dashboard-identity:before{content:"TP";position:absolute;inset:2px auto auto 0;display:grid;width:62px;height:62px;place-items:center;border:1px solid rgba(211,177,112,.75);border-radius:50%;background:radial-gradient(circle at 35% 25%,rgba(204,158,83,.18),transparent 58%),#12100e;color:#e9cb91;font:500 1.05rem/1 'Playfair Display',Georgia,serif;letter-spacing:.08em;box-shadow:inset 0 0 0 5px rgba(202,165,107,.06)}
 .account-dashboard-identity .kicker{color:var(--gold);letter-spacing:.15em}
-.account-dashboard-identity h1{margin:.32em 0 .14em;font:500 clamp(2rem,4vw,3.35rem)/1.08 'Playfair Display',Georgia,serif;color:var(--ivory);overflow-wrap:anywhere}
-.account-dashboard-identity p{max-width:min(100%,520px);margin:0;overflow:hidden;color:#e1d3bd;text-overflow:ellipsis;white-space:nowrap}
+.account-dashboard-identity h1{margin:.24em 0 .08em;font:500 clamp(2.4rem,4.6vw,4rem)/1.04 'Playfair Display',Georgia,serif;color:var(--ivory);overflow-wrap:anywhere}
+.account-dashboard-identity .account-dashboard-hero-lead{max-width:100%;margin:0 0 8px;overflow:visible;color:#e0bd78;font:italic 500 clamp(1.12rem,2vw,1.55rem)/1.3 'Playfair Display',Georgia,serif;white-space:normal}
+.account-dashboard-identity .account-dashboard-hero-copy{max-width:min(100%,520px);margin:0;overflow:visible;color:#ddd2bf;font-size:.88rem;line-height:1.55;white-space:normal}
+.account-dashboard-member{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:baseline;gap:4px 12px;max-width:620px;margin-top:15px;padding-top:10px;border-top:1px solid rgba(202,165,107,.24)}
+.account-dashboard-member>strong{color:#f1d5a0;font-size:.78rem;font-weight:600}
+.account-dashboard-member-email{min-width:0;overflow:hidden;color:#e1d3bd;font-size:.74rem;text-overflow:ellipsis;white-space:nowrap}
+.account-dashboard-member>small{grid-column:1/-1;margin-top:1px;color:var(--muted);font-size:.67rem;line-height:1.45}
 .account-dashboard-identity>small{display:block;margin-top:10px;color:var(--muted);line-height:1.5}
 .account-logout-form{flex:none}
 .account-dashboard-overview{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr);gap:16px;margin:20px 0}
@@ -622,11 +627,16 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 @media(max-width:680px){
   .account-dashboard.account-shell{margin:20px auto;padding-inline:10px}
   .account-dashboard .account-dashboard-card{padding:17px 13px}
-  .account-dashboard-hero{align-items:flex-start;min-height:170px;margin:-4px -4px 0;padding:18px 13px 22px}
-  .account-dashboard-hero:before{background-image:linear-gradient(90deg,rgba(12,11,9,.97) 0%,rgba(12,11,9,.86) 62%,rgba(12,11,9,.65) 100%),url("assets/generated/room-garden-terrace.webp");background-position:58% center}
+  .account-dashboard-hero{align-items:flex-start;min-height:0;margin:-4px -4px 4px;padding:20px 13px 22px}
+  .account-dashboard-hero:before{background-image:linear-gradient(90deg,rgba(12,11,9,.96) 0%,rgba(12,11,9,.85) 58%,rgba(12,11,9,.62) 100%),url("assets/generated/room-garden-terrace.webp");background-position:58% center}
   .account-dashboard-identity{padding-left:60px}
   .account-dashboard-identity:before{width:46px;height:46px;font-size:.84rem}
-  .account-dashboard-identity h1{font-size:clamp(1.75rem,8vw,2.45rem)}
+  .account-dashboard-identity h1{font-size:clamp(1.8rem,8vw,2.55rem);line-height:1.06}
+  .account-dashboard-identity .account-dashboard-hero-lead{font-size:clamp(1.03rem,5vw,1.28rem)}
+  .account-dashboard-identity .account-dashboard-hero-copy{font-size:.79rem;line-height:1.5}
+  .account-dashboard-member{grid-template-columns:minmax(0,1fr);gap:4px;margin-top:12px;padding-top:9px}
+  .account-dashboard-member-email{max-width:100%}
+  .account-dashboard-member>small{grid-column:auto;font-size:.63rem}
   .account-dashboard-identity>small{font-size:.68rem}
   .account-logout-form .button{min-height:38px;padding-inline:10px;font-size:.68rem}
   .account-dashboard-overview{grid-template-columns:1fr;margin:14px 0}

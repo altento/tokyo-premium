@@ -211,12 +211,17 @@ header_html();
         </form>
       </div>
     <?php else: ?>
-      <header class="account-dashboard-hero">
+      <header class="account-dashboard-hero" aria-labelledby="account-dashboard-title">
         <div class="account-dashboard-identity">
           <span class="kicker">Tokyo Premium · личное пространство</span>
-          <h1>Здравствуйте, <?=e($user['full_name'])?></h1>
-          <p title="<?=e($user['email'])?>"><?=e($user['email'])?></p>
-          <small>Участник с <?=e(substr((string)$user['created_at'], 0, 10))?> · история и бонусы видны только после входа в этот аккаунт.</small>
+          <h1 id="account-dashboard-title">Личный кабинет</h1>
+          <p class="account-dashboard-hero-lead">Ваше пространство в Tokyo Premium</p>
+          <p class="account-dashboard-hero-copy">Управляйте заказами, бронированиями, бонусами и личными данными в одном месте.</p>
+          <div class="account-dashboard-member">
+            <strong>Здравствуйте, <?=e($user['full_name'])?></strong>
+            <span class="account-dashboard-member-email" title="<?=e($user['email'])?>"><?=e($user['email'])?></span>
+            <small>Участник с <?=e(substr((string)$user['created_at'], 0, 10))?> · данные видны только после входа в этот аккаунт.</small>
+          </div>
         </div>
         <form method="post" class="account-logout-form">
           <input type="hidden" name="csrf" value="<?=e(csrf())?>">
