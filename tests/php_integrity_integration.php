@@ -40,7 +40,7 @@ foreach ($initializers as [$worker, $workerPipes, $number]) {
     $checks++;
 }
 require dirname(__DIR__) . '/bootstrap.php';
-$pdo = db();
+$pdo = freshTestDatabase($dbPath);
 check(strtolower((string)$pdo->query('PRAGMA journal_mode')->fetchColumn()) === 'wal', 'SQLite uses WAL for concurrent read and order commits');
 $pairingCount=(int)$pdo->query('SELECT COUNT(*) FROM dish_pairings')->fetchColumn();
 check($pairingCount>=36,'migration v9 seeds editable pairing recommendations for the catalogue');
