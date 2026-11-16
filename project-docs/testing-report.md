@@ -195,3 +195,7 @@ One focused visual-fidelity run passed for the Omakase route in PHP and exported
 ## 2026-11-16 cart layout follow-up
 
 The cart-only static browser regression passed and saved eight states after recommendations were moved below the order/checkout grid. The populated case contains three catalog items with one quantity of two and a 12,700 ₸ subtotal; empty, pickup, delivery and validation states were also refreshed. The PHP template passed syntax lint, and `premium.css` is synchronized with `docs/premium.css`. PHP browser rendering was not verified in this runtime because the active PHP executable reports `could not find driver` for PDO SQLite. No broad suite, hosted CI or Pages deployment was run.
+
+## 2026-11-16 philosophy hero follow-up
+
+One focused static Playwright route check passed at 320, 390, 768 and 1440 px: the title remains in bounds, the decorative mark avoids the title/actions, section links resolve, and the page has no horizontal overflow. HTTP 200, no console errors, no failed resources; the desktop capture decoded all four content images. `php -l about.php`, CSS hash comparison and `git diff --check` passed. PHP browser rendering, broad suites, hosted CI and public Pages were not checked.
