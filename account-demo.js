@@ -23,10 +23,11 @@ document.addEventListener('DOMContentLoaded',()=>{
     const repeatSets=customSets.map(set=>({variant:set.variant||set.setType||'signature',setType:set.variant||set.setType||'signature',name:set.name||'Авторский сет',qty:Number(set.qty||1),items:Array.isArray(set.items)?set.items.map(item=>({id:Number(item.id),qty:Number(item.qty)})):[]}));
     const repeatData=JSON.stringify({items,customSets:repeatSets});
     const lineCount=items.length+customSets.length;
-    return '<article class="demo-order"><div><small>'+esc(row.orderId||'Демо-заказ')+'</small><strong>'+esc(row.date)+'</strong><p>'+esc(row.name)+' · '+Number(row.count||0)+' позиций · '+Number(row.subtotal??row.total??0).toLocaleString('ru-RU')+' ₸</p><p>'+esc(row.fulfillment==='pickup'?'Самовывоз':'Демо-доставка')+'</p>'+(allLines?'<ul class="demo-order-items">'+allLines+'</ul>':'<p class="menu-note">Состав старого заказа недоступен.</p>')+(lineCount?'<button class="button secondary" type="button" data-repeat-order="'+esc(repeatData)+'">Собрать заказ снова</button>':'')+'</div></article>';
+    const demoBadge=row.demo===true?'<span class="account-demo-record-badge">Учебный пример · локально</span>':'';
+    return '<article class="demo-order"><div>'+demoBadge+'<small>'+esc(row.orderId||'Демо-заказ')+'</small><strong>'+esc(row.date)+'</strong><p>'+esc(row.name)+' · '+Number(row.count||0)+' позиций · '+Number(row.subtotal??row.total??0).toLocaleString('ru-RU')+' ₸</p><p>'+esc(row.fulfillment==='pickup'?'Самовывоз':'Демо-доставка')+'</p>'+(allLines?'<ul class="demo-order-items">'+allLines+'</ul>':'<p class="menu-note">Состав старого заказа недоступен.</p>')+(lineCount?'<button class="button secondary" type="button" data-repeat-order="'+esc(repeatData)+'">Собрать заказ снова</button>':'')+'</div></article>';
    }).join(''):'<div class="account-empty-state"><p>Здесь появятся локальные учебные заказы после демонстрационного оформления. Сейчас история пуста.</p><a class="button secondary" href="'+menuHref+'">Открыть меню ↗</a></div>'
   }
-  if(bookings){const rows=read('tokyo-demo-bookings');bookings.innerHTML=rows.length?rows.map(row=>'<article><div><strong>'+esc(row.date)+' · '+esc(row.time)+'</strong><p>'+esc(row.name)+' · гостей: '+esc(row.guests)+' · '+esc(row.zone||'Зона не выбрана')+(row.format?' · формат Omakase «'+esc(row.format)+'»':'')+(row.table?' · стол '+esc(row.table):'')+'</p></div></article>').join(''):'<div class="account-empty-state"><p>Запросов на бронирование пока нет. Выберите дату и предпочтительную зону; демоверсия не резервирует стол.</p><a class="button secondary" href="'+bookingHref+'">Выбрать дату и зону ↗</a></div>'}
+  if(bookings){const rows=read('tokyo-demo-bookings');bookings.innerHTML=rows.length?rows.map(row=>'<article><div>'+(row.demo===true?'<span class="account-demo-record-badge">Учебный пример · локально</span>':'')+'<strong>'+esc(row.date)+' · '+esc(row.time)+'</strong><p>'+esc(row.name)+' · гостей: '+esc(row.guests)+' · '+esc(row.zone||'Зона не выбрана')+(row.format?' · формат Omakase «'+esc(row.format)+'»':'')+(row.table?' · стол '+esc(row.table):'')+'</p></div></article>').join(''):'<div class="account-empty-state"><p>Запросов на бронирование пока нет. Выберите дату и предпочтительную зону; демоверсия не резервирует стол.</p><a class="button secondary" href="'+bookingHref+'">Выбрать дату и зону ↗</a></div>'}
   const favs=$('#demo-favorites'),phpFavs=$('#account-browser-favorites-list'),empty=$('#demo-favorites-empty'),phpEmpty=$('#account-browser-favorites-empty');
   if(favs||phpFavs){
    const ids=window.TokyoCart?.getFavorites()||[],dishes=window.DISHES||[];
@@ -56,6 +57,37 @@ document.addEventListener('DOMContentLoaded',()=>{
  }
  $$('[data-account-tab]').forEach(button=>button.addEventListener('click',()=>{$$('[data-account-tab]').forEach(b=>{b.classList.toggle('active',b===button);b.setAttribute('aria-current',b===button?'page':'false')});$$('[data-account-panel]').forEach(panel=>panel.hidden=panel.dataset.accountPanel!==button.dataset.accountTab)}));
  $$('[data-account-quick-target]').forEach(button=>button.addEventListener('click',()=>document.querySelector('.account-demo-nav [data-account-tab="'+button.dataset.accountQuickTarget+'"]')?.click()));
+ $('[data-account-demo-seed]')?.addEventListener('click',()=>{
+  const status=$('[data-account-demo-seed-status]'),catalog=Array.isArray(window.DISHES)?window.DISHES:[];
+  const examples=[
+   {orderId:'DEMO-TP-8724',date:'Пример · 12 ноября, 19:42',fulfillment:'delivery',items:[[3,1],[6,2]]},
+   {orderId:'DEMO-TP-8651',date:'Пример · 8 ноября, 14:20',fulfillment:'pickup',items:[[12,1],[15,1]]},
+   {orderId:'DEMO-TP-8607',date:'Пример · 5 ноября, 20:11',fulfillment:'pickup',items:[[19,2]]}
+  ];
+  try{
+   const savedOrders=read('tokyo-demo-orders');
+   const current=Array.isArray(savedOrders)?savedOrders.filter(row=>row&&typeof row==='object'):[];
+   const existing=new Set(current.map(row=>row?.orderId).filter(Boolean));
+   const additions=[];
+   for(const example of examples){
+    if(existing.has(example.orderId))continue;
+    const items=example.items.map(([id,qty])=>{const dish=catalog.find(value=>Number(value.id)===id);if(!dish)return null;const unitPrice=Number(dish.price);if(!Number.isSafeInteger(unitPrice)||unitPrice<0)return null;return{id,name:String(dish.name),qty,unitPrice,lineTotal:unitPrice*qty}});
+    if(items.some(item=>!item)){if(status)status.textContent='Учебный пример сейчас недоступен: не удалось сверить позицию с каталогом.';return}
+    const total=items.reduce((sum,item)=>sum+item.lineTotal,0);
+    additions.push({orderId:example.orderId,date:example.date,name:'Демо-гость',count:items.reduce((sum,item)=>sum+item.qty,0),subtotal:total,total,fulfillment:example.fulfillment,items,demo:true});
+   }
+   localStorage.setItem('tokyo-demo-orders',JSON.stringify([...current,...additions]));
+   const savedBookings=read('tokyo-demo-bookings');
+   const bookings=Array.isArray(savedBookings)?savedBookings.filter(row=>row&&typeof row==='object'):[];
+   const bookingAdded=!bookings.some(row=>row.demoId==='DEMO-TP-BOOKING');
+   if(bookingAdded)bookings.unshift({demoId:'DEMO-TP-BOOKING',date:'Учебный пример · 20 ноября',time:'19:00',name:'Демо-гость',guests:2,zone:'Основной зал',format:'Сезонный',table:'10',demo:true});
+   localStorage.setItem('tokyo-demo-bookings',JSON.stringify(bookings));
+   const favorites=window.TokyoCart?.getFavorites?.()||[];
+   window.TokyoCart?.setFavorites?.([...new Set([...favorites,3,6,19])]);
+   render();document.dispatchEvent(new Event('tokyo-demo-data-updated'));
+   if(status){const changed=[];if(additions.length)changed.push('добавлено учебных заказов: '+additions.length);if(bookingAdded)changed.push('добавлен учебный запрос на бронь');status.textContent=changed.length?'В '+changed.join(', ')+'. Блюда избранного взяты из каталога. Всё сохранено только в этом браузере; очистить можно в настройках.':'Учебный пример уже заполнен. Данные остаются только в этом браузере.'}
+  }catch{if(status)status.textContent='Не удалось сохранить учебный пример в локальном хранилище браузера.'}
+ });
  $('#demo-orders')?.addEventListener('click',event=>{
   const button=event.target.closest('[data-repeat-order]');if(!button)return;
   const status=$('#demo-repeat-status')||(()=>{const node=document.createElement('p');node.id='demo-repeat-status';node.className='form-status';node.setAttribute('aria-live','polite');$('#demo-orders').append(node);return node})();

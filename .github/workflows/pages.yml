@@ -93,6 +93,7 @@ jobs:
           test -s docs/assets/food/03-nigiri-salmon.webp
           grep -q 'не зашифровано' docs/account.html
           grep -q 'href="luxury-refinements.css"' docs/account.html
+          grep -q 'data-account-demo-seed' docs/account.html
       - name: Run browser regression and visual QA
         id: browser_qa
         if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
@@ -108,6 +109,7 @@ jobs:
             sleep 1
           done
           TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:browser
+          TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:account-demo
           TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:tokyo20
           TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:reviews
           TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:cart-visual

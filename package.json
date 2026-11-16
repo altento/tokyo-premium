@@ -11,6 +11,7 @@
     "test:personal-offer": "php tests/personal-offer-regression.php",
     "test:offers-evening": "node tests/offers-evening-regression.cjs",
     "test:browser": "node tests/browser-regression.cjs",
+    "test:account-demo": "node tests/account-demo-regression.cjs",
     "test:tokyo20": "node tests/tokyo20-regression.cjs",
     "test:reviews": "node tests/reviews-regression.cjs",
     "test:cart-visual": "node tests/cart-visual-regression.cjs",

@@ -157,3 +157,7 @@ The menu now adds six ingredient filters from the approved reference. The focuse
 ## 2026-11-16 catalog-backed product pairings
 
 `dish-pairings-2026-11-16/` contains full-page captures of the static salmon-nigiri detail route at 1440 px and 390 px, plus a page-specific comparison note. The page shows configured active catalogue pairings (including yuzu lemonade and tuna nigiri), then fills the remaining four-card layout from active menu items. Screenshot review confirmed the images load and the mobile page stays within 390 px. The focused static browser interaction also confirmed add-to-order still increments the shared cart count. PHP browser rendering and the PDO SQLite migration regression are not claimed in this local runtime.
+
+## 2026-11-16 explicitly seeded account demo
+
+`11-account-seeded-desktop.jpg` and `11-account-seeded-mobile.jpg` show the static profile after the user explicitly creates sample history. Three fictional orders use current catalog names and prices, one booking request and three favorites carry a visible browser-local demo label, and the existing settings action clears them. The account remains empty by default; this action saves only to this browser.

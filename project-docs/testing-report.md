@@ -251,3 +251,7 @@ Added an in-place editor for existing marketing campaigns and two regression ass
 ## Delivery tariff configuration — 2026-11-16
 
 The protected site settings now validate and persist a delivery tariff from 0 to 100,000 ₸, and the campaign creation form exposes the existing free-delivery reward. The focused integration assertions cover saving a positive rate, rejecting a negative rate without overwriting it, and applying the configured amount to a server-quoted free-delivery promotion. PHP lint and `git diff --check` passed; the SQLite integration suite was not run locally because `pdo_sqlite` is unavailable.
+
+## Browser-only account sample — 2026-11-16
+
+Added an explicit “Заполнить учебный пример” action to the static profile. `npm run test:account-demo` passed: it checks three catalog-backed order snapshots, a locally labeled booking request, favorites, idempotent repeat clicks, updated metrics, mobile overflow, and the existing clear-data control. Full-page desktop/mobile captures were visually inspected at `visual-qa/11-account-seeded-{desktop,mobile}.jpg`. JavaScript syntax, exporter PHP syntax and `git diff --check` passed. The local PHP CLI lacks `pdo_sqlite`, so this pass did not rerun the exporter or PHP server-backed account path; hosted CI must verify the generated export.
