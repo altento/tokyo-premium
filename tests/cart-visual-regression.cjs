@@ -57,6 +57,7 @@ async function run(options = {}) {
     const displayedTotal = Number((await page.locator('#cart-page-total').innerText()).replace(/\D/g, ''));
     assert.equal(displayedTotal, computedTotal, 'visible total matches the shared cart store');
     assert.equal(await page.locator('.cart-recommendations .dish-card').count(), 3, 'real recommendations remain available');
+    assert.equal(await page.locator('[data-tp-gift-choice]').isHidden(), true, 'gift selector stays hidden until a server-validated offer makes it available');
     assert.equal(await page.locator('.cart-recommendations .add-to-cart').evaluateAll((buttons, ids) => buttons.every(button => !ids.includes(Number(button.dataset.id))), await page.evaluate(() => window.TokyoCart.get().map(item => Number(item.id)))), true, 'recommendations exclude dishes already in the cart');
     await screenshot(page, 'cart-populated-desktop.png');
     assert.equal(await page.locator('#cart-page-items .cart-page-item img').evaluateAll(images => images.length === 3 && images.every(image => image.complete && image.naturalWidth > 0)), true, 'each cart line has a loaded food photograph');
