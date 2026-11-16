@@ -34,7 +34,7 @@ $cats=db()->query('SELECT slug,name FROM categories ORDER BY sort_order')->fetch
               <h3><a href="pages.php?page=dish&amp;id=<?=(int)$d['id']?>"><?=e($d['name'])?></a></h3><p><?=e($d['description'])?></p>
               <div class="dish-bottom">
                 <div class="menu-card-links"><a class="text-button" href="pages.php?page=dish&amp;id=<?=(int)$d['id']?>">Подробнее ↗</a><button type="button" class="text-button" data-tp-quick-view data-dish-id="<?=(int)$d['id']?>">Быстрый просмотр</button></div>
-                <span class="dish-price"><?=number_format((int)$d['price'],0,'.',' ')?> ₸</span><button class="add-to-cart" type="button" data-id="<?= (int)$d['id']?>">Добавить +</button>
+                <span class="dish-price"><?=number_format((int)$d['price'],0,'.',' ')?> ₸</span><button class="add-to-cart" type="button" data-id="<?= (int)$d['id']?>" aria-label="Добавить <?=e($d['name'])?> в корзину">Добавить +</button>
               </div>
             </div>
           </article>
