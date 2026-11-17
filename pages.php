@@ -63,12 +63,23 @@ header_html($view);
   $compositionQuery=db()->prepare("SELECT i.name,di.is_optional FROM dish_ingredients di JOIN ingredients i ON i.slug=di.ingredient_slug AND i.active=1 WHERE di.dish_id=? ORDER BY di.sort_order,i.name");
   $compositionQuery->execute([(int)$dish['id']]);
   $dishComposition=$compositionQuery->fetchAll();
+  $detailGalleryImages = [
+    ['src'=>(string)$dish['image_url'], 'srcset'=>image_srcset((string)$dish['image_url']), 'alt'=>$dish['name'].' — основной ракурс'],
+  ];
+  if ((int)$dish['id'] === 3) {
+    $detailGalleryImages[] = ['src'=>'assets/generated/nigiri-salmon-angle-02.jpg', 'srcset'=>'', 'alt'=>$dish['name'].' — второй ракурс'];
+    $detailGalleryImages[] = ['src'=>'assets/generated/nigiri-salmon-angle-03.jpg', 'srcset'=>'', 'alt'=>$dish['name'].' — крупный план подачи'];
+  }
 
 ?>
 <nav class="breadcrumbs" aria-label="Навигация"><a href="index.php">Главная</a><span>›</span><a href="menu.php">Меню</a><span>›</span><span aria-current="page"><?=e($dish['name'])?></span></nav>
 <section class="section detail-feature detail-feature--product">
   <div class="detail-product-heading"><div class="kicker"><?=e($dish['category_name'])?> · <?=e($dish['weight'])?> · ВЫМЫШЛЕННОЕ МЕНЮ</div><h1 class="detail-product-title"><?=e($dish['name'])?></h1><p class="detail-product-intro">Японская подача, собранная вокруг чистого вкуса продукта.</p></div>
-  <div class="detail-gallery"><div class="detail-visual"><img id="dish-main-image" src="<?=e($dish['image_url'])?>" srcset="<?=e(image_srcset($dish['image_url']))?>" sizes="(max-width:760px) 100vw, 58vw" width="1200" height="900" alt="<?=e($dish['name'])?> — демонстрационная фотография блюда" fetchpriority="high" decoding="async"><span class="image-caption">Одна фотография блюда · дополнительные ракурсы не представлены</span></div></div>
+  <?php $hasDetailGallery=count($detailGalleryImages)>1; ?>
+  <div class="detail-gallery<?=$hasDetailGallery?' detail-gallery--has-thumbnails':''?>" data-detail-gallery>
+    <?php if($hasDetailGallery): ?><div class="detail-thumbnails" role="group" aria-label="Выберите ракурс блюда"><?php foreach($detailGalleryImages as $index=>$galleryImage): ?><button class="detail-thumbnail<?=$index===0?' is-active':''?>" type="button" data-detail-gallery-image="<?=e($galleryImage['src'])?>" data-detail-srcset="<?=e($galleryImage['srcset'])?>" data-detail-alt="<?=e($galleryImage['alt'])?>" data-detail-caption="<?=e('Фото '.($index+1).' из '.count($detailGalleryImages).' · '.($index===0?'Основной ракурс':'Дополнительный ракурс'))?>" aria-label="Показать фото <?=($index+1)?> из <?=count($detailGalleryImages)?>" aria-controls="dish-main-image" aria-pressed="<?=$index===0?'true':'false'?>"><img src="<?=e($galleryImage['src'])?>" width="1200" height="900" alt="" loading="<?=$index===0?'eager':'lazy'?>" decoding="async"></button><?php endforeach ?></div><?php endif ?>
+    <div class="detail-visual"><img id="dish-main-image" src="<?=e($detailGalleryImages[0]['src'])?>" srcset="<?=e($detailGalleryImages[0]['srcset'])?>" sizes="(max-width:760px) 100vw, 58vw" width="1200" height="900" alt="<?=e($detailGalleryImages[0]['alt'])?>" fetchpriority="high" decoding="async"><span class="image-caption" data-detail-gallery-caption aria-live="polite"><?=$hasDetailGallery?'Фото 1 из '.count($detailGalleryImages).' · основной ракурс':'Одна фотография блюда · дополнительные ракурсы не представлены'?></span></div>
+  </div>
   <div class="detail-copy">
     <p><?=e($dish['description'])?></p>
     <dl class="detail-facts"><div><dt>Раздел</dt><dd><?=e($dish['category_name'])?></dd></div><div><dt>Порция</dt><dd><?=e($dish['weight'])?></dd></div><div><dt>Цена учебного меню</dt><dd><?=ep_price((int)$dish['price'])?> ₸</dd></div></dl>

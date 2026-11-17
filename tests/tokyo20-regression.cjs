@@ -60,6 +60,27 @@ async function verifyDishDetailRoutes(page, mode, catalog, secretIds) {
     const image = page.locator('#dish-main-image');
     await image.evaluate(node => node.decode());
     check(await image.evaluate(node => node.naturalWidth > 0), `${mode.name} dish ${id} main photograph loads`);
+    const galleryButtons = page.locator('[data-detail-gallery-image]');
+    if (id === 3) {
+      check(await galleryButtons.count() === 3, `${mode.name} salmon nigiri exposes exactly three original gallery photos`);
+      const gallerySources = await galleryButtons.evaluateAll(buttons => buttons.map(button => button.dataset.detailGalleryImage));
+      check(new Set(gallerySources).size === 3, `${mode.name} salmon nigiri gallery uses three distinct photo files`);
+      const secondPhoto = galleryButtons.nth(1);
+      await secondPhoto.click();
+      await image.evaluate(node => node.decode());
+      check(await image.getAttribute('src') === await secondPhoto.getAttribute('data-detail-gallery-image'), `${mode.name} selecting a thumbnail updates the main dish photo`);
+      check(await secondPhoto.getAttribute('aria-pressed') === 'true' && await galleryButtons.nth(0).getAttribute('aria-pressed') === 'false', `${mode.name} gallery exposes its selected photo accessibly`);
+      check((await page.locator('[data-detail-gallery-caption]').innerText()).includes('Фото 2 из 3'), `${mode.name} gallery caption follows the selected photo`);
+      const thirdPhoto = galleryButtons.nth(2);
+      await thirdPhoto.click();
+      await image.evaluate(node => node.decode());
+      check(await image.getAttribute('src') === await thirdPhoto.getAttribute('data-detail-gallery-image'), `${mode.name} third product photo is selectable`);
+      await galleryButtons.first().click();
+      await image.evaluate(node => node.decode());
+    } else {
+      check(await galleryButtons.count() === 0, `${mode.name} dish ${id} does not claim unavailable gallery photos`);
+      check((await page.locator('[data-detail-gallery-caption]').innerText()).includes('Одна фотография'), `${mode.name} dish ${id} honestly describes its single photo`);
+    }
     const addButton = page.locator('.detail-actions .add-to-cart');
     check(await addButton.count() === 1 && Number(await addButton.getAttribute('data-id')) === id, `${mode.name} dish ${id} add button targets the current product`);
     await addButton.click();
