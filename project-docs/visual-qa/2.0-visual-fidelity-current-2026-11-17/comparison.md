@@ -30,3 +30,10 @@
 This is a real visual inspection of all 11 current route captures against the matching references, not a pixel-diff claim. The overall luxury direction and section intent are present. There are still meaningful differences in density, decorative art direction, and the detailed layouts of dish, booking and account; the all-reference visual-fidelity objective is therefore **in progress**, not accepted as pixel-perfect.
 
 A separate empty-cart capture remains available as `cart-static-*.jpg`; the two `cart-populated-current-*.png` files provide the populated state required for review.
+
+
+## Booking spacing follow-up — commit 597c115, 2026-11-17
+
+- Tightened the reservation steps into three compact cards, reduced spacing around the form, and capped the adjacent room image height on mobile in `experience-ui.css`.
+- The updated visual-fidelity regression passed on both PHP and static routes in [workflow run #194](https://github.com/altento/tokyo-premium/actions/runs/44063649044). It checks three step cards, their text bounds, and section heights (desktop ≤220 px; 390 px mobile ≤350 px).
+- The run generated updated full-page screenshots in the `tokyo-premium-visual-qa` artifact attached to that workflow run. This follow-up is geometric regression evidence; the new booking capture has not been manually compared with the reference, so visual parity is still open.
