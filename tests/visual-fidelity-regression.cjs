@@ -297,14 +297,14 @@ async function visit(browser, base, route, mode, capture = false) {
     assert.ok(await page.locator(loyaltyCard).isVisible(), `${mode} account dashboard shows its correctly labelled loyalty card`);
     if (mode === 'php') {
       const navigationLinks = page.locator('.account-dashboard-nav a[href^="#"]');
-      assert.equal(await navigationLinks.count(), 6, 'PHP account navigation links all six dashboard sections');
-      assert.equal(await page.locator('.account-dashboard-nav .account-nav-icon svg').count(), 6, 'PHP account section navigation uses consistent inline icons');
+      assert.equal(await navigationLinks.count(), 7, 'PHP account navigation links all seven dashboard sections, including notifications');
+      assert.equal(await page.locator('.account-dashboard-nav .account-nav-icon svg').count(), 7, 'PHP account section navigation uses consistent inline icons');
       assert.equal(await navigationLinks.evaluateAll(links => links.every(link => document.querySelector(link.hash))), true, 'PHP account navigation targets existing dashboard sections');
       await page.locator('.account-dashboard-nav a[href="#account-bookings"]').click();
       await page.waitForFunction(() => document.querySelector('.account-dashboard-nav a[aria-current="location"]')?.hash === '#account-bookings');
       assert.equal(await page.locator('.account-dashboard-nav a[aria-current="location"]').getAttribute('href'), '#account-bookings', 'PHP account marks the current section for visual and assistive navigation');
       await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
-      await page.waitForFunction(() => document.querySelector('.account-dashboard-nav a[aria-current="location"]')?.hash === '#account-orders');
+      await page.waitForFunction(() => document.querySelector('.account-dashboard-nav a[aria-current="location"]')?.hash === '#account-notifications');
     }
   }
 
