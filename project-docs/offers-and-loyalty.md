@@ -52,3 +52,6 @@ A `set_price` campaign's `maximum_discount` applies across the order's targeted 
 ### Existing-member referral flow and account lookup — 2026-11-16
 
 The private admin account lookup performs Cyrillic-aware case-insensitive matching for name/email search. A validated invitation code survives login for an existing member and is prefilled for explicit account attachment; referral rewards still follow the existing completed-order rule. The PHP/SQLite regression is `tests/admin-account-search-referral-regression.php`.
+## Promo-code administration follow-up — 2026-11-17
+
+Promo-code rows now expose the persisted redemption counter, total and per-account limits, validity window, and first-order restriction. Each existing code has a prefilled editor for those settings; the code string is read-only there so editing cannot accidentally create a second code while leaving the original active. Disabling remains reversible and preserves redemption history.

@@ -355,3 +355,7 @@ The static motion regression passed after the expected mobile hero crop was chan
 ## Static account first-visit preview — 2026-11-17
 
 The static account now displays clearly labeled browser-local example orders, a booking request and favorites on a clean first visit, improving the populated-dashboard preview against reference 11. Existing local data suppresses auto-seeding; clearing data persists an empty state until the visitor opts back in. The focused account regression passed, including image loading and existing-data preservation. Evidence: `project-docs/visual-qa/account-first-visit-2026-11-17/`. PHP behavior, hosted verification, public deployment and full reference acceptance remain open.
+
+## 2026-11-17 admin promo-code workflow
+
+The protected Marketing & Loyalty panel now shows saved redemption counts, total/per-account caps, local validity windows, and first-order restrictions beside each code. Existing codes can be edited from a prefilled form without changing their identity. The 199-assertion PHP/SQLite integration check passed locally, including the `DEMO10` counter and editor fields. PHP lint, shared stylesheet parity and diff hygiene passed. Hosted CI for this change and public deployment remain pending. The preceding branch run `43991676194` passed PHP/SQLite integrity, browser regression and screenshots; deployment was skipped because PR #19 remains a draft. Full visual comparison of all 11 approved references remains incomplete.

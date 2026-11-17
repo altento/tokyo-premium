@@ -424,3 +424,7 @@ The PHP account query now joins order items to the current catalogue image while
 ## 2026-11-17 Tokyo 2.0 checkout and first-visit account regression
 
 The new first-visit examples changed the expected static account history from one checkout row and one booking to three labeled sample rows plus the newly submitted order and booking. Updated `tests/tokyo20-regression.cjs` to verify the submitted guest order itself and both sets of local records. `npm run test:tokyo20` passed against an isolated PHP + SQLite server and the current Pages export. Hosted run 43986099018 exposed the stale count assertions; the correction passed CI in replacement run 43988516200. Artifact upload and deployment were skipped because PR #19 remains a draft.
+
+## 2026-11-17 promo-code administration
+
+The Marketing & Loyalty page now displays each code's persisted use count, global and per-account limits, validity dates in `Asia/Qyzylorda`, and first-order restriction. Every existing code has a prefilled edit form; its code string is read-only there to avoid accidentally creating a replacement while leaving the old code enabled. `tests/php_integrity_integration.php` passed all 199 assertions under PHP 8.4 + SQLite, including a new assertion that matches the seeded `DEMO10` redemption counter and verifies the prefilled editor. `php -l admin-marketing.php`, matching PHP/Pages `tokyo20.css` hashes, and `git diff --check` passed. Hosted CI for this latest change and public Pages deployment have not run; deployment remains skipped while PR #19 is draft.
