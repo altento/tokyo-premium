@@ -303,27 +303,35 @@
 
   const signals = {
     fish: ['рыб', 'лосос', 'угор', 'тунец', 'сашими', 'нигири', 'кревет', 'гребеш', 'икр'],
-    seafood: ['рыб', 'лосос', 'угор', 'тунец', 'сашими', 'нигири', 'кревет', 'гребеш', 'икр'],
-    plant: ['вегет', 'овощ', 'тофу', 'гриб', 'авокадо', 'салат', 'мисо'],
-    vegetarian: ['вегет', 'овощ', 'тофу', 'гриб', 'авокадо', 'салат', 'мисо'],
+    meat: ['мяс', 'говядин', 'утк', 'куриц', 'цыпл', 'свинин', 'бекон'],
+    plant: ['вегет', 'овощ', 'тофу', 'гриб', 'авокадо', 'салат'],
     spicy: ['остр', 'чили', 'васаби', 'кимчи', 'перец'],
     light: ['салат', 'сашими', 'тартар', 'чай', 'лёгк', 'легк'],
-    sweet: ['десерт', 'матча', 'моти', 'тирамису', 'морожен']
+    sets: ['сет', 'сэт', 'омак', 'дегустац']
   };
   const signalText = dish => `${dish.name || ''} ${dish.description || ''} ${dish.category_name || ''} ${dish.category || ''}`.toLocaleLowerCase('ru-RU');
+  const productKind = dish => {
+    const text = signalText(dish);
+    if (/напит|drink|beverage|чай|матча|лимонад|кофе|саке/.test(text)) return 'drink';
+    if (/десерт|dessert|моти|тирамису|морожен/.test(text)) return 'dessert';
+    if (/(?:^|\W)(?:сет|сэт)|омак|set menu/.test(text)) return 'set';
+    return 'dish';
+  };
 
   function scoreDish(dish, state) {
     const text = signalText(dish);
+    const kind = productKind(dish);
     let score = 0;
     const preference = state.preference || 'fish';
-    if ((signals[preference] || []).some(word => text.includes(word))) score += 5;
-    if (preference === 'plant' && /мяс|рыб|лосос|тунец|угор|кревет|сашими/.test(text)) score -= 8;
-    if (state.mood === 'light' && signals.light.some(word => text.includes(word))) score += 3;
+    if (preference === 'sets') score += kind === 'set' ? 12 : -6;
+    else if ((signals[preference] || []).some(word => text.includes(word))) score += 6;
+    if (preference === 'plant' && /мяс|рыб|лосос|тунец|угор|кревет|сашими|говядин|утк|куриц/.test(text)) score -= 10;
     if (state.occasion === 'romantic' && /тартар|сашими|десерт|чай|матча|моти|тирамису/.test(text)) score += 3;
     if (state.occasion === 'celebration' && /сашими|сэт|сет|десерт|икр|премиум|ассорти/.test(text)) score += 3;
     if (state.occasion === 'discovery' && /омак|сашими|сэт|сет|авторск/.test(text)) score += 3;
     if (state.occasion === 'friends' && /сет|сэт|ролл|ассорти/.test(text)) score += 2;
-    const price = Math.max(0, Number(dish.price) || 0);
+    if (state.atmosphere === 'omakase' && kind === 'set') score += 10;
+    const price = Math.max(0, Number(dish.price) || 0) / (kind === 'set' ? 2 : 1);
     const perGuest = Math.max(0, Number(state.budget || 0));
     if (perGuest > 0) score += price <= perGuest * 0.72 ? 2 : price <= perGuest ? 0 : -4;
     return score;
@@ -339,6 +347,7 @@
     const booking = one('[data-tp-evening-booking]', root);
     const initialBookingHref = booking instanceof HTMLAnchorElement ? booking.getAttribute('href') || booking.href : '';
     let current = 0;
+    let recommendedPlan = null;
     const refreshNextButtons = () => {
       many('[data-tp-evening-next]', root).forEach(next => {
         const step = next.closest('[data-tp-evening-step]');
@@ -394,9 +403,76 @@
       const guestCount = Math.max(1, Math.min(12, Number(state.guests || 2)));
       const budget = Math.max(0, Number(state.budget || 0));
       const groupBudget = budget * guestCount;
-      const dishes = dishRows().filter(dish => dish && Number(dish.active ?? 1) !== 0)
-        .sort((a, b) => scoreDish(b, state) - scoreDish(a, state) || Number(a.price) - Number(b.price))
-        .slice(0, 3);
+      const dishes = dishRows().filter(dish => dish && Number(dish.active ?? 1) !== 0 && Number(dish.price) >= 0);
+      const byId = new Map(dishes.map(dish => [Number(dish.id), dish]));
+      const pairings = Array.isArray(global.TP_DISH_PAIRINGS) ? global.TP_DISH_PAIRINGS : [];
+      const setVariants = Array.isArray(global.TP_SET_VARIANTS) ? global.TP_SET_VARIANTS.filter(row => row && row.slug && row.name) : [];
+      const mains = dishes.filter(dish => !['drink', 'dessert'].includes(productKind(dish)))
+        .sort((a, b) => scoreDish(b, state) - scoreDish(a, state) || Number(a.price) - Number(b.price));
+      const pickPaired = (main, pairingType, fallbackKind) => {
+        const linked = pairings
+          .filter(pair => Number(pair.dish_id) === Number(main.id) && pair.pairing_type === pairingType)
+          .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0))
+          .map(pair => byId.get(Number(pair.paired_dish_id)))
+          .filter(dish => dish && Number(dish.id) !== Number(main.id));
+        return linked[0] || dishes.filter(dish => productKind(dish) === fallbackKind && Number(dish.id) !== Number(main.id))
+          .sort((a, b) => Number(a.price) - Number(b.price))[0] || null;
+      };
+      const makePlan = (main, includeExtras) => {
+        const isSet = productKind(main) === 'set';
+        const lines = [{ dish: main, qty: isSet ? Math.max(1, Math.ceil(guestCount / 2)) : guestCount, role: isSet ? 'Сет для компании' : 'Основное блюдо' }];
+        const drink = pickPaired(main, 'drink', 'drink');
+        if (drink) lines.push({ dish: drink, qty: guestCount, role: 'Напиток к блюду' });
+        if (includeExtras) {
+          const side = pickPaired(main, 'dish', 'dish');
+          if (side && Number(side.id) !== Number(drink?.id)) lines.push({ dish: side, qty: Math.max(1, Math.ceil(guestCount / 2)), role: 'Дополнение к столу' });
+          const dessert = pickPaired(main, 'dessert', 'dessert');
+          if (dessert && !lines.some(line => Number(line.dish.id) === Number(dessert.id))) lines.push({ dish: dessert, qty: Math.max(1, Math.ceil(guestCount / 2)), role: 'Десерт для компании' });
+        }
+        const total = lines.reduce((sum, line) => sum + Math.max(0, Number(line.dish.price) || 0) * line.qty, 0);
+        return { main, lines, total, full: includeExtras };
+      };
+      const planCandidates = mains.map(main => ({ core: makePlan(main, false), full: makePlan(main, true), score: scoreDish(main, state) }));
+      const wantsSet = state.preference === 'sets' || state.atmosphere === 'omakase';
+      const variantSlug = state.atmosphere === 'omakase' ? 'omakase' : state.occasion === 'celebration' ? 'seasonal' : 'signature';
+      const setVariant = wantsSet ? setVariants.find(row => String(row.slug) === variantSlug) : null;
+      const makeSetPlan = (main, variant) => {
+        const unique = new Map();
+        makePlan(main, true).lines.forEach(line => {
+          if (unique.size < Number(variant.maximum_distinct_items || 8)) unique.set(Number(line.dish.id), { dish: line.dish, qty: 1, role: line.role });
+        });
+        const fillers = dishes.filter(dish => productKind(dish) !== 'set' && !unique.has(Number(dish.id)))
+          .sort((a, b) => scoreDish(b, state) - scoreDish(a, state) || Number(a.price) - Number(b.price));
+        for (const dish of fillers) {
+          if (unique.size >= Number(variant.maximum_distinct_items || 8)) break;
+          unique.set(Number(dish.id), { dish, qty: 1, role: productKind(dish) === 'drink' ? 'Напиток к сету' : productKind(dish) === 'dessert' ? 'Десерт к сету' : 'Блюдо сета' });
+        }
+        const components = Array.from(unique.values()).slice(0, Number(variant.maximum_distinct_items || 8));
+        if (components.length < Number(variant.minimum_distinct_items || 3) || components.length > 8 || components.length > Number(variant.maximum_total_quantity || 12)) return null;
+        const setQty = Math.min(3, Math.max(1, Math.ceil(guestCount / 4)));
+        const perSet = components.reduce((sum, line) => sum + Math.max(0, Number(line.dish.price) || 0), 0);
+        return {
+          main,
+          lines: components,
+          total: perSet * setQty,
+          full: true,
+          setVariant: variant,
+          customSetPayload: { setType: String(variant.slug), name: String(variant.name), qty: setQty, items: components.map(line => ({ id: Number(line.dish.id), qty: 1 })) }
+        };
+      };
+      const setCandidates = setVariant ? mains.map(main => ({ plan: makeSetPlan(main, setVariant), score: scoreDish(main, state) })).filter(item => item.plan) : [];
+      let chosen = null;
+      if (wantsSet && setCandidates.length) {
+        const affordable = budget > 0 ? setCandidates.find(item => item.plan.total <= groupBudget) : null;
+        chosen = (affordable || setCandidates.slice().sort((a, b) => a.plan.total - b.plan.total || b.score - a.score)[0])?.plan || null;
+      } else if (budget > 0) {
+        chosen = planCandidates.find(item => item.full.total <= groupBudget)?.full
+          || planCandidates.find(item => item.core.total <= groupBudget)?.core
+          || planCandidates.slice().sort((a, b) => a.core.total - b.core.total || b.score - a.score)[0]?.core;
+      } else {
+        chosen = planCandidates[0]?.full || null;
+      }
+      recommendedPlan = chosen;
       const headline = doc.createElement('p');
       headline.className = 'tp-evening-summary';
       const zoneByAtmosphere = { sushi: 'Суши-бар', main: 'Основной зал', private: 'Приватная комната', omakase: 'Суши-бар' };
@@ -409,7 +485,7 @@
         safeText(budgetNode, `Ориентир: ${money(budget)} на гостя · ${money(groupBudget)} на компанию.`);
         result.append(budgetNode);
       }
-      if (!dishes.length) {
+      if (!chosen) {
         const empty = doc.createElement('p');
         empty.className = 'tp-empty-state';
         safeText(empty, 'В каталоге пока нет блюд для подбора.');
@@ -417,11 +493,34 @@
       }
       const list = doc.createElement('div');
       list.className = 'tp-evening-dishes';
-      let total = 0;
-      dishes.forEach(dish => {
-        const price = Math.max(0, Number(dish.price) || 0);
+      if (chosen?.customSetPayload) {
         const article = doc.createElement('article');
-        article.className = 'tp-recommendation-card';
+        article.className = 'tp-recommendation-card tp-evening-plan-card tp-evening-set-card';
+        article.dataset.role = 'Сет для компании';
+        article.dataset.variant = chosen.customSetPayload.setType;
+        article.dataset.qty = String(chosen.customSetPayload.qty);
+        const copy = doc.createElement('div');
+        const role = doc.createElement('span'); role.className = 'tp-evening-plan-role'; safeText(role, `Сет для ${guestCount} гостей`);
+        const title = doc.createElement('h4'); safeText(title, chosen.setVariant.name);
+        const description = doc.createElement('p'); safeText(description, `${chosen.lines.length} позиций из доступного меню · ${chosen.customSetPayload.qty} ${chosen.customSetPayload.qty === 1 ? 'сет' : 'сета'}.`);
+        const components = doc.createElement('ul'); components.className = 'tp-evening-set-components';
+        chosen.lines.forEach(line => {
+          const item = doc.createElement('li');
+          const name = doc.createElement('span'); safeText(name, line.dish.name);
+          const price = doc.createElement('small'); safeText(price, money(line.dish.price));
+          item.append(name, price); components.append(item);
+        });
+        copy.append(role, title, description, components);
+        article.append(copy); list.append(article);
+      } else (chosen?.lines || []).forEach(line => {
+        const dish = line.dish;
+        const price = Math.max(0, Number(dish.price) || 0) * line.qty;
+        const article = doc.createElement('article');
+        article.className = 'tp-recommendation-card tp-evening-plan-card';
+        article.dataset.tpEveningPlanLine = '';
+        article.dataset.id = String(dish.id);
+        article.dataset.qty = String(line.qty);
+        article.dataset.role = line.role;
         if (dish.image_url) {
           const image = doc.createElement('img');
           image.src = dish.image_url;
@@ -431,43 +530,79 @@
           article.append(image);
         }
         const copy = doc.createElement('div');
+        const role = doc.createElement('span'); role.className = 'tp-evening-plan-role'; safeText(role, line.role);
         const title = doc.createElement('h4'); safeText(title, dish.name);
         const description = doc.createElement('p'); safeText(description, dish.description || 'Позиция учебного каталога.');
-        const priceNode = doc.createElement('strong'); safeText(priceNode, money(price));
+        const quantity = doc.createElement('small'); safeText(quantity, `${line.qty} ${line.qty === 1 ? 'порция' : 'порции'} · ${money(price)} на компанию`);
         const add = doc.createElement('button');
-        add.type = 'button'; add.className = 'button secondary'; add.dataset.id = String(dish.id); add.classList.add('add-to-cart');
-        add.setAttribute('aria-label', `Добавить ${dish.name} в корзину`); safeText(add, 'Добавить в корзину +');
-        copy.append(title, description, priceNode, add);
+        add.type = 'button'; add.className = 'button secondary'; add.dataset.tpEveningAddLine = ''; add.dataset.id = String(dish.id); add.dataset.qty = String(line.qty);
+        add.setAttribute('aria-label', `Добавить ${line.qty} × ${dish.name} в корзину`); safeText(add, 'Добавить позицию +');
+        copy.append(role, title, description, quantity, add);
         article.append(copy); list.append(article);
-        total += price * guestCount;
       });
       result.append(list);
       const totalNode = doc.createElement('p');
       totalNode.className = 'tp-evening-estimate';
-      safeText(totalNode, `Ориентир на выбранные позиции для ${guestCount} гостей: ${money(total)}. ${staticDemo ? 'Демо-стоимость рассчитана в браузере и не проверяется сервером.' : 'Стоимость учебная; сервер проверяет цены при заказе.'}`);
+      const total = chosen?.total || 0;
+      safeText(totalNode, `Ориентир на подбор для ${guestCount} гостей: ${money(total)}. ${staticDemo ? 'Демо-стоимость рассчитана в браузере и не проверяется сервером.' : 'Стоимость учебная; сервер проверяет цены при заказе.'}`);
       result.append(totalNode);
       if (budget && total > groupBudget) {
         const budgetNote = doc.createElement('p');
         budgetNote.className = 'tp-budget-note';
-        safeText(budgetNote, 'Подбор превышает указанный ориентир бюджета; измените предпочтения или бюджет.');
+        safeText(budgetNote, 'Даже наиболее доступная подходящая комбинация выходит за ваш ориентир. Проверьте состав и итог перед оформлением.');
+        result.append(budgetNote);
+      } else if (budget && chosen && !chosen.full) {
+        const budgetNote = doc.createElement('p');
+        budgetNote.className = 'tp-budget-note';
+        safeText(budgetNote, 'Чтобы уложиться в бюджет, в подбор включены основное блюдо и напиток без дополнительных позиций.');
         result.append(budgetNote);
       }
       const note = doc.createElement('small');
-      safeText(note, 'Подбор сформирован по правилам каталога, а не нейросетью.');
+      safeText(note, 'Сочетания напитков и дополнений взяты из каталога ресторана. Подбор сформирован по правилам, а не нейросетью.');
       result.append(note);
+      if (chosen) {
+        const addPlan = doc.createElement('button');
+        addPlan.type = 'button'; addPlan.className = 'button tp-evening-add-plan'; addPlan.dataset.tpEveningAddPlan = '';
+        safeText(addPlan, 'Добавить весь подбор в корзину ↗');
+        result.append(addPlan);
+      }
       result.hidden = false;
       steps.forEach(step => { step.hidden = true; });
       if (booking instanceof HTMLAnchorElement) {
         const url = new URL(initialBookingHref || booking.href, doc.baseURI);
         url.searchParams.set('zone', zone);
-        if (state.atmosphere === 'omakase') url.searchParams.set('format', 'Сезонный');
+        if (chosen?.setVariant) {
+          const format = chosen.setVariant.slug === 'omakase' ? 'Премиальный' : chosen.setVariant.slug === 'seasonal' ? 'Сезонный' : 'Начало';
+          url.searchParams.set('format', format);
+        }
         else url.searchParams.delete('format');
+        if (chosen) url.searchParams.set('experience', chosen.lines.map(line => `${line.qty} × ${line.dish.name}`).join(', ').slice(0, 180));
+        else url.searchParams.delete('experience');
         booking.href = url.pathname + url.search + url.hash;
       }
       setStatus(root, `Подбор готов. Ориентировочная сумма ${money(total)} для ${guestCount} гостей.`);
     };
 
     root.addEventListener('click', event => {
+      const addPlan = event.target.closest('[data-tp-evening-add-plan]');
+      if (addPlan && root.contains(addPlan)) {
+        if (!recommendedPlan || !global.TokyoCart || typeof global.TokyoCart.addMany !== 'function') {
+          setStatus(root, 'Не удалось добавить подбор. Обновите страницу и попробуйте ещё раз.');
+          return;
+        }
+        const accepted = recommendedPlan.customSetPayload
+          ? global.TokyoCart.addCustomSet(recommendedPlan.customSetPayload)
+          : global.TokyoCart.addMany(recommendedPlan.lines.map(line => ({ id: Number(line.dish.id), qty: line.qty })));
+        if (accepted) { addPlan.disabled = true; safeText(addPlan, 'Подбор добавлен в корзину ✓'); setStatus(root, 'Все позиции подбора добавлены в корзину.'); }
+        else setStatus(root, 'Подбор не добавлен целиком: проверьте лимит корзины или количество блюд. Состав корзины не менялся.');
+        return;
+      }
+      const addLine = event.target.closest('[data-tp-evening-add-line]');
+      if (addLine && root.contains(addLine)) {
+        const accepted = global.TokyoCart && global.TokyoCart.add(Number(addLine.dataset.id), Number(addLine.dataset.qty));
+        setStatus(root, accepted ? 'Позиция добавлена в корзину.' : 'Не удалось добавить позицию в корзину.');
+        return;
+      }
       const next = event.target.closest('[data-tp-evening-next]');
       if (next && root.contains(next)) {
         if (next.disabled || !steps.length) return;
@@ -489,6 +624,7 @@
       });
       const result = one('[data-tp-evening-result]', root);
       if (result) { result.hidden = true; result.replaceChildren(); }
+      recommendedPlan = null;
       if (booking instanceof HTMLAnchorElement) booking.href = initialBookingHref;
       renderStep(); setStatus(root, 'Подбор сброшен.');
     });
@@ -907,8 +1043,25 @@
     });
   }
 
+  function initBookingPrefill() {
+    const form = one('#full-booking-form');
+    if (!form) return;
+    let params;
+    try { params = new URLSearchParams(global.location.search); } catch (_) { return; }
+    const zone = params.get('zone') || '';
+    const zoneField = form.elements.namedItem('zone');
+    if (zoneField && Array.from(zoneField.options || []).some(option => option.value === zone)) zoneField.value = zone;
+    const format = params.get('format') || '';
+    const formatField = form.elements.namedItem('format');
+    if (formatField && Array.from(formatField.options || []).some(option => option.value === format)) formatField.value = format;
+    const experience = (params.get('experience') || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 180);
+    const noteField = form.elements.namedItem('message');
+    if (experience && noteField && !noteField.value.trim()) noteField.value = `Подбор меню: ${experience}`;
+  }
+
   function init(root) {
     const scope = root || doc;
+    initBookingPrefill();
     matches(scope, '[data-tp-omakase]').forEach(initOmakase);
     matches(scope, '[data-tp-set-builder]').forEach(initSetBuilder);
     matches(scope, '[data-tp-perfect-evening]').forEach(initPerfectEvening);

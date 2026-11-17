@@ -17,6 +17,17 @@ $localDateTime = static function ($value): ?string {
     }
     return $date->format('Y-m-d H:i:s');
 };
+$imageOptions = [
+    'assets/generated/campaign-exclusive-v1.webp' => 'Tokyo Exclusive · сезонное нигири',
+    'assets/generated/campaign-golden-hour-v1.webp' => 'Golden Hour · матча и подача',
+    'assets/generated/campaign-chef-drop-v1.webp' => 'Chef’s Secret Drop · гребешок от шефа',
+    'assets/generated/campaign-secret-menu-v1.webp' => 'Secret Menu · скрытая подача угря',
+    'assets/generated/tokyo-seasonal-omakase-v2.webp' => 'Сезонная дегустация',
+    'assets/generated/room-main-hall.webp' => 'Основной зал',
+    'assets/generated/room-garden-terrace.webp' => 'Садовая терраса',
+    'assets/generated/home-hero-nigiri-v2.webp' => 'Нигири · демонстрационный сюжет',
+    'assets/food/17-omakase-set.webp' => 'Дегустационный сет'
+];
 
 function marketing_unicode_lower(string $value): string
 {
@@ -85,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $targetRows = array_merge($parseTargets((string)($_POST['target_include'] ?? ''), 0), $parseTargets((string)($_POST['target_exclude'] ?? ''), 1));
             $targetKeys = [];
             foreach ($targetRows as $target) { $key = $target['kind'] . ':' . $target['key']; if (isset($targetKeys[$key])) throw new DomainException('Одна цель не может одновременно включаться и исключаться.'); $targetKeys[$key] = true; }
-            if ($giftDishId === false || $giftQuantity === false || $giftQuantity < 0 || $giftQuantity > 10000 || $giftMaxPerOrder === false || $giftMaxPerOrder < 1 || $giftMaxPerOrder > 10000 || !preg_match('/^[a-z0-9][a-z0-9-]{1,50}$/', $slug) || $title === '' || strlen($title) > 100 || strlen($description) > 1200 || !in_array($type, ['exclusive','golden_hour','chef_drop','secret_menu','birthday','personal','gift_threshold'], true) || !in_array($reward, ['percent','fixed','gift_dish','set_price','free_delivery','bonus_points','access','none'], true) || $value === false || $value < 0 || $minimum === false || $minimum < 0 || $maximum === false || $maximum < 0 || !in_array($image, ['assets/generated/room-main-hall.webp','assets/generated/room-garden-terrace.webp','assets/generated/tokyo-seasonal-omakase-v2.webp','assets/food/17-omakase-set.webp'], true) || ($start && $end && $end <= $start) || (($timeStart === '') !== ($timeEnd === '')) || ($type === 'golden_hour' && (!preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $timeStart) || !preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $timeEnd)))) {
+            if ($giftDishId === false || $giftQuantity === false || $giftQuantity < 0 || $giftQuantity > 10000 || $giftMaxPerOrder === false || $giftMaxPerOrder < 1 || $giftMaxPerOrder > 10000 || !preg_match('/^[a-z0-9][a-z0-9-]{1,50}$/', $slug) || $title === '' || strlen($title) > 100 || strlen($description) > 1200 || !in_array($type, ['exclusive','golden_hour','chef_drop','secret_menu','birthday','personal','gift_threshold'], true) || !in_array($reward, ['percent','fixed','gift_dish','set_price','free_delivery','bonus_points','access','none'], true) || $value === false || $value < 0 || $minimum === false || $minimum < 0 || $maximum === false || $maximum < 0 || !isset($imageOptions[$image]) || ($start && $end && $end <= $start) || (($timeStart === '') !== ($timeEnd === '')) || ($type === 'golden_hour' && (!preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $timeStart) || !preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $timeEnd)))) {
                 throw new DomainException('Проверьте тип кампании, срок, текст, изображение и числовые значения.');
             }
             $giftDishId = $giftDishId ?: null;
@@ -138,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $notice='Промокод сохранён. Ограничения проверяются сервером при оформлении заказа.';
         } elseif ($action === 'collection-save') {
             $id=filter_var($_POST['id']??0,FILTER_VALIDATE_INT)?:0; $slug=strtolower(trim((string)($_POST['slug']??''))); $name=trim((string)($_POST['name']??'')); $description=trim((string)($_POST['description']??'')); $image=(string)($_POST['image_url']??'assets/generated/room-garden-terrace.webp'); $theme=(string)($_POST['theme_key']??'sakura');
-            if (!preg_match('/^[a-z0-9][a-z0-9-]{1,50}$/',$slug)||$name===''||strlen($name)>100||strlen($description)>1200||!in_array($image,['assets/generated/room-main-hall.webp','assets/generated/room-garden-terrace.webp','assets/generated/tokyo-seasonal-omakase-v2.webp','assets/food/17-omakase-set.webp'],true)||!preg_match('/^[a-z0-9-]{2,24}$/',$theme)) throw new DomainException('Проверьте slug, название, тему и изображение коллекции.');
+            if (!preg_match('/^[a-z0-9][a-z0-9-]{1,50}$/',$slug)||$name===''||strlen($name)>100||strlen($description)>1200||!isset($imageOptions[$image])||!preg_match('/^[a-z0-9-]{2,24}$/',$theme)) throw new DomainException('Проверьте slug, название, тему и изображение коллекции.');
             $collectionStart=$localDateTime($_POST['starts_at']??''); $collectionEnd=$localDateTime($_POST['ends_at']??''); if($collectionStart&&$collectionEnd&&$collectionEnd<=$collectionStart)throw new DomainException('Дата завершения должна быть позже начала.');
             $rawIds=trim((string)($_POST['dish_ids']??'')); $dishIds=$rawIds===''?[]:array_values(array_unique(array_filter(array_map('intval',preg_split('/\s*,\s*/',$rawIds)?:[]),static fn(int $v):bool=>$v>0)));
             if (count($dishIds)>20) throw new DomainException('Коллекция может содержать не более 20 блюд.');
@@ -246,7 +257,6 @@ $certificateDenominations=commerce_certificate_denominations($pdo);
 $dishes=$pdo->query('SELECT id,name FROM dishes WHERE active=1 ORDER BY sort_order,id')->fetchAll();
 $metrics=$pdo->query("SELECT (SELECT COUNT(*) FROM orders) AS orders_count,(SELECT COALESCE(SUM(total),0) FROM orders WHERE status<>'cancelled') AS order_volume,(SELECT COUNT(*) FROM promotion_campaigns WHERE active=1) AS active_campaigns,(SELECT COUNT(*) FROM promo_redemptions) AS redemptions,(SELECT COALESCE(SUM(CASE WHEN points>0 THEN points ELSE 0 END),0) FROM loyalty_ledger) AS issued_points")->fetch();
 $popular=$pdo->query('SELECT item_name,SUM(quantity) AS quantity FROM order_items GROUP BY item_name ORDER BY quantity DESC LIMIT 5')->fetchAll();
-$imageOptions=['assets/generated/room-main-hall.webp'=>'Зал','assets/generated/room-garden-terrace.webp'=>'Садовая терраса','assets/generated/tokyo-seasonal-omakase-v2.webp'=>'Осенняя дегустация','assets/food/17-omakase-set.webp'=>'Дегустационный сет'];
 page_start('Marketing & Loyalty — Tokyo Premium', 'Управление учебными кампаниями, промокодами, сезонными коллекциями и уровнями Tokyo Privilege.');
 header_html();
 ?>

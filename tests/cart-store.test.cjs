@@ -67,6 +67,19 @@ test('add and quantity controls reject fractions and clamp at twenty', () => {
   assert.deepEqual(JSON.parse(JSON.stringify(api.snapshot())), [{ id: 1, name: 'Nigiri', qty: 19, unitPrice: 1200, lineTotal: 22800 }]);
 });
 
+test('addMany applies a recommended group plan atomically in one cart update', () => {
+  const { api, values, cartUpdates } = createStore({ 'tokyo-cart-v1': JSON.stringify({ items: [{ id: 1, qty: 2 }], customSets: [] }) });
+  assert.equal(api.addMany([{ id: 2, qty: 3 }, { id: 999, qty: 1 }]), false, 'an unknown product rejects the whole group plan');
+  assert.deepEqual(JSON.parse(JSON.stringify(api.get())), [{ id: 1, qty: 2 }], 'a rejected plan does not partially change existing items');
+  assert.equal(cartUpdates.length, 0, 'a rejected plan emits no stale intermediate cart event');
+  assert.equal(api.addMany([{ id: 2, qty: 2 }, { id: 3, qty: 1 }, { id: 2, qty: 1 }]), true);
+  assert.deepEqual(JSON.parse(JSON.stringify(api.get())), [{ id: 1, qty: 2 }, { id: 2, qty: 3 }, { id: 3, qty: 1 }]);
+  assert.equal(cartUpdates.length, 1, 'all group lines are persisted and rendered as one cart update');
+  assert.deepEqual(JSON.parse(values.get('tokyo-cart-v1')), { items: [{ id: 1, qty: 2 }, { id: 2, qty: 3 }, { id: 3, qty: 1 }], customSets: [] });
+  assert.equal(api.addMany([{ id: 2, qty: 18 }]), false, 'the batch rejects quantities above the per-item cap instead of truncating the plan');
+  assert.deepEqual(JSON.parse(JSON.stringify(api.get())), [{ id: 1, qty: 2 }, { id: 2, qty: 3 }, { id: 3, qty: 1 }]);
+});
+
 test('each mutation rereads storage so same-page state cannot overwrite a newer tab value', () => {
   const { api, values, listeners, customEvents } = createStore();
   values.set('tokyo-cart-v1', JSON.stringify([{ id: 2, qty: 5 }]));

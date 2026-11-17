@@ -1,6 +1,6 @@
 # SQLite schema and migration notes
 
-Updated 2026-11-17
+Updated 2026-11-18
 
 The app runs `schema.sql` with `CREATE TABLE/INDEX IF NOT EXISTS`, then records explicit upgrades in `app_migrations`. Existing SQLite files are upgraded additively; migrations avoid deleting menu, user, order or booking data.
 
@@ -18,6 +18,7 @@ The app runs `schema.sql` with `CREATE TABLE/INDEX IF NOT EXISTS`, then records 
 | 10 | Add the photographed scallop nigiri catalog item and its normalized scallop ingredient/pairing links when absent; preserve an existing dish record and photo. |
 | 11 | Add catalog-derived ingredient notes to dish details using the existing normalized ingredient tables. The additive transaction uses `INSERT OR IGNORE`, preserves administrator edits on future boots, and does not provide or imply allergen verification. Set pages without a component list retain an explicit note instead of invented ingredients. |
 | 12 | Add account-owned persisted notifications with unique event keys, owner-scoped read helpers, and booking status event IDs. Order and booking status notifications are committed in the same transaction as the underlying status event; unchanged status requests do not emit notifications. Existing accounts keep an empty inbox. |
+| 13 | Assign dedicated generated WebP imagery to unchanged seeded offers without overwriting administrator edits, and add a 30-day demo Chef's Secret Drop linked to the active scallop nigiri item. |
 
 The account notification helpers are `commerce_account_notifications($pdo, $userId, $limit)` and `commerce_mark_account_notification_read($pdo, $userId, $notificationId)`. The mark-read helper only updates rows owned by the supplied user and is safe to retry. The authenticated `account.php` page exposes the `notification-read` POST action and checks CSRF before invoking the helper.
 

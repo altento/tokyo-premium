@@ -4,6 +4,21 @@ require __DIR__ . '/bootstrap.php';
 $pdo = db();
 $userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
 $offers = commerce_public_offers($pdo, $userId);
+$chefDrop = null;
+foreach ($offers as $offer) {
+    if (($offer['campaign_type'] ?? '') === 'chef_drop') { $chefDrop = $offer; break; }
+}
+$chefDropDish = null;
+if ($chefDrop) {
+    $visibleDishes = [];
+    foreach (dishes() as $dish) $visibleDishes[(int)$dish['id']] = $dish;
+    $dropTargets = $pdo->prepare("SELECT target_key FROM promotion_targets WHERE campaign_id=? AND target_kind='dish' AND excluded=0 ORDER BY id");
+    $dropTargets->execute([(int)$chefDrop['id']]);
+    foreach ($dropTargets->fetchAll(PDO::FETCH_COLUMN) as $targetId) {
+        $targetId = filter_var($targetId, FILTER_VALIDATE_INT);
+        if ($targetId && isset($visibleDishes[(int)$targetId])) { $chefDropDish = $visibleDishes[(int)$targetId]; break; }
+    }
+}
 $collections = commerce_public_collections($pdo);
 $codeRows = $pdo->query("SELECT pc.code,pc.campaign_id,pc.active AS code_active,pc.starts_at AS code_starts_at,pc.ends_at AS code_ends_at,pc.uses_count,pc.maximum_uses,c.title,c.active,c.starts_at,c.ends_at,c.weekday_mask,c.starts_time,c.ends_time,c.timezone,c.required_tier FROM promo_codes pc JOIN promotion_campaigns c ON c.id=pc.campaign_id WHERE pc.active=1 AND c.active=1 AND c.campaign_type NOT IN ('secret_menu','personal','birthday') ORDER BY c.sort_order,pc.created_at DESC")->fetchAll();
 $codes = array_values(array_filter($codeRows, static fn(array $row): bool => commerce_campaign_tier_is_eligible($pdo, $row, $userId) && commerce_campaign_is_active($row) && commerce_date_window_is_active($row['code_starts_at'] ?: null, $row['code_ends_at'] ?: null, (string)$row['timezone']) && ($row['maximum_uses'] === null || (int)$row['uses_count'] < (int)$row['maximum_uses'])));
@@ -36,7 +51,7 @@ header_html('offers');
     <?php endif ?>
   </section>
   <?php if ($codes): ?><section class="tp20-code-vault section" aria-labelledby="tp20-code-title"><div><span class="kicker">PRIVATE INVITATIONS</span><h2 id="tp20-code-title">Коды предложений</h2><p>Применимость каждого кода и итоговая стоимость проверяются сервером при расчёте заказа.</p></div><div class="tp20-code-list"><?php foreach ($codes as $promo): ?><article><span><?=e($promo['title'])?></span><strong><?=e($promo['code'])?></strong><button class="button secondary" type="button" data-copy-code="<?=e($promo['code'])?>" data-label="Скопировать код">Скопировать код</button></article><?php endforeach ?></div></section><?php endif ?>
-  <section class="tp20-feature-band" data-tp-reveal><div class="tp20-feature-art"><img src="assets/generated/tokyo-seasonal-omakase-v2.webp" alt="Осенняя дегустационная подача Tokyo Premium, авторское изображение" loading="lazy" decoding="async"></div><div class="tp20-feature-copy"><span class="kicker">CHEF’S SECRET DROP</span><h2>Один момент.<br>Одна авторская подача.</h2><p>Предложения шефа появляются только при активной кампании. Без фиктивного счётчика порций и обещаний наличия.</p><a class="button secondary" href="#offers">Посмотреть сезонный выбор ↗</a></div></section>
+  <?php if ($chefDrop): ?><section class="tp20-feature-band" data-tp-reveal><div class="tp20-feature-art"><img src="<?=e($chefDrop['image_url'])?>" alt="<?=e($chefDrop['title'])?> · учебная фотография" loading="lazy" decoding="async"></div><div class="tp20-feature-copy"><span class="kicker">CHEF’S SECRET DROP · ДЕМО</span><h2><?=e($chefDrop['title'])?></h2><p><?=e($chefDrop['description'])?><?php if (!empty($chefDrop['ends_at'])): ?> Предложение действует до <?=e(substr((string)$chefDrop['ends_at'],0,10))?>.<?php endif ?></p><?php if ($chefDropDish): ?><a class="button secondary" href="pages.php?page=dish&amp;id=<?=(int)$chefDropDish['id']?>">Открыть блюдо <?=e($chefDropDish['name'])?> ↗</a><?php else: ?><a class="button secondary" href="menu.php">Посмотреть меню ↗</a><?php endif ?></div></section><?php endif ?>
   <section class="section tp20-section">
     <div class="editorial-heading"><div class="kicker">Seasonal stories</div><h2>Коллекции Tokyo</h2><p>Собранные по сезону сочетания — от меню до пространства вечера.</p></div>
     <?php if ($collections): ?><div class="tp20-collection-grid">

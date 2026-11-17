@@ -1,5 +1,5 @@
 # Content inventory
-Updated 2026-11-17
+Updated 2026-11-18
 
 | Content | Source | Status |
 |---|---|---|
@@ -33,3 +33,8 @@ No actual address or restaurant availability is claimed. The decorative map is e
 ## 2026-11-17 catalog addition
 
 - `assets/food/21-nigiri-scallop.webp` is original AI-generated, text-free product photography, exported as a 1200×1200 WebP (about 122 KiB). It illustrates the fictional “Нигири с морским гребешком” menu item; the entry and example price are educational content, not a real restaurant offer.
+
+## 2026-11-18 campaign imagery
+
+- `assets/generated/campaign-exclusive-v1.webp`, `campaign-golden-hour-v1.webp`, `campaign-chef-drop-v1.webp`, and `campaign-secret-menu-v1.webp` are original AI-generated, text-free food photographs, optimized as WebP for the four campaign concepts. They are illustrative school-project content, not evidence of a real promotion or current stock.
+- The images are copied by the static exporter to `docs/assets/generated/` and assigned to the corresponding editable seed campaigns through additive SQLite migration 13. The Chef's Secret Drop points to the catalog scallop nigiri item and makes no claim about remaining portions.

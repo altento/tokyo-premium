@@ -1,6 +1,6 @@
 # Offers, Tokyo Privilege and static-demo limits
 
-Updated 2026-11-16
+Updated 2026-11-18
 
 ## Eligibility consistency follow-up — 2026-11-16
 
@@ -55,3 +55,9 @@ The private admin account lookup performs Cyrillic-aware case-insensitive matchi
 ## Promo-code administration follow-up — 2026-11-17
 
 Promo-code rows now expose the persisted redemption counter, total and per-account limits, validity window, and first-order restriction. Each existing code has a prefilled editor for those settings; the code string is read-only there so editing cannot accidentally create a second code while leaving the original active. Disabling remains reversible and preserves redemption history.
+
+## Campaign imagery and composed Ideal Evening — 2026-11-18
+
+The four seeded promotion concepts now use separate original, optimized WebP photographs: Tokyo Exclusive, Golden Hour, Chef's Secret Drop and Secret Menu. Additive migration 13 changes only the original seed image values, leaves administrator-edited image paths intact, and inserts a 30-day `demo_only` Chef's Secret Drop tied to the active scallop nigiri catalog record. The Offers page renders this campaign from SQLite, links to that real item when it is visible to the current visitor, and does not invent a remaining-stock count. The admin campaign image selector accepts these local files through its exact allow-list.
+
+Ideal Evening now uses active, viewable catalog pairings to build a guest-sized meal with a main item, a linked drink, and optional side/dessert lines when the group budget permits. It shows roles, quantities, and the group estimate, and one action adds the full plan atomically through `TokyoCart.addMany`; ordinary cart controls continue to share the same canonical cart state. Choosing Omakase with a catalog set carries the set's matching format, preferred zone, and an editable plan summary into booking. Secret Menu-only items are excluded unless they are actually visible in the current PHP session. GitHub Pages labels its result as a browser estimate and keeps all submitted data local.

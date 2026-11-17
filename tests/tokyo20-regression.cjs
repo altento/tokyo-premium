@@ -361,6 +361,8 @@ async function run() {
       }
       check(await page.locator('[data-tp-evening-result]').isVisible(), `${mode.name} preference wizard renders a recommendation result`);
       check(await page.locator('.tp-recommendation-card').count() > 0, `${mode.name} recommendation uses real catalog items`);
+      check(await page.locator('.tp-evening-plan-card').count() >= 2, `${mode.name} evening recommendation includes a composed main and drink pairing`);
+      check(await page.locator('.tp-evening-plan-card[data-role="Напиток к блюду"]').count() === 1, `${mode.name} drink pairing is a real catalogue position`);
       const budgetSummary = await page.locator('.tp-evening-budget-summary').innerText();
       check(/10[\s\u00a0\u202f]*000.+на гостя/.test(budgetSummary) && /30[\s\u00a0\u202f]*000.+на компанию/.test(budgetSummary), `${mode.name} budget distinguishes the per-guest amount from the group allowance`);
       check(await page.locator('.tp-budget-note').count() === 0, `${mode.name} recommendation below the three-person budget is not incorrectly flagged`);
@@ -368,6 +370,39 @@ async function run() {
       await page.setViewportSize({ width: 390, height: 844 });
       await page.screenshot({ path: path.join(evidence, `12-${mode.name}-perfect-evening-mobile.jpg`), fullPage: true, type: 'jpeg', quality: 72 });
       await page.setViewportSize({ width: 1440, height: 1000 });
+      await page.evaluate(() => window.TokyoCart.clear());
+      const planLines = await page.locator('[data-tp-evening-plan-line]').evaluateAll(nodes => nodes.map(node => ({ id: Number(node.dataset.id), qty: Number(node.dataset.qty) })));
+      await page.locator('[data-tp-evening-add-plan]').click();
+      check(JSON.stringify(await page.evaluate(() => window.TokyoCart.get())) === JSON.stringify(planLines), `${mode.name} recommendation adds every plan line and quantity to the shared cart`);
+      const bookingHref = await page.locator('[data-tp-evening-booking]').getAttribute('href');
+      check(bookingHref.includes('experience='), `${mode.name} recommendation carries its menu summary to booking`);
+      await page.locator('[data-tp-evening-booking]').click();
+      check(await page.locator('#booking-zone').inputValue() === 'Основной зал', `${mode.name} booking receives the selected dining zone`);
+      await page.waitForFunction(() => document.querySelector('#booking-note')?.value.startsWith('Подбор меню:'));
+      check((await page.locator('#booking-note').inputValue()).startsWith('Подбор меню:'), `${mode.name} booking receives an editable recommendation summary`);
+      await page.goto(mode.base + mode.routes.evening, { waitUntil: 'domcontentloaded' });
+      const omakaseChoices = [
+        ['occasion', 'discovery'], ['preference', 'sets'], null, null, ['atmosphere', 'omakase']
+      ];
+      for (let index = 0; index < omakaseChoices.length; index++) {
+        const step = page.locator('[data-tp-evening-step]').nth(index);
+        const choice = omakaseChoices[index];
+        if (choice) await step.locator(`[data-tp-evening-option][data-field="${choice[0]}"][value="${choice[1]}"]`).click();
+        else await step.locator('[data-tp-evening-input]').fill(index === 2 ? '100000' : '3');
+        await step.locator('[data-tp-evening-next]').click();
+      }
+      check(await page.locator('.tp-evening-plan-card[data-role="Сет для компании"]').count() === 1, `${mode.name} Omakase choice recommends a real set product`);
+      check(await page.locator('.tp-evening-set-card').getAttribute('data-variant') === 'omakase', `${mode.name} Omakase set matches the active server variant`);
+      await page.evaluate(() => window.TokyoCart.clear());
+      await page.locator('[data-tp-evening-add-plan]').click();
+      const savedOmakase = await page.evaluate(() => ({ sets: window.TokyoCart.getCustomSets(), total: window.TokyoCart.total() }));
+      check(savedOmakase.sets.length === 1 && savedOmakase.sets[0].setType === 'omakase', `${mode.name} full recommendation is transferred as a custom Omakase set`);
+      check(savedOmakase.sets[0].items.length >= 5 && savedOmakase.total > 0, `${mode.name} set includes distinct catalog dishes and a computed estimate`);
+      const omakaseHref = await page.locator('[data-tp-evening-booking]').getAttribute('href');
+      check(omakaseHref.includes('format='), `${mode.name} selected Omakase format is carried to booking`);
+      await page.locator('[data-tp-evening-booking]').click();
+      await page.waitForFunction(() => document.querySelector('#booking-format')?.value);
+      check(['Начало','Сезонный','Премиальный'].includes(await page.locator('#booking-format').inputValue()), `${mode.name} booking selects one of the configured Omakase formats`);
 
       await page.goto(mode.base + mode.routes.booking, { waitUntil: 'domcontentloaded' });
       await page.waitForSelector('[data-tp-table]', { timeout: 8000 });

@@ -42,7 +42,15 @@ foreach ($initializers as [$worker, $workerPipes, $number]) {
 require dirname(__DIR__) . '/bootstrap.php';
 $pdo = freshTestDatabase($dbPath);
 check(strtolower((string)$pdo->query('PRAGMA journal_mode')->fetchColumn()) === 'wal', 'SQLite uses WAL for concurrent read and order commits');
-check((int)$pdo->query('SELECT 1 FROM app_migrations WHERE version=12')->fetchColumn()===1&&(int)$pdo->query("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('user_notifications','booking_status_events')")->fetchColumn()===2,'migration v12 installs durable account notifications and booking transition event IDs');
+check((int)$pdo->query('SELECT 1 FROM app_migrations WHERE version=13')->fetchColumn()===1&&(int)$pdo->query("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('user_notifications','booking_status_events')")->fetchColumn()===2,'bootstrap applies migration v13 and retains durable account notifications and booking transition event IDs');
+$campaignAssets=$pdo->query("SELECT slug,image_url FROM promotion_campaigns WHERE slug IN ('demo-privilege','golden-hour','secret-menu-demo') ORDER BY slug")->fetchAll(PDO::FETCH_KEY_PAIR);
+check($campaignAssets===['demo-privilege'=>'assets/generated/campaign-exclusive-v1.webp','golden-hour'=>'assets/generated/campaign-golden-hour-v1.webp','secret-menu-demo'=>'assets/generated/campaign-secret-menu-v1.webp'],'migration v13 assigns individual campaign images to unchanged seeded examples');
+$chefDrop=$pdo->query("SELECT id,image_url,demo_only FROM promotion_campaigns WHERE slug='chef-secret-drop'")->fetch(PDO::FETCH_ASSOC);
+check(is_array($chefDrop)&&(int)$chefDrop['demo_only']===1&&$chefDrop['image_url']==='assets/generated/campaign-chef-drop-v1.webp'&&(int)$pdo->query("SELECT COUNT(*) FROM promotion_targets WHERE campaign_id=".(int)$chefDrop['id']." AND target_kind='dish' AND target_key=(SELECT CAST(id AS TEXT) FROM dishes WHERE name='Нигири с морским гребешком' AND active=1 ORDER BY id LIMIT 1) AND excluded=0")->fetchColumn()===1,'migration v13 links the clearly marked chef drop to the real scallop nigiri catalogue item');
+$pdo->exec("UPDATE promotion_campaigns SET image_url='assets/generated/room-garden-terrace.webp' WHERE slug='demo-privilege'");
+$pdo->exec('DELETE FROM app_migrations WHERE version=13');
+commerce_migrate($pdo);
+check((int)$pdo->query("SELECT COUNT(*) FROM promotion_campaigns WHERE slug='chef-secret-drop'")->fetchColumn()===1&&(string)$pdo->query("SELECT image_url FROM promotion_campaigns WHERE slug='demo-privilege'")->fetchColumn()==='assets/generated/room-garden-terrace.webp','migration v13 retries without duplicate campaigns and preserves an administrator-selected image');
 $scallop = $pdo->query("SELECT d.id,d.price,d.image_url,i.slug FROM dishes d JOIN dish_ingredients di ON di.dish_id=d.id JOIN ingredients i ON i.slug=di.ingredient_slug WHERE d.name='Нигири с морским гребешком' AND i.slug='scallop'")->fetch(PDO::FETCH_ASSOC);
 check(is_array($scallop) && (int)$scallop['price']===2200 && $scallop['image_url']==='assets/food/21-nigiri-scallop.webp', 'migration v10 seeds the catalog scallop with its original product photo and server price');
 $pdo->exec('DELETE FROM app_migrations WHERE version=10');
@@ -78,7 +86,7 @@ if (PHP_OS_FAMILY === 'Windows') {
     if (!extension_loaded('sqlite3')) array_push($upgradeCommand, '-d', 'extension=php_sqlite3.dll');
     if (!extension_loaded('pdo_sqlite')) array_push($upgradeCommand, '-d', 'extension=php_pdo_sqlite.dll');
 }
-array_push($upgradeCommand, '-r', 'require $argv[1]; db(); echo (int)db()->query("SELECT 1 FROM app_migrations WHERE version=8")->fetchColumn() . (int)db()->query("SELECT 1 FROM sqlite_master WHERE type=\'table\' AND name=\'user_addresses\'")->fetchColumn() . (int)db()->query("SELECT 1 FROM app_migrations WHERE version=9")->fetchColumn() . (int)db()->query("SELECT 1 FROM app_migrations WHERE version=10")->fetchColumn() . (int)db()->query("SELECT 1 FROM app_migrations WHERE version=11")->fetchColumn() . (int)db()->query("SELECT 1 FROM app_migrations WHERE version=12")->fetchColumn();', dirname(__DIR__) . '/bootstrap.php');
+array_push($upgradeCommand, '-r', 'require $argv[1]; db(); echo (int)db()->query("SELECT 1 FROM app_migrations WHERE version=8")->fetchColumn() . (int)db()->query("SELECT 1 FROM sqlite_master WHERE type=\'table\' AND name=\'user_addresses\'")->fetchColumn() . (int)db()->query("SELECT 1 FROM app_migrations WHERE version=9")->fetchColumn() . (int)db()->query("SELECT 1 FROM app_migrations WHERE version=10")->fetchColumn() . (int)db()->query("SELECT 1 FROM app_migrations WHERE version=11")->fetchColumn() . (int)db()->query("SELECT 1 FROM app_migrations WHERE version=12")->fetchColumn() . (int)db()->query("SELECT 1 FROM app_migrations WHERE version=13")->fetchColumn();', dirname(__DIR__) . '/bootstrap.php');
 $upgradePipes = [];
 $upgradeProcess = proc_open($upgradeCommand, [0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']], $upgradePipes, dirname(__DIR__), null);
 if ($oldRestaurantDb === false) putenv('RESTAURANT_DB'); else putenv('RESTAURANT_DB=' . $oldRestaurantDb);
@@ -89,7 +97,7 @@ $upgradeError = trim(stream_get_contents($upgradePipes[2]));
 fclose($upgradePipes[1]);
 fclose($upgradePipes[2]);
 $upgradeExit = proc_close($upgradeProcess);
-check($upgradeExit === 0 && $upgradeOutput === '111111', 'an existing migration-v6 database receives booking idempotency, saved addresses, pairings and v10-v12 updates during bootstrap' . ($upgradeError !== '' ? ' (' . $upgradeError . ')' : ''));
+check($upgradeExit === 0 && $upgradeOutput === '1111111', 'an existing migration-v6 database receives booking idempotency, saved addresses, pairings and v10-v13 updates during bootstrap' . ($upgradeError !== '' ? ' (' . $upgradeError . ')' : ''));
 foreach ([$upgradeDbPath,$upgradeDbPath.'-wal',$upgradeDbPath.'-shm'] as $fixtureFile) if (is_file($fixtureFile)) @unlink($fixtureFile);
 $password = 'Integration-Only-' . bin2hex(random_bytes(8));
 $pdo->prepare('INSERT INTO admins(email,password_hash) VALUES(?,?)')->execute(['integration@example.test', password_hash($password, PASSWORD_DEFAULT)]);

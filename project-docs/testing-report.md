@@ -510,3 +510,12 @@ The account route passed `npm run test:visual-fidelity` in both PHP and static m
 ## 2026-11-17 философия: векторный акцент Фудзи
 
 Добавлена оригинальная SVG-композиция энсо/Фудзи/сакуры в страницу философии, размещена третьей колонкой desktop и после chef story на мобильном. Точечная visual-fidelity проверка прошла для PHP и Pages, включая загрузку SVG, декоративную доступность, мобильный порядок секции и отсутствие overflow. Созданы и просмотрены четыре скриншота в `project-docs/visual-qa/2.0-visual-fidelity/`. Полное визуальное совпадение с reference 05 не заявляется.
+
+## 2026-11-18 Ideal Evening, campaign assets and server validation
+
+- Focused cart unit tests: `node --test tests/cart-store.test.cjs` passed 13/13, including atomic multi-item recommendations and custom-set validation.
+- `npm run test:offers-evening` passed against the freshly exported Pages build on the local static server. It checks a real main-and-drink recommendation, per-guest budget wording, atomic cart addition, and booking handoff including Omakase format.
+- `tests/php_integrity_integration.php` passed 217 assertions with PHP 8.4 + PDO SQLite, including migration 13, preservation of admin-selected campaign images, Chef's Secret Drop target, and transactional/idempotent integrity.
+- The preceding focused `npm run test:tokyo20` run passed PHP and static mode, including 21 PHP and 19 static dish-detail routes, the custom Omakase set, booking handoff and responsive checks. It is a focused integration regression, not a full acceptance run.
+- Static export contains 37 pages. New result captures are in `project-docs/visual-qa/12-php-perfect-evening-{result,mobile}.jpg` and `12-static-perfect-evening-{result,mobile}.jpg`.
+- `git diff --check` passes. Public Pages, hosted CI and the complete 11-reference visual acceptance have not yet been verified for this working change.

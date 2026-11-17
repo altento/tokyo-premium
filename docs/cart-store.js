@@ -200,6 +200,27 @@
     return setQty(id, next);
   }
 
+  function addMany(lines) {
+    if (!Array.isArray(lines) || !lines.length || lines.length > MAX_LINES) return false;
+    const known = catalog();
+    const state = getState();
+    const quantities = new Map(state.items.map(row => [row.id, row.qty]));
+    for (const line of lines) {
+      if (!line || typeof line !== 'object') return false;
+      const id = positiveId(line.id);
+      const qty = line.qty;
+      if (!id || !Number.isSafeInteger(qty) || qty < 1 || qty > MAX_QTY || (known.size && !known.has(id))) return false;
+      const next = (quantities.get(id) || 0) + qty;
+      if (next > MAX_QTY) return false;
+      quantities.set(id, next);
+    }
+    if (quantities.size > MAX_LINES) return false;
+    return Boolean(writeState({
+      items: Array.from(quantities, ([id, qty]) => ({ id, qty })),
+      customSets: state.customSets
+    }));
+  }
+
   function adjust(idValue, delta) {
     if (!Number.isSafeInteger(delta) || Math.abs(delta) !== 1) return false;
     const id = positiveId(idValue);
@@ -394,7 +415,7 @@
   }
 
   global.TokyoCart = Object.freeze({
-    key: CART_KEY, maxQty: MAX_QTY, maxCustomSets: MAX_CUSTOM_SETS, get: getCart, set: writeCart, add, setQty, adjust, remove: id => setQty(id, 0),
+    key: CART_KEY, maxQty: MAX_QTY, maxCustomSets: MAX_CUSTOM_SETS, get: getCart, set: writeCart, add, addMany, setQty, adjust, remove: id => setQty(id, 0),
     getCustomSets, addCustomSet, setCustomSetQty, adjustCustomSet: (key, delta) => { const row = getCustomSets().find(item => item.key === key); return row && Number.isSafeInteger(delta) && Math.abs(delta) === 1 ? setCustomSetQty(key, Math.max(0, row.qty + delta)) : false; }, removeCustomSet, customSetSnapshot, orderPayload,
     clear, count, total, snapshot, snapshotAll, getFavorites, setFavorites, toggleFavorite, beginCheckout, finishCheckout, checkoutRequestKey, clearCheckoutRequestKey,
     catalog: () => Array.from(catalog().values())

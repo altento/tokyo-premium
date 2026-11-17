@@ -398,3 +398,12 @@ Added a small original SVG scene (enso, Mount Fuji and sakura) as a third editor
 - Added regression coverage to `tests/tokyo20-regression.cjs` for the desktop/mobile panel-height limits, served SVG, computed quote text color, and mobile overflow.
 - `php -l pages.php`, static export of 37 pages, and `npm run test:tokyo20` passed. The suite covered PHP and Pages, 21/19 dish routes, Omakase course selection and photographs, the new visual assertions, and mobile overflow across feature routes. Desktop/mobile PHP and Pages screenshots were reviewed.
 - This improves reference 04 but does not claim full pixel parity. GitHub Actions and public deployment have not yet been run for this working change.
+
+## 2026-11-18 incremental Tokyo Premium 2.0 checkpoint
+
+- Ideal Evening now assembles a menu plan from current catalog positions and real pairings, distinguishes the per-guest budget from the group allowance, supports adding the whole plan atomically, and carries zone, editable summary and selected Omakase format into booking.
+- When the guest selects a set/Omakase preference, the flow uses the active SQLite set-variant contract, builds a set from distinct eligible catalog dishes, and adds it through the shared cart custom-set API. It does not rely on a fabricated fixed set product.
+- Marketing accepts four original, optimized campaign images through an exact local-path allow-list. Additive SQLite migration 13 updates only untouched seed image values and creates a time-limited Chef's Secret Drop linked to an active catalog dish without claiming live stock.
+- Verified in this checkpoint: 13 cart-store tests; focused static Offers/Ideal Evening browser regression; PHP/SQLite integration (217 assertions); the preceding PHP + static Tokyo 2.0 regression and 37-page export. Full suite, all-page visual reconciliation, hosted CI and public Pages deployment remain outstanding.
+- Current local previews: PHP `http://localhost:8871/`; static `http://localhost:8870/`. These are temporary local servers, not public deployment URLs.
+- This is an incremental checkpoint, not completion of the modernization objective. PHP account, admin workflows, all 11 approved references, security review, performance checks and the published Pages build still require the broader acceptance pass.

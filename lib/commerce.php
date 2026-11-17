@@ -331,6 +331,40 @@ function commerce_migrate(PDO $pdo): void
             throw $error;
         }
     }
+
+    // v13 assigns dedicated campaign imagery without overwriting administrator
+    // edits and seeds one time-limited, catalogue-linked chef-drop example.
+    if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=13')->fetchColumn()) {
+        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        try {
+            $campaignImageUpdates = [
+                ['demo-privilege','assets/generated/home-hero-nigiri-v2.webp','assets/generated/campaign-exclusive-v1.webp'],
+                ['golden-hour','assets/generated/room-garden-terrace.webp','assets/generated/campaign-golden-hour-v1.webp'],
+                ['secret-menu-demo','assets/food/17-omakase-set.webp','assets/generated/campaign-secret-menu-v1.webp'],
+            ];
+            $updateCampaignImage = $pdo->prepare('UPDATE promotion_campaigns SET image_url=? WHERE slug=? AND image_url=?');
+            foreach ($campaignImageUpdates as [$slug,$oldImage,$newImage]) $updateCampaignImage->execute([$newImage,$slug,$oldImage]);
+
+            $nowInRestaurant = new DateTimeImmutable('now', new DateTimeZone('Asia/Qyzylorda'));
+            $dropStart = $nowInRestaurant->modify('-1 minute')->format('Y-m-d H:i:s');
+            $dropEnd = $nowInRestaurant->modify('+30 days')->format('Y-m-d H:i:s');
+            $createChefDrop = $pdo->prepare("INSERT OR IGNORE INTO promotion_campaigns(slug,campaign_type,title,description,image_url,reward_type,reward_value,minimum_subtotal,maximum_discount,starts_at,ends_at,timezone,active,demo_only,sort_order) VALUES('chef-secret-drop','chef_drop','Выбор шефа · гребешок и юдзу','Демонстрационная сезонная подача. Сроки, цена и доступность уточняются в условиях учебного проекта.','assets/generated/campaign-chef-drop-v1.webp','none',0,0,0,?,?,'Asia/Qyzylorda',1,1,25)");
+            $createChefDrop->execute([$dropStart,$dropEnd]);
+            $dishLookup = $pdo->prepare('SELECT id FROM dishes WHERE name=? AND active=1 ORDER BY id LIMIT 1');
+            $dishLookup->execute(['Нигири с морским гребешком']);
+            $dropDishId = $dishLookup->fetchColumn();
+            $dropCampaignId = $pdo->query("SELECT id FROM promotion_campaigns WHERE slug='chef-secret-drop'")->fetchColumn();
+            if ($dropDishId !== false && $dropCampaignId !== false) {
+                $target = $pdo->prepare("INSERT OR IGNORE INTO promotion_targets(campaign_id,target_kind,target_key,excluded) VALUES(?,'dish',?,0)");
+                $target->execute([(int)$dropCampaignId,(string)$dropDishId]);
+            }
+            $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(13)');
+            $pdo->commit();
+        } catch (Throwable $error) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $error;
+        }
+    }
 }
 
 function commerce_actor_key(?int $userId, string $sessionId): string
