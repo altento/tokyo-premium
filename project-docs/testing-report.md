@@ -1,5 +1,11 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-17 static account dashboard reference pass
+
+Compared the populated GitHub Pages account with `design-references/11-account.png`. The masthead, browser-local identity cue, privilege cards, metric row and quick actions now use a tighter dashboard rhythm; order and favorite content remain visible and functional. Responsive actions use four desktop columns and two phone columns. Source account CSS and the checked-in Pages copies are synchronized so a future export retains the same styling.
+
+`npm run test:account-demo` passed against `http://127.0.0.1:8765`. The focused regression checked 1440 px masthead geometry, four/two-column quick actions, 390 px and 320 px layout bounds, local record labels and persistence, loaded order/favorite photos, favorite-to-cart, clear-data and sample restoration. Desktop and mobile captures were visually inspected in `visual-qa/account-refresh-2026-11-17/`. This is progress on reference 11, not complete pixel-level parity.
+
 ## 2026-11-17 cart checkout and booking notification follow-up
 
 The cart checkout/contact section is now a native disclosure to keep the populated order summary compact. PHP and Pages markup use the same structure; the delivery/pickup selector and total remain visible. The browser regression opens the disclosure before filling checkout fields, then checks pickup reset, repeated delivery validation, and state after route changes/reload. Restaurant booking notification email status and retry are now visible in the admin booking row; the PHP integration suite includes an outbox fixture and retry-action assertion.
@@ -417,4 +423,4 @@ The PHP account query now joins order items to the current catalogue image while
 
 ## 2026-11-17 Tokyo 2.0 checkout and first-visit account regression
 
-The new first-visit examples changed the expected static account history from one checkout row and one booking to three labeled sample rows plus the newly submitted order and booking. Updated `tests/tokyo20-regression.cjs` to verify the submitted guest order itself and both sets of local records. `npm run test:tokyo20` passed against an isolated PHP + SQLite server and the current Pages export. Hosted run 43986099018 exposed the stale count assertions; the fix is awaiting its replacement CI run.
+The new first-visit examples changed the expected static account history from one checkout row and one booking to three labeled sample rows plus the newly submitted order and booking. Updated `tests/tokyo20-regression.cjs` to verify the submitted guest order itself and both sets of local records. `npm run test:tokyo20` passed against an isolated PHP + SQLite server and the current Pages export. Hosted run 43986099018 exposed the stale count assertions; the correction passed CI in replacement run 43988516200. Artifact upload and deployment were skipped because PR #19 remains a draft.

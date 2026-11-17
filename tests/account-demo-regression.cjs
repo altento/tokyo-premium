@@ -28,7 +28,8 @@ async function run() {
     assert.match(await page.locator('.account-overview-privacy').innerText(), /не зашифровано/i, 'account explains that browser-local demo data is not encrypted');
     assert.equal(await page.locator('.account-overview-art img').getAttribute('src'), 'assets/generated/contact-exterior.webp', 'account uses an entrance photograph rather than a room photo');
     assert.ok(await page.locator('.account-overview-art img').evaluate(image => image.complete && image.naturalWidth > 0), 'account entrance photograph is decoded');
-    assert.ok(await page.locator('.account-overview').evaluate(hero => hero.getBoundingClientRect().height <= 420), 'desktop account masthead remains a compact introduction');
+    assert.ok(await page.locator('.account-overview').evaluate(hero => hero.getBoundingClientRect().height <= 330), 'desktop account masthead stays compact beside the approved account reference');
+    assert.equal(await page.locator('.account-quick-actions').evaluate(node => getComputedStyle(node).gridTemplateColumns.split(' ').length), 4, 'desktop account quick actions form four balanced tiles');
 
     assert.match(await page.locator('[data-account-demo-seed-status]').evaluate(node => node.textContent), /только в этом браузере/i, 'first-visit status clearly identifies browser-local demo data');
     const privilege = page.locator('[data-tp-demo-loyalty]');
@@ -77,6 +78,7 @@ async function run() {
     await page.screenshot({ path: path.join(evidence, '11-account-seeded-desktop.jpg'), fullPage: true, type: 'jpeg', quality: 74 });
     await page.setViewportSize({ width: 390, height: 844 });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'seeded account has no mobile horizontal overflow');
+    assert.equal(await page.locator('.account-quick-actions').evaluate(node => getComputedStyle(node).gridTemplateColumns.split(' ').length), 2, 'mobile quick actions remain an easy two-column grid');
     const mobileTabBadges = await page.locator('.account-demo-nav [data-account-tab]').evaluateAll(buttons => buttons.filter(button => button.querySelector('.account-demo-tab-count')).map(button => {
       const labelNode = [...button.childNodes].find(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
       const range = document.createRange();
