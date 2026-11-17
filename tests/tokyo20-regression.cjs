@@ -136,13 +136,22 @@ async function run() {
         continue;
       }
       await page.goto(mode.base + mode.routes.offers, { waitUntil: 'domcontentloaded' });
-      const repeatSecretForm = page.locator('[data-tp-secret-unlock]');
-      await repeatSecretForm.locator('[name="code"]').fill(secretCode);
-      await repeatSecretForm.locator('button[type="submit"]').click();
-      await page.waitForFunction(() => {
-        const root = document.querySelector('[data-tp-secret-results]');
-        return root && !root.hidden && root.querySelector('.dish-card');
-      }, null, { timeout: 10000 });
+      if (mode.name === 'static') {
+        // Pages has no server session, so a fresh navigation starts at the
+        // honest local-demo gate and the visitor must unlock the preview again.
+        const repeatSecretForm = page.locator('[data-tp-secret-unlock]');
+        await repeatSecretForm.locator('[name="code"]').fill(secretCode);
+        await repeatSecretForm.locator('button[type="submit"]').click();
+        await page.waitForFunction(() => {
+          const root = document.querySelector('[data-tp-secret-results]');
+          return root && !root.hidden && root.querySelector('.dish-card');
+        }, null, { timeout: 10000 });
+      } else {
+        // PHP stores the unlock in the session and renders the secret grid on
+        // return; its form is intentionally absent after access is granted.
+        const serverUnlockedItems = page.locator('.tp20-secret-grid .add-to-cart');
+        check(await serverUnlockedItems.count() >= 2, 'php Secret Menu access persists after returning to offers');
+      }
       await prepareVisual(page);
       await page.screenshot({ path: path.join(evidence, `12-${mode.name}-secret-menu-unlocked-desktop.jpg`), fullPage: true, type: 'jpeg', quality: 72 });
       await page.setViewportSize({ width: 390, height: 844 });
