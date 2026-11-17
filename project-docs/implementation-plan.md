@@ -22,7 +22,7 @@ The project remains the existing PHP 8+ application with SQLite. Public PHP rout
 
 1. PHP syntax and isolated PHP/SQLite integrity tests.
 2. Cart-store unit tests.
-3. Browser regression for 11 route types, 20 dishes, cart/checkout/profile/navigation and responsive widths.
+3. Browser regression for 11 route types, 21 dishes, cart/checkout/profile/navigation and responsive widths.
 4. `test:tokyo20` against PHP and static export, including offers, collection, Omakase, set builder, recommendation wizard, booking preference, gift preview, quick view and populated cart.
 5. Inspect captured screenshots before updating the evidence index.
 6. Verify a clean CI dependency install, static Pages export and published deployment after pushing the release branch.

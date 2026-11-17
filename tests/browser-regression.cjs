@@ -90,15 +90,15 @@ async function run(options = {}) {
       await page.setViewportSize({ width: 1440, height: 1000 });
       if (name === '03-dish') {
         const dishCount = await page.evaluate(() => window.DISHES?.length || 0);
-        check(dishCount === 18, `public catalog hides two Secret Menu dishes until access is granted (got ${dishCount})`);
+        check(dishCount === 19, `public catalog hides two Secret Menu dishes until access is granted (got ${dishCount})`);
         const offersPage = await page.goto(`${base}/offers.php`, { waitUntil: 'domcontentloaded' });
         check(offersPage?.status() === 200, 'Secret Menu access page responds');
         await page.locator('[data-tp-secret-unlock] [name="code"]').fill('SECRET');
         await page.locator('[data-tp-secret-unlock] button[type="submit"]').click();
         await page.waitForFunction(() => document.querySelector('[data-tp-secret-results] .dish-card'), null, { timeout: 10000 });
         await page.goto(`${base}/menu.php`, { waitUntil: 'domcontentloaded' });
-        check(await page.evaluate(() => window.DISHES?.length || 0) === 20, 'server unlock grants the two Secret Menu dishes across pages');
-        for (let id = 1; id <= 20; id++) {
+        check(await page.evaluate(() => window.DISHES?.length || 0) === 21, 'server unlock grants the two Secret Menu dishes across pages');
+        for (let id = 1; id <= 21; id++) {
           const detail = await page.goto(`${base}/pages.php?page=dish&id=${id}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
           check(detail?.status() === 200, `dish ${id} responds`);
           check(await page.locator('.detail-actions .add-to-cart').count() === 1, `dish ${id} add button`);
@@ -431,7 +431,7 @@ async function run(options = {}) {
     await page.screenshot({ path: path.join(evidence, '11-account-mobile.jpg'), fullPage: true, type: 'jpeg', quality: 70 });
     check(failures.length === 0, failures.slice(0, 12).join('\n'));
     progress('browser regression pass');
-    console.log(`PASS: browser regression; 11 routes, 20 details, cart/checkout, tabs, favorites, navigation, filters, 6 widths. Screenshots: ${evidence}`);
+    console.log(`PASS: browser regression; 11 routes, 21 details, cart/checkout, tabs, favorites, navigation, filters, 6 widths. Screenshots: ${evidence}`);
   } finally { await browser.close(); }
 }
 

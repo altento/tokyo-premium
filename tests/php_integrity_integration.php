@@ -42,6 +42,11 @@ foreach ($initializers as [$worker, $workerPipes, $number]) {
 require dirname(__DIR__) . '/bootstrap.php';
 $pdo = freshTestDatabase($dbPath);
 check(strtolower((string)$pdo->query('PRAGMA journal_mode')->fetchColumn()) === 'wal', 'SQLite uses WAL for concurrent read and order commits');
+$scallop = $pdo->query("SELECT d.id,d.price,d.image_url,i.slug FROM dishes d JOIN dish_ingredients di ON di.dish_id=d.id JOIN ingredients i ON i.slug=di.ingredient_slug WHERE d.name='Нигири с морским гребешком' AND i.slug='scallop'")->fetch(PDO::FETCH_ASSOC);
+check(is_array($scallop) && (int)$scallop['price']===2200 && $scallop['image_url']==='assets/food/21-nigiri-scallop.webp', 'migration v10 seeds the catalog scallop with its original product photo and server price');
+$pdo->exec('DELETE FROM app_migrations WHERE version=10');
+commerce_migrate($pdo);
+check((int)$pdo->query("SELECT COUNT(*) FROM dishes WHERE name='Нигири с морским гребешком'")->fetchColumn()===1, 'scallop content migration can be retried without duplicate catalog items');
 $pairingCount=(int)$pdo->query('SELECT COUNT(*) FROM dish_pairings')->fetchColumn();
 check($pairingCount>=36,'migration v9 seeds editable pairing recommendations for the catalogue');
 check((string)$pdo->query("SELECT pairing_type FROM dish_pairings WHERE dish_id=3 AND paired_dish_id=20")->fetchColumn()==='drink','salmon nigiri has a catalog-backed yuzu drink pairing');
@@ -66,7 +71,7 @@ if (PHP_OS_FAMILY === 'Windows') {
     if (!extension_loaded('sqlite3')) array_push($upgradeCommand, '-d', 'extension=php_sqlite3.dll');
     if (!extension_loaded('pdo_sqlite')) array_push($upgradeCommand, '-d', 'extension=php_pdo_sqlite.dll');
 }
-array_push($upgradeCommand, '-r', 'require $argv[1]; db(); echo (int)db()->query("SELECT 1 FROM app_migrations WHERE version=8")->fetchColumn() . (int)db()->query("SELECT 1 FROM sqlite_master WHERE type=\'table\' AND name=\'user_addresses\'")->fetchColumn() . (int)db()->query("SELECT 1 FROM app_migrations WHERE version=9")->fetchColumn();', dirname(__DIR__) . '/bootstrap.php');
+array_push($upgradeCommand, '-r', 'require $argv[1]; db(); echo (int)db()->query("SELECT 1 FROM app_migrations WHERE version=8")->fetchColumn() . (int)db()->query("SELECT 1 FROM sqlite_master WHERE type=\'table\' AND name=\'user_addresses\'")->fetchColumn() . (int)db()->query("SELECT 1 FROM app_migrations WHERE version=9")->fetchColumn() . (int)db()->query("SELECT 1 FROM app_migrations WHERE version=10")->fetchColumn();', dirname(__DIR__) . '/bootstrap.php');
 $upgradePipes = [];
 $upgradeProcess = proc_open($upgradeCommand, [0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']], $upgradePipes, dirname(__DIR__), null);
 if ($oldRestaurantDb === false) putenv('RESTAURANT_DB'); else putenv('RESTAURANT_DB=' . $oldRestaurantDb);
@@ -77,7 +82,7 @@ $upgradeError = trim(stream_get_contents($upgradePipes[2]));
 fclose($upgradePipes[1]);
 fclose($upgradePipes[2]);
 $upgradeExit = proc_close($upgradeProcess);
-check($upgradeExit === 0 && $upgradeOutput === '111', 'an existing migration-v6 database receives booking idempotency, saved addresses and catalog pairings during bootstrap' . ($upgradeError !== '' ? ' (' . $upgradeError . ')' : ''));
+check($upgradeExit === 0 && $upgradeOutput === '1111', 'an existing migration-v6 database receives booking idempotency, saved addresses, catalog pairings and the v10 scallop menu addition during bootstrap' . ($upgradeError !== '' ? ' (' . $upgradeError . ')' : ''));
 foreach ([$upgradeDbPath,$upgradeDbPath.'-wal',$upgradeDbPath.'-shm'] as $fixtureFile) if (is_file($fixtureFile)) @unlink($fixtureFile);
 $password = 'Integration-Only-' . bin2hex(random_bytes(8));
 $pdo->prepare('INSERT INTO admins(email,password_hash) VALUES(?,?)')->execute(['integration@example.test', password_hash($password, PASSWORD_DEFAULT)]);

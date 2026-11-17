@@ -1,5 +1,5 @@
 # Content inventory
-Updated 2026-11-13
+Updated 2026-11-17
 
 | Content | Source | Status |
 |---|---|---|
@@ -29,3 +29,7 @@ No actual address or restaurant availability is claimed. The decorative map is e
 
 - The menu hero now selects `assets/generated/menu-hero-sushi-assortment-v1.webp`, an original AI-generated text-free food composition distinct from the homepage hero. Its dimensions are declared in markup to preserve layout space.
 - The Omakase stage selector displays five different catalog photos linked to the same five educational stages shown in the interactive detail panel. These are menu photographs reused as truthful previews of those catalog items, not fabricated additional camera angles.
+
+## 2026-11-17 catalog addition
+
+- `assets/food/21-nigiri-scallop.webp` is original AI-generated, text-free product photography, exported as a 1200×1200 WebP (about 122 KiB). It illustrates the fictional “Нигири с морским гребешком” menu item; the entry and example price are educational content, not a real restaurant offer.

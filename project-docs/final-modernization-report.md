@@ -184,7 +184,7 @@ Removed the empty “Сеты 0” filter and added a direct “Собрать �
 
 The menu toolbar now also has an accessible grid/list toggle, with horizontal cards at desktop and mobile widths. The focused static test covers both modes and confirms a search for the unique “Рамен с говядиной” result keeps nonmatching cards hidden in list mode. Crops are saved in `visual-qa/menu-grid-list-2026-11-16/`; PHP browser mode, broad suite, hosted CI and Pages deployment were not repeated.
 
-Ingredient filters for tuna, salmon, eel, shrimp, scallop and roe are supported and use the current menu text/ingredient metadata; each visible filter must match at least one active dish. The scallop option is hidden because the seeded catalog currently has no scallop dish. The focused browser scenario verifies category + salmon + product-name filtering and the zero-result combination; no full-suite or PHP browser run was repeated.
+Ingredient filters for tuna, salmon, eel, shrimp, scallop and roe use current menu text/ingredient metadata; each visible filter matches at least one active dish. Follow-up 2026-11-17 adds original photographed scallop nigiri through additive SQLite migration v10, so the scallop option now has a matching catalog dish. Focused PHP and static browser checks cover the filter and detail-page image; the full suite was not repeated.
 
 ## Omakase hero image follow-up — 2026-11-16
 

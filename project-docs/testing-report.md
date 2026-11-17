@@ -266,7 +266,7 @@ The homepage now starts with date, time, guest count and preferred zone; contact
 
 The same route-focused suite now includes the reference-aligned grid/list switch. It checks switching both ways and confirms searching the unique dish name “Рамен с говядиной” in list mode leaves one result while hiding nonmatches. Static-only run: two viewports (1440/390); PHP browser mode was not run in this pass.
 
-Ingredient quick-filters now combine with category and text search. The focused menu test verifies that “Роллы” + “Лосось” + “Филадельфия” yields one dish and that changing category to “Суши и сашими” yields none while the other filters remain active. Filters with no matching catalog item remain hidden; the seeded menu currently has no scallop dish. This supplements the same two-width static-only run; no full suite was repeated.
+Ingredient quick-filters combine with category and text search. The focused menu test verifies category, ingredient, and text-filter combinations. In the 2026-11-17 follow-up, a photographed scallop nigiri was added through SQLite migration v10; the scallop filter is now visible and returns that dish in PHP and Pages modes. The same focused Playwright run checks 1440, 1024, and 390 px, including the three-column menu grid at 1024 px and PHP/static detail-page image loading. No full suite was repeated.
 
 ## Campaign editor follow-up — 2026-11-16
 

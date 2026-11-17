@@ -147,3 +147,7 @@
 The previous hosted run 43937788170 passed PHP/SQLite, the full browser regression, and all eight cart states, then failed on the 320 px booking-title hyphenation assertion. The source and Pages editorial styles now set hyphens: none. Focused static-browser checks passed at nine widths (320–1920 px), including visible text bounds and no horizontal overflow. The static motion regression also passed after its 82% hero-crop assertion was aligned with the visually inspected image. Evidence: project-docs/visual-qa/07-booking-heading-fix-2026-11-17/ and project-docs/visual-qa/2.0-motion-2026-11-17/.
 
 Status: CSS repair is locally verified; hosted PHP + SQLite/responsive regression for the new head is pending. This does not change the previously recorded outstanding all-reference visual review, draft PR state, or public Pages deployment status.
+
+## Local follow-up — 2026-11-17
+
+Added a fictional scallop nigiri with original 1200×1200 WebP photography. Additive SQLite migration v10 inserts the dish and ingredient only when missing; seed data and the static export include it. The scallop filter now has a matching item. Also kept the three-column menu grid at 1024 px to match reference 02; it switches to two columns below 900 px. Focused Playwright smoke passed for PHP and static Pages at 1440, 1024, and 390 px, including the scallop filter, product detail page, image decoding, divider, and overflow checks. PHP lint passed. The full suite and hosted CI for these latest changes have not run; the public Pages site has not been updated.

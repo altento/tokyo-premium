@@ -107,6 +107,8 @@ foreach ($routes as $route => $filename) {
 $secretIds=commerce_secret_menu_restricted_dish_ids(db());
 $secretDemoItems=[];
 if($secretIds){$marks=implode(',',array_fill(0,count($secretIds),'?'));$q=db()->prepare("SELECT d.*,c.name AS category_name FROM dishes d JOIN categories c ON c.slug=d.category WHERE d.active=1 AND d.id IN ($marks) ORDER BY d.sort_order,d.id");$q->execute($secretIds);$secretDemoItems=$q->fetchAll();}
+foreach($secretDemoItems as &$secretItem) unset($secretItem['created_at']);
+unset($secretItem);
 $secretDemoJson=json_encode($secretDemoItems,JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP|JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR);
 if(file_put_contents($docs.'/tokyo-secret-demo.js','window.TOKYO_SECRET_DEMO_ITEMS = '.$secretDemoJson.";\n")===false)throw new RuntimeException('Cannot write static Secret Menu preview data');
 

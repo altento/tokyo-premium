@@ -215,6 +215,37 @@ function commerce_migrate(PDO $pdo): void
             throw $error;
         }
     }
+
+    // v10 adds one photographed scallop nigiri to make the existing scallop
+    // ingredient filter useful. Keep it additive: never replace an edited dish.
+    if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=10')->fetchColumn()) {
+        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        try {
+            $pdo->exec("INSERT OR IGNORE INTO ingredients(slug,name,active) VALUES ('scallop','Морской гребешок',1)");
+            $ingredientQuery = $pdo->query("SELECT slug FROM ingredients WHERE slug='scallop' OR name='Морской гребешок' ORDER BY CASE WHEN slug='scallop' THEN 0 ELSE 1 END LIMIT 1");
+            $ingredientSlug = (string)$ingredientQuery->fetchColumn();
+            if ($ingredientSlug === '') throw new RuntimeException('Scallop ingredient could not be resolved.');
+            $dishName = 'Нигири с морским гребешком';
+            $findDish = $pdo->prepare('SELECT id FROM dishes WHERE name=? ORDER BY id LIMIT 1');
+            $findDish->execute([$dishName]);
+            $dishId = $findDish->fetchColumn();
+            if ($dishId === false) {
+                $insertDish = $pdo->prepare('INSERT INTO dishes(category,name,description,weight,price,image_url,featured,active,sort_order) VALUES(?,?,?,?,?,?,?,?,?)');
+                $insertDish->execute(['sushi',$dishName,'Сладкий морской гребешок, слегка обожжённый снаружи, на рисе для суши; цитрусовый акцент юдзу.','40 г',2200,'assets/food/21-nigiri-scallop.webp',0,1,4]);
+                $dishId = (int)$pdo->lastInsertId();
+            }
+            $dishId = (int)$dishId;
+            $linkIngredient = $pdo->prepare('INSERT OR IGNORE INTO dish_ingredients(dish_id,ingredient_slug,is_optional,sort_order) VALUES(?,?,0,10)');
+            $linkIngredient->execute([$dishId,$ingredientSlug]);
+            $linkPairing = $pdo->prepare("INSERT OR IGNORE INTO dish_pairings(dish_id,paired_dish_id,pairing_type,sort_order) VALUES(?,20,'drink',10)");
+            $linkPairing->execute([$dishId]);
+            $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(10)');
+            $pdo->commit();
+        } catch (Throwable $error) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $error;
+        }
+    }
 }
 
 function commerce_actor_key(?int $userId, string $sessionId): string

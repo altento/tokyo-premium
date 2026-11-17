@@ -18,6 +18,7 @@ if (selectedMode && !routes.some(route => route.mode === selectedMode)) throw ne
 const selectedRoutes = selectedMode ? routes.filter(route => route.mode === selectedMode) : routes;
 const viewports = [
   { name: 'desktop', width: 1440, height: 1000 },
+  { name: 'tablet-landscape', width: 1024, height: 900 },
   { name: 'mobile', width: 390, height: 844 }
 ];
 
@@ -36,6 +37,15 @@ const viewports = [
         await page.setViewportSize({ width: viewport.width, height: viewport.height });
         const response = await page.goto(`${base}${route.path}`, { waitUntil: 'networkidle' });
         assert.equal(response?.status(), 200, `${route.mode} menu returns HTTP 200`);
+        if (viewport.name === 'desktop') {
+          const dishPath = route.mode === 'php' ? '/pages.php?page=dish&id=21' : '/docs/dish-21.html';
+          const detailResponse = await page.goto(`${base}${dishPath}`, { waitUntil: 'networkidle' });
+          assert.equal(detailResponse?.status(), 200, `${route.mode} scallop detail route returns HTTP 200`);
+          await page.locator('#dish-main-image').evaluate(image => image.decode());
+          assert.match(await page.locator('h1').innerText(), /Нигири с морским гребешком/u, `${route.mode} detail page shows the scallop nigiri`);
+          assert.ok(await page.locator('#dish-main-image').evaluate(image => image.naturalWidth > 0), `${route.mode} scallop product photograph loads`);
+          await page.goto(`${base}${route.path}`, { waitUntil: 'networkidle' });
+        }
         await page.evaluate(async () => {
           for (const image of document.images) image.loading = 'eager';
           await Promise.all([...document.images].map(image => image.decode().catch(() => {})));
@@ -49,6 +59,7 @@ const viewports = [
           return {
             width: innerWidth,
             scrollWidth: document.documentElement.scrollWidth,
+            menuGridColumns: getComputedStyle(document.querySelector('.menu-page .dish-grid')).gridTemplateColumns.split(' ').length,
             heroHeight: Math.round(hero?.getBoundingClientRect().height || 0),
             heroImageLoaded: Boolean(heroImage?.naturalWidth),
             breadcrumb: document.querySelector('.menu-breadcrumbs [aria-current="page"]')?.textContent.trim(),
@@ -67,6 +78,7 @@ const viewports = [
             setBuilderShortcut: document.querySelector('.menu-category-list .menu-set-link')?.getAttribute('href'),
             menuViewButtons: document.querySelectorAll('[data-menu-view]').length,
             ingredientFilterButtons: [...document.querySelectorAll('.menu-subfilter[data-menu-ingredient]')].filter(button => !button.hidden).length,
+            scallopFilterVisible: !document.querySelector('.menu-subfilter[data-menu-ingredient="scallop"]')?.hidden,
             ingredientFilterCountsMatch: (() => {
               const matchers = {
                 tuna: /тун(ец|ца|цу|цом|ц)/u,
@@ -99,12 +111,14 @@ const viewports = [
         assert.ok(metrics.heroHeight > 0 && metrics.heroHeight <= (viewport.width > 700 ? 350 : 370), `${route.mode} ${viewport.name} keeps the compact responsive menu hero`);
         assert.equal(metrics.heroImageLoaded, true, `${route.mode} ${viewport.name} hero image loads`);
         assert.equal(metrics.breadcrumb, 'Меню', `${route.mode} ${viewport.name} shows the current breadcrumb`);
+        assert.equal(metrics.menuGridColumns, viewport.width > 900 ? 3 : 2, `${route.mode} ${viewport.name} keeps the catalog at its intended responsive column count`);
         assert.ok(metrics.catalogHeadingDivider && metrics.catalogHeadingDivider.content !== 'none' && metrics.catalogHeadingDivider.width >= 40 && metrics.catalogHeadingDivider.height === 2, `${route.mode} ${viewport.name} preserves the Japanese-red rule under the catalog section title`);
         assert.equal(metrics.firstPageCards, 6, `${route.mode} ${viewport.name} renders the first six catalog cards`);
         assert.equal(metrics.emptyCategoryButtons, 0, `${route.mode} ${viewport.name} does not present an empty catalog filter`);
         assert.match(metrics.setBuilderShortcut || '', /set-builder/, `${route.mode} ${viewport.name} links directly to the set builder from categories`);
         assert.equal(metrics.menuViewButtons, 2, `${route.mode} ${viewport.name} exposes grid and list view controls`);
         assert.ok(metrics.ingredientFilterButtons > 1, `${route.mode} ${viewport.name} exposes filters for ingredients available in the menu`);
+        assert.equal(metrics.scallopFilterVisible, true, `${route.mode} ${viewport.name} exposes the scallop filter for the photographed scallop nigiri`);
         assert.equal(metrics.ingredientFilterCountsMatch, true, `${route.mode} ${viewport.name} shows only ingredient filters with matching dishes and correct counts`);
         assert.equal(metrics.setBuilderShortcutInViewport, true, `${route.mode} ${viewport.name} keeps the set-builder shortcut visible in the category controls`);
         assert.equal(metrics.storyPhotoCount, 2, `${route.mode} ${viewport.name} has two authored-set photographs`);
@@ -117,6 +131,10 @@ const viewports = [
           cardDisplay: getComputedStyle(grid.querySelector('.dish-card:not([hidden])')).display
         }));
         assert.deepEqual(listState, { view: 'list', pressed: 'true', cardDisplay: 'grid' }, `${route.mode} ${viewport.name} switches to a real card list`);
+        await page.locator('[data-menu-ingredient="scallop"]').click();
+        assert.equal(await page.locator('.menu-page .dish-card:not([hidden])').count(), 1, `${route.mode} ${viewport.name} scallop filter returns its catalog dish`);
+        assert.match(await page.locator('.menu-page .dish-card:not([hidden])').innerText(), /Нигири с морским гребешком/u, `${route.mode} ${viewport.name} filter shows the correct dish`);
+        await page.locator('[data-menu-ingredient="all"]').click();
         await page.locator('.menu-search').fill('Рамен с говядиной');
         const filteredList = await page.locator('.menu-page .dish-grid').evaluate(grid => ({
           visible: [...grid.querySelectorAll('.dish-card')].filter(card => !card.hidden && getComputedStyle(card).display !== 'none').length,
