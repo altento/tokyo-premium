@@ -20,15 +20,82 @@ async function prepareVisual(page) {
   });
 }
 
+async function verifyDishDetailRoutes(page, mode, catalog, secretIds) {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const secret = new Set(secretIds.map(Number));
+  const accessibleDishes = catalog.filter(dish => mode.name !== 'static' || !secret.has(Number(dish.id)));
+  check(accessibleDishes.length === (mode.name === 'static' ? catalog.length - secret.size : catalog.length), `${mode.name} has a route for every dish available in this mode`);
+
+  for (const dish of accessibleDishes) {
+    const id = Number(dish.id);
+    const url = mode.name === 'php' ? `/pages.php?page=dish&id=${id}` : `/dish-${id}.html`;
+    const response = await page.goto(mode.base + url, { waitUntil: 'domcontentloaded' });
+    check(response?.status() === 200, `${mode.name} dish ${id} detail route returns 200`);
+    check(await page.locator('.detail-feature--product').count() === 1, `${mode.name} dish ${id} uses the product detail layout`);
+    check(await page.locator('h1').count() === 1, `${mode.name} dish ${id} has one heading`);
+
+    const heading = page.locator('.detail-product-heading h1');
+    const titleState = await heading.evaluate(node => {
+      const rect = node.getBoundingClientRect();
+      const clippingAncestorsFit = (() => {
+        for (let parent = node.parentElement; parent; parent = parent.parentElement) {
+          const style = getComputedStyle(parent);
+          if (!['hidden', 'clip'].includes(style.overflowX)) continue;
+          const box = parent.getBoundingClientRect();
+          if (rect.left < box.left - 1 || rect.right > box.right + 1) return false;
+        }
+        return true;
+      })();
+      return {
+        text: node.innerText.trim(),
+        insideViewport: rect.left >= -1 && rect.right <= innerWidth + 1,
+        noTextOverflow: node.scrollWidth <= node.clientWidth + 1,
+        clippingAncestorsFit
+      };
+    });
+    check(titleState.text === String(dish.name).trim(), `${mode.name} dish ${id} heading matches its catalog title`);
+    check(titleState.insideViewport && titleState.noTextOverflow && titleState.clippingAncestorsFit, `${mode.name} dish ${id} title is not clipped at 390px`);
+    check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `${mode.name} dish ${id} has no mobile horizontal overflow`);
+
+    const image = page.locator('#dish-main-image');
+    await image.evaluate(node => node.decode());
+    check(await image.evaluate(node => node.naturalWidth > 0), `${mode.name} dish ${id} main photograph loads`);
+    const addButton = page.locator('.detail-actions .add-to-cart');
+    check(await addButton.count() === 1 && Number(await addButton.getAttribute('data-id')) === id, `${mode.name} dish ${id} add button targets the current product`);
+    await addButton.click();
+    const cartState = await page.evaluate(targetId => ({
+      line: window.TokyoCart?.get().find(item => item.id === targetId),
+      total: window.TokyoCart?.total()
+    }), id);
+    check(cartState.line?.qty === 1, `${mode.name} dish ${id} can be added from its detail page`);
+    check(Number(cartState.total) === Number(dish.price), `${mode.name} dish ${id} detail add uses its catalog price`);
+    await page.evaluate(() => window.TokyoCart.clear());
+    check(await page.evaluate(() => window.TokyoCart.get().length === 0), `${mode.name} dish ${id} can be cleared after adding`);
+  }
+
+  for (const id of secret) {
+    if (mode.name === 'php') continue;
+    const response = await page.request.get(`${mode.base}/dish-${id}.html`);
+    const body = await response.text();
+    const dish = catalog.find(item => Number(item.id) === id);
+    check(Boolean(dish) && (response.status() === 404 || !body.includes(String(dish.name))), `static Secret Menu dish ${id} has no public detail route`);
+  }
+  return accessibleDishes.length;
+}
+
 async function run() {
   const { chromium } = require('playwright');
   fs.mkdirSync(evidence, { recursive: true });
   const browser = await chromium.launch({ headless: true });
   try {
-    for (const mode of [
+    const modes = [
       { name: 'php', base: phpBase, routes: { offers: '/offers.php', collection: '/collection.php?slug=autumn-in-kyoto', builder: '/set-builder.php', evening: '/perfect-evening.php', gift: '/gift-certificates.php', omakase: '/pages.php?page=omakase', dish: '/pages.php?page=dish&id=3', booking: '/pages.php?page=booking', menu: '/menu.php', cart: '/pages.php?page=cart', account: '/account.php' } },
       { name: 'static', base: staticBase, routes: { offers: '/offers.html', collection: '/collection-autumn-in-kyoto.html', builder: '/set-builder.html', evening: '/perfect-evening.html', gift: '/gift-certificates.html', omakase: '/omakase.html', dish: '/dish-3.html', booking: '/booking.html', menu: '/menu.html', cart: '/cart.html', account: '/account.html' } }
-    ]) {
+    ];
+    const requestedModes = String(process.env.TOKYO20_MODES || '').split(',').map(value => value.trim()).filter(Boolean);
+    const selectedModes = requestedModes.length ? modes.filter(mode => requestedModes.includes(mode.name)) : modes;
+    check(selectedModes.length === (requestedModes.length ? requestedModes.length : modes.length), `requested Tokyo 2.0 modes exist: ${requestedModes.join(', ')}`);
+    for (const mode of selectedModes) {
       const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
       const page = await context.newPage();
       page.setDefaultTimeout(7000);
@@ -54,6 +121,24 @@ async function run() {
       const secretCode = mode.name === 'php' ? 'SECRET' : 'TOKYO-DEMO';
       await secretForm.locator('[name="code"]').fill(secretCode);
       await secretForm.locator('button[type="submit"]').click();
+      await page.waitForFunction(() => {
+        const root = document.querySelector('[data-tp-secret-results]');
+        return root && !root.hidden && root.querySelector('.dish-card');
+      }, null, { timeout: 10000 });
+      const exposedDishes = await page.evaluate(() => (Array.isArray(window.DISHES) ? window.DISHES : []).map(dish => ({ id: Number(dish.id), name: String(dish.name), price: Number(dish.price) })));
+      const unlockedSecretIds = await page.locator('[data-tp-secret-results] .add-to-cart').evaluateAll(buttons => buttons.map(button => Number(button.dataset.id)));
+      check(exposedDishes.length >= 19, `${mode.name} exposes the public catalog after Secret Menu unlock`);
+      check(unlockedSecretIds.length >= 2, `${mode.name} Secret Menu unlock exposes at least two additional dishes`);
+      const detailRouteCount = await verifyDishDetailRoutes(page, mode, exposedDishes, unlockedSecretIds);
+      console.log(`PASS: ${mode.name} product detail routes (${detailRouteCount}) and add-to-cart actions`);
+      if (process.env.TOKYO20_DISH_ONLY === '1') {
+        await context.close();
+        continue;
+      }
+      await page.goto(mode.base + mode.routes.offers, { waitUntil: 'domcontentloaded' });
+      const repeatSecretForm = page.locator('[data-tp-secret-unlock]');
+      await repeatSecretForm.locator('[name="code"]').fill(secretCode);
+      await repeatSecretForm.locator('button[type="submit"]').click();
       await page.waitForFunction(() => {
         const root = document.querySelector('[data-tp-secret-results]');
         return root && !root.hidden && root.querySelector('.dish-card');
@@ -312,8 +397,9 @@ async function run() {
       await context.close();
     }
     check(failures.length === 0, failures.slice(0, 12).join('\n'));
-    console.log(`PASS: Tokyo 2.0 interactive regression (PHP + static): offer routes, Omakase, set builder, preference wizard, floorplan, gift preview, quick view, profile, mobile overflow. Evidence: ${evidence}`);
+    console.log(`PASS: Tokyo 2.0 interactive regression (${selectedModes.map(mode => mode.name).join(' + ')}): product detail routes, offers, Omakase, set builder, preference wizard, floorplan, gift preview, quick view, profile, mobile overflow. Evidence: ${evidence}`);
   } finally { await browser.close(); }
 }
 
 if (require.main === module) run().catch(error => { console.error(error); process.exitCode = 1; });
+
