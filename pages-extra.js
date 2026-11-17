@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     const cartIds=new Set(cart.map(item=>Number(item.id)));
     customSets.forEach(set=>set.items.forEach(item=>cartIds.add(Number(item.id))));
     if(recommendationContainer){
-      const suggestions=allRecommendations.filter(card=>{const id=Number(card.querySelector('.add-to-cart')?.dataset.id);return id>0&&!cartIds.has(id)}).slice(0,3);
+      const suggestions=allRecommendations.filter(card=>{const id=Number(card.querySelector('.add-to-cart')?.dataset.id);return id>0&&!cartIds.has(id)}).slice(0,4);
       recommendationContainer.replaceChildren(...suggestions);
     }
     container.innerHTML='';

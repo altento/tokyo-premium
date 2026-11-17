@@ -1,5 +1,11 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-17 contacts artwork and cart recommendations
+
+Replaced the repeated terrace photo in the PHP and Pages contact visit block with an original 1600 × 800 WebP landscape illustration (154 KB), captioned to clarify that it is not the restaurant location. The cart now shows four catalog-backed suggestions in a four-column row across the full cart width, after the order and checkout columns. Updated the existing cart visual regression expectations for this layout.
+
+Focused static Chromium verification passed: three cart products, four distinct suggestions, loaded food and contact images, full-width recommendation row, and no JavaScript errors. At 430 px the suggestions use two columns; at 390 px they use one, with no horizontal overflow at 390 or 320 px. PHP/JS syntax and diff checks passed. Desktop cart and mobile contact captures plus notes are in `visual-qa/cart-contact-refresh-2026-11-17/`. PHP browser rendering, full cart screenshot suite, PHP/SQLite integration, CI and public Pages deployment were not run for this change.
+
 ## 2026-11-17 account-history layout follow-up
 
 Changed the populated account history to use the full dashboard width, with booking requests below the orders. Local Chromium regression passed against the checked-in Pages export at 1440, 390 and 320 px; it also covered local sample persistence, favorite-to-cart, clear-data and sample restoration. Browser console/page errors were empty. Manually captured desktop and mobile history-panel evidence is in `visual-qa/account-order-flow-2026-11-17/`; these are panel captures, not full-page parity proof. The focused test skipped its expensive full-page screenshot step for this local run. PHP syntax, JavaScript syntax and diff hygiene are checked before commit. No PHP/SQLite integration, hosted CI, 11-reference visual acceptance, or public deployment is claimed for this follow-up.

@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## Focused visual follow-up · 2026-11-17
+
+The contacts visit section now uses an original, optimized torii-and-Fuji landscape image instead of repeating the interior terrace photo; its caption identifies it as a decorative illustration, not the venue location. Cart recommendations now span the full cart layout and display four catalog-backed dishes. A focused static browser pass and responsive checks passed; PHP rendering, broad integration suites, CI and deployment were not repeated. Evidence: [cart and contacts comparison](visual-qa/cart-contact-refresh-2026-11-17/comparison.md).
+
 Updated 2026-11-13
 
 ## What was added to the existing project

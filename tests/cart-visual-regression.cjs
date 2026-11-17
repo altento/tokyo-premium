@@ -60,20 +60,21 @@ async function run(options = {}) {
     const computedTotal = await page.evaluate(() => window.TokyoCart.total());
     const displayedTotal = Number((await page.locator('#cart-page-total').innerText()).replace(/\D/g, ''));
     assert.equal(displayedTotal, computedTotal, 'visible total matches the shared cart store');
-    assert.equal(await page.locator('.cart-recommendations .dish-card').count(), 3, 'real recommendations remain available');
+    assert.equal(await page.locator('.cart-recommendations .dish-card').count(), 4, 'four real recommendations remain available');
     const desktopCartFlow = await page.evaluate(() => {
-      const rect = selector => { const value = document.querySelector(selector).getBoundingClientRect(); return { top: value.top, left: value.left, bottom: value.bottom }; };
+      const rect = selector => { const value = document.querySelector(selector).getBoundingClientRect(); return { top: value.top, left: value.left, right: value.right, bottom: value.bottom }; };
       return { items: rect('#cart-page-items'), checkout: rect('.cart-checkout'), recommendations: rect('.cart-recommendation-heading'), detailsOpen: document.querySelector('.cart-checkout-details').open, nameVisible: document.querySelector('#checkout-name').checkVisibility() };
     });
-    assert.ok(desktopCartFlow.recommendations.top >= desktopCartFlow.items.bottom, 'recommendations follow the product list in the cart column');
-    assert.ok(desktopCartFlow.recommendations.left < desktopCartFlow.checkout.left, 'desktop recommendations stay beside the compact checkout panel');
+    assert.ok(desktopCartFlow.recommendations.top >= Math.max(desktopCartFlow.items.bottom, desktopCartFlow.checkout.bottom), 'recommendations follow both the product list and checkout panel');
+    assert.ok(desktopCartFlow.recommendations.left <= desktopCartFlow.items.left + 2 && desktopCartFlow.recommendations.right >= desktopCartFlow.checkout.right - 2, 'desktop recommendation heading spans the full cart layout');
+    assert.equal(await page.locator('.cart-recommendations').evaluate(grid => getComputedStyle(grid).gridTemplateColumns.split(' ').length), 4, 'desktop recommendations use the four-card reference row');
     assert.equal(desktopCartFlow.detailsOpen, false, 'contact fields begin collapsed until checkout intent');
     assert.equal(desktopCartFlow.nameVisible, false, 'collapsed checkout fields do not occupy the default cart layout');
     assert.equal(await page.locator('[data-tp-gift-choice]').isHidden(), true, 'gift selector stays hidden until a server-validated offer makes it available');
     assert.equal(await page.locator('.cart-recommendations .add-to-cart').evaluateAll((buttons, ids) => buttons.every(button => !ids.includes(Number(button.dataset.id))), await page.evaluate(() => window.TokyoCart.get().map(item => Number(item.id)))), true, 'recommendations exclude dishes already in the cart');
     await screenshot(page, 'cart-populated-desktop.png');
     assert.equal(await page.locator('#cart-page-items .cart-page-item img').evaluateAll(images => images.length === 3 && images.every(image => image.complete && image.naturalWidth > 0)), true, 'each cart line has a loaded food photograph');
-    assert.equal(await page.locator('.cart-recommendations .dish-card img').evaluateAll(images => images.length === 3 && images.every(image => image.complete && image.naturalWidth > 0)), true, 'each recommendation has a loaded food photograph');
+    assert.equal(await page.locator('.cart-recommendations .dish-card img').evaluateAll(images => images.length === 4 && images.every(image => image.complete && image.naturalWidth > 0)), true, 'each recommendation has a loaded food photograph');
     assert.equal(await page.locator('.cart-recommendations .dish-card').first().isVisible(), true, 'recommendations are visible in populated screenshot');
     await page.setViewportSize({ width: 390, height: 844 });
     const mobileHeroHeight = await page.locator('.cart-hero').evaluate(hero => hero.getBoundingClientRect().height);
