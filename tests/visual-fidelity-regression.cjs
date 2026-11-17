@@ -20,7 +20,7 @@ const routes = [
   { key: 'contacts', php: '/pages.php?page=contacts', static: '/contacts.html', width: 1440, ogImage: 'assets/generated/contact-exterior.webp' },
   { key: 'omakase', php: '/pages.php?page=omakase', static: '/omakase.html', width: 1440, ogImage: 'assets/generated/omakase-chef-panorama-1920.webp' },
   { key: 'reviews', php: '/reviews.php', static: '/reviews.html', width: 1440, ogImage: 'assets/generated/restaurant-interior.webp' },
-  { key: 'cart', php: '/pages.php?page=cart', static: '/cart.html', width: 1440, ogImage: 'assets/food/17-omakase-set.webp' },
+  { key: 'cart', php: '/pages.php?page=cart', static: '/cart.html', width: 1440, ogImage: 'assets/generated/cart-hero.webp' },
   { key: 'account', php: '/account.php', static: '/account.html', width: 1440, ogImage: 'assets/generated/contact-exterior.webp' }
 ];
 
