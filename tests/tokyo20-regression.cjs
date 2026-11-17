@@ -55,6 +55,30 @@ async function verifyDishDetailRoutes(page, mode, catalog, secretIds) {
     });
     check(titleState.text === String(dish.name).trim(), `${mode.name} dish ${id} heading matches its catalog title`);
     check(titleState.insideViewport && titleState.noTextOverflow && titleState.clippingAncestorsFit, `${mode.name} dish ${id} title is not clipped at 390px`);
+    check(await page.locator('[data-dish-facts]').count() === 1, mode.name + ' dish ' + id + ' shows its factual detail strip');
+    const detailFacts = await page.locator('[data-dish-facts]').evaluate(node => ({
+      fields: Object.fromEntries([...node.querySelectorAll('[data-dish-fact]')].map(item => [item.dataset.dishFact, {
+        value: item.querySelector('strong')?.textContent.trim() || '',
+        count: Number(item.dataset.count || 0)
+      }])),
+      itemsFit: [...node.querySelectorAll('article')].every(item => {
+        const box = item.getBoundingClientRect();
+        return box.left >= node.getBoundingClientRect().left - 1 && box.right <= node.getBoundingClientRect().right + 1
+          && [...item.querySelectorAll('span,strong')].every(text => text.scrollWidth <= text.clientWidth + 2);
+      })
+    }));
+    check(detailFacts.fields.category?.value === dish.category_name && detailFacts.fields.portion?.value === dish.weight, mode.name + ' dish ' + id + ' facts match catalog category and portion');
+    check(detailFacts.fields.photos?.count === (id === 3 ? 3 : 1), mode.name + ' dish ' + id + ' photo count matches its actual gallery');
+    check(detailFacts.itemsFit, mode.name + ' dish ' + id + ' fact strip fits its mobile cards');
+    check(Number(await page.locator('[data-dish-price]').getAttribute('data-price-value')) === Number(dish.price), mode.name + ' dish ' + id + ' primary price matches catalog');
+    check(await page.locator('.detail-purchase-group .quantity-control').count() === 1, mode.name + ' dish ' + id + ' keeps quantity control in purchase group');
+    const favoriteButton = page.locator('.detail-visual .detail-favorite-btn');
+    check(await favoriteButton.count() === 1, mode.name + ' dish ' + id + ' exposes image-level favorite action');
+    const favoriteBeforeToggle = await favoriteButton.getAttribute('aria-pressed') === 'true';
+    await favoriteButton.click();
+    check((await favoriteButton.getAttribute('aria-pressed') === 'true') !== favoriteBeforeToggle, mode.name + ' dish ' + id + ' toggles favorite state from the image');
+    await favoriteButton.click();
+    check((await favoriteButton.getAttribute('aria-pressed') === 'true') === favoriteBeforeToggle, mode.name + ' dish ' + id + ' restores its initial favorite state');
     check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `${mode.name} dish ${id} has no mobile horizontal overflow`);
 
     const image = page.locator('#dish-main-image');
@@ -83,13 +107,15 @@ async function verifyDishDetailRoutes(page, mode, catalog, secretIds) {
     }
     const addButton = page.locator('.detail-actions .add-to-cart');
     check(await addButton.count() === 1 && Number(await addButton.getAttribute('data-id')) === id, `${mode.name} dish ${id} add button targets the current product`);
+    await page.locator('[data-qty-step="1"]').click();
+    check(await page.locator('#dish-qty').innerText() === '2' && await addButton.getAttribute('data-qty') === '2', `${mode.name} dish ${id} quantity control updates the add action`);
     await addButton.click();
     const cartState = await page.evaluate(targetId => ({
       line: window.TokyoCart?.get().find(item => item.id === targetId),
       total: window.TokyoCart?.total()
     }), id);
-    check(cartState.line?.qty === 1, `${mode.name} dish ${id} can be added from its detail page`);
-    check(Number(cartState.total) === Number(dish.price), `${mode.name} dish ${id} detail add uses its catalog price`);
+    check(cartState.line?.qty === 2, `${mode.name} dish ${id} can add the selected quantity from its detail page`);
+    check(Number(cartState.total) === Number(dish.price) * 2, `${mode.name} dish ${id} detail add uses its catalog price and quantity`);
     await page.evaluate(() => window.TokyoCart.clear());
     check(await page.evaluate(() => window.TokyoCart.get().length === 0), `${mode.name} dish ${id} can be cleared after adding`);
   }
@@ -146,7 +172,13 @@ async function run() {
         const root = document.querySelector('[data-tp-secret-results]');
         return root && !root.hidden && root.querySelector('.dish-card');
       }, null, { timeout: 10000 });
-      const exposedDishes = await page.evaluate(() => (Array.isArray(window.DISHES) ? window.DISHES : []).map(dish => ({ id: Number(dish.id), name: String(dish.name), price: Number(dish.price) })));
+      const exposedDishes = await page.evaluate(() => (Array.isArray(window.DISHES) ? window.DISHES : []).map(dish => ({
+        id: Number(dish.id),
+        name: String(dish.name),
+        category_name: String(dish.category_name || ''),
+        weight: String(dish.weight || ''),
+        price: Number(dish.price)
+      })));
       const unlockedSecretIds = await page.locator('[data-tp-secret-results] .add-to-cart').evaluateAll(buttons => buttons.map(button => Number(button.dataset.id)));
       check(exposedDishes.length >= 19, `${mode.name} exposes the public catalog after Secret Menu unlock`);
       check(unlockedSecretIds.length >= 2, `${mode.name} Secret Menu unlock exposes at least two additional dishes`);

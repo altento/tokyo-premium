@@ -476,3 +476,9 @@ Public GitHub Pages is still unchanged because PR #19 is open as draft and deplo
 - PHP syntax checks passed for `lib/commerce.php`, `bootstrap.php`, `pages.php` and `tests/php_integrity_integration.php`; both updated browser test files pass `node --check`; `git diff --check` passed.
 - SQLite integration assertions now cover the two listed salmon nigiri ingredients, idempotent migration retry and migration of an existing v6 database. They were not run locally because PHP here lacks `pdo_sqlite`; hosted CI is required to verify the database path.
 - This targeted detail-page improvement does not close the remaining all-reference visual gaps or update the public Pages deployment.
+# 2026-11-17 — dish detail layout follow-up
+
+- `php -l pages.php` and `node --check tests/tokyo20-regression.cjs` passed; `git diff --check` reported no whitespace errors.
+- Focused Playwright browser regression passed on the local PHP + isolated SQLite runtime and the freshly exported static Pages build (`TOKYO20_MODES=php,static`, `TOKYO20_DISH_ONLY=1`, `npm run test:tokyo20`). It checked 21 PHP and 19 static dish-detail routes, including add-to-cart, favorite state, quantity, displayed total, factual detail data and mobile fit.
+- Full-page screenshots were captured at 1440 px and 390 px for PHP and static routes and visually inspected against `design-references/03-dish.png`; details and remaining visual gaps are documented in `visual-qa/dish-detail-layout-2026-11-17/README.md`.
+- This is a focused product-detail regression only. It is not a rerun of the complete site suite, the PHP admin flow, or public GitHub Pages; the working-tree changes are not deployed.
