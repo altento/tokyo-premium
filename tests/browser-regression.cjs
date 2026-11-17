@@ -323,8 +323,10 @@ async function run(options = {}) {
     await page.goto(staticBase + '/account.html');
     await page.locator('[data-account-tab="history"]').click();
     check((await page.locator('#demo-orders').innerText()).includes('Составлен заказ снова') || await page.locator('#demo-orders .demo-order-items li').count() > 0, 'static profile shows order line snapshot');
-    check((await page.locator('#demo-orders').innerText()).includes('Tokyo Signature QA'), 'static order history retains custom set variant and name');
     const customSetOrder = page.locator('#demo-orders .demo-order').filter({ hasText: 'Tokyo Signature QA' }).first();
+    const customSetDetails = customSetOrder.locator('.demo-order-details');
+    if (await customSetDetails.count()) await customSetDetails.locator('summary').click();
+    check((await customSetOrder.innerText()).includes('Tokyo Signature QA'), 'static order history exposes the custom set variant and name when expanded');
     const repeatButton = customSetOrder.locator('[data-repeat-order]');
     if (await repeatButton.count()) {
       await repeatButton.click();
