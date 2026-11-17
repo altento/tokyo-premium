@@ -385,3 +385,6 @@ Compared current PHP captures with approved references 03 and 04. Fixed the dish
 ## 2026-11-17 account dashboard visual pass
 
 The authenticated PHP account dashboard now uses a shorter hero, a compact metric grid alongside Tokyo Privilege, and denser empty states for notifications, orders, and bookings. Focused visual-fidelity tests passed for PHP and static account routes; fresh PHP desktop and mobile screenshots were reviewed. The change keeps all account modules present and does not seed fabricated server history. Reference 11 still has broader layout differences, and the full Tokyo Premium 2.0 objective remains incomplete. The current working-tree changes have not yet been published.
+## 2026-11-17 — gallery photo deduplication
+
+Updated the PHP and GitHub Pages gallery so its eight photographs are unique and do not reuse the images in the four room cards. Added browser assertions for both conditions, exported the static gallery, and passed focused PHP/static visual-fidelity plus gallery caption tests. Desktop and mobile screenshots of both modes were reviewed against reference 06. The page preserves the broad section order but still differs from the reference; complete visual parity and full-site acceptance remain open.

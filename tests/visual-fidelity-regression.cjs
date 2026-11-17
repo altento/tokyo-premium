@@ -200,6 +200,8 @@ async function visit(browser, base, route, mode, capture = false) {
         clientHeight: grid.clientHeight,
         tileCount: tiles.length,
         allTilesWithinSection: tiles.every(tile => tile.getBoundingClientRect().bottom <= sectionBounds.bottom + 1),
+        uniqueGalleryImages: new Set(tiles.map(tile => tile.querySelector('img')?.getAttribute('src'))).size === tiles.length,
+        noRoomCardDuplicates: tiles.every(tile => ![...document.querySelectorAll('.zone-grid .zone-card img')].some(image => image.getAttribute('src') === tile.querySelector('img')?.getAttribute('src'))),
         imageCount: tiles.filter(tile => tile.querySelector('img')?.naturalWidth > 0).length
       };
     });
@@ -207,6 +209,8 @@ async function visit(browser, base, route, mode, capture = false) {
     assert.ok(geometry.clientHeight > 390, `${mode} editorial gallery grows to fit all rows`);
     assert.ok(geometry.scrollHeight <= geometry.clientHeight + 1, `${mode} gallery grid does not internally clip overflow`);
     assert.equal(geometry.allTilesWithinSection, true, `${mode} every gallery tile stays inside its section`);
+    assert.equal(geometry.uniqueGalleryImages, true, `${mode} gallery uses a different photograph for every tile`);
+    assert.equal(geometry.noRoomCardDuplicates, true, `${mode} gallery does not repeat its room-card photographs`);
     assert.equal(geometry.imageCount, 8, `${mode} all gallery images load`);
   } else if (route.key === 'booking') {
     const heroHeight = await page.locator('.editorial-hero.booking-hero').evaluate(node => node.getBoundingClientRect().height);

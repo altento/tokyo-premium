@@ -31,3 +31,10 @@ This note covers two of the eleven approved reference pages. It is not a claim o
 - Kept all account sections and server-backed status semantics visible; this CSS pass did not fabricate account history or change account data behavior.
 - `npm run test:visual-fidelity` passed for the account route in PHP and static modes. Browser assertions cover the compact hero, summary geometry, concise empty states, seven in-page navigation targets, and mobile overflow. Fresh PHP desktop/mobile captures were inspected.
 - This improves density but does not establish full parity with reference 11. Comprehensive account flows, full-site QA, hosted CI, and public deployment remain pending.
+## Пространство / галерея — фото без повторов
+
+В исходном блоке галереи первые четыре кадра повторяли изображения карточек залов. Заменил эти четыре позиции на отдельные интерьерный, chef-counter, блюдо и садовый кадры из уже имеющихся ресурсов; все восемь изображений теперь уникальны и не совпадают с фото карточек залов. Порядок секций и галерейный lightbox сохранены. Это функционально-честная галерея фотографий, не 360°-тур.
+
+Сверка с `design-references/06-gallery.png`: сохранена последовательность hero → принципы пространства → карточки зон → фильтруемая галерея → footer. Фотографии и композиция галереи теперь разнообразнее; структура вёрстки остаётся компактнее и отличается от макета, поэтому полный визуальный паритет не заявляется.
+
+Проверено: `npm run test:visual-fidelity` на PHP и Pages для маршрута `space`, включая уникальность 8 изображений, отсутствие повторов с карточками залов и загрузку изображений; `npm run test:gallery-caption`; `php -l pages.php`; `node --check tests/visual-fidelity-regression.cjs`; `git diff --check`. Захвачены и просмотрены PHP и статические скриншоты desktop/mobile: `2.0-visual-fidelity/space-{php,static}-{desktop,mobile}.jpg`.

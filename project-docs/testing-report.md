@@ -504,3 +504,6 @@ The PHP profile navigation is now compact, icon-led, and marks the section curre
 ## 2026-11-17 PHP account dashboard density
 
 The account route passed `npm run test:visual-fidelity` in both PHP and static modes. The PHP desktop capture checks a hero height at or below 320 px, a two-by-two metric grid, concise empty history panels, and all seven dashboard navigation targets; the mobile route retains the no-overflow check. Screenshots are in `project-docs/visual-qa/2.0-visual-fidelity/account-php-{desktop,mobile}.jpg`. This is a focused visual pass; it does not verify every account transaction or the full PHP/SQLite integration suite.
+## 2026-11-17 галерея пространства: отдельные фотографии
+
+Первые четыре кадра галереи больше не повторяют фотографии карточек залов. Добавлены проверки уникальных источников и отсутствия дублей между галереей и карточками зон. `npm run test:visual-fidelity` прошёл для PHP и статической версии на маршруте `space`; `npm run test:gallery-caption`, PHP lint, JS syntax и `git diff --check` прошли. Просмотрены desktop/mobile скриншоты обеих версий в `project-docs/visual-qa/2.0-visual-fidelity/`. Сравнение с `design-references/06-gallery.png` подтверждает сохранение общей структуры секций, но не полный визуальный паритет.
