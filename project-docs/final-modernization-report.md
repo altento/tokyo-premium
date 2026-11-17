@@ -2,7 +2,7 @@
 
 ## 2026-11-17 account notifications — local verification
 
-Added in-app notifications for actual order and booking status changes in the PHP/SQLite account. Notifications are owner-scoped, written transactionally with each status transition, and can be marked read with a CSRF-protected account action. The static Pages profile shows only local demo notifications and keeps the non-confirmation disclosure visible. The focused account browser regression passed, and the PHP/SQLite integration suite passed 214 assertions on the configured PHP 8.4 runtime. Visual evidence is saved as `project-docs/visual-qa/11-account-notifications-unread-desktop.jpg` and `11-account-notifications-mobile.jpg`. This checkpoint has not yet been pushed or deployed; broader 2.0 acceptance remains open.
+Added in-app notifications for actual order and booking status changes in the PHP/SQLite account. Notifications are owner-scoped, written transactionally with each status transition, and can be marked read with a CSRF-protected account action. The static Pages profile shows only local demo notifications and keeps the non-confirmation disclosure visible. The focused account browser regression passed, and the PHP/SQLite integration suite passed 214 assertions on the configured PHP 8.4 runtime. Visual evidence is saved as `project-docs/visual-qa/11-account-notifications-unread-desktop.jpg` and `11-account-notifications-mobile.jpg`. Commit `8ca123e` reached `main`, but the hosted browser job caught an outdated section-count expectation; its fix now passes the 11-route/21-detail browser suite locally and awaits hosted CI. Pages has not refreshed yet, and broader 2.0 acceptance remains open.
 
 ## Focused visual follow-up · 2026-11-17
 

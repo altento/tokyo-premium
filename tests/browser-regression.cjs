@@ -252,9 +252,10 @@ async function run(options = {}) {
     const primaryLayout = await page.locator('.account-dashboard-primary').evaluate(element => ({
       columns: getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/).length,
       historyWidth: Math.round(element.querySelector('#account-orders').getBoundingClientRect().width),
-      sectionCount: element.querySelectorAll('.account-dashboard-panel').length
+      historyAndBookingPanels: [...element.querySelectorAll('.account-dashboard-panel')].filter(panel => panel.id !== 'account-notifications').length,
+      hasStatusNotifications: Boolean(element.querySelector('#account-notifications.account-dashboard-panel'))
     }));
-    check(primaryLayout.columns === 1 && primaryLayout.historyWidth > 900 && primaryLayout.sectionCount === 2, `account history and booking use a readable full-width column (layout=${JSON.stringify(primaryLayout)})`);
+    check(primaryLayout.columns === 1 && primaryLayout.historyWidth > 900 && primaryLayout.historyAndBookingPanels === 2 && primaryLayout.hasStatusNotifications, `account history and booking use a readable full-width column beside status notifications (layout=${JSON.stringify(primaryLayout)})`);
     const accountNavState = await page.locator('.account-dashboard-nav').evaluate(element => ({
       height: Math.round(element.getBoundingClientRect().height),
       backgroundImage: getComputedStyle(element).backgroundImage
