@@ -161,16 +161,28 @@
       hero.setAttribute('aria-busy', 'true');
 
       let incomingReady = false;
-      if (!reducedMotion.matches && photoUrl !== image.src) {
+      if (photoUrl !== image.src) {
         nextImage.src = photoUrl;
         try { await nextImage.decode(); incomingReady = nextImage.naturalWidth > 0; } catch { /* The existing scene remains visible if an optional photo fails. */ }
       }
 
-      if (reducedMotion.matches || !incomingReady || photoUrl === image.src) {
-        if (reducedMotion.matches || incomingReady || photoUrl === image.src) {
+      if (photoUrl !== image.src && !incomingReady) {
+        nextImage.removeAttribute('src');
+        hero.classList.remove('is-crossfading', 'is-text-changing');
+        hero.removeAttribute('aria-busy');
+        changing = false;
+        if (status) status.textContent = 'Не удалось загрузить фотографию. Оставлена текущая сцена.';
+        const queued = queuedIndex;
+        queuedIndex = null;
+        if (queued !== null && queued !== target && queued !== activeIndex) showScene(queued);
+        return;
+      }
+
+      if (reducedMotion.matches || photoUrl === image.src) {
+        if (photoUrl !== image.src) {
         image.src = photoUrl;
-        image.alt = String(scene.alt || 'Сцена Tokyo Premium — учебная концепция');
         }
+        image.alt = String(scene.alt || 'Сцена Tokyo Premium — учебная концепция');
         nextImage.removeAttribute('src');
       } else {
         hero.classList.add('is-crossfading');

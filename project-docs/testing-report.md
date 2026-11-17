@@ -519,3 +519,14 @@ The account route passed `npm run test:visual-fidelity` in both PHP and static m
 - The preceding focused `npm run test:tokyo20` run passed PHP and static mode, including 21 PHP and 19 static dish-detail routes, the custom Omakase set, booking handoff and responsive checks. It is a focused integration regression, not a full acceptance run.
 - Static export contains 37 pages. New result captures are in `project-docs/visual-qa/12-php-perfect-evening-{result,mobile}.jpg` and `12-static-perfect-evening-{result,mobile}.jpg`.
 - `git diff --check` passes. Public Pages, hosted CI and the complete 11-reference visual acceptance have not yet been verified for this working change.
+
+## 2026-11-18 hero image failure recovery
+
+- Reproduced a home-hero state mismatch when a next-scene photo fails to decode. The scene copy and selected control previously advanced while the visible photo remained on the previous scene.
+- `motion-system.js` now decodes the incoming image before changing the selected scene in both normal and reduced-motion modes. On failure it keeps the current image, text, index and pressed dot together, clears the failed preloader, removes `aria-busy`, and announces the fallback in the existing live status.
+- `npm run test:motion` passed in PHP and static modes. The added Playwright scenarios force the Omakase image to return 404 and verify that copy, photo description, index and controls stay synchronized with both motion preferences. The existing hero/scroll-story checks and eight viewport widths also passed.
+- Regenerated static export: 37 pages. No pixel layout changed. The complete 11-reference comparison and public deployment for this fix remain outstanding pending GitHub Actions.
+
+## 2026-11-18 published checkpoint — 7828998
+
+GitHub Actions run [44179154931](https://github.com/altento/tokyo-premium/actions/runs/44179154931) completed successfully for commit `7828998c75f1dbb2d386af56683ce9a72cf3557e`; both build and deploy jobs passed. Cache-busted public checks returned HTTP 200 for the Ideal Evening static page (including the active set-variant payload) and the new Chef's Secret Drop WebP asset. The subsequent hero image-failure fix recorded above is a later local change and is not yet part of the deployed commit.

@@ -164,6 +164,37 @@ async function runReducedMotion(browser, name, base, route) {
   await context.close();
 }
 
+async function runFailedSceneImage(browser, name, base, route, reduceMotion) {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: reduceMotion ? 'reduce' : 'no-preference' });
+  const page = await context.newPage();
+  await page.route('**/tokyo-seasonal-omakase-v2.webp', intercepted => intercepted.fulfill({ status: 404, contentType: 'text/plain', body: 'missing test image' }));
+  await page.goto(`${base}${route}`, { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => !document.querySelector('[data-home-hero-controls]')?.hidden);
+  const before = await page.evaluate(() => ({
+    scene: document.querySelector('[data-home-hero]')?.dataset.homeHeroScene,
+    title: document.querySelector('#home-title')?.textContent,
+    alt: document.querySelector('#home-hero-photo')?.alt
+  }));
+  await page.locator('[data-home-hero-index="1"]').click();
+  await page.waitForFunction(() => {
+    const hero = document.querySelector('[data-home-hero]');
+    return hero && !hero.hasAttribute('aria-busy') && /Не удалось загрузить фотографию/.test(hero.querySelector('[data-home-hero-status]')?.textContent || '');
+  });
+  const after = await page.evaluate(() => ({
+    scene: document.querySelector('[data-home-hero]')?.dataset.homeHeroScene,
+    title: document.querySelector('#home-title')?.textContent,
+    alt: document.querySelector('#home-hero-photo')?.alt,
+    selected: document.querySelector('[data-home-hero-index][aria-pressed="true"]')?.dataset.homeHeroIndex,
+    nextImageSource: document.querySelector('[data-home-hero-next]')?.getAttribute('src')
+  }));
+  assert.equal(after.scene, before.scene, `${name} keeps the active scene if the next image cannot be decoded${reduceMotion ? ' with reduced motion' : ''}`);
+  assert.equal(after.title, before.title, `${name} keeps the active copy if the next image cannot be decoded${reduceMotion ? ' with reduced motion' : ''}`);
+  assert.equal(after.alt, before.alt, `${name} keeps the active image description if the next image cannot be decoded${reduceMotion ? ' with reduced motion' : ''}`);
+  assert.equal(after.selected, before.scene, `${name} keeps the matching scene control selected after image failure${reduceMotion ? ' with reduced motion' : ''}`);
+  assert.equal(after.nextImageSource, null, `${name} discards the failed preloaded image${reduceMotion ? ' with reduced motion' : ''}`);
+  await context.close();
+}
+
 (async () => {
   fs.mkdirSync(evidenceDir, { recursive: true });
   const browser = await chromium.launch({ headless: true });
@@ -172,9 +203,13 @@ async function runReducedMotion(browser, name, base, route) {
     if (!staticOnly) {
       await runMode(browser, 'php', phpBase, '/', true);
       await runReducedMotion(browser, 'php', phpBase, '/');
+      await runFailedSceneImage(browser, 'php', phpBase, '/', false);
+      await runFailedSceneImage(browser, 'php', phpBase, '/', true);
     }
     await runMode(browser, 'static', staticBase, '/index.html', true);
     await runReducedMotion(browser, 'static', staticBase, '/index.html');
+    await runFailedSceneImage(browser, 'static', staticBase, '/index.html', false);
+    await runFailedSceneImage(browser, 'static', staticBase, '/index.html', true);
     console.log(`PASS: cinematic hero and scroll story, scene controls, keyboard, reduced motion, no autoplay, and eight responsive widths${staticOnly ? ' in static mode' : ' in PHP and static modes'}; screenshots saved to ${evidenceDir}`);
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

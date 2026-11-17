@@ -407,3 +407,9 @@ Added a small original SVG scene (enso, Mount Fuji and sakura) as a third editor
 - Verified in this checkpoint: 13 cart-store tests; focused static Offers/Ideal Evening browser regression; PHP/SQLite integration (217 assertions); the preceding PHP + static Tokyo 2.0 regression and 37-page export. Full suite, all-page visual reconciliation, hosted CI and public Pages deployment remain outstanding.
 - Current local previews: PHP `http://localhost:8871/`; static `http://localhost:8870/`. These are temporary local servers, not public deployment URLs.
 - This is an incremental checkpoint, not completion of the modernization objective. PHP account, admin workflows, all 11 approved references, security review, performance checks and the published Pages build still require the broader acceptance pass.
+
+## 2026-11-18 hero image recovery
+
+The home hero now keeps image, scene copy, accessible description and selected control synchronized when the next scene image fails, including when reduced motion is enabled. This is covered by an explicit 404 image test in the existing motion regression for PHP and Pages. `npm run test:motion` passed and the static export was regenerated to 37 pages. This source change is not yet hosted; publication awaits the next GitHub Actions run. The full Tokyo Premium 2.0 acceptance remains in progress.
+
+Commit `7828998` is now live on GitHub Pages: Actions run 44179154931 passed its build and deploy jobs. A cache-busted request verified HTTP 200 for the public Ideal Evening route and campaign image. The hero image-failure correction is a subsequent change and is still awaiting its own deployment.
