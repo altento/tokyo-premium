@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const evidence = path.resolve(process.env.TOKYO_EVIDENCE_DIR || path.join(root, 'project-docs', 'visual-qa'));
-const widths = [320, 360, 375, 390, 430, 768, 900, 901, 929, 981, 1024, 1025, 1440, 1920];
+const widths = [320, 360, 375, 390, 430, 768, 900, 901, 929, 981, 1023, 1024, 1025, 1440, 1920];
 const routes = [
   ['01-home', '/'], ['02-menu', '/menu.php'], ['03-dish', '/pages.php?page=dish&id=3'],
   ['04-omakase', '/pages.php?page=omakase'], ['05-philosophy', '/about.php'],
@@ -96,9 +96,9 @@ async function run(options = {}) {
         check(geometry.clipped.length === 0, `${name} text clipped at ${width}px: ${JSON.stringify(geometry.clipped.slice(0,3))}`);
         check(geometry.cartCount === 1, `${name} must have one header cart link at ${width}px`);
         check(geometry.visibleCart, `${name} header cart link is hidden at ${width}px`);
-        check(geometry.visibleMenu === (width <= 1024), `${name} mobile menu breakpoint is consistent at ${width}px`);
-        check(geometry.visibleCta === (width > 1024), `${name} booking CTA breakpoint is consistent at ${width}px`);
-        check(geometry.visibleDesktopNav === (width > 1024), `${name} primary navigation breakpoint is consistent at ${width}px`);
+        check(geometry.visibleMenu === (width <= 1023), `${name} mobile menu breakpoint is consistent at ${width}px`);
+        check(geometry.visibleCta === (width > 1023), `${name} booking CTA breakpoint is consistent at ${width}px`);
+        check(geometry.visibleDesktopNav === (width > 1023), `${name} primary navigation breakpoint is consistent at ${width}px`);
         check(!geometry.cartFixed, `${name} cart action must not float over content at ${width}px`);
         check(geometry.visibleToggles === 0, `${name} duplicate floating cart control at ${width}px`);
         check(geometry.cartMinHitTarget, `${name} cart tap target is under 44px at ${width}px`);
@@ -121,7 +121,7 @@ async function run(options = {}) {
           const gallery = await page.locator('.detail-visual').boundingBox();
           check(gallery && gallery.width >= width * .35, `dish hero image keeps editorial desktop width at ${width}px (got ${gallery?.width || 0})`);
         }
-        if (width <= 1024) {
+        if (width <= 1023) {
           const menu=page.locator('.mobile-menu');
           await menu.focus(); await page.keyboard.press('Enter');
           check(await menu.getAttribute('aria-expanded')==='true', `${name} menu opens at ${width}px`);
@@ -151,7 +151,7 @@ async function run(options = {}) {
 
     // The GitHub Pages export shares the responsive header but has its own HTML
     // and relative routes, so guard the breakpoint in both delivery modes.
-    for (const width of [929, 1024, 1025]) {
+    for (const width of [929, 1023, 1024, 1025]) {
       await page.setViewportSize({width, height:900});
       const response=await navigateReady(base+'/docs/menu.html');
       check(response?.status()===200, `static menu loads at ${width}px`);
@@ -160,10 +160,10 @@ async function run(options = {}) {
         return {overflow:document.documentElement.scrollWidth>innerWidth+1,menu:visible(document.querySelector('.mobile-menu')),cta:visible(document.querySelector('.header-cta')),cart:visible(document.querySelector('.header-cart-link'))};
       });
       check(!header.overflow, `static menu has no horizontal overflow at ${width}px`);
-      check(header.menu===(width<=1024), `static menu navigation breakpoint is consistent at ${width}px`);
-      check(header.cta===(width>1024), `static booking CTA breakpoint is consistent at ${width}px`);
+      check(header.menu===(width<=1023), `static menu navigation breakpoint is consistent at ${width}px`);
+      check(header.cta===(width>1023), `static booking CTA breakpoint is consistent at ${width}px`);
       check(header.cart, `static header cart stays available at ${width}px`);
-      if (width<=1024) {
+      if (width<=1023) {
         const menu=page.locator('.mobile-menu');
         await menu.focus(); await page.keyboard.press('Enter');
         check(await menu.getAttribute('aria-expanded')==='true', `static menu opens at ${width}px`);
