@@ -236,7 +236,7 @@ async function run(options = {}) {
     await page.screenshot({path:path.join(evidence,'07-mobile-header-cart-390.jpg'),type:'jpeg',quality:80,fullPage:false});
     await page.locator('.header-cart-link').click();
     check(new URL(page.url()).searchParams.get('page')==='cart', 'header cart link opens the full cart page');
-    console.log(`PASS responsive regression: ${routes.length} PHP page types × ${widths.length} widths plus static Pages at 929/1024/1025px; heading clipping, cart access, tablet/mobile keyboard navigation and restaurant-timezone booking dates.`);
+    console.log(`PASS responsive regression: ${routes.length} PHP page types × ${widths.length} widths plus static Pages at 929/1023/1024/1025px; heading clipping, cart access, tablet/mobile keyboard navigation and restaurant-timezone booking dates.`);
   } finally { await browser.close(); }
 }
 

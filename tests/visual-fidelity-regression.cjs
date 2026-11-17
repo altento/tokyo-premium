@@ -125,7 +125,7 @@ async function visit(browser, base, route, mode, capture = false) {
     assert.equal(await mobileToggle.isVisible(), true, `${mode} 1023px uses the mobile navigation`);
     assert.equal(await mobileNav.evaluate(node => node.inert), true, `${mode} closed mobile navigation is inert`);
     await mobileToggle.click();
-    assert.equal(await page.locator('#site-navigation .mobile-nav-utilities a[href="booking.html"]').isVisible(), true, `${mode} mobile navigation exposes booking`);
+    assert.equal(await page.locator('#site-navigation .mobile-nav-utilities a[href*="booking"]').isVisible(), true, `${mode} mobile navigation exposes booking`);
     await page.keyboard.press('Escape');
     assert.equal(await mobileToggle.getAttribute('aria-expanded'), 'false', `${mode} mobile navigation closes with Escape`);
     assert.equal(await mobileToggle.evaluate(node => document.activeElement === node), true, `${mode} mobile navigation restores focus`);
@@ -171,6 +171,15 @@ async function visit(browser, base, route, mode, capture = false) {
     assert.equal(await page.locator('[data-tp-floorplan] svg').count(), 1, `${mode} preference floorplan renders as SVG`);
     assert.equal(await page.locator('[data-tp-floorplan-selection]').count(), 1, `${mode} floorplan clearly labels selection as a preference`);
   } else if (route.key === 'contacts') {
+    const contactGeometry = await page.evaluate(() => ({
+      hero: document.querySelector('.contact-hero').getBoundingClientRect().height,
+      map: document.querySelector('.fictional-map').getBoundingClientRect().height,
+      summaryWidth: document.querySelector('.contact-summary').getBoundingClientRect().width,
+      mapWidth: document.querySelector('.fictional-map').getBoundingClientRect().width
+    }));
+    assert.ok(contactGeometry.hero <= 380, `${mode} contact hero stays close to reference proportions (${contactGeometry.hero}px)`);
+    assert.ok(contactGeometry.map <= 350, `${mode} fictional map stays in the reference-led overview (${contactGeometry.map}px)`);
+    assert.ok(contactGeometry.mapWidth >= contactGeometry.summaryWidth * 1.8, `${mode} map receives the dominant overview width from reference 09 (${contactGeometry.mapWidth}px vs ${contactGeometry.summaryWidth}px)`);
     assert.equal(await page.locator('.fictional-map[role="img"]').count(), 1, `${mode} contact map is labelled as a decorative schematic`);
     assert.equal(await page.locator('.fictional-map svg.contact-map-art').count(), 1, `${mode} contact map has its own vector illustration`);
     assert.match(await page.locator('.fictional-map').getAttribute('aria-label'), /не является реальной картой/i, `${mode} map clearly disclaims real navigation`);
