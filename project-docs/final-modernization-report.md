@@ -359,3 +359,7 @@ The static account now displays clearly labeled browser-local example orders, a 
 ## 2026-11-17 admin promo-code workflow
 
 The protected Marketing & Loyalty panel now shows saved redemption counts, total/per-account caps, local validity windows, and first-order restrictions beside each code. Existing codes can be edited from a prefilled form without changing their identity. The 199-assertion PHP/SQLite integration check passed locally, including the `DEMO10` counter and editor fields. PHP lint, shared stylesheet parity and diff hygiene passed. Hosted CI for this change and public deployment remain pending. The preceding branch run `43991676194` passed PHP/SQLite integrity, browser regression and screenshots; deployment was skipped because PR #19 remains a draft. Full visual comparison of all 11 approved references remains incomplete.
+
+## 2026-11-17 cart hero reference follow-up
+
+Added a dedicated original dining-scene image to the PHP cart hero and GitHub Pages export, replacing the reused omakase close-up. The focused cart visual regression passed all eight states and checked image loading; desktop and mobile captures were inspected. Evidence and the specific visual comparison are in `project-docs/visual-qa/cart-hero-refinement-2026-11-17/` and `cart-hero-refinement-2026-11-17.md`. The full pixel comparison of all 11 references remains incomplete, and the public Pages deployment remains unchanged in this pass.

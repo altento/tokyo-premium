@@ -45,6 +45,10 @@ async function run(options = {}) {
     await add.nth(2).click();
     await page.goto(`${base}/docs/cart.html`, { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => document.querySelectorAll('#cart-page-items .cart-page-item').length === 3);
+    const heroPhoto = page.locator('.cart-hero .editorial-hero-photo');
+    assert.match(await heroPhoto.getAttribute('src') || '', /^assets\/generated\/cart-hero\.webp$/, 'cart hero uses its own generated dining photograph');
+    assert.equal(await heroPhoto.evaluate(image => image.complete && image.naturalWidth > 0), true, 'cart hero photograph loads successfully');
+    assert.equal(await page.locator('meta[property="og:image"]').getAttribute('content'), 'assets/generated/cart-hero.webp', 'social preview matches the cart hero');
     const desktopHeroHeight = await page.locator('.cart-hero').evaluate(hero => hero.getBoundingClientRect().height);
     assert.ok(desktopHeroHeight <= 270, `desktop cart hero stays compact against the approved reference (height ${desktopHeroHeight}px)`);
     assert.equal(await page.locator('.cart-hero .button-row').isHidden(), true, 'cart hero keeps the reference title/copy hierarchy without a duplicate CTA');
