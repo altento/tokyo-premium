@@ -123,6 +123,8 @@ async function visit(browser, base, route, mode, capture = false) {
     const mobileToggle = page.locator('.site-header .mobile-menu');
     const mobileNav = page.locator('#site-navigation');
     assert.equal(await mobileToggle.isVisible(), true, `${mode} 1023px uses the mobile navigation`);
+    // Wait for the matchMedia change handler to apply inert after resizing from desktop.
+    await page.waitForFunction(() => document.querySelector('#site-navigation')?.inert === true, null, { timeout: 2000 });
     assert.equal(await mobileNav.evaluate(node => node.inert), true, `${mode} closed mobile navigation is inert`);
     await mobileToggle.click();
     assert.equal(await page.locator('#site-navigation .mobile-nav-utilities a[href*="booking"]').isVisible(), true, `${mode} mobile navigation exposes booking`);

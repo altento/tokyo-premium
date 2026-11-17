@@ -5,7 +5,7 @@
 - Static Pages route: `/contacts.html`
 - Desktop capture: `contacts-static-desktop.jpg` (1440 px viewport)
 - Mobile capture: `contacts-static-mobile.jpg` (390 px viewport)
-- Supplementary header captures from the same regression: `menu-static-desktop.jpg` and `menu-static-mobile.jpg`
+- Supplementary common-header captures from the same regression: `home-static-desktop.jpg`, `home-static-mobile.jpg`, `menu-static-desktop.jpg`, and `menu-static-mobile.jpg`
 - Approved reference: `design-references/09-contacts.png`
 
 ## Changes and observed result
@@ -20,4 +20,4 @@ The implementation follows the reference's dark/gold/red palette and the contact
 
 ## Verification scope
 
-The focused static visual-fidelity Playwright run passed for `menu` and `contacts` at the tested desktop/tablet/mobile widths. It checked the contact hero and map geometry and the 1024/1023 px menu breakpoint. These are local static-demo results only. PHP/SQLite rendering, hosted CI for the current working-tree changes, and public Pages deployment are not verified by these captures.
+The focused static visual-fidelity Playwright run passed for `menu` and `contacts` at the tested desktop/tablet/mobile widths. It checked the contact hero and map geometry and the 1024/1023 px menu breakpoint. Hosted run #181 verified the changes across PHP/SQLite and responsive jobs but exposed a timing race in the same test's immediate `inert` read after a viewport resize. A bounded wait for the documented `matchMedia` handler has been added and awaits hosted rerun. These are local static-demo results only; public Pages deployment has not occurred.
