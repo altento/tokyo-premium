@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-17 account-history layout follow-up
+
+Changed the populated account history to use the full dashboard width, with booking requests below the orders. Local Chromium regression passed against the checked-in Pages export at 1440, 390 and 320 px; it also covered local sample persistence, favorite-to-cart, clear-data and sample restoration. Browser console/page errors were empty. Manually captured desktop and mobile history-panel evidence is in `visual-qa/account-order-flow-2026-11-17/`; these are panel captures, not full-page parity proof. The focused test skipped its expensive full-page screenshot step for this local run. PHP syntax, JavaScript syntax and diff hygiene are checked before commit. No PHP/SQLite integration, hosted CI, 11-reference visual acceptance, or public deployment is claimed for this follow-up.
+
 ## 2026-11-17 static account dashboard reference pass
 
 Compared the populated GitHub Pages account with `design-references/11-account.png`. The masthead, browser-local identity cue, privilege cards, metric row and quick actions now use a tighter dashboard rhythm; order and favorite content remain visible and functional. Responsive actions use four desktop columns and two phone columns. Source account CSS and the checked-in Pages copies are synchronized so a future export retains the same styling.

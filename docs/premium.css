@@ -941,7 +941,7 @@ body.story-motion-gsap [data-story-reveal].story-visible img{animation:none}
 .account-demo-page .account-demo-summary .account-quick-actions a,.account-demo-page .account-demo-summary .account-quick-actions button{min-height:48px;justify-content:space-between;padding-inline:13px;border-radius:6px;text-align:left}
 .account-demo-page .account-dashboard.section{max-width:1320px;padding-top:18px;padding-bottom:24px}
 .account-demo-page .account-dashboard .account-demo-layout{grid-template-columns:210px minmax(0,1fr);gap:12px}
-.account-demo-page .account-demo-panel[data-account-panel="history"]>.intro-grid{grid-template-columns:minmax(0,1.15fr) minmax(230px,.85fr);gap:clamp(14px,2vw,26px)}
+.account-demo-page .account-demo-panel[data-account-panel="history"]>.intro-grid{grid-template-columns:minmax(0,1fr);gap:clamp(18px,2.4vw,30px)}
 .account-demo-page .account-dashboard .account-demo-panel{min-height:0;padding:clamp(16px,2vw,22px)}
 .account-demo-page .account-dashboard .account-demo-nav{top:88px}
 .account-demo-page .account-list article.account-demo-order{padding:12px;gap:10px}

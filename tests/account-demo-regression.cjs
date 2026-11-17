@@ -5,6 +5,7 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const base = process.env.TOKYO_STATIC_BASE_URL || 'http://127.0.0.1:8091';
 const evidence = process.env.TOKYO_EVIDENCE_DIR || path.join(root, 'project-docs', 'visual-qa');
+const captureScreenshots = process.env.TOKYO_CAPTURE_ACCOUNT_SCREENSHOTS !== '0';
 
 async function run() {
   const { chromium } = require('playwright');
@@ -35,6 +36,7 @@ async function run() {
     const privilege = page.locator('[data-tp-demo-loyalty]');
     assert.ok(await privilege.isVisible(), 'local demo loyalty card is visible');
     assert.match(await privilege.innerText(), /TOKYO PRIVILEGE · ЛОКАЛЬНАЯ ДЕМО/, 'loyalty card identifies its browser-only demo mode');
+    assert.match(await privilege.locator('.tp20-referral-card .kicker').innerText(), /ДЕМО-ПРИГЛАШЕНИЕ · ТОЛЬКО ЭТОТ БРАУЗЕР/i, 'referral card keeps its browser-only demo label in Russian');
     assert.equal(await privilege.locator('[data-tp-loyalty-points]').innerText(), await page.evaluate(() => Math.floor(JSON.parse(localStorage.getItem('tokyo-demo-orders') || '[]').reduce((sum, order) => sum + Math.max(0, Number(order.total) || 0), 0) / 100).toLocaleString('ru-RU')), 'loyalty points refresh from sample orders created after page load');
     assert.ok(await page.evaluate(() => document.querySelector('[data-tp-demo-loyalty]').getBoundingClientRect().top < document.querySelector('#demo-orders').getBoundingClientRect().top), 'loyalty summary appears before order history');
     const tabBadgeLayout = await page.locator('.account-demo-nav [data-account-tab]').evaluateAll(buttons => buttons.filter(button => button.querySelector('.account-demo-tab-count')).map(button => {
@@ -46,9 +48,15 @@ async function run() {
       return getComputedStyle(button).display === 'flex' && badge.left - labelRight >= 8 && badge.right <= button.getBoundingClientRect().right;
     }));
     assert.deepEqual(tabBadgeLayout, [true, true, true], 'history, favorites and address counts are separated from their labels');
-    const historyHeadingTops = await page.locator('.account-demo-panel[data-account-panel="history"] .intro-grid h2').evaluateAll(headings => headings.map(heading => heading.getBoundingClientRect().top));
-    assert.equal(historyHeadingTops.length, 2, 'history exposes order and booking headings');
-    assert.ok(Math.abs(historyHeadingTops[0] - historyHeadingTops[1]) <= 20, `order and booking columns align at the top edge: ${historyHeadingTops.join(', ')}`);
+    const historyLayout = await page.locator('.account-demo-panel[data-account-panel="history"] .intro-grid').evaluate(grid => {
+      const orders = grid.children[0].getBoundingClientRect();
+      const bookings = grid.children[1].getBoundingClientRect();
+      const area = grid.getBoundingClientRect();
+      return { ordersWidth: orders.width, areaWidth: area.width, ordersBottom: orders.bottom, bookingsTop: bookings.top, ordersLeft: orders.left, bookingsLeft: bookings.left };
+    });
+    assert.ok(historyLayout.ordersWidth >= historyLayout.areaWidth * .94, `desktop order history uses the dashboard width: ${historyLayout.ordersWidth}/${historyLayout.areaWidth}`);
+    assert.ok(historyLayout.bookingsTop >= historyLayout.ordersBottom, `booking requests follow the full-width order history: ${historyLayout.ordersBottom} -> ${historyLayout.bookingsTop}`);
+    assert.ok(Math.abs(historyLayout.ordersLeft - historyLayout.bookingsLeft) <= 2, 'order history and booking requests share the same left edge');
     assert.equal(await page.locator('#demo-favorites .dish-card').count(), 3, 'sample favorites resolve to catalog dishes');
     assert.equal(await page.locator('#demo-favorites-preview .dish-card').count(), 3, 'dashboard surfaces the saved dishes without opening another tab');
     assert.ok(await page.locator('#demo-favorites-preview .dish-card img').first().evaluate(image => image.complete && image.naturalWidth > 0), 'dashboard favorite preview uses a loaded dish photograph');
@@ -75,7 +83,7 @@ async function run() {
     });
     assert.deepEqual(reloadedOrderImageStates, [true, true, true], 'all lazy order photographs are decoded again after reload before the desktop capture');
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
-    await page.screenshot({ path: path.join(evidence, '11-account-seeded-desktop.jpg'), fullPage: true, type: 'jpeg', quality: 74 });
+    if (captureScreenshots) await page.screenshot({ path: path.join(evidence, '11-account-seeded-desktop.jpg'), fullPage: true, type: 'jpeg', quality: 74 });
     await page.setViewportSize({ width: 390, height: 844 });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'seeded account has no mobile horizontal overflow');
     assert.equal(await page.locator('.account-quick-actions').evaluate(node => getComputedStyle(node).gridTemplateColumns.split(' ').length), 2, 'mobile quick actions remain an easy two-column grid');
@@ -90,7 +98,7 @@ async function run() {
     assert.deepEqual(mobileTabBadges, [true, true, true], 'mobile account tab counts remain legible and inside their buttons');
     assert.ok(await page.evaluate(() => { const title=document.querySelector('.account-overview h1').getBoundingClientRect(); const hero=document.querySelector('.account-overview').getBoundingClientRect(); return title.left >= hero.left && title.right <= hero.right && title.width > 0; }), 'account title stays inside the mobile masthead');
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
-    await page.screenshot({ path: path.join(evidence, '11-account-seeded-mobile.jpg'), fullPage: true, type: 'jpeg', quality: 74 });
+    if (captureScreenshots) await page.screenshot({ path: path.join(evidence, '11-account-seeded-mobile.jpg'), fullPage: true, type: 'jpeg', quality: 74 });
     await page.setViewportSize({ width: 320, height: 844 });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'favorites preview has no overflow at 320 px');
     assert.ok(await page.locator('#demo-favorites-preview .dish-card').evaluateAll(cards => { const box=document.querySelector('#demo-favorites-preview').getBoundingClientRect(); return cards.every(card => { const rect=card.getBoundingClientRect(); return rect.width>0 && rect.left>=box.left && rect.right<=box.right; }); }), 'favorite cards stay within their panel at 320 px');
