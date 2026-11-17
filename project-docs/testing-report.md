@@ -414,3 +414,7 @@ The PHP account query now joins order items to the current catalogue image while
 - Fixed the CSS cascade for the seed prompt `hidden` state. The focused regression checks visible state, existing-data preservation, persistence, explicit restoration and successful loading of all order thumbnails before capture.
 - `npm run test:account-demo` passed against the local static export. JavaScript syntax checks and `git diff --check` passed. Desktop (1440 px) and mobile (390 px) captures in `project-docs/visual-qa/account-first-visit-2026-11-17/` were inspected.
 - This is a focused static-page improvement; PHP account rendering, hosted CI, public Pages and full 11-reference acceptance remain open.
+
+## 2026-11-17 Tokyo 2.0 checkout and first-visit account regression
+
+The new first-visit examples changed the expected static account history from one checkout row and one booking to three labeled sample rows plus the newly submitted order and booking. Updated `tests/tokyo20-regression.cjs` to verify the submitted guest order itself and both sets of local records. `npm run test:tokyo20` passed against an isolated PHP + SQLite server and the current Pages export. Hosted run 43986099018 exposed the stale count assertions; the fix is awaiting its replacement CI run.

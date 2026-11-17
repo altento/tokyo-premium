@@ -184,7 +184,7 @@ async function run() {
         await page.locator('#checkout-form button[type="submit"]').click();
         await page.waitForFunction(() => document.querySelector('#checkout-form > .form-status')?.classList.contains('success'), null, { timeout: 10000 });
         const savedOrder = await page.evaluate(() => JSON.parse(localStorage.getItem('tokyo-demo-orders') || '[]')[0]);
-        check(savedOrder?.demo === true, 'static order submitted through checkout is tagged as a local demo record');
+        check(savedOrder?.demo === true && savedOrder?.name === 'Демо заказа QA', 'static checkout prepends the submitted local demo order to the account history');
       }
 
       await page.goto(mode.base + mode.routes.evening, { waitUntil: 'domcontentloaded' });
@@ -290,8 +290,9 @@ async function run() {
         await page.goto(mode.base + mode.routes.account, { waitUntil: 'domcontentloaded' });
         check(await page.locator('[data-tp-demo-loyalty]').count() === 1, 'static profile discloses browser-only loyalty demo');
         check(/^TP-DEMO-[A-Z0-9]{6}$/.test(await page.locator('[data-tp-demo-referral]').innerText()), 'static referral code is browser-generated demo data');
-        check(await page.locator('#demo-orders .account-demo-record-badge').count() === 1, 'static account marks the submitted order as a local educational record');
-        check(await page.locator('#demo-bookings .account-demo-record-badge').count() === 1, 'static account marks the submitted booking as a local educational record');
+        check(await page.locator('#demo-orders .account-demo-record-badge').count() === 4, 'static account keeps the three first-visit examples and the submitted order clearly labeled');
+        check(await page.locator('#demo-orders .demo-order').evaluateAll(rows => rows.some(row => row.textContent.includes('Демо заказа QA'))), 'static account history includes the order submitted through checkout');
+        check(await page.locator('#demo-bookings .account-demo-record-badge').count() === 2, 'static account keeps the first-visit booking example and the submitted booking clearly labeled');
         await page.screenshot({ path: path.join(evidence, '12-static-account-privilege-desktop.jpg'), fullPage: true, type: 'jpeg', quality: 72 });
       }
 
