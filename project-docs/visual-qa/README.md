@@ -39,7 +39,7 @@ The screenshots were captured in Chromium at 1440 px, 390 px and 320 px and insp
 
 ## 2026-11-17 account notifications
 
-`11-account-notifications-unread-desktop.jpg` and `11-account-notifications-mobile.jpg` show the notifications panel with unread entries. The static records are labeled as browser-local examples and state that no order is paid or sent to the restaurant and that a saved booking request is not a confirmed reservation. The PHP account uses database-backed status changes and owner-scoped read actions; its account and SQLite behavior is covered by `tests/php_integrity_integration.php`. These captures document the notification state, not full visual parity with `design-references/11-account.png`.
+`11-account-notifications-unread-desktop.jpg` and `11-account-notifications-mobile.jpg` show the notifications panel with unread entries. `11-account-notifications-public-mobile.jpg` is a clean-context capture of the deployed GitHub Pages account after selecting the notifications tab. The static records are labeled as browser-local examples and state that no order is paid or sent to the restaurant and that a saved booking request is not a confirmed reservation. A public Chromium smoke check found four seeded local examples, no horizontal overflow at 390 px, and no page/console errors. The PHP account uses database-backed status changes and owner-scoped read actions; its account and SQLite behavior is covered by `tests/php_integrity_integration.php`. These captures document the notification state, not full visual parity with `design-references/11-account.png`.
 
 ## 2026-11-13 Tokyo 2.0 visual-fidelity pass
 
