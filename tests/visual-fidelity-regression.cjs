@@ -258,7 +258,7 @@ async function visit(browser, base, route, mode, capture = false) {
     const cartHeroHeight = await page.locator('.cart-hero').evaluate(hero => hero.getBoundingClientRect().height);
     assert.ok(cartHeroHeight <= 270, `${mode} cart hero remains compact against the approved reference (${cartHeroHeight}px)`);
     assert.ok(await page.locator('#cart-page-empty').isVisible(), `${mode} fresh browser starts with an honest empty-cart state`);
-    assert.equal(await page.locator('.cart-recommendations .dish-card').count(), 3, `${mode} empty cart offers three catalog-backed recommendations`);
+    assert.equal(await page.locator('.cart-recommendations .dish-card').count(), 4, `${mode} empty cart offers four catalog-backed recommendations`);
   } else if (route.key === 'account') {
     const heading = mode === 'php' ? '#account-dashboard-title' : '.account-overview h1';
     const accountNavigation = mode === 'php' ? '.account-dashboard-nav' : '.account-demo-nav';
