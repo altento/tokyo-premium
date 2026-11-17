@@ -382,7 +382,7 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 @media(max-width:640px){.editorial-hero.cart-hero{min-height:360px;padding-block:64px 40px}.cart-page.section{padding-top:30px}}
 
 /* A consistent Japanese-red divider marks section titles throughout the site. */
-:is(.section-head h2,.home-section-head h2,.editorial-heading h2,.editorial-page .section>h2,.philosophy-copy h2,.space-copy h2,.home-omakase-strip h2,.booking-intro h2,.admin-card>h2,.account-section>h2,.local-review-heading h2)::after{
+:is(.section-head h2,.home-section-head h2,.editorial-heading h2,.editorial-page .section>h2,.menu-catalog-heading h2,.philosophy-copy h2,.space-copy h2,.home-omakase-strip h2,.booking-intro h2,.admin-card>h2,.account-section>h2,.local-review-heading h2)::after{
   content:"";display:block;width:44px;height:2px;margin-top:.42em;background:linear-gradient(90deg,#ed2430,#a30e19);box-shadow:0 0 14px #ed243044
 }
 

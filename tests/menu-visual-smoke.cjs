@@ -52,6 +52,12 @@ const viewports = [
             heroHeight: Math.round(hero?.getBoundingClientRect().height || 0),
             heroImageLoaded: Boolean(heroImage?.naturalWidth),
             breadcrumb: document.querySelector('.menu-breadcrumbs [aria-current="page"]')?.textContent.trim(),
+            catalogHeadingDivider: (() => {
+              const title = document.querySelector('.menu-catalog-heading h2');
+              if (!title) return null;
+              const divider = getComputedStyle(title, '::after');
+              return { content: divider.content, width: parseFloat(divider.width), height: parseFloat(divider.height) };
+            })(),
             firstPageCards: [...document.querySelectorAll('.menu-page .dish-card')].filter(card => {
               const style = getComputedStyle(card);
               const rect = card.getBoundingClientRect();
@@ -93,6 +99,7 @@ const viewports = [
         assert.ok(metrics.heroHeight > 0 && metrics.heroHeight <= (viewport.width > 700 ? 350 : 370), `${route.mode} ${viewport.name} keeps the compact responsive menu hero`);
         assert.equal(metrics.heroImageLoaded, true, `${route.mode} ${viewport.name} hero image loads`);
         assert.equal(metrics.breadcrumb, 'Меню', `${route.mode} ${viewport.name} shows the current breadcrumb`);
+        assert.ok(metrics.catalogHeadingDivider && metrics.catalogHeadingDivider.content !== 'none' && metrics.catalogHeadingDivider.width >= 40 && metrics.catalogHeadingDivider.height === 2, `${route.mode} ${viewport.name} preserves the Japanese-red rule under the catalog section title`);
         assert.equal(metrics.firstPageCards, 6, `${route.mode} ${viewport.name} renders the first six catalog cards`);
         assert.equal(metrics.emptyCategoryButtons, 0, `${route.mode} ${viewport.name} does not present an empty catalog filter`);
         assert.match(metrics.setBuilderShortcut || '', /set-builder/, `${route.mode} ${viewport.name} links directly to the set builder from categories`);
