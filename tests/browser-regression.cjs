@@ -102,8 +102,10 @@ async function run(options = {}) {
           const detail = await page.goto(`${base}/pages.php?page=dish&id=${id}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
           check(detail?.status() === 200, `dish ${id} responds`);
           check(await page.locator('.detail-actions .add-to-cart').count() === 1, `dish ${id} add button`);
+          check(await page.locator('[data-dish-composition] .detail-ingredient-card').count() > 0, `dish ${id} displays its documented composition or an honest empty note`);
           await page.locator('#dish-main-image').evaluate(img => img.decode());
           check(await page.locator('#dish-main-image').evaluate(img => img.naturalWidth > 0), `dish ${id} image loads`);
+          if (id === 3) check(/Лосось/.test(await page.locator('[data-dish-composition]').innerText()) && /Рис для суши/.test(await page.locator('[data-dish-composition]').innerText()), 'salmon nigiri detail lists its documented salmon and sushi rice');
         }
       }
       if (name === '01-home') {

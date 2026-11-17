@@ -140,6 +140,10 @@ async function visit(browser, base, route, mode, capture = false) {
     assert.equal(await page.locator('#dish-main-image').evaluate(image => image.naturalWidth > 0), true, `${mode} dish photo loads`);
     assert.equal(await page.locator('.dish-chef-story img').evaluate(image => image.naturalWidth > 0), true, `${mode} chef editorial photo loads`);
     assert.equal(await page.locator('.detail-actions .add-to-cart').count(), 1, `${mode} dish retains its add-to-cart action`);
+    const composition = await page.locator('[data-dish-composition]').innerText();
+    assert.match(composition, /Лосось/, `${mode} salmon nigiri shows catalog-backed salmon composition`);
+    assert.match(composition, /Рис для суши/, `${mode} salmon nigiri shows catalog-backed sushi-rice composition`);
+    assert.match(await page.locator('.detail-accuracy-note').innerText(), /Аллергенные сведения не установлены/, `${mode} dish detail does not imply allergy verification`);
     assert.equal(await page.locator('.dish-grid-related .dish-card').count(), 4, `${mode} dish shows four complementary items`);
     assert.match(await page.locator('.dish-grid-related').innerText(), /Юдзу-лимонад|Нигири с тунцом/, `${mode} dish recommendations use the configured pairing records`);
   } else if (route.key === 'philosophy') {

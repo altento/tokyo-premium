@@ -116,6 +116,21 @@
 .editorial-page .dish-chef-section{padding-block:clamp(28px,4vw,54px)}
 @media(max-width:900px){.detail-feature--product{grid-template-columns:minmax(0,1fr);grid-template-areas:"heading" "gallery" "copy";gap:20px}.detail-feature--product .detail-product-heading{padding-inline:0}.detail-feature--product .detail-copy{padding:0}.dish-chef-story{grid-template-columns:1fr;gap:18px}.dish-chef-story>img{height:clamp(260px,54vw,430px)}}
 @media(max-width:640px){.detail-feature--product{padding-top:24px;gap:16px}.detail-product-heading:after{right:0}.detail-product-title{font-size:clamp(2.25rem,10vw,3.4rem)}.detail-product-intro{font-size:1.08rem}.dish-chef-story .editorial-note{min-height:0;padding:24px}.dish-chef-story .editorial-note:after{width:76px;height:76px;right:14px;top:12px}}
+.detail-product-title{font-size:clamp(2.3rem,3.35vw,3.35rem);line-height:1.08;letter-spacing:-.03em;overflow-wrap:normal;hyphens:none}
+.detail-product-heading .kicker{letter-spacing:.11em;line-height:1.55}
+.detail-product-intro{max-width:42ch}
+.detail-visual{isolation:isolate}
+.detail-visual img{height:auto;aspect-ratio:1.18;max-height:none;object-fit:cover}
+.dish-composition-section .editorial-heading{max-width:780px}
+.dish-composition-section .detail-ingredients{grid-template-columns:repeat(auto-fill,minmax(min(100%,165px),210px));gap:12px}
+.dish-composition-section .detail-ingredient-card{display:grid;grid-template-columns:30px minmax(0,1fr);align-content:start;align-items:start;gap:8px 11px;min-height:112px;padding:17px!important;border-color:rgba(199,167,102,.26);background:linear-gradient(145deg,rgba(199,167,102,.055),rgba(16,14,12,.94));transition:transform .25s ease,border-color .25s ease,background .25s ease}
+.dish-composition-section .detail-ingredient-card:hover{transform:translateY(-3px);border-color:rgba(199,167,102,.62);background:linear-gradient(145deg,rgba(130,31,34,.18),rgba(16,14,12,.96))}
+.dish-composition-section .detail-ingredient-card>span{position:static;grid-row:1 / span 2;color:var(--jp-gold);font:500 1.05rem/1.2 'Playfair Display',Georgia,serif}
+.dish-composition-section .detail-ingredient-card h3{margin:0;color:var(--jp-cream);font:500 1rem/1.25 'Playfair Display',Georgia,serif;overflow-wrap:anywhere}
+.dish-composition-section .detail-ingredient-card p{grid-column:2;margin:0;color:var(--jp-muted);font-size:.72rem;line-height:1.45}
+.dish-composition-section .detail-ingredient-card small{grid-column:2;color:var(--jp-muted);font-size:.7rem;line-height:1.5}
+.dish-composition-section .detail-ingredient-card--note{grid-column:1/-1;grid-template-columns:34px minmax(0,1fr);min-height:0}
+@media(max-width:640px){.detail-product-title{font-size:clamp(2.25rem,9vw,3.2rem)}.detail-visual img{height:auto;aspect-ratio:1.08;max-height:unset}.dish-composition-section .detail-ingredients{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.dish-composition-section .detail-ingredient-card{min-height:104px;padding:13px!important;gap:7px}.dish-composition-section .detail-ingredient-card h3{font-size:.9rem}.dish-composition-section .detail-ingredient-card p{font-size:.68rem}}
 .editorial-hero.cart-hero{box-sizing:border-box;min-height:250px;padding:24px clamp(24px,5vw,76px);align-items:center}
 .cart-hero .editorial-hero-copy{max-width:470px}
 .cart-hero h1{font-size:clamp(2.8rem,5.2vw,4.8rem);line-height:1;margin:.08em 0 .13em}

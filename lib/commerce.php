@@ -246,6 +246,57 @@ function commerce_migrate(PDO $pdo): void
             throw $error;
         }
     }
+
+    // v11 adds source-backed ingredient notes for the educational dish cards.
+    // Seed once and only insert missing links so later admin edits are preserved.
+    if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=11')->fetchColumn()) {
+        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        try {
+            $composition = [
+                'Филадельфия' => ['Лосось','Сливочный сыр','Огурец','Рис для суши','Нори'],
+                'Калифорния' => ['Снежный краб','Авокадо','Огурец','Икра тобико','Рис для суши'],
+                'Зелёный дракон' => ['Копчёный угорь','Авокадо','Сливочный сыр','Соус унаги','Кунжут'],
+                'Запечённый ролл «Вулкан»' => ['Лосось','Огурец','Сливочный сыр','Соус спайси'],
+                'Нигири с лососем' => ['Лосось','Рис для суши'],
+                'Нигири с тунцом' => ['Тунец','Рис для суши'],
+                'Гункан с икрой' => ['Икра лосося','Рис для суши','Нори'],
+                'Рамен с говядиной' => ['Говядина','Говяжий бульон','Лапша','Яйцо адзитама'],
+                'Удон с курицей терияки' => ['Лапша удон','Курица','Овощи','Соус терияки'],
+                'Моти' => ['Рисовое тесто','Ягодная начинка'],
+                'Матча латте' => ['Матча','Кокосовое молоко'],
+                'Тартар из тунца с юдзу' => ['Тунец ахи','Юдзу','Соус понзу','Зелёное яблоко','Хрустящий рис'],
+                'Гёдза с уткой' => ['Утка','Имбирь','Кунжутное масло','Соус понзу','Тесто'],
+                'Мисо-суп с вакаме' => ['Бульон даси','Паста сира-мисо','Тофу','Вакаме','Зелёный лук'],
+                'Эби темпура' => ['Тигровые креветки','Тесто темпура','Сезонные овощи','Соус тэнцую','Дайкон'],
+                'Донбури с угрём унаги' => ['Рис косихикари','Угорь','Глазурь кабаяки','Тамаго','Маринованный дайкон'],
+                'Матча-тирамису' => ['Крем маскарпоне','Савоярди','Ходзича','Матча'],
+                'Юдзу-лимонад' => ['Юдзу','Содовая','Свежий имбирь'],
+                'Нигири с морским гребешком' => ['Морской гребешок','Рис для суши','Юдзу'],
+            ];
+            $insertIngredient = $pdo->prepare('INSERT OR IGNORE INTO ingredients(slug,name,active) VALUES(?,?,1)');
+            $findIngredient = $pdo->prepare('SELECT slug FROM ingredients WHERE name=? ORDER BY slug LIMIT 1');
+            $findDish = $pdo->prepare('SELECT id FROM dishes WHERE name=? ORDER BY id LIMIT 1');
+            $insertLink = $pdo->prepare('INSERT OR IGNORE INTO dish_ingredients(dish_id,ingredient_slug,is_optional,sort_order) VALUES(?,?,0,?)');
+            foreach ($composition as $dishName => $ingredientNames) {
+                $findDish->execute([$dishName]);
+                $dishId = $findDish->fetchColumn();
+                if ($dishId === false) continue;
+                foreach ($ingredientNames as $position => $ingredientName) {
+                    $slug = 'dish-note-' . substr(hash('sha256', $ingredientName), 0, 20);
+                    $insertIngredient->execute([$slug,$ingredientName]);
+                    $findIngredient->execute([$ingredientName]);
+                    $resolvedSlug = (string)$findIngredient->fetchColumn();
+                    if ($resolvedSlug === '') throw new RuntimeException('Could not resolve seeded dish ingredient.');
+                    $insertLink->execute([(int)$dishId,$resolvedSlug,($position + 1) * 10]);
+                }
+            }
+            $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(11)');
+            $pdo->commit();
+        } catch (Throwable $error) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $error;
+        }
+    }
 }
 
 function commerce_actor_key(?int $userId, string $sessionId): string

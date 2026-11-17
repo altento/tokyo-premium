@@ -457,3 +457,12 @@ A current local static Playwright visual-fidelity pass passed all 11 page routes
 The populated-cart browser capture was created by adding three actual catalog items (Philadelphia ×2, salmon nigiri ×1, matcha latte ×1). The subtotal shown is 12,700 ₸. Desktop and mobile captures show loaded recommendation photography, quantity controls, promo and fulfilment controls, and checkout. The first capture attempt raced lazy image loading; after waiting for image decode the recommendation image rendered correctly, so no asset correction was needed.
 
 Public GitHub Pages is still unchanged because PR #19 is open as draft and deploy was skipped. The full comparison, PHP rendering on this workstation (no local pdo_sqlite), SMTP delivery configuration, and public-site post-deploy checks remain outstanding.
+
+## 2026-11-17 dish ingredient composition follow-up
+
+- Added additive migration v11 to populate the normalized ingredient relations for 19 individually described educational dishes. Set pages keep an honest “components not listed” note; the detail page explicitly says allergen data are not verified. The migration only inserts missing ingredient and dish links.
+- The PHP dish detail now reads ingredient names from SQLite. A local static preview of the salmon nigiri page shows salmon and sushi rice, with no synthetic photo gallery. Full generated static export of all detail pages is delegated to the hosted exporter.
+- Focused static Playwright visual-fidelity check passed for the dish route at 1440 px desktop and 390 px mobile. Captures: `project-docs/visual-qa/dish-composition-2026-11-17/dish-static-desktop.jpg` and `dish-static-mobile.jpg`; both were visually inspected against reference 03.
+- PHP syntax checks passed for `lib/commerce.php`, `bootstrap.php`, `pages.php` and `tests/php_integrity_integration.php`; both updated browser test files pass `node --check`; `git diff --check` passed.
+- SQLite integration assertions now cover the two listed salmon nigiri ingredients, idempotent migration retry and migration of an existing v6 database. They were not run locally because PHP here lacks `pdo_sqlite`; hosted CI is required to verify the database path.
+- This targeted detail-page improvement does not close the remaining all-reference visual gaps or update the public Pages deployment.
