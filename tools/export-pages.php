@@ -19,7 +19,7 @@ $copyAssets = function (string $sourceDir, string $targetDir) use (&$copyAssets)
         $sourcePath = $sourceDir . DIRECTORY_SEPARATOR . $entry;
         $targetPath = $targetDir . DIRECTORY_SEPARATOR . $entry;
         if (is_dir($sourcePath)) { $copyAssets($sourcePath, $targetPath); continue; }
-        if (!preg_match('/\.(webp|svg|woff2?)$/i', $entry)) continue;
+        if (!preg_match('/\.(webp|jpe?g|svg|woff2?)$/i', $entry)) continue;
         if (!copy($sourcePath, $targetPath)) throw new RuntimeException('Cannot copy ' . $sourcePath);
     }
 };
