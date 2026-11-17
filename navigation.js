@@ -34,10 +34,10 @@
   const nav = document.querySelector('#site-navigation');
   const toggle = header?.querySelector('.mobile-menu');
   if (!header || !nav || !toggle) return;
+  header.querySelector('.header-cta')?.setAttribute('aria-label', 'Бронировать столик');
 
-  // The full navigation no longer fits below 1025px (the booking CTA clips
-  // between tablet and mobile widths), so CSS and interaction share one cutoff.
-  const mobile = window.matchMedia('(max-width: 1024px)');
+  // Keep the desktop reference at 1024px; use the accessible menu below that breakpoint.
+  const mobile = window.matchMedia('(max-width: 1023px)');
   let returnFocus = false;
 
   const mobileUtilities = nav.querySelector('.mobile-nav-utilities');

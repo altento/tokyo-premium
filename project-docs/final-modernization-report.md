@@ -363,3 +363,9 @@ The protected Marketing & Loyalty panel now shows saved redemption counts, total
 ## 2026-11-17 cart hero reference follow-up
 
 Added a dedicated original dining-scene image to the PHP cart hero and GitHub Pages export, replacing the reused omakase close-up. The focused cart visual regression passed all eight states and checked image loading; desktop and mobile captures were inspected. Hosted run #177 found an outdated cart-image expectation in the broader visual-fidelity test; that assertion now matches the new asset, and a hosted rerun is pending. Evidence and the specific visual comparison are in `project-docs/visual-qa/cart-hero-refinement-2026-11-17/` and `cart-hero-refinement-2026-11-17.md`. The full pixel comparison of all 11 references remains incomplete, and the public Pages deployment remains unchanged in this pass.
+
+## 2026-11-17 tablet navigation alignment
+
+A fresh comparison against `design-references/02-menu.png` found that the header switched to its mobile state at 1024 px, while the approved layout retains its desktop navigation there. CSS and JavaScript now agree on a 1023 px mobile breakpoint; the desktop header uses a compact booking action with an explicit accessible name at 1024 px. Focused static Playwright checks passed at 1440, 1024, 1023, 900, and 390 px; the existing visual-fidelity regression was extended and passed in static menu mode, including header padding bounds, accessible naming, Escape close, and focus restoration. Evidence: `project-docs/visual-qa/menu-header-tablet-2026-11-17/`. Current branch changes still need hosted verification; the all-11-page reference comparison and public deployment are not complete.
+
+Hosted gate #178 for the preceding cart-only commit passed its PHP/SQLite checks, browser regression and visual QA, and static export. Its deployment job was skipped because PR #19 is a draft. The successful run does not verify the subsequent tablet-header change.

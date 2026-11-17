@@ -19,6 +19,8 @@ const selectedRoutes = selectedMode ? routes.filter(route => route.mode === sele
 const viewports = [
   { name: 'desktop', width: 1440, height: 1000 },
   { name: 'tablet-landscape', width: 1024, height: 900 },
+  { name: 'tablet-boundary', width: 1023, height: 900 },
+  { name: 'tablet-portrait', width: 900, height: 900 },
   { name: 'mobile', width: 390, height: 844 }
 ];
 
@@ -59,6 +61,36 @@ const viewports = [
           return {
             width: innerWidth,
             scrollWidth: document.documentElement.scrollWidth,
+            navigation: (() => {
+              const nav = document.querySelector('#site-navigation');
+              const toggle = document.querySelector('.site-header .mobile-menu');
+              const wordmark = document.querySelector('.site-header .wordmark');
+              const profile = document.querySelector('.site-header .header-actions .header-icon:not(.header-cart-link)');
+              const cart = document.querySelector('.site-header .header-cart-link');
+              const booking = document.querySelector('.site-header .header-cta');
+              const header = document.querySelector('.site-header');
+              const visible = element => Boolean(element && getComputedStyle(element).display !== 'none' && element.getBoundingClientRect().width > 0);
+              const rect = element => {
+                const box = element.getBoundingClientRect();
+                return { left: box.left, right: box.right };
+              };
+              const desktopItems = [wordmark, nav, profile, cart, booking].filter(visible);
+              const boxes = desktopItems.map(rect);
+              const headerBox = header.getBoundingClientRect();
+              const headerStyle = getComputedStyle(header);
+              const contentLeft = headerBox.left + parseFloat(headerStyle.paddingLeft);
+              const contentRight = headerBox.right - parseFloat(headerStyle.paddingRight);
+              return {
+                navVisible: visible(nav),
+                navInert: nav.inert,
+                mobileToggleVisible: visible(toggle),
+                profileVisible: visible(profile),
+                cartVisible: visible(cart),
+                bookingVisible: visible(booking),
+                desktopItemsDoNotOverlap: boxes.every((box, index) => index === 0 || boxes[index - 1].right <= box.left + 1),
+                desktopItemsInsideContent: boxes.every(box => box.left >= contentLeft - 1 && box.right <= contentRight + 1)
+              };
+            })(),
             menuGridColumns: getComputedStyle(document.querySelector('.menu-page .dish-grid')).gridTemplateColumns.split(' ').length,
             heroHeight: Math.round(hero?.getBoundingClientRect().height || 0),
             heroImageLoaded: Boolean(heroImage?.naturalWidth),
@@ -108,6 +140,17 @@ const viewports = [
         });
 
         assert.ok(metrics.scrollWidth <= viewport.width, `${route.mode} ${viewport.name} has no horizontal page overflow`);
+        const desktopNavigation = viewport.width > 1023;
+        assert.equal(metrics.navigation.navVisible, desktopNavigation, `${route.mode} ${viewport.name} shows only the matching navigation mode`);
+        assert.equal(metrics.navigation.navInert, !desktopNavigation, `${route.mode} ${viewport.name} keeps hidden navigation out of keyboard focus`);
+        assert.equal(metrics.navigation.mobileToggleVisible, !desktopNavigation, `${route.mode} ${viewport.name} exposes the mobile menu only at mobile widths`);
+        assert.equal(metrics.navigation.profileVisible, desktopNavigation, `${route.mode} ${viewport.name} keeps the profile action available`);
+        assert.equal(metrics.navigation.cartVisible, true, `${route.mode} ${viewport.name} keeps the cart visible`);
+        assert.equal(metrics.navigation.bookingVisible, desktopNavigation, `${route.mode} ${viewport.name} keeps booking available in the active header mode`);
+        if (desktopNavigation) {
+          assert.equal(metrics.navigation.desktopItemsDoNotOverlap, true, `${route.mode} ${viewport.name} header controls do not overlap`);
+          assert.equal(metrics.navigation.desktopItemsInsideContent, true, `${route.mode} ${viewport.name} header controls stay inside the header padding`);
+        }
         assert.ok(metrics.heroHeight > 0 && metrics.heroHeight <= (viewport.width > 700 ? 350 : 370), `${route.mode} ${viewport.name} keeps the compact responsive menu hero`);
         assert.equal(metrics.heroImageLoaded, true, `${route.mode} ${viewport.name} hero image loads`);
         assert.equal(metrics.breadcrumb, 'Меню', `${route.mode} ${viewport.name} shows the current breadcrumb`);
@@ -163,11 +206,20 @@ const viewports = [
           quality: viewport.name === 'desktop' ? 74 : 72,
           fullPage: true
         });
+        if (viewport.name === 'mobile') {
+          const toggle = page.locator('.site-header .mobile-menu');
+          await toggle.click();
+          assert.equal(await toggle.getAttribute('aria-expanded'), 'true', `${route.mode} mobile menu opens`);
+          assert.equal(await page.locator('#site-navigation .mobile-nav-utilities a[href="booking.html"]').isVisible(), true, `${route.mode} mobile menu exposes booking`);
+          await page.keyboard.press('Escape');
+          assert.equal(await toggle.getAttribute('aria-expanded'), 'false', `${route.mode} Escape closes the mobile menu`);
+          assert.equal(await toggle.evaluate(element => document.activeElement === element), true, `${route.mode} closing the mobile menu restores focus`);
+        }
         console.log(`${route.mode} ${viewport.name}: ${JSON.stringify(metrics)}`);
       }
     }
     assert.deepEqual(errors, [], 'menu has no browser JavaScript or console errors');
-    console.log(`PASS: ${selectedRoutes.length * viewports.length} focused menu visual cases (${selectedRoutes.map(route => route.mode).join(', ')} × desktop/mobile)`);
+    console.log(`PASS: ${selectedRoutes.length * viewports.length} focused menu visual cases (${selectedRoutes.map(route => route.mode).join(', ')} × ${viewports.map(viewport => viewport.name).join(', ')})`);
   } finally {
     await browser.close();
   }

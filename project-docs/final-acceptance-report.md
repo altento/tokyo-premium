@@ -151,3 +151,7 @@ Status: CSS repair is locally verified; hosted PHP + SQLite/responsive regressio
 ## Local follow-up — 2026-11-17
 
 Added a fictional scallop nigiri with original 1200×1200 WebP photography. Additive SQLite migration v10 inserts the dish and ingredient only when missing; seed data and the static export include it. The scallop filter now has a matching item. Also kept the three-column menu grid at 1024 px to match reference 02; it switches to two columns below 900 px. Focused Playwright smoke passed for PHP and static Pages at 1440, 1024, and 390 px, including the scallop filter, product detail page, image decoding, divider, and overflow checks. PHP lint passed. The full suite and hosted CI for these latest changes have not run; the public Pages site has not been updated.
+
+## Status update — 2026-11-17
+
+The earlier “hosted CI pending” status is superseded for commit `f45a3ecc8fb6ecdce676a3bdb4a3d0b35c7a499f`: hosted run [#178](https://github.com/altento/tokyo-premium/actions/runs/44009506920) passed PHP/SQLite integrity, cart-store, the full browser regression, visual QA and Pages export. Deployment was skipped because PR #19 remains a draft. A subsequent focused menu-header change passed the static Playwright check at 1440, 1024, 1023, 900 and 390 px, but still needs a hosted run. Full pixel-by-pixel acceptance for all 11 references and publication verification remain incomplete.

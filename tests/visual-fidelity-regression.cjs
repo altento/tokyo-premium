@@ -96,6 +96,41 @@ async function visit(browser, base, route, mode, capture = false) {
     assert.ok(await page.locator('.menu-hero').evaluate(node => node.getBoundingClientRect().height <= 460), `${mode} menu hero stays within the compact editorial height`);
     assert.equal(await page.locator('.menu-set-story-photo img').evaluateAll(images => images.length === 2 && images.every(image => image.naturalWidth > 0)), true, `${mode} menu's authored-set story has two loaded photographs`);
     assert.equal(await page.locator('.menu-set-story a[href*="set-builder"]').count(), 1, `${mode} menu links its authored-set story to the set builder`);
+    await page.setViewportSize({ width: 1024, height: 900 });
+    const tabletHeader = await page.evaluate(() => {
+      const header = document.querySelector('.site-header');
+      const style = getComputedStyle(header);
+      const nodes = [
+        header.querySelector('.wordmark'),
+        header.querySelector('#site-navigation'),
+        header.querySelector('.header-actions .header-icon:not(.header-cart-link)'),
+        header.querySelector('.header-cart-link'),
+        header.querySelector('.header-cta')
+      ];
+      const boxes = nodes.map(node => node.getBoundingClientRect());
+      const left = header.getBoundingClientRect().left + parseFloat(style.paddingLeft);
+      const right = header.getBoundingClientRect().right - parseFloat(style.paddingRight);
+      return {
+        visible: nodes.every(node => getComputedStyle(node).display !== 'none' && node.getBoundingClientRect().width > 0),
+        noOverlap: boxes.every((box,index) => index === 0 || boxes[index - 1].right <= box.left + 1),
+        insideHeader: boxes.every(box => box.left >= left - 1 && box.right <= right + 1),
+        navAvailable: !header.querySelector('#site-navigation').inert,
+        bookingAccessibleName: nodes[4].getAttribute('aria-label')
+      };
+    });
+    assert.deepEqual(tabletHeader, { visible: true, noOverlap: true, insideHeader: true, navAvailable: true, bookingAccessibleName: 'Бронировать столик' }, `${mode} 1024px desktop header follows the approved reference without clipping`);
+    await page.setViewportSize({ width: 1023, height: 900 });
+    const mobileToggle = page.locator('.site-header .mobile-menu');
+    const mobileNav = page.locator('#site-navigation');
+    assert.equal(await mobileToggle.isVisible(), true, `${mode} 1023px uses the mobile navigation`);
+    assert.equal(await mobileNav.evaluate(node => node.inert), true, `${mode} closed mobile navigation is inert`);
+    await mobileToggle.click();
+    assert.equal(await page.locator('#site-navigation .mobile-nav-utilities a[href="booking.html"]').isVisible(), true, `${mode} mobile navigation exposes booking`);
+    await page.keyboard.press('Escape');
+    assert.equal(await mobileToggle.getAttribute('aria-expanded'), 'false', `${mode} mobile navigation closes with Escape`);
+    assert.equal(await mobileToggle.evaluate(node => document.activeElement === node), true, `${mode} mobile navigation restores focus`);
+    await page.setViewportSize({ width: route.width, height: 1000 });
+    await revealAll();
   } else if (route.key === 'dish') {
     assert.equal(await page.locator('.detail-feature--product').count(), 1, `${mode} dish uses the product detail layout`);
     assert.equal(await page.locator('.detail-product-heading h1').count(), 1, `${mode} dish has one product heading`);

@@ -250,3 +250,7 @@ The static motion suite passed after its crop assertion was aligned with the cur
 ## 2026-11-17 static account first-visit preview
 
 The populated static Pages account after first visit is captured at `account-first-visit-2026-11-17/11-account-seeded-desktop.jpg` (1440 px) and `account-first-visit-2026-11-17/11-account-seeded-mobile.jpg` (390 px). The focused browser regression verifies sample labels, first-visit local seeding, preservation of existing profile and orders, clear-and-reload behavior, explicit restore and all thumbnails before capture. Compared with `design-references/11-account.png`, the dashboard now shows catalog-backed history, a local booking, points and favorites; the layout remains distinct from the reference.
+
+## 2026-11-17 tablet navigation and menu comparison
+
+`menu-header-tablet-2026-11-17/` contains the pre-change 1024 px capture and fresh 1440, 1024, 1023, 900, and 390 px captures. The 1024 px header now matches the desktop reference navigation pattern with profile, cart, and a compact booking control visible; at 1023 px the accessible mobile menu takes over. The focused static menu regression passed all five widths, verifies header bounds and no overlap, and checks opening the mobile menu, reaching booking, Escape close, and focus restoration. This corrects header collapse alone; it does not claim full page parity with reference 02.
