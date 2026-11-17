@@ -159,7 +159,10 @@ async function run() {
       await page.screenshot({ path: path.join(evidence, `12-${mode.name}-secret-menu-unlocked-mobile.jpg`), fullPage: true, type: 'jpeg', quality: 72 });
       await page.setViewportSize({ width: 1440, height: 1000 });
       check(await page.evaluate(() => localStorage.getItem('tokyo-secret-menu-code')) === secretCode, `${mode.name} successful Secret Menu access persists the re-check token for checkout`);
-      await page.locator('[data-tp-secret-results] .add-to-cart').first().click();
+      const secretMenuAddButton = mode.name === 'static'
+        ? page.locator('[data-tp-secret-results] .add-to-cart').first()
+        : page.locator('.tp20-secret-grid .add-to-cart').first();
+      await secretMenuAddButton.click();
       await page.goto(mode.base + mode.routes.cart, { waitUntil: 'domcontentloaded' });
       check(await page.locator('#checkout-form [name="secret_code"]').inputValue() === secretCode, `${mode.name} checkout carries the Secret Menu access code separately from discount codes`);
       if (mode.name === 'php') {
