@@ -262,3 +262,11 @@ The populated static Pages account after first visit is captured at `account-fir
 ### PHP account dashboard polish — 2026-11-17
 
 Compact PHP account navigation, active-section accessibility state and server-status pills are captured at desktop/mobile in `account-dashboard-polish-2026-11-17/`. The comparison records remaining differences from reference 11; no pixel-perfect claim. The focused and broad local checks passed; hosted CI and publication are pending.
+
+## 2026-11-17 dish and Omakase layout follow-up
+
+`2.0-visual-fidelity/dish-php-{desktop,mobile}.jpg` and `omakase-php-{desktop,mobile}.jpg` are fresh captures after fixing the dish purchase-column gap and compacting the interactive Omakase story panel. The PHP and static routes passed the focused visual-fidelity regression. The updated screenshots were opened and compared with references 03 and 04. Details and the limited verification scope are in `reference-repair-followup-2026-11-17.md`; this does not close visual QA for every reference.
+
+## 2026-11-17 PHP account density pass
+
+`2.0-visual-fidelity/account-php-{desktop,mobile}.jpg` shows the PHP dashboard after tightening the hero and empty history states. The focused account visual-fidelity regression passed in PHP and static modes, including the desktop two-by-two metric layout and mobile overflow check. The dashboard remains richer and longer than reference 11, so this is an improvement rather than a full parity claim.

@@ -99,14 +99,16 @@
 .menu-set-story-copy small{display:block;margin-top:8px;color:#a99b87;font-size:.65rem;letter-spacing:.04em}
 @media(max-width:1050px){.menu-set-story{grid-template-columns:minmax(170px,.8fr) minmax(250px,1.1fr) minmax(190px,.9fr)}.menu-set-story-photo,.menu-set-story-photo img{min-height:230px}}
 @media(max-width:700px){.menu-set-story{grid-template-columns:1fr}.menu-set-story:before{right:-100px;top:auto;bottom:44px;transform:none}.menu-set-story-photo--platter{display:none}.menu-set-story-photo,.menu-set-story-photo img{min-height:0;height:auto;aspect-ratio:2.1}.menu-set-story-photo:after,.menu-set-story-photo--platter:after{background:linear-gradient(0deg,#0d0b09 0%,transparent 34%)}.menu-set-story-copy{max-width:560px;padding:12px 22px 24px}.menu-set-story-copy h2{font-size:clamp(1.55rem,7.5vw,2.05rem)}.menu-set-story-copy p{font-size:.82rem}.menu-set-story-photo--chef img{object-position:center 43%}.menu-set-story-photo--platter img{object-position:center 58%}}
-.detail-feature--product{grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);grid-template-areas:"gallery heading" "gallery copy";align-items:start;padding-block:clamp(32px,4vw,56px)}
+.detail-feature--product{grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);grid-template-areas:"gallery product";align-items:center;padding-block:clamp(32px,4vw,56px)}
 .detail-feature--product .detail-gallery{grid-area:gallery;min-width:0}
-.detail-feature--product .detail-product-heading{grid-area:heading;position:relative;align-self:end;min-width:0;padding:0 clamp(2px,1.2vw,18px) 4px}
+.detail-product-panel{grid-area:product;display:flex;min-width:0;flex-direction:column;justify-content:center;gap:clamp(12px,1.6vw,22px);padding-inline:clamp(2px,1.2vw,18px)}
+.detail-feature--product .detail-product-heading{position:relative;min-width:0;padding:0}
 .detail-product-heading:after{position:absolute;right:8px;top:0;content:"寿";color:rgba(205,166,101,.16);font:500 clamp(3rem,7vw,6rem)/1 "Playfair Display",serif;pointer-events:none}
 .detail-product-heading .kicker{position:relative;z-index:1;max-width:calc(100% - 44px)}
 .detail-product-title{position:relative;z-index:1;margin:.22em 0 .12em;color:var(--jp-cream,#f4e8d2);font:500 clamp(2.35rem,4.3vw,4.25rem)/1.06 "Playfair Display",Georgia,serif;letter-spacing:-.025em;overflow-wrap:anywhere}
 .detail-product-intro{position:relative;z-index:1;margin:.2em 0 0;color:var(--jp-gold,#c7a766);font:italic 500 clamp(1.05rem,1.8vw,1.35rem)/1.4 "Playfair Display",Georgia,serif}
-.detail-feature--product .detail-copy{grid-area:copy;align-self:start;min-width:0;padding:8px clamp(2px,1.2vw,18px) 0}
+.detail-feature--product .detail-copy{min-width:0;padding:0}
+.detail-feature--product .detail-copy>p:first-child{margin:0 0 10px}
 .detail-feature--product .detail-facts{margin:18px 0}
 .detail-accuracy-note{max-width:600px;margin:12px 0 0;font-size:.72rem;line-height:1.5}
 .dish-chef-story{display:grid;grid-template-columns:minmax(250px,.82fr) minmax(0,1.18fr);gap:clamp(22px,5vw,70px);align-items:center;max-width:1320px;margin:0 auto}
@@ -114,7 +116,7 @@
 .dish-chef-story .editorial-note{min-height:260px;padding:clamp(24px,4vw,50px)}
 .dish-chef-story .editorial-note blockquote{max-width:640px;font-size:clamp(1.4rem,2.6vw,2.25rem)}
 .editorial-page .dish-chef-section{padding-block:clamp(28px,4vw,54px)}
-@media(max-width:900px){.detail-feature--product{grid-template-columns:minmax(0,1fr);grid-template-areas:"heading" "gallery" "copy";gap:20px}.detail-feature--product .detail-product-heading{padding-inline:0}.detail-feature--product .detail-copy{padding:0}.dish-chef-story{grid-template-columns:1fr;gap:18px}.dish-chef-story>img{height:clamp(260px,54vw,430px)}}
+@media(max-width:900px){.detail-feature--product{grid-template-columns:minmax(0,1fr);grid-template-areas:"heading" "gallery" "copy";gap:20px}.detail-product-panel{display:contents}.detail-feature--product .detail-product-heading{grid-area:heading;padding-inline:0}.detail-feature--product .detail-copy{grid-area:copy;padding:0}.dish-chef-story{grid-template-columns:1fr;gap:18px}.dish-chef-story>img{height:clamp(260px,54vw,430px)}}
 @media(max-width:640px){.detail-feature--product{padding-top:24px;gap:16px}.detail-product-heading:after{right:0}.detail-product-title{font-size:clamp(2.25rem,10vw,3.4rem)}.detail-product-intro{font-size:1.08rem}.dish-chef-story .editorial-note{min-height:0;padding:24px}.dish-chef-story .editorial-note:after{width:76px;height:76px;right:14px;top:12px}}
 .detail-product-title{font-size:clamp(2.3rem,3.35vw,3.35rem);line-height:1.08;letter-spacing:-.03em;overflow-wrap:normal;hyphens:none}
 .detail-product-heading .kicker{letter-spacing:.11em;line-height:1.55}
@@ -228,11 +230,17 @@
 .editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-heading h2{font-size:clamp(1.8rem,3.1vw,2.6rem);margin:6px 0}
 .editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-heading p{font-size:.9rem;margin:8px 0;line-height:1.55}
 .editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-tabs{margin-bottom:12px}
+.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-panels{min-height:0}
+.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-panel{grid-template-columns:minmax(0,.88fr) minmax(0,1.12fr);padding:clamp(12px,1.25vw,18px)}
 .editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-photo,
-.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-photo img{min-height:290px;max-height:370px}
-.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-story{padding:clamp(20px,2.3vw,30px)}
-.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-story h3{font-size:clamp(1.65rem,2.6vw,2.25rem);margin:10px 0}
-.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-story dl{gap:9px;margin:14px 0}
+.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-photo img{min-height:clamp(220px,18vw,270px);max-height:270px}
+.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-story{padding:clamp(14px,1.7vw,22px)}
+.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-story h3{font-size:clamp(1.4rem,1.85vw,1.8rem);line-height:1.12;margin:6px 0}
+.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-story>p:not(.tp20-course-note){font-size:.8rem;line-height:1.45;margin:6px 0}
+.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-story dl{gap:5px;margin:8px 0}
+.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-story dl>div{gap:8px;padding-top:7px}
+.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-story .tp20-course-note{font-size:.7rem;line-height:1.4;margin:8px 0;padding-left:10px}
+.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-story>.button{min-height:42px;padding-block:8px}
 .editorial-page:has(.omakase-hero)>.section:has(.experience-tiers){padding-block:clamp(24px,2.8vw,38px)}
 .editorial-page:has(.omakase-hero)>.section:has(.experience-tiers) .editorial-heading{margin-bottom:24px}
 .editorial-page:has(.omakase-hero)>.section:has(.experience-tiers) .editorial-heading h2{font-size:clamp(1.9rem,3vw,2.7rem);max-width:920px;line-height:1.1}
@@ -240,9 +248,9 @@
 .editorial-page:has(.omakase-hero)>.image-story>img{height:clamp(260px,25vw,360px)}
 .editorial-page:has(.omakase-hero)>.image-story h2{font-size:clamp(2rem,3vw,2.75rem)}
 .editorial-page:has(.omakase-hero)>.omakase-quote{padding-block:clamp(20px,2.3vw,30px)}
-@media(max-width:700px){.editorial-page:has(.omakase-hero)>.section{padding-block:24px}.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-photo,.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-photo img{min-height:220px;max-height:300px}.editorial-page:has(.omakase-hero)>.image-story>img{height:280px}}
+@media(max-width:700px){.editorial-page:has(.omakase-hero)>.section{padding-block:24px}.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-panel{grid-template-columns:minmax(0,1fr);padding:12px}.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-photo,.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-photo img{min-height:220px;max-height:300px}.editorial-page:has(.omakase-hero)>.image-story>img{height:280px}}
 .omakase-reservation-band{position:relative;isolation:isolate;display:flex;align-items:center;min-height:250px;overflow:hidden;border-block:1px solid rgba(199,167,102,.28);background:#100d0b}
-.omakase-reservation-band:after{position:absolute;z-index:-1;inset:0;background:linear-gradient(90deg,rgba(9,8,7,.32) 0%,rgba(10,9,8,.91) 39%,#100d0b 76%);content:""}
+.omakase-reservation-band:after{position:absolute;z-index:-1;inset:0;background:linear-gradient(90deg,rgba(9,8,7,.88) 0%,rgba(10,9,8,.66) 44%,rgba(16,13,11,.16) 78%,rgba(16,13,11,.04) 100%);content:""}
 .omakase-reservation-band>img{position:absolute;z-index:-2;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 48%}
 .omakase-reservation-copy{width:min(570px,52%);margin-left:max(7vw,calc((100vw - 1280px)/2));padding:24px 0}
 .omakase-reservation-copy h2{font-size:clamp(1.85rem,2.8vw,2.55rem)}

@@ -482,6 +482,14 @@ Public GitHub Pages is still unchanged because PR #19 is open as draft and deplo
 - PHP syntax checks passed for `lib/commerce.php`, `bootstrap.php`, `pages.php` and `tests/php_integrity_integration.php`; both updated browser test files pass `node --check`; `git diff --check` passed.
 - SQLite integration assertions now cover the two listed salmon nigiri ingredients, idempotent migration retry and migration of an existing v6 database. They were not run locally because PHP here lacks `pdo_sqlite`; hosted CI is required to verify the database path.
 - This targeted detail-page improvement does not close the remaining all-reference visual gaps or update the public Pages deployment.
+
+## 2026-11-17 detail and Omakase visual repairs
+
+- Compared fresh PHP screenshots with references 03 and 04. On dish detail, the desktop grid had split the heading and purchase information into separate rows, leaving a large empty gap. Grouped the content into one desktop column while retaining mobile reading order (heading, photo, purchase).
+- On Omakase, the selected course panel added substantial repeated imagery and height, and the booking-band gradient hid most of the room. Reduced the panel to a compact editorial composition and moved the stronger shade to the copy side so the interior remains visible.
+- Added browser assertions for the dish title-to-description spacing, desktop column, mobile order, visible cart controls, and a maximum 360 px desktop Omakase panel. Existing assertions still exercise all five distinct course photos, mouse/keyboard selection, and matching story panels.
+- `php -l pages.php` passed. Focused `npm run test:visual-fidelity` passed for dish in PHP and static modes and Omakase in both modes. It saved fresh 1440 px desktop and 390 px mobile captures under `project-docs/visual-qa/2.0-visual-fidelity/`; I opened and inspected the updated dish and Omakase screenshots.
+- This is a two-page visual repair, not full 11-reference acceptance. The PHP/SQLite integration suite and hosted Pages deployment were not rerun in this pass; remaining visual differences are recorded in `project-docs/visual-qa/reference-repair-followup-2026-11-17.md`.
 # 2026-11-17 — dish detail layout follow-up
 
 - `php -l pages.php` and `node --check tests/tokyo20-regression.cjs` passed; `git diff --check` reported no whitespace errors.
@@ -492,3 +500,7 @@ Public GitHub Pages is still unchanged because PR #19 is open as draft and deplo
 ## 2026-11-17 PHP account dashboard polish
 
 The PHP profile navigation is now compact, icon-led, and marks the section currently in view; order states use server-backed status pills. Focused PHP account visual-fidelity passed at desktop and mobile widths. The full browser regression (11 route types, 21 detail routes, six viewport widths) and Tokyo 2.0 PHP/static regression passed. Static export regenerated 37 pages and passed the rerun. Local PHP/JS syntax and diff checks pass. Screenshots and remaining comparison gaps: `project-docs/visual-qa/account-dashboard-polish-2026-11-17/README.md`. This checkpoint is still local and has not yet passed hosted CI or updated Pages.
+
+## 2026-11-17 PHP account dashboard density
+
+The account route passed `npm run test:visual-fidelity` in both PHP and static modes. The PHP desktop capture checks a hero height at or below 320 px, a two-by-two metric grid, concise empty history panels, and all seven dashboard navigation targets; the mobile route retains the no-overflow check. Screenshots are in `project-docs/visual-qa/2.0-visual-fidelity/account-php-{desktop,mobile}.jpg`. This is a focused visual pass; it does not verify every account transaction or the full PHP/SQLite integration suite.

@@ -1047,3 +1047,24 @@ body.story-motion-gsap [data-story-reveal].story-visible img{animation:none}
   .account-demo-page .tp20-static-privilege .tp20-loyalty-card,.account-demo-page .tp20-referral-card{padding:15px}
   .account-demo-page .demo-order-details>summary{min-height:38px;font-size:.68rem}
 }
+
+/* Keep the authenticated dashboard's first view dense and close to reference 11. */
+@media(min-width:1240px){
+  .account-dashboard.account-shell{max-width:1500px;margin:18px auto 28px;padding-inline:20px}
+  .account-dashboard .account-dashboard-card{padding:20px 26px}
+  .account-dashboard-hero{min-height:240px;margin:-2px 0 2px;padding:22px 28px}
+  .account-dashboard-identity h1{font-size:clamp(2.3rem,3.35vw,3.25rem)}
+  .account-dashboard-overview{gap:12px;margin:14px 0}
+  .account-dashboard-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .account-dashboard-metrics article{min-height:90px;padding:10px 11px}
+  .account-dashboard-metrics article>span{font-size:.69rem}
+  .account-dashboard-metrics article>strong{font-size:clamp(1.15rem,1.6vw,1.5rem)}
+  .account-dashboard-actions{margin-bottom:14px}
+  .account-dashboard-layout{grid-template-columns:190px minmax(0,1fr);gap:12px}
+  .account-dashboard .account-dashboard-panel{padding:18px}
+  .account-dashboard-section-heading{margin-bottom:10px}
+  .account-dashboard .account-empty-state{grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;padding:11px 13px}
+  .account-dashboard .account-empty-state p{margin:0}
+  .account-dashboard #account-notifications .account-empty-state{grid-template-columns:minmax(0,1fr)}
+  .account-dashboard .account-empty-state .button{min-height:36px;padding:7px 11px;font-size:.68rem}
+}

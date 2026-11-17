@@ -160,6 +160,20 @@ async function visit(browser, base, route, mode, capture = false) {
     await revealAll();
   } else if (route.key === 'dish') {
     assert.equal(await page.locator('.detail-feature--product').count(), 1, `${mode} dish uses the product detail layout`);
+    const productPanel = await page.locator('.detail-product-panel').evaluate(panel => {
+      const heading = panel.querySelector('.detail-product-heading').getBoundingClientRect();
+      const copy = panel.querySelector('.detail-copy').getBoundingClientRect();
+      const description = panel.querySelector('.detail-copy > p:first-child').getBoundingClientRect();
+      const gallery = document.querySelector('.detail-gallery').getBoundingClientRect();
+      return {
+        containsPurchase: Boolean(panel.querySelector('.detail-actions .add-to-cart')),
+        headingCopyGap: description.top - heading.bottom,
+        panelFitsGalleryHeight: panel.getBoundingClientRect().height <= gallery.height + 2,
+        sameColumn: Math.abs(heading.left - copy.left) <= 2
+      };
+    });
+    assert.deepEqual({ containsPurchase: productPanel.containsPurchase, panelFitsGalleryHeight: productPanel.panelFitsGalleryHeight, sameColumn: productPanel.sameColumn }, { containsPurchase: true, panelFitsGalleryHeight: true, sameColumn: true }, `${mode} dish keeps its purchase flow in one compact column beside the photo`);
+    assert.ok(productPanel.headingCopyGap < 55, `${mode} dish has no oversized blank gap between title and description (${productPanel.headingCopyGap}px)`);
     assert.equal(await page.locator('.detail-product-heading h1').count(), 1, `${mode} dish has one product heading`);
     assert.equal(await page.locator('h1').count(), 1, `${mode} dish does not duplicate its title`);
     assert.equal(await page.locator('#dish-main-image').evaluate(image => image.naturalWidth > 0), true, `${mode} dish photo loads`);
@@ -266,6 +280,9 @@ async function visit(browser, base, route, mode, capture = false) {
     assert.equal(await thirdCourse.evaluate(node => document.activeElement === node), true, `${mode} ArrowRight moves keyboard focus with the selected course`);
     assert.equal(await page.locator('[data-tp-course-panel][data-step="3"]').isVisible(), true, `${mode} keyboard selection reveals the matching course story`);
     await page.locator('.tp20-course-tabs [data-tp-course][data-step="1"]').click();
+    await page.waitForTimeout(450);
+    const firstCoursePanelHeight = await page.locator('[data-tp-course-panel][data-step="1"]').evaluate(panel => panel.getBoundingClientRect().height);
+    assert.ok(firstCoursePanelHeight <= 360, `${mode} Omakase course story stays editorially compact (${firstCoursePanelHeight}px)`);
     assert.equal(counts.duplicateCourseGrid, false, `${mode} Omakase does not repeat the same course photos in a second grid`);
     assert.equal(counts.orderIsEditorial, true, `${mode} Omakase follows philosophy, interactive journey, tiers and booking order`);
     assert.ok(counts.heroHeight <= 370, `${mode} Omakase desktop hero stays close to the reference height (${counts.heroHeight}px)`);
@@ -296,6 +313,26 @@ async function visit(browser, base, route, mode, capture = false) {
     assert.ok(await page.locator(accountNavigation).isVisible(), `${mode} account dashboard exposes its navigation`);
     assert.ok(await page.locator(loyaltyCard).isVisible(), `${mode} account dashboard shows its correctly labelled loyalty card`);
     if (mode === 'php') {
+      const overviewGeometry = await page.evaluate(() => {
+        const hero = document.querySelector('.account-dashboard-hero').getBoundingClientRect();
+        const metrics = [...document.querySelectorAll('.account-dashboard-metrics article')].map(node => node.getBoundingClientRect());
+        const grid = getComputedStyle(document.querySelector('.account-dashboard-metrics'));
+        return {
+          heroHeight: hero.height,
+          metricColumns: grid.gridTemplateColumns.split(' ').length,
+          metricCardHeight: metrics[0]?.height ?? 0,
+          metricRows: new Set(metrics.map(rect => Math.round(rect.top))).size,
+          emptyStateHeights: ['#account-notifications', '#account-orders', '#account-bookings']
+            .map(selector => document.querySelector(`${selector} .account-empty-state`))
+            .filter(Boolean)
+            .map(node => node.getBoundingClientRect().height)
+        };
+      });
+      assert.ok(overviewGeometry.heroHeight <= 320, `PHP account hero stays compact against reference 11 (${overviewGeometry.heroHeight}px)`);
+      assert.equal(overviewGeometry.metricColumns, 2, 'PHP account summary metrics use a balanced two-column grid');
+      assert.ok(overviewGeometry.metricCardHeight <= 150, `PHP account metric tiles remain compact beside the loyalty summary (${overviewGeometry.metricCardHeight}px)`);
+      assert.equal(overviewGeometry.metricRows, 2, 'PHP account summary metrics form two clear rows');
+      assert.ok(overviewGeometry.emptyStateHeights.every(height => height <= 100), `PHP account empty history states remain concise (${overviewGeometry.emptyStateHeights.join(', ')}px)`);
       const navigationLinks = page.locator('.account-dashboard-nav a[href^="#"]');
       assert.equal(await navigationLinks.count(), 7, 'PHP account navigation links all seven dashboard sections, including notifications');
       assert.equal(await page.locator('.account-dashboard-nav .account-nav-icon svg').count(), 7, 'PHP account section navigation uses consistent inline icons');
@@ -318,6 +355,20 @@ async function visit(browser, base, route, mode, capture = false) {
     const mobileObjectPosition = await page.locator('.omakase-hero .editorial-hero-photo').evaluate(image => getComputedStyle(image).objectPosition);
     assert.equal(mobileObjectPosition, '100% 50%', `${mode} mobile Omakase crop keeps the chef in frame`);
     assert.equal(await page.locator('.tp20-course-tabs [data-tp-course] img').evaluateAll(images => images.every(image => image.naturalWidth > 0)), true, `${mode} mobile course preview photos load`);
+  }
+  if (route.key === 'dish') {
+    const mobileProduct = await page.evaluate(() => {
+      const feature = document.querySelector('.detail-feature--product');
+      const heading = feature.querySelector('.detail-product-heading').getBoundingClientRect();
+      const gallery = feature.querySelector('.detail-gallery').getBoundingClientRect();
+      const copy = feature.querySelector('.detail-copy').getBoundingClientRect();
+      return {
+        ordered: heading.bottom <= gallery.top + 1 && gallery.bottom <= copy.top + 1,
+        panelUsesContents: getComputedStyle(feature.querySelector('.detail-product-panel')).display === 'contents',
+        controlsVisible: feature.querySelector('.detail-actions .add-to-cart').getBoundingClientRect().width > 0
+      };
+    });
+    assert.deepEqual(mobileProduct, { ordered: true, panelUsesContents: true, controlsVisible: true }, `${mode} mobile dish keeps title, photo, and purchase controls in the intended order`);
   }
   const mobile = await page.evaluate(() => ({
     width: innerWidth,
