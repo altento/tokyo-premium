@@ -992,3 +992,29 @@ body.story-motion-gsap [data-story-reveal].story-visible img{animation:none}
   .account-demo-page .account-overview-body .account-overview-greeting:before{transition:none}
   .account-demo-page .account-dashboard .account-demo-nav button,.account-demo-page .account-quick-actions a,.account-demo-page .account-quick-actions button{transition:none}
 }
+
+
+/* Keep the demo account's useful sections in view sooner while preserving all data. */
+@media(min-width:641px){
+  .account-demo-page .account-overview{min-height:clamp(228px,17vw,252px);margin-top:12px}
+  .account-demo-page .tp20-static-privilege{margin-top:9px;gap:9px}
+  .account-demo-page .tp20-static-privilege .tp20-loyalty-card,.account-demo-page .tp20-referral-card{min-height:174px;padding:15px 19px}
+  .account-demo-page .tp20-static-privilege .tp20-loyalty-card p,.account-demo-page .tp20-referral-card p{font-size:.69rem;line-height:1.38}
+  .account-demo-page .tp20-static-privilege .tp20-loyalty-balance{margin-block:2px}
+  .account-demo-page .tp20-static-privilege .tp20-loyalty-card progress{margin-top:3px}
+  .account-demo-page .account-demo-summary{margin-top:8px;gap:8px}
+  .account-demo-page .account-demo-summary .account-metrics{min-height:68px}
+  .account-demo-page .account-demo-summary .account-quick-actions a,.account-demo-page .account-demo-summary .account-quick-actions button{min-height:42px}
+  .account-demo-page .account-dashboard.section{padding-top:12px}
+}
+.account-demo-page .demo-order-details{margin:5px 0 3px;border-top:1px solid rgba(202,165,107,.18)}
+.account-demo-page .demo-order-details>summary{display:flex;min-height:34px;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;color:#e4c78f;font-size:.7rem;list-style:none}
+.account-demo-page .demo-order-details>summary::-webkit-details-marker{display:none}
+.account-demo-page .demo-order-details>summary:after{content:'+';display:grid;flex:0 0 23px;width:23px;height:23px;place-items:center;border:1px solid rgba(202,165,107,.4);border-radius:50%;font-size:.85rem}
+.account-demo-page .demo-order-details[open]>summary:after{content:'−'}
+.account-demo-page .demo-order-details>summary:focus-visible{outline:2px solid #e2bd78;outline-offset:3px}
+.account-demo-page .demo-order-details .demo-order-items{margin:0 0 8px;padding:7px 10px;border-left:1px solid rgba(199,167,102,.45);color:#c9bba5;font-size:.69rem;line-height:1.45}
+@media(max-width:640px){
+  .account-demo-page .tp20-static-privilege .tp20-loyalty-card,.account-demo-page .tp20-referral-card{padding:15px}
+  .account-demo-page .demo-order-details>summary{min-height:38px;font-size:.68rem}
+}
