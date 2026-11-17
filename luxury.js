@@ -211,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (image.complete) requestAnimationFrame(reveal);
     const caption = $('[data-detail-gallery-caption]');
     if (caption) caption.textContent = button.dataset.detailCaption || '';
-    $('[data-detail-gallery-image]').forEach(item => {
+    document.querySelectorAll('[data-detail-gallery-image]').forEach(item => {
       const active = item === button;
       item.classList.toggle('is-active', active);
       item.setAttribute('aria-pressed', String(active));
