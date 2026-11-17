@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 260" fill="none">
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="1600" y2="260" gradientUnits="userSpaceOnUse"><stop stop-color="#f4e8d1"/><stop offset=".5" stop-color="#f7eddd"/><stop offset="1" stop-color="#ead9bd"/></linearGradient>
+    <linearGradient id="ink" x1="0" y1="0" x2="0" y2="260" gradientUnits="userSpaceOnUse"><stop stop-color="#554b40" stop-opacity=".08"/><stop offset="1" stop-color="#554b40" stop-opacity=".42"/></linearGradient>
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".78" numOctaves="2" seed="8"/><feColorMatrix values=".22 0 0 0 .7 .22 0 0 0 .62 .22 0 0 0 .5 0 0 0 .12 0"/></filter>
+  </defs>
+  <path fill="url(#paper)" d="M0 0h1600v260H0z"/>
+  <path fill="#fff" filter="url(#grain)" opacity=".32" d="M0 0h1600v260H0z"/>
+  <g fill="url(#ink)">
+    <path d="m0 233 116-78 70 37 92-97 84 90 93-122 76 91 102-69 84 100 105-121 106 110 104-84 104 102 100-74 109 97v45H0z" opacity=".55"/>
+    <path d="m695 242 151-119 71 39 98-111 74 75 84-91 68 82 83-64 111 80v127H695z" opacity=".72"/>
+    <path d="m923 164 92-113 101 137-83-49-38 19-33-24-41 30z" fill="#f7eddd" opacity=".9"/>
+    <path d="M1024 51 996 87l24-7 8 16 11-16 25 8z" fill="#eee0c7" opacity=".9"/>
+    <path d="M0 237c151-27 269-13 392 3s246 15 363-2 253-21 386-1 287 17 459-5v28H0z" opacity=".8"/>
+  </g>
+  <g stroke="#65594c" stroke-linecap="round" stroke-width="3" opacity=".38">
+    <path d="M1310 207v-71m-22 71h48m-43-40h38m-35-12h32m-28-10h24m-19-12h15m-41 75-12 9m57-9 12 9m-70-51h76m-67-12h58"/>
+    <path d="M1269 143h82l-41-24zM1281 156h58l-29-19zM1293 170h34l-17-15z"/>
+  </g>
+  <g fill="#a94c45" opacity=".46">
+    <circle cx="74" cy="40" r="4"/><circle cx="91" cy="52" r="3"/><circle cx="57" cy="57" r="3"/><circle cx="106" cy="35" r="2.5"/><circle cx="38" cy="39" r="2.5"/>
+  </g>
+  <g stroke="#8c6954" stroke-width="1" opacity=".22">
+    <path d="M0 220c182-34 319-15 458 4s264 9 389-9 260-19 399 1 238 20 354 3"/>
+    <path d="M0 239c178-27 333-13 478 3s265 10 398-5 258-16 397 1 225 18 327 2"/>
+  </g>
+</svg>

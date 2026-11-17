@@ -260,6 +260,12 @@ async function run() {
       const firstCourseImage = firstCourse.locator('.tp20-course-photo img');
       await firstCourseImage.evaluate(image => image.decode());
       check(await firstCourseImage.evaluate(image => image.naturalWidth > 0), `${mode.name} Omakase first stage shows its catalog photo`);
+      check(await firstCourse.evaluate(panel => panel.getBoundingClientRect().height <= 250), `${mode.name} Omakase selected-stage detail stays compact beneath the tasting cards`);
+      const quoteStrip = page.locator('.omakase-quote');
+      check((await quoteStrip.evaluate(node => getComputedStyle(node).backgroundImage)).includes('omakase-quote-landscape.svg'), `${mode.name} Omakase quote uses the original landscape illustration`);
+      check((await quoteStrip.locator('p').evaluate(node => getComputedStyle(node).color)) === 'rgb(56, 44, 34)', `${mode.name} Omakase quote text remains dark and legible over parchment artwork`);
+      const quoteArtwork = await page.request.get(`${mode.base}/assets/generated/omakase-quote-landscape.svg`);
+      check(quoteArtwork.ok() && (await quoteArtwork.text()).includes('<svg'), `${mode.name} Omakase quote illustration is served as an SVG asset`);
       check(!(await firstCourse.evaluate(panel => panel.classList.contains('reveal'))), `${mode.name} Omakase stage does not depend on scrolling to become visible`);
       await page.locator('[data-tp-course][data-step="2"]').click();
       const secondCourse = page.locator('[data-tp-course-panel][data-step="2"]');
@@ -271,6 +277,8 @@ async function run() {
       await page.screenshot({ path: path.join(evidence, `12-${mode.name}-omakase-stage-2.jpg`), fullPage: true, type: 'jpeg', quality: 72 });
       await page.setViewportSize({ width: 390, height: 844 });
       await prepareVisual(page);
+      check(await page.locator('[data-tp-course-panel][data-step="2"]').evaluate(panel => panel.getBoundingClientRect().height < 420), `${mode.name} Omakase selected-stage panel remains compact on mobile`);
+      check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `${mode.name} Omakase mobile layout has no horizontal overflow`);
       await page.screenshot({ path: path.join(evidence, `12-${mode.name}-omakase-mobile.jpg`), fullPage: true, type: 'jpeg', quality: 72 });
       await page.setViewportSize({ width: 1440, height: 1000 });
 

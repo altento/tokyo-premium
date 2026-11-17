@@ -257,6 +257,27 @@
 .omakase-reservation-copy .button{margin-top:10px}
 @media(max-width:800px){.omakase-philosophy-strip{grid-template-columns:1fr;gap:25px}.omakase-reservation-copy{width:min(620px,76%);margin-left:6vw}.omakase-reservation-band{min-height:330px}.omakase-reservation-band:after{background:linear-gradient(90deg,rgba(9,8,7,.72),rgba(10,9,8,.9) 58%,rgba(16,13,11,.93))}}
 @media(max-width:560px){.omakase-philosophy-strip{gap:18px}.omakase-principles article{padding:6px 10px}.omakase-principles article>span{font-size:1.8rem;margin-bottom:8px}.omakase-principles h3{font-size:.9rem}.omakase-principles p{font-size:.68rem}.omakase-reservation-band{min-height:370px;align-items:flex-end}.omakase-reservation-band>img{object-position:65% center}.omakase-reservation-band:after{background:linear-gradient(0deg,rgba(9,8,7,.96),rgba(10,9,8,.82) 57%,rgba(16,13,11,.2))}.omakase-reservation-copy{width:auto;margin:0;padding:24px 22px 28px}.omakase-reservation-copy h2{font-size:clamp(1.85rem,8vw,2.35rem)}.omakase-reservation-copy .button{width:100%}}
+
+/* Keep the interactive Omakase detail, but let the tasting cards and set choices
+   retain the visual rhythm of the approved concept instead of repeating a second
+   full-size dish feature between them. */
+.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-panel{grid-template-columns:minmax(150px,.38fr) minmax(0,1.62fr);align-items:center;padding:10px}
+.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-photo,
+.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-photo img{height:184px;min-height:184px;max-height:184px}
+.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-story{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,.62fr);grid-template-areas:"meta meta" "title title" "description description" "facts note" "facts link";align-items:start;gap:5px 20px;padding:14px 20px}
+.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-story>.kicker{grid-area:meta}
+.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-story>h3{grid-area:title;margin:3px 0;font-size:clamp(1.25rem,1.7vw,1.7rem);line-height:1.13}
+.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-story>p:not(.tp20-course-note){grid-area:description;margin:0 0 3px;font-size:.77rem;line-height:1.4}
+.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-story>dl{grid-area:facts;align-self:stretch;gap:4px;margin:0}
+.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-story>dl>div{gap:8px;padding-top:5px}
+.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-story>.tp20-course-note{grid-area:note;align-self:end;margin:0;padding-left:8px;font-size:.64rem;line-height:1.35}
+.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-story>.button{grid-area:link;justify-self:start;min-height:38px;margin:0;padding:7px 13px;font-size:.72rem}
+.omakase-quote{position:relative;isolation:isolate;background-color:#eee0c7;background-image:linear-gradient(90deg,rgba(242,230,208,.28),rgba(247,237,221,.88) 24%,rgba(247,237,221,.9) 76%,rgba(230,215,190,.2)),url('assets/generated/omakase-quote-landscape.svg');background-position:center;background-size:cover}
+.omakase-quote>span,.omakase-quote>p,.omakase-quote>small{position:relative;z-index:1}
+.omakase-quote>p{color:#382c22}
+@media(max-width:900px){.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-panel{grid-template-columns:minmax(130px,.36fr) minmax(0,1.64fr)}.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-story{grid-template-columns:minmax(0,1fr) minmax(145px,.58fr);gap:5px 12px;padding:12px}}
+@media(max-width:700px){.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-panel{grid-template-columns:minmax(0,1fr);padding:8px}.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-photo,.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-photo img{height:126px;min-height:126px;max-height:126px}.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-story{grid-template-columns:minmax(0,1fr);grid-template-areas:"meta" "title" "description" "facts" "note" "link";gap:4px;padding:10px}.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-story>dl{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-story>dl>div{grid-template-columns:1fr;gap:3px}.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-story>.button{justify-self:stretch}.omakase-quote{grid-template-columns:1fr;gap:8px;padding-inline:22px!important}.omakase-quote>span{font-size:2rem}.omakase-quote p{font-size:1.2rem}.omakase-quote small{grid-column:1}}
+@media(prefers-reduced-motion:reduce){.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-tabs button,.editorial-page:has(.omakase-hero)>.tp20-omakase-experience .tp20-course-tabs button>img{transition:none}}
 /* Keep the mobile checkout path short while preserving an accessible optional note. */
 .cart-comment-disclosure{border-top:1px solid rgba(199,167,102,.2);padding-top:11px;margin-top:4px}
 .cart-comment-disclosure>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:42px;cursor:pointer;color:#ead9bd;font-size:.88rem;list-style:none}

@@ -391,3 +391,10 @@ Updated the PHP and GitHub Pages gallery so its eight photographs are unique and
 ## 2026-11-17 — Philosophy visual accent
 
 Added a small original SVG scene (enso, Mount Fuji and sakura) as a third editorial element in the philosophy chef chapter, with a mobile reading order that places it after the chef photo and copy. PHP and Pages route checks passed and desktop/mobile screenshots were inspected. This closes one visible art-direction gap; the broader page and remaining approved references still need review.
+## 2026-11-18 Omakase layout refinement
+
+- Kept the interactive selected-course details but reduced the duplicate feature panel to a compact editorial strip, with a shorter mobile photograph and reorganized metadata.
+- Added an original SVG parchment landscape to the Omakase closing quote. Explicit text color restores dark, readable type over the illustrated paper.
+- Added regression coverage to `tests/tokyo20-regression.cjs` for the desktop/mobile panel-height limits, served SVG, computed quote text color, and mobile overflow.
+- `php -l pages.php`, static export of 37 pages, and `npm run test:tokyo20` passed. The suite covered PHP and Pages, 21/19 dish routes, Omakase course selection and photographs, the new visual assertions, and mobile overflow across feature routes. Desktop/mobile PHP and Pages screenshots were reviewed.
+- This improves reference 04 but does not claim full pixel parity. GitHub Actions and public deployment have not yet been run for this working change.
