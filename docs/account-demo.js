@@ -81,6 +81,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     const total=items.reduce((sum,item)=>sum+item.lineTotal,0);
     additions.push({orderId:example.orderId,date:example.date,name:'Демо-гость',count:items.reduce((sum,item)=>sum+item.qty,0),subtotal:total,total,fulfillment:example.fulfillment,items,demo:true});
    }
+   localStorage.removeItem('tokyo-demo-account-seed-dismissed');
+   localStorage.setItem('tokyo-demo-account-seeded','1');
    localStorage.setItem('tokyo-demo-orders',JSON.stringify([...current,...additions]));
    const savedBookings=read('tokyo-demo-bookings');
    const bookings=Array.isArray(savedBookings)?savedBookings.filter(row=>row&&typeof row==='object'):[];
@@ -91,6 +93,7 @@ document.addEventListener('DOMContentLoaded',()=>{
    window.TokyoCart?.setFavorites?.([...new Set([...favorites,3,6,19])]);
    render();document.dispatchEvent(new Event('tokyo-demo-data-updated'));
    if(status){const changed=[];if(additions.length)changed.push('добавлено учебных заказов: '+additions.length);if(bookingAdded)changed.push('добавлен учебный запрос на бронь');status.textContent=changed.length?'В '+changed.join(', ')+'. Блюда избранного взяты из каталога. Всё сохранено только в этом браузере; очистить можно в настройках.':'Учебный пример уже заполнен. Данные остаются только в этом браузере.'}
+   const seedPanel=$('.account-demo-seed');if(seedPanel)seedPanel.hidden=true
   }catch{if(status)status.textContent='Не удалось сохранить учебный пример в локальном хранилище браузера.'}
  });
  $('#demo-orders')?.addEventListener('click',event=>{
@@ -107,6 +110,11 @@ document.addEventListener('DOMContentLoaded',()=>{
  });
  document.addEventListener('submit',event=>{const form=event.target;if(!form.matches('[data-local-form]'))return;event.preventDefault();const values=Object.fromEntries(new FormData(form).entries());if(form.dataset.localForm==='profile'){localStorage.setItem('tokyo-demo-profile',JSON.stringify(values));writeStatus(form,'Профиль сохранён только в этом браузере.')}else if(form.dataset.localForm==='address'){const list=read('tokyo-demo-addresses');list.unshift(values.address.trim());localStorage.setItem('tokyo-demo-addresses',JSON.stringify(list.slice(0,10)));form.reset();writeStatus(form,'Адрес сохранён только в этом браузере.');render()}});
  $('#demo-addresses')?.addEventListener('click',event=>{const b=event.target.closest('[data-address-remove]');if(!b)return;const list=read('tokyo-demo-addresses');list.splice(Number(b.dataset.addressRemove),1);localStorage.setItem('tokyo-demo-addresses',JSON.stringify(list));render()});
- $('#demo-clear-data')?.addEventListener('click',()=>{window.TokyoCart?.clear();window.TokyoCart?.setFavorites([]);['tokyo-demo-orders','tokyo-demo-bookings','tokyo-demo-reviews','tokyo-demo-contacts','tokyo-demo-profile','tokyo-demo-addresses'].forEach(key=>localStorage.removeItem(key));const s=$('#demo-settings-status');if(s)s.textContent='Локальные данные этого сайта очищены.';render();document.dispatchEvent(new Event('tokyo-demo-data-updated'))});
- document.addEventListener('tokyo-demo-data-updated',render);document.addEventListener('tokyo-favorites-updated',render);render();
+ $('#demo-clear-data')?.addEventListener('click',()=>{window.TokyoCart?.clear();window.TokyoCart?.setFavorites([]);['tokyo-demo-orders','tokyo-demo-bookings','tokyo-demo-reviews','tokyo-demo-contacts','tokyo-demo-profile','tokyo-demo-addresses','tokyo-demo-account-seeded'].forEach(key=>localStorage.removeItem(key));localStorage.setItem('tokyo-demo-account-seed-dismissed','1');const seedPanel=$('.account-demo-seed');if(seedPanel)seedPanel.hidden=false;const s=$('#demo-settings-status');if(s)s.textContent='Локальные данные этого сайта очищены.';render();document.dispatchEvent(new Event('tokyo-demo-data-updated'))});
+ document.addEventListener('tokyo-demo-data-updated',render);document.addEventListener('tokyo-favorites-updated',render);
+ const accountDataKeys=['tokyo-demo-orders','tokyo-demo-bookings','tokyo-demo-reviews','tokyo-demo-contacts','tokyo-demo-profile','tokyo-demo-addresses'];
+ const hasExistingLocalData=()=>{try{const stored=accountDataKeys.some(key=>{const raw=localStorage.getItem(key);if(!raw)return false;let value;try{value=JSON.parse(raw)}catch{return true}return Array.isArray(value)?value.length>0:!!(value&&typeof value==='object'&&Object.keys(value).length)});const cart=window.TokyoCart;return stored||Boolean(cart?.get?.().length||cart?.getCustomSets?.().length||cart?.getFavorites?.().length)}catch{return true}};
+ let dismissed=false;try{dismissed=localStorage.getItem('tokyo-demo-account-seed-dismissed')==='1'}catch{dismissed=true}
+ if(staticMode&&!dismissed&&!hasExistingLocalData()) $('[data-account-demo-seed]')?.click();
+ else {try{if(localStorage.getItem('tokyo-demo-account-seeded')==='1'&&(read('tokyo-demo-orders').length||read('tokyo-demo-bookings').length)){const seedPanel=$('.account-demo-seed');if(seedPanel)seedPanel.hidden=true}}catch{}render()}
 });

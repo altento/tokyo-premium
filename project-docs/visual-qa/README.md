@@ -245,3 +245,7 @@ The static motion suite passed after its crop assertion was aligned with the cur
 ## 2026-11-17 home hero reference pass
 
 `home-hero-reference-2026-11-17/` contains PHP and static hero captures at desktop and mobile widths. The title now follows reference 01's TOKYO PREMIUM hierarchy and the hero is shorter on desktop and tablet. I inspected all four captures. `npm run test:motion` passed across PHP and Pages modes, including reduced motion and eight responsive widths. This pass covers the hero only, not full homepage reference parity.
+
+## 2026-11-17 static account first-visit preview
+
+The populated static Pages account after first visit is captured at `account-first-visit-2026-11-17/11-account-seeded-desktop.jpg` (1440 px) and `account-first-visit-2026-11-17/11-account-seeded-mobile.jpg` (390 px). The focused browser regression verifies sample labels, first-visit local seeding, preservation of existing profile and orders, clear-and-reload behavior, explicit restore and all thumbnails before capture. Compared with `design-references/11-account.png`, the dashboard now shows catalog-backed history, a local booking, points and favorites; the layout remains distinct from the reference.

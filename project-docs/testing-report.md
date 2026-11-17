@@ -406,3 +406,11 @@ The PHP account query now joins order items to the current catalogue image while
 - Kept the shared account selectors in sync in `premium.css` and `docs/premium.css`. The GitHub Pages account template uses separate demo markup, so this grid adjustment affects the PHP dashboard only.
 - Added a browser geometry regression that confirms the two primary history sections stack and the order history exceeds 900 px at the desktop test viewport. `npm run test:browser` passed against the local PHP and static routes; it covered 11 routes, all 20 dish detail pages, cart/checkout, navigation, favorites, filters, and six responsive widths. The focused desktop account assertion ran against the authenticated PHP dashboard.
 - Captured and visually inspected populated account screenshots at 1440 px and 390 px in `visual-qa/account-dashboard-layout-2026-11-17/`. The order/booking hierarchy is now readable and remains stacked on mobile. The screenshot still shows the expanded 2.0 account feature set and is not a claim of exact pixel parity with the older reference. Public Pages was not updated or checked in this pass.
+
+## 2026-11-17 static account first-visit preview
+
+- A clean GitHub Pages browser now opens the account with three catalog-backed example orders, one example booking request and three favorites. Each generated record is marked as a local educational example. This behavior is limited to the static account route and does not write PHP/server account data.
+- First-visit seeding is skipped when browser-local account data, cart items, custom sets or favorites already exist. The clear-data action records a dismissal, so reload stays empty; the visitor can explicitly restore the sample afterward.
+- Fixed the CSS cascade for the seed prompt `hidden` state. The focused regression checks visible state, existing-data preservation, persistence, explicit restoration and successful loading of all order thumbnails before capture.
+- `npm run test:account-demo` passed against the local static export. JavaScript syntax checks and `git diff --check` passed. Desktop (1440 px) and mobile (390 px) captures in `project-docs/visual-qa/account-first-visit-2026-11-17/` were inspected.
+- This is a focused static-page improvement; PHP account rendering, hosted CI, public Pages and full 11-reference acceptance remain open.

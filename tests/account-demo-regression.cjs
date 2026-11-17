@@ -18,20 +18,19 @@ async function run() {
     assert.equal(response?.status(), 200, 'static account loads');
     await page.evaluate(() => localStorage.clear());
     await page.reload({ waitUntil: 'domcontentloaded' });
-    assert.equal(await page.locator('#demo-orders .demo-order').count(), 0, 'new browser starts with an empty history');
-    assert.equal(await page.locator('[data-account-demo-seed]').count(), 1, 'account offers an explicit sample-data action');
+    assert.equal(await page.locator('#demo-orders .demo-order').count(), 3, 'first visit opens with three clearly labeled local demo orders');
+    assert.equal(await page.locator('#demo-bookings article').count(), 1, 'first visit includes one labeled demo booking request');
+    assert.equal(await page.locator('#demo-favorites-preview .dish-card').count(), 3, 'first visit includes three catalog-backed favorites');
+    assert.equal(await page.locator('[data-account-demo-seed]').count(), 1, 'account retains an explicit sample-data action for later use');
+    assert.ok(!(await page.locator('.account-demo-seed').isVisible()), 'sample prompt is hidden after first-visit seeding');
     assert.equal(await page.locator('.account-overview h1').innerText(), 'Личный кабинет', 'account masthead keeps a stable page title');
-    assert.equal(await page.locator('#demo-favorites-preview .dish-card').count(), 0, 'empty profile has no favorite previews');
-    assert.ok(await page.locator('#demo-favorites-preview-empty').isVisible(), 'empty profile explains how to save a favorite');
     assert.equal(await page.locator('.account-overview-lead').innerText(), 'Ваше пространство в Tokyo Premium', 'account masthead follows the approved subtitle hierarchy');
     assert.match(await page.locator('.account-overview-privacy').innerText(), /не зашифровано/i, 'account explains that browser-local demo data is not encrypted');
     assert.equal(await page.locator('.account-overview-art img').getAttribute('src'), 'assets/generated/contact-exterior.webp', 'account uses an entrance photograph rather than a room photo');
     assert.ok(await page.locator('.account-overview-art img').evaluate(image => image.complete && image.naturalWidth > 0), 'account entrance photograph is decoded');
     assert.ok(await page.locator('.account-overview').evaluate(hero => hero.getBoundingClientRect().height <= 420), 'desktop account masthead remains a compact introduction');
 
-    await page.locator('[data-account-demo-seed]').click();
-    assert.equal(await page.locator('#demo-orders .demo-order').count(), 3, 'sample action adds three orders');
-    assert.equal(await page.locator('#demo-bookings article').count(), 1, 'sample action adds one booking request');
+    assert.match(await page.locator('[data-account-demo-seed-status]').evaluate(node => node.textContent), /только в этом браузере/i, 'first-visit status clearly identifies browser-local demo data');
     const privilege = page.locator('[data-tp-demo-loyalty]');
     assert.ok(await privilege.isVisible(), 'local demo loyalty card is visible');
     assert.match(await privilege.innerText(), /TOKYO PRIVILEGE · ЛОКАЛЬНАЯ ДЕМО/, 'loyalty card identifies its browser-only demo mode');
@@ -54,17 +53,26 @@ async function run() {
     assert.ok(await page.locator('#demo-favorites-preview .dish-card img').first().evaluate(image => image.complete && image.naturalWidth > 0), 'dashboard favorite preview uses a loaded dish photograph');
     assert.equal(await page.locator('#demo-orders .account-demo-record-badge').count(), 3, 'every sample order is explicitly labeled');
     assert.equal(await page.locator('#demo-orders .account-order-preview').count(), 3, 'sample order history uses catalogue thumbnails');
-    assert.ok(await page.locator('#demo-orders .account-order-preview').first().evaluate(image => image.complete && image.naturalWidth > 0), 'order preview resolves to an actual catalogue photograph');
+    const orderImageStates = await page.locator('#demo-orders .account-order-preview').evaluateAll(async images => {
+      images.forEach(image => { image.loading = 'eager'; });
+      return Promise.all(images.map(async image => { try { await image.decode(); return image.complete && image.naturalWidth > 0; } catch { return false; } }));
+    });
+    assert.deepEqual(orderImageStates, [true, true, true], 'all catalogue order photographs are decoded before the full-page capture');
     assert.equal(await page.locator('#demo-bookings .account-demo-record-badge').count(), 1, 'sample booking is explicitly labeled');
     assert.ok(await page.locator('#demo-orders .demo-order-items li').count() >= 5, 'order history shows item snapshots');
     assert.ok(await page.evaluate(() => JSON.parse(localStorage.getItem('tokyo-demo-orders') || '[]').every(order => order.subtotal === order.items.reduce((sum, item) => sum + item.lineTotal, 0))), 'sample totals agree with saved catalog item prices');
     assert.equal(await page.locator('[data-account-stat="orders"]').innerText(), '3', 'dashboard metrics update');
     assert.equal(await page.locator('[data-account-stat="bookings"]').innerText(), '1', 'booking metric updates');
-    assert.match(await page.locator('[data-account-demo-seed-status]').innerText(), /только в этом браузере/i, 'status explains the local-only demo');
 
-    await page.locator('[data-account-demo-seed]').click();
-    assert.equal(await page.locator('#demo-orders .demo-order').count(), 3, 'repeating the action does not duplicate orders');
-    assert.equal(await page.locator('#demo-bookings article').count(), 1, 'repeating the action does not duplicate the booking');
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    assert.equal(await page.locator('#demo-orders .demo-order').count(), 3, 'reload preserves first-visit sample orders without duplicating them');
+    assert.equal(await page.locator('#demo-bookings article').count(), 1, 'reload preserves a single sample booking');
+    assert.ok(!(await page.locator('.account-demo-seed').isVisible()), 'seed prompt stays hidden while the sample profile is populated');
+    const reloadedOrderImageStates = await page.locator('#demo-orders .account-order-preview').evaluateAll(async images => {
+      images.forEach(image => { image.loading = 'eager'; });
+      return Promise.all(images.map(async image => { try { await image.decode(); return image.complete && image.naturalWidth > 0; } catch { return false; } }));
+    });
+    assert.deepEqual(reloadedOrderImageStates, [true, true, true], 'all lazy order photographs are decoded again after reload before the desktop capture');
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
     await page.screenshot({ path: path.join(evidence, '11-account-seeded-desktop.jpg'), fullPage: true, type: 'jpeg', quality: 74 });
     await page.setViewportSize({ width: 390, height: 844 });
@@ -95,6 +103,30 @@ async function run() {
     assert.equal(await page.locator('[data-tp-loyalty-points]').innerText(), '0', 'clearing local orders refreshes the demo loyalty balance');
     assert.equal(await page.locator('[data-account-stat="bookings"]').innerText(), '0', 'clear-data action removes seeded booking');
     assert.equal(await page.evaluate(() => window.TokyoCart.getFavorites().length), 0, 'clear-data action removes seeded favorites');
+    assert.equal(await page.evaluate(() => localStorage.getItem('tokyo-demo-account-seed-dismissed')), '1', 'clear-data action persists the choice to keep the profile empty');
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    assert.equal(await page.locator('#demo-orders .demo-order').count(), 0, 'cleared account stays empty after reload');
+    assert.ok(await page.locator('.account-demo-seed').isVisible(), 'cleared account offers an explicit way to restore the sample');
+    await page.locator('[data-account-demo-seed]').click();
+    assert.equal(await page.locator('#demo-orders .demo-order').count(), 3, 'user can opt into the sample again after clearing');
+    assert.equal(await page.evaluate(() => localStorage.getItem('tokyo-demo-account-seed-dismissed')), null, 'explicitly restoring the sample removes the dismissal marker');
+
+    const preservedPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const preservedErrors = [];
+    preservedPage.on('pageerror', error => preservedErrors.push(error.message));
+    await preservedPage.addInitScript(() => {
+      localStorage.setItem('tokyo-demo-profile', JSON.stringify({ name: 'Сохранённый гость', phone: '' }));
+      localStorage.setItem('tokyo-demo-orders', JSON.stringify([{ orderId: 'MY-DEMO-ORDER', date: 'Локальная запись', name: 'Сохранённый гость', count: 1, subtotal: 1200, total: 1200, fulfillment: 'pickup', items: [{ id: 3, qty: 1, unitPrice: 1200, lineTotal: 1200 }] }]));
+    });
+    const preservedResponse = await preservedPage.goto(`${base}/account.html`, { waitUntil: 'domcontentloaded' });
+    assert.equal(preservedResponse?.status(), 200, 'account with existing local data loads');
+    assert.equal(await preservedPage.locator('#demo-orders .demo-order').count(), 1, 'first visit does not replace existing local order history with samples');
+    assert.equal(await preservedPage.locator('#demo-orders .demo-order small').first().innerText(), 'MY-DEMO-ORDER', 'existing order identifier remains intact');
+    assert.equal(await preservedPage.locator('#demo-orders .account-demo-record-badge').count(), 0, 'an existing user order is not relabeled as a system sample');
+    assert.equal(await preservedPage.evaluate(() => JSON.parse(localStorage.getItem('tokyo-demo-profile') || '{}').name), 'Сохранённый гость', 'existing local profile data is preserved');
+    assert.ok(await preservedPage.locator('.account-demo-seed').isVisible(), 'sample opt-in remains available when user data already exists');
+    assert.equal(preservedErrors.length, 0, `no errors with existing data: ${preservedErrors.join('; ')}`);
+    await preservedPage.close();
     assert.equal(errors.length, 0, `no browser exceptions: ${errors.join('; ')}`);
     console.log(`PASS: browser-only account sample, idempotency, local labels and clear-data flow. Screenshots: ${evidence}`);
   } finally {
