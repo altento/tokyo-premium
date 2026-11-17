@@ -68,7 +68,15 @@ async function run() {
     });
     assert.deepEqual(orderImageStates, [true, true, true], 'all catalogue order photographs are decoded before the full-page capture');
     assert.equal(await page.locator('#demo-bookings .account-demo-record-badge').count(), 1, 'sample booking is explicitly labeled');
-    assert.ok(await page.locator('#demo-orders .demo-order-items li').count() >= 5, 'order history shows item snapshots');
+    assert.ok(await page.locator('#demo-orders .demo-order-items li').count() >= 5, 'order history retains item snapshots');
+    const orderDetails = page.locator('#demo-orders .demo-order-details');
+    assert.equal(await orderDetails.count(), 3, 'each sample order has an expandable composition');
+    assert.ok(await orderDetails.first().evaluate(node => !node.open), 'order composition starts collapsed to keep the dashboard compact');
+    await orderDetails.first().locator('summary').click();
+    assert.ok(await orderDetails.first().evaluate(node => node.open), 'order composition opens from its keyboard-accessible summary');
+    assert.ok(await orderDetails.first().locator('li').first().isVisible(), 'expanded order exposes its saved item snapshot');
+    await orderDetails.first().locator('summary').click();
+    assert.ok(await orderDetails.first().evaluate(node => !node.open), 'order composition can be collapsed again');
     assert.ok(await page.evaluate(() => JSON.parse(localStorage.getItem('tokyo-demo-orders') || '[]').every(order => order.subtotal === order.items.reduce((sum, item) => sum + item.lineTotal, 0))), 'sample totals agree with saved catalog item prices');
     assert.equal(await page.locator('[data-account-stat="orders"]').innerText(), '3', 'dashboard metrics update');
     assert.equal(await page.locator('[data-account-stat="bookings"]').innerText(), '1', 'booking metric updates');
