@@ -32,6 +32,31 @@ if (requestedRoutes.length && routesToRun.length !== requestedRoutes.length) {
   throw new Error(`Unknown visual route filter: ${requestedRoutes.join(', ')}`);
 }
 
+
+async function bookingBenefitsGeometry(page) {
+  return page.locator('.booking-benefits-section').evaluate(section => {
+    const sectionRect = section.getBoundingClientRect();
+    const cards = [...section.querySelectorAll('.booking-benefits > article')];
+    return {
+      height: sectionRect.height,
+      count: cards.length,
+      cardsFit: cards.every(card => {
+        const cardRect = card.getBoundingClientRect();
+        const textFits = [...card.querySelectorAll('span,h3,p')].every(node => {
+          const rect = node.getBoundingClientRect();
+          return rect.left >= cardRect.left - 1 && rect.right <= cardRect.right + 1
+            && rect.top >= cardRect.top - 1 && rect.bottom <= cardRect.bottom + 1
+            && node.scrollWidth <= node.clientWidth + 2
+            && node.scrollHeight <= node.clientHeight + 2;
+        });
+        return cardRect.left >= sectionRect.left - 1 && cardRect.right <= sectionRect.right + 1
+          && cardRect.top >= sectionRect.top - 1 && cardRect.bottom <= sectionRect.bottom + 1
+          && textFits;
+      })
+    };
+  });
+}
+
 async function visit(browser, base, route, mode, capture = false) {
   const page = await browser.newPage({ viewport: { width: route.width, height: 1000 }, deviceScaleFactor: 1 });
   const errors = [];
@@ -172,6 +197,10 @@ async function visit(browser, base, route, mode, capture = false) {
   } else if (route.key === 'booking') {
     const heroHeight = await page.locator('.editorial-hero.booking-hero').evaluate(node => node.getBoundingClientRect().height);
     assert.ok(heroHeight <= 420, `${mode} booking hero stays compact and brings the booking content closer`);
+    const desktopBenefits = await bookingBenefitsGeometry(page);
+    assert.equal(desktopBenefits.count, 3, `${mode} booking guidance keeps all three steps`);
+    assert.ok(desktopBenefits.height <= 220, `${mode} desktop booking steps remain compact (${desktopBenefits.height}px)`);
+    assert.equal(desktopBenefits.cardsFit, true, `${mode} booking guidance text is visible inside its cards`);
     assert.equal(await page.locator('#full-booking-form').count(), 1, `${mode} booking form is present`);
     assert.equal(await page.locator('#full-guest-email').getAttribute('required'), '', `${mode} booking requests an email for status updates`);
     assert.equal(await page.locator('[data-tp-floorplan] svg').count(), 1, `${mode} preference floorplan renders as SVG`);
@@ -319,6 +348,10 @@ async function visit(browser, base, route, mode, capture = false) {
   if (route.key === 'booking') {
     const mobileBookingHero = await page.locator('.editorial-hero.booking-hero').evaluate(node => node.getBoundingClientRect().height);
     assert.ok(mobileBookingHero <= 460, `${mode} booking hero remains compact on mobile`);
+    const mobileBenefits = await bookingBenefitsGeometry(page);
+    assert.equal(mobileBenefits.count, 3, `${mode} mobile booking steps preserve all guidance`);
+    assert.ok(mobileBenefits.height <= 350, `${mode} mobile booking steps fit a compact strip (${mobileBenefits.height}px)`);
+    assert.equal(mobileBenefits.cardsFit, true, `${mode} mobile booking guidance text is not clipped`);
   }
   assert.equal(mobile.omakaseTabsVisible, true, "Omakase keeps all stages visible without horizontal scrolling");
   if (route.key === 'omakase') assert.equal(mobile.omakaseLastStageCentered, true, `${mode} Omakase centers the fifth mobile course preview`);
