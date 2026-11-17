@@ -348,7 +348,7 @@ async function run(options = {}) {
     check(await page.locator('.dish-card:visible').count() === 6, 'menu pagination advances while preserving page size');
     check(await page.locator('#menu-pagination [aria-current="page"]').innerText() === '2', 'menu pagination exposes the active page accessibly');
     await page.locator('#menu-pagination button[aria-label="Страница 4"]').click();
-    check(await page.locator('.dish-card:visible').count() === 2, 'last menu page shows the remaining catalog items');
+    check(await page.locator('.dish-card:visible').count() === 3, 'last menu page shows the remaining catalog items after the scallop addition');
     await page.locator('.menu-search').fill('нигири');
     check(await page.locator('.dish-card:visible').count() > 0, 'menu search matches dish names');
     check(await page.locator('.dish-card:visible').evaluateAll(cards => cards.every(card => (card.dataset.search || card.textContent).toLocaleLowerCase('ru').includes('нигири'))), 'menu search removes non-matching dishes, including cards left from the previous page');
