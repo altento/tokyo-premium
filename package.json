@@ -9,6 +9,7 @@
     "test:saved-address-browser": "node tests/saved-address-browser-regression.cjs",
     "test:admin-order-status": "php tests/admin-order-status-regression.php",
     "test:admin-account-search-referral": "php tests/admin-account-search-referral-regression.php",
+    "test:admin-loyalty-ledger": "php tests/admin-loyalty-ledger-regression.php",
     "test:set-draft": "node tests/set-builder-draft-regression.cjs",
     "test:personal-offer": "php tests/personal-offer-regression.php",
     "test:offers-evening": "node tests/offers-evening-regression.cjs",

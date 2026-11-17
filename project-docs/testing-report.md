@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-18 Tokyo Privilege ledger
+
+The focused PHP/SQLite regression passed **13 assertions** with PHP 8.4.25 and `pdo_sqlite`; it covers search (including hash-prefixed operation IDs), pagination, current balances, order/referral links, operation types, Asia/Qyzylorda inclusive date boundaries, literal wildcard handling, invalid calendar dates, escaped user text, and mobile scroll guidance. PHP lint passed for both the admin route and regression script. Playwright rendered the protected synthetic preview at 1440 px and 390 px: both reported `documentElement.scrollWidth === viewportWidth`, 25 rows on the first page, no browser errors; the mobile table uses a 900 px internal scroll area in its 340 px container and the visible hint appears only at the mobile breakpoint. The mobile table was captured at both horizontal ends. Evidence is under `project-docs/visual-qa/admin-loyalty-ledger-2026-11-18/`. This is a focused feature check, not a full-suite or hosted CI result.
+
 ## 2026-11-17 account notifications
 
 PHP order and booking status changes now create durable, owner-scoped account notifications in the same database transaction as each real status transition. Repeating an unchanged status creates no duplicate notification. The authenticated account can mark its own notifications read through a CSRF-protected action. In GitHub Pages, the notification panel reflects only browser-local demo orders and booking requests; it explicitly says those records are not sent to the restaurant and do not confirm a table.

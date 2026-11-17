@@ -257,6 +257,50 @@ $certificateDenominations=commerce_certificate_denominations($pdo);
 $dishes=$pdo->query('SELECT id,name FROM dishes WHERE active=1 ORDER BY sort_order,id')->fetchAll();
 $metrics=$pdo->query("SELECT (SELECT COUNT(*) FROM orders) AS orders_count,(SELECT COALESCE(SUM(total),0) FROM orders WHERE status<>'cancelled') AS order_volume,(SELECT COUNT(*) FROM promotion_campaigns WHERE active=1) AS active_campaigns,(SELECT COUNT(*) FROM promo_redemptions) AS redemptions,(SELECT COALESCE(SUM(CASE WHEN points>0 THEN points ELSE 0 END),0) FROM loyalty_ledger) AS issued_points")->fetch();
 $popular=$pdo->query('SELECT item_name,SUM(quantity) AS quantity FROM order_items GROUP BY item_name ORDER BY quantity DESC LIMIT 5')->fetchAll();
+$ledgerTypeLabels=['earn'=>'Начисление','redeem'=>'Списание','reversal'=>'Возврат','referral'=>'Приглашение','birthday'=>'День рождения','admin_adjustment'=>'Корректировка'];
+$ledgerSearch=trim((string)($_GET['ledger_search']??''));if(strlen($ledgerSearch)>120)$ledgerSearch=substr($ledgerSearch,0,120);
+$ledgerType=(string)($_GET['ledger_type']??'');if(!array_key_exists($ledgerType,$ledgerTypeLabels))$ledgerType='';
+$ledgerFromInput=trim((string)($_GET['ledger_from']??''));$ledgerToInput=trim((string)($_GET['ledger_to']??''));
+$ledgerFilterError='';$ledgerLocalTimezone=new DateTimeZone('Asia/Qyzylorda');$ledgerUtcTimezone=new DateTimeZone('UTC');
+$parseLedgerBoundary=static function(string $value,bool $exclusiveEnd) use ($ledgerLocalTimezone,$ledgerUtcTimezone):?string {
+    if($value==='')return null;
+    if(!preg_match('/^\d{4}-\d{2}-\d{2}$/D',$value))throw new DomainException('Укажите корректный календарный диапазон дат.');
+    $date=DateTimeImmutable::createFromFormat('!Y-m-d',$value,$ledgerLocalTimezone);$dateErrors=DateTimeImmutable::getLastErrors();
+    if(!$date||($dateErrors!==false&&($dateErrors['warning_count']>0||$dateErrors['error_count']>0))||$date->format('Y-m-d')!==$value)throw new DomainException('Укажите корректный календарный диапазон дат.');
+    if($exclusiveEnd)$date=$date->modify('+1 day');
+    return $date->setTimezone($ledgerUtcTimezone)->format('Y-m-d H:i:s');
+};
+$ledgerFromUtc=null;$ledgerToUtc=null;
+try {
+    $ledgerFromUtc=$parseLedgerBoundary($ledgerFromInput,false);$ledgerToUtc=$parseLedgerBoundary($ledgerToInput,true);
+    if($ledgerFromUtc!==null&&$ledgerToUtc!==null&&$ledgerFromUtc>=$ledgerToUtc)throw new DomainException('Дата «С» должна быть не позже даты «По».');
+} catch(DomainException $exception) {
+    $ledgerFilterError=$exception->getMessage();$ledgerFromInput='';$ledgerToInput='';$ledgerFromUtc=null;$ledgerToUtc=null;
+}
+$ledgerWhere=[];$ledgerParams=[];
+if($ledgerSearch!==''){
+    $ledgerIdSearch=preg_replace('/^#/','',$ledgerSearch)??$ledgerSearch;
+    $ledgerPattern='%'.str_replace(['!','%','_'],['!!','!%','!_'],marketing_unicode_lower($ledgerSearch)).'%';
+    $ledgerWhere[]="(CAST(l.id AS TEXT)=? OR CAST(l.user_id AS TEXT)=? OR CAST(l.order_id AS TEXT)=? OR CAST(l.referral_id AS TEXT)=? OR tp_marketing_lower(u.full_name) LIKE ? ESCAPE '!' OR tp_marketing_lower(u.email) LIKE ? ESCAPE '!' OR tp_marketing_lower(l.note) LIKE ? ESCAPE '!' OR tp_marketing_lower(l.event_key) LIKE ? ESCAPE '!' OR tp_marketing_lower(r.code) LIKE ? ESCAPE '!')";
+    array_push($ledgerParams,$ledgerIdSearch,$ledgerIdSearch,$ledgerIdSearch,$ledgerIdSearch,$ledgerPattern,$ledgerPattern,$ledgerPattern,$ledgerPattern,$ledgerPattern);
+}
+if($ledgerType!==''){$ledgerWhere[]='l.transaction_type=?';$ledgerParams[]=$ledgerType;}
+if($ledgerFromUtc!==null){$ledgerWhere[]='l.created_at>=?';$ledgerParams[]=$ledgerFromUtc;}
+if($ledgerToUtc!==null){$ledgerWhere[]='l.created_at<?';$ledgerParams[]=$ledgerToUtc;}
+$ledgerWhereSql=$ledgerWhere?' WHERE '.implode(' AND ',$ledgerWhere):'';
+$ledgerCountQuery=$pdo->prepare('SELECT COUNT(*) FROM loyalty_ledger l JOIN users u ON u.id=l.user_id LEFT JOIN referrals r ON r.id=l.referral_id'.$ledgerWhereSql);
+$ledgerCountQuery->execute($ledgerParams);$ledgerTotal=(int)$ledgerCountQuery->fetchColumn();
+$ledgerPageSize=25;$ledgerPageCount=max(1,(int)ceil($ledgerTotal/$ledgerPageSize));
+$ledgerPageValue=filter_var($_GET['ledger_page']??1,FILTER_VALIDATE_INT);$ledgerPage=$ledgerPageValue===false?1:max(1,min((int)$ledgerPageValue,$ledgerPageCount));
+$ledgerOffset=($ledgerPage-1)*$ledgerPageSize;
+$ledgerQuery=$pdo->prepare("SELECT l.id,l.user_id,l.order_id,l.referral_id,l.event_key,l.transaction_type,l.points,l.note,l.created_at,u.full_name,u.email,o.status AS order_status,r.code AS referral_code,COALESCE(b.balance,0) AS current_balance
+    FROM loyalty_ledger l JOIN users u ON u.id=l.user_id
+    LEFT JOIN orders o ON o.id=l.order_id LEFT JOIN referrals r ON r.id=l.referral_id
+    LEFT JOIN (SELECT user_id,SUM(points) AS balance FROM loyalty_ledger GROUP BY user_id) b ON b.user_id=l.user_id
+    {$ledgerWhereSql} ORDER BY l.created_at DESC,l.id DESC LIMIT {$ledgerPageSize} OFFSET {$ledgerOffset}");
+$ledgerQuery->execute($ledgerParams);$loyaltyLedger=$ledgerQuery->fetchAll();
+$ledgerFilterParams=array_filter(['ledger_search'=>$ledgerSearch,'ledger_type'=>$ledgerType,'ledger_from'=>$ledgerFromInput,'ledger_to'=>$ledgerToInput],static fn(string $value):bool=>$value!=='');
+$ledgerPageUrl=static fn(int $target):string=>'admin-marketing.php?'.http_build_query($ledgerFilterParams+['ledger_page'=>$target]).'#loyalty-ledger';
 page_start('Marketing & Loyalty — Tokyo Premium', 'Управление учебными кампаниями, промокодами, сезонными коллекциями и уровнями Tokyo Privilege.');
 header_html();
 ?>
@@ -379,6 +423,25 @@ header_html();
     <form method="post" class="tp20-admin-form"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="loyalty-settings-save"><div class="tp20-admin-fields"><label>Баллов за каждые 100 ₸<input type="number" name="points_per_100" min="0" max="10000" value="<?= (int)$loyaltySettings['points_per_100']?>"></label><label>Тенге за один балл<input type="number" name="currency_per_point" min="1" max="100000" value="<?= (int)$loyaltySettings['currency_per_point']?>"></label><label>Максимум оплаты баллами, %<input type="number" name="maximum_redeem_percent" min="0" max="100" value="<?= (int)$loyaltySettings['maximum_redeem_percent']?>"></label><label>Окно предложения ко дню рождения, дней<input type="number" name="birthday_window_days" min="0" max="60" value="<?= (int)$loyaltySettings['birthday_window_days']?>"></label><label>Баллы к дню рождения<input type="number" name="birthday_reward_points" min="0" value="<?= (int)$loyaltySettings['birthday_reward_points']?>"></label><label>Баллы пригласившему<input type="number" name="referral_inviter_points" min="0" value="<?= (int)$loyaltySettings['referral_inviter_points']?>"></label><label>Баллы приглашённому<input type="number" name="referral_friend_points" min="0" value="<?= (int)$loyaltySettings['referral_friend_points']?>"></label><label>Минимальная сумма заказа для реферала, ₸<input type="number" name="referral_minimum_order" min="0" value="<?= (int)$loyaltySettings['referral_minimum_order']?>"></label><label class="tp20-admin-check"><input type="checkbox" name="enabled" <?=!empty($loyaltySettings['enabled'])?'checked':''?>> Программа активна</label></div><button class="button" type="submit">Сохранить условия клуба ↗</button></form>
     <form method="post" class="tp20-admin-form"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="certificate-settings-save"><label>Номиналы предпросмотра, ₸ · через запятую<input name="denominations" value="<?=e(implode(', ', $certificateDenominations))?>" required></label><button class="button secondary" type="submit">Обновить номиналы ↗</button><p>Сертификаты сохраняются только как preview_only; изменение номинала не означает оплату.</p></form>
     <form method="post" class="tp20-admin-form"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="loyalty-adjust"><h3>Ручная корректировка журнала</h3><div class="tp20-admin-fields"><label>Аккаунт<select name="user_id" required><?php foreach($users as $user): ?><option value="<?= (int)$user['id']?>">#<?= (int)$user['id']?> · <?=e($user['full_name'])?> · <?=e($user['email'])?></option><?php endforeach ?></select></label><label>Баллы · минус списывает<input type="number" name="points" min="-100000" max="100000" required></label><label>Уникальный event key<input name="event_key" minlength="8" maxlength="160" pattern="[A-Za-z0-9._:-]{8,160}" required placeholder="admin:case:2026-001"></label><label>Примечание<input name="note" maxlength="240" required></label></div><button class="button" type="submit">Записать операцию ↗</button></form>
+  </section>
+  <section class="section tp20-admin-section" id="loyalty-ledger"><div class="editorial-heading"><div class="kicker">09 · TOKYO PRIVILEGE AUDIT</div><h2>Журнал бонусных операций</h2><p>История начислений и списаний по учебным аккаунтам. Баланс и связанные события рассчитаны по текущим записям SQLite; строки не редактируются и не удаляются из этой панели.</p></div>
+    <?php if($ledgerFilterError!==''): ?><p class="form-status error" role="alert"><?=e($ledgerFilterError)?></p><?php endif ?>
+    <form method="get" action="admin-marketing.php" class="tp20-admin-form tp20-admin-ledger-filters"><div class="tp20-admin-fields">
+      <label>Участник, email, ID операции, заказа, приглашения или текст события<input type="search" name="ledger_search" maxlength="120" value="<?=e($ledgerSearch)?>" placeholder="Имя, email, # ID или текст события"></label>
+      <label>Тип операции<select name="ledger_type"><option value="">Все типы</option><?php foreach($ledgerTypeLabels as $typeValue=>$typeLabel): ?><option value="<?=e($typeValue)?>" <?=$ledgerType===$typeValue?'selected':''?>><?=e($typeLabel)?></option><?php endforeach ?></select></label>
+      <label>С даты · местное время<input type="date" name="ledger_from" value="<?=e($ledgerFromInput)?>"></label>
+      <label>По дату · включительно<input type="date" name="ledger_to" value="<?=e($ledgerToInput)?>"></label>
+    </div><div class="tp20-admin-ledger-actions"><button class="button" type="submit">Найти операции ↗</button><a class="button secondary" href="admin-marketing.php#loyalty-ledger">Сбросить фильтры</a></div></form>
+    <p class="tp20-note" role="status">Найдено операций: <strong><?=number_format($ledgerTotal,0,'.',' ')?></strong> · Страница <?=$ledgerPage?> из <?=$ledgerPageCount?> · даты указаны по Asia/Qyzylorda.</p>
+    <?php if(!$loyaltyLedger): ?><p class="tp20-note tp20-admin-ledger-empty">В журнале пока нет операций, соответствующих фильтрам.</p><?php else: ?>
+      <p class="tp20-note tp20-admin-ledger-scroll-hint" id="loyalty-ledger-scroll-hint">На телефоне проведите таблицу по горизонтали, чтобы увидеть текущий баланс, связи и примечания.</p>
+      <div class="tp20-admin-ledger-wrap" role="region" aria-label="Таблица журнала бонусных операций" aria-describedby="loyalty-ledger-scroll-hint" tabindex="0"><table class="tp20-admin-ledger-table"><caption>Операции Tokyo Privilege</caption><thead><tr><th scope="col">Дата</th><th scope="col">Участник</th><th scope="col">Событие</th><th scope="col">Баллы</th><th scope="col">Текущий баланс</th><th scope="col">Связь</th><th scope="col">Примечание</th></tr></thead><tbody>
+      <?php foreach($loyaltyLedger as $ledgerRow): $ledgerDate=(new DateTimeImmutable((string)$ledgerRow['created_at'],$ledgerUtcTimezone))->setTimezone($ledgerLocalTimezone); $ledgerOrderStatus=(string)($ledgerRow['order_status']??''); ?>
+        <tr class="tp20-admin-ledger-row" data-ledger-entry="<?= (int)$ledgerRow['id']?>"><td><time datetime="<?=e((string)$ledgerRow['created_at'])?>"><?=e($ledgerDate->format('d.m.Y H:i'))?></time></td><td><strong><?=e($ledgerRow['full_name'])?></strong><small>#<?= (int)$ledgerRow['user_id']?> · <?=e($ledgerRow['email'])?></small></td><td><?=e($ledgerTypeLabels[$ledgerRow['transaction_type']]??$ledgerRow['transaction_type'])?></td><td class="<?=((int)$ledgerRow['points']>0?'is-positive':'is-negative')?>"><?=((int)$ledgerRow['points']>0?'+':'')?><?=number_format((int)$ledgerRow['points'],0,'.',' ')?></td><td><?=number_format((int)$ledgerRow['current_balance'],0,'.',' ')?></td><td><?php if($ledgerRow['order_id']!==null): ?>Заказ #<?= (int)$ledgerRow['order_id']?><?=$ledgerOrderStatus!==''?' · '.e($ledgerOrderStatus):''?><?php endif ?><?php if($ledgerRow['referral_id']!==null): ?><?php if($ledgerRow['order_id']!==null): ?><br><?php endif ?>Приглашение #<?= (int)$ledgerRow['referral_id']?><?php if(!empty($ledgerRow['referral_code'])): ?> · <?=e($ledgerRow['referral_code'])?><?php endif ?><?php endif ?><?php if($ledgerRow['order_id']===null&&$ledgerRow['referral_id']===null): ?>—<?php endif ?></td><td><?=e($ledgerRow['note'])?><small>event: <?=e($ledgerRow['event_key'])?></small></td></tr>
+      <?php endforeach ?>
+      </tbody></table></div>
+      <?php if($ledgerPageCount>1): ?><nav class="tp20-admin-ledger-pagination" aria-label="Страницы журнала"><?php if($ledgerPage>1): ?><a class="button secondary" href="<?=e($ledgerPageUrl($ledgerPage-1))?>" aria-label="Предыдущая страница">← Назад</a><?php endif ?><span>Страница <?=$ledgerPage?> из <?=$ledgerPageCount?></span><?php if($ledgerPage<$ledgerPageCount): ?><a class="button secondary" href="<?=e($ledgerPageUrl($ledgerPage+1))?>" aria-label="Следующая страница">Дальше →</a><?php endif ?></nav><?php endif ?>
+    <?php endif ?>
   </section>
 </main>
 <?php footer_html(); ?>

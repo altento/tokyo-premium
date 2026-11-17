@@ -56,6 +56,14 @@ The private admin account lookup performs Cyrillic-aware case-insensitive matchi
 
 Promo-code rows now expose the persisted redemption counter, total and per-account limits, validity window, and first-order restriction. Each existing code has a prefilled editor for those settings; the code string is read-only there so editing cannot accidentally create a second code while leaving the original active. Disabling remains reversible and preserves redemption history.
 
+## Searchable Tokyo Privilege ledger — 2026-11-18
+
+The protected `/admin-marketing.php#loyalty-ledger` section now shows the current server-side loyalty ledger with member and email details, event type, signed points, current balance, linked order/referral, note, and event key. Search covers hash-prefixed or plain operation/member/order/referral IDs and case-insensitive name, email, note, event key, or referral code; type and inclusive local-calendar-date filters can be combined. Results are ordered newest first and paginated at 25 rows. Date bounds are parsed as real dates in `Asia/Qyzylorda`, then converted to UTC for the existing SQLite timestamps. SQL wildcard characters in search input are treated literally. The page remains behind the existing admin session; it does not provide edit/delete controls for ledger history.
+
+At narrow widths the filter form becomes one column and the wide ledger stays inside its own horizontally scrollable region. A visible mobile scroll hint is connected to the keyboard-focusable table region through `aria-describedby`; the page itself remains within the viewport. Desktop and mobile screenshots plus geometry measurements are in `project-docs/visual-qa/admin-loyalty-ledger-2026-11-18/`.
+
+`php tests/admin-loyalty-ledger-regression.php` creates an isolated temporary SQLite database and verifies the protected page rendering, totals and pagination, member search, linked events, operation-type filtering, signed balance, local date boundaries, literal wildcard search, invalid-date handling, HTML escaping, and the mobile scroll hint. This adds no migration and does not alter the seed database.
+
 ## Campaign imagery and composed Ideal Evening — 2026-11-18
 
 The four seeded promotion concepts now use separate original, optimized WebP photographs: Tokyo Exclusive, Golden Hour, Chef's Secret Drop and Secret Menu. Additive migration 13 changes only the original seed image values, leaves administrator-edited image paths intact, and inserts a 30-day `demo_only` Chef's Secret Drop tied to the active scallop nigiri catalog record. The Offers page renders this campaign from SQLite, links to that real item when it is visible to the current visitor, and does not invent a remaining-stock count. The admin campaign image selector accepts these local files through its exact allow-list.

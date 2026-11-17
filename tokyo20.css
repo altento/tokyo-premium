@@ -625,3 +625,22 @@ selected dish photography for a custom-set composition. */
 @media(max-width:1000px){.space-values-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.space-values-strip article:nth-child(2){border-right:0}.space-values-strip article:nth-child(-n+2){border-bottom:1px solid rgba(202,165,107,.16)}.editorial-page #gallery .gallery-grid{grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:clamp(170px,22vw,220px)}}
 @media(max-width:700px){.space-values-strip{padding:10px 14px}.space-values-strip article{gap:8px;padding:13px 7px}.space-values-strip article>span{flex-basis:31px;width:31px;height:36px}.space-values-strip svg{width:28px;height:28px}.space-values-strip h3{font-size:.88rem}.space-values-strip p{font-size:.65rem}.editorial-page #gallery .gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:clamp(140px,39vw,190px);gap:9px}}
 @media(max-width:600px){.tp20-omakase-experience .tp20-course-tabs [data-tp-course]:last-child:nth-child(odd){grid-column:1 / -1;justify-self:center;width:calc((100% - 8px)/2)}}
+
+/* Tokyo Privilege admin ledger: searchable, readable audit trail on narrow screens too. */
+.tp20-admin-ledger-filters .tp20-admin-fields{grid-template-columns:minmax(230px,2fr) repeat(3,minmax(140px,1fr))}
+.tp20-admin-ledger-actions,.tp20-admin-ledger-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.tp20-admin-ledger-wrap{max-width:100%;overflow:auto;overscroll-behavior-x:contain;border:1px solid var(--tp20-line);border-radius:12px;background:#100e0c}
+.tp20-admin-ledger-table{width:100%;min-width:980px;border-collapse:collapse;color:var(--tp20-ivory);font-size:.78rem;line-height:1.45}
+.tp20-admin-ledger-table caption{padding:14px 16px;text-align:left;color:#e4c791;font:500 1.05rem var(--tp20-serif)}
+.tp20-admin-ledger-table th,.tp20-admin-ledger-table td{padding:12px 13px;text-align:left;vertical-align:top;border-top:1px solid rgba(202,165,107,.14)}
+.tp20-admin-ledger-table th{position:sticky;top:0;background:#181410;color:#ddc28e;font-size:.7rem;font-weight:600;letter-spacing:.04em}
+.tp20-admin-ledger-table td small{display:block;margin-top:4px;color:var(--tp20-muted);font-size:.68rem;overflow-wrap:anywhere}
+.tp20-admin-ledger-table td:nth-child(4),.tp20-admin-ledger-table td:nth-child(5){white-space:nowrap;font-variant-numeric:tabular-nums}
+.tp20-admin-ledger-table .is-positive{color:#a9c89d}.tp20-admin-ledger-table .is-negative{color:#e27b72}
+.tp20-admin-ledger-row:hover{background:rgba(202,165,107,.045)}
+.tp20-admin-ledger-wrap:focus-visible{outline:2px solid #d7b66f;outline-offset:3px}
+.tp20-admin-ledger-pagination{justify-content:flex-end;margin-top:16px;color:var(--tp20-muted);font-size:.8rem}
+.tp20-admin-ledger-empty{padding:20px;border:1px dashed var(--tp20-line);border-radius:10px}
+.tp20-admin-ledger-scroll-hint{display:none}
+@media(max-width:900px){.tp20-admin-ledger-filters .tp20-admin-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.tp20-admin-ledger-filters .tp20-admin-fields{grid-template-columns:minmax(0,1fr)}.tp20-admin-ledger-actions{align-items:stretch;flex-direction:column}.tp20-admin-ledger-actions .button{justify-content:center}.tp20-admin-ledger-pagination{justify-content:space-between}.tp20-admin-ledger-table{min-width:900px;font-size:.72rem}.tp20-admin-ledger-table th,.tp20-admin-ledger-table td{padding:10px}.tp20-admin-ledger-scroll-hint{display:block;margin:0 0 10px;padding:10px 12px;border-left:2px solid #b50f1b;background:rgba(202,165,107,.06);font-size:.75rem}}
