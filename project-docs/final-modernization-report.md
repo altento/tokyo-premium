@@ -388,3 +388,6 @@ The authenticated PHP account dashboard now uses a shorter hero, a compact metri
 ## 2026-11-17 — gallery photo deduplication
 
 Updated the PHP and GitHub Pages gallery so its eight photographs are unique and do not reuse the images in the four room cards. Added browser assertions for both conditions, exported the static gallery, and passed focused PHP/static visual-fidelity plus gallery caption tests. Desktop and mobile screenshots of both modes were reviewed against reference 06. The page preserves the broad section order but still differs from the reference; complete visual parity and full-site acceptance remain open.
+## 2026-11-17 — Philosophy visual accent
+
+Added a small original SVG scene (enso, Mount Fuji and sakura) as a third editorial element in the philosophy chef chapter, with a mobile reading order that places it after the chef photo and copy. PHP and Pages route checks passed and desktop/mobile screenshots were inspected. This closes one visible art-direction gap; the broader page and remaining approved references still need review.

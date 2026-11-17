@@ -188,6 +188,10 @@ async function visit(browser, base, route, mode, capture = false) {
   } else if (route.key === 'philosophy') {
     const background = await page.locator('.about-hero').evaluate(node => getComputedStyle(node).backgroundImage);
     assert.match(background, /contact-exterior\.webp/, `${mode} philosophy hero uses the sakura entrance photograph`);
+    const landscape = await page.locator('.chef-landscape img').evaluate(image => ({ loaded: image.naturalWidth > 0, hiddenFromAssistiveTech: image.closest('figure')?.getAttribute('aria-hidden') === 'true', width: image.getBoundingClientRect().width, sectionWidth: image.closest('.about-chef')?.getBoundingClientRect().width }));
+    assert.equal(landscape.loaded, true, `${mode} philosophy chef section loads its original enso-and-Fuji illustration`);
+    assert.equal(landscape.hiddenFromAssistiveTech, true, `${mode} philosophy illustration is decorative`);
+    assert.ok(landscape.width > 150 && landscape.width <= landscape.sectionWidth, `${mode} philosophy landscape fits the chef story composition`);
   } else if (route.key === 'space') {
     const geometry = await page.locator('[data-tp-gallery] .gallery-grid').evaluate(grid => {
       const section = grid.closest('[data-tp-gallery]');
@@ -373,6 +377,12 @@ async function visit(browser, base, route, mode, capture = false) {
       };
     });
     assert.deepEqual(mobileProduct, { ordered: true, panelUsesContents: true, controlsVisible: true }, `${mode} mobile dish keeps title, photo, and purchase controls in the intended order`);
+  }
+  if (route.key === 'philosophy') {
+    const landscape = await page.locator('.chef-landscape img').evaluate(image => ({ loaded: image.naturalWidth > 0, bounds: image.getBoundingClientRect().toJSON(), portrait: image.closest('.about-chef')?.querySelector('.chef-portrait')?.getBoundingClientRect().toJSON(), copy: image.closest('.about-chef')?.querySelector('.about-copy')?.getBoundingClientRect().toJSON() }));
+    assert.equal(landscape.loaded, true, `${mode} mobile philosophy illustration loads`);
+    assert.ok(landscape.bounds.left >= 0 && landscape.bounds.right <= 390, `${mode} mobile philosophy illustration stays within the viewport`);
+    assert.ok(landscape.portrait.bottom <= landscape.copy.top && landscape.copy.bottom <= landscape.bounds.top + 1, `${mode} mobile philosophy preserves chef photo → story → illustration order`);
   }
   const mobile = await page.evaluate(() => ({
     width: innerWidth,
