@@ -482,3 +482,7 @@ Public GitHub Pages is still unchanged because PR #19 is open as draft and deplo
 - Focused Playwright browser regression passed on the local PHP + isolated SQLite runtime and the freshly exported static Pages build (`TOKYO20_MODES=php,static`, `TOKYO20_DISH_ONLY=1`, `npm run test:tokyo20`). It checked 21 PHP and 19 static dish-detail routes, including add-to-cart, favorite state, quantity, displayed total, factual detail data and mobile fit.
 - Full-page screenshots were captured at 1440 px and 390 px for PHP and static routes and visually inspected against `design-references/03-dish.png`; details and remaining visual gaps are documented in `visual-qa/dish-detail-layout-2026-11-17/README.md`.
 - This is a focused product-detail regression only. It is not a rerun of the complete site suite, the PHP admin flow, or public GitHub Pages; the working-tree changes are not deployed.
+
+## 2026-11-17 PHP account dashboard polish
+
+The PHP profile navigation is now compact, icon-led, and marks the section currently in view; order states use server-backed status pills. Focused PHP account visual-fidelity passed at desktop and mobile widths. The full browser regression (11 route types, 21 detail routes, six viewport widths) and Tokyo 2.0 PHP/static regression passed. Static export regenerated 37 pages and passed the rerun. Local PHP/JS syntax and diff checks pass. Screenshots and remaining comparison gaps: `project-docs/visual-qa/account-dashboard-polish-2026-11-17/README.md`. This checkpoint is still local and has not yet passed hosted CI or updated Pages.

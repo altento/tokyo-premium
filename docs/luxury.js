@@ -194,11 +194,29 @@ document.addEventListener('DOMContentLoaded', () => {
     addButton.dataset.qty = String(quantity);
   }));
 
-  $$('[data-detail-focus]').forEach(button => button.addEventListener('click', () => {
+  $('[data-detail-gallery]')?.addEventListener('click', event => {
+    const button = event.target.closest?.('[data-detail-gallery-image]');
     const image = $('#dish-main-image');
-    if (image) image.style.objectPosition = button.dataset.detailFocus;
-    $$('[data-detail-focus]').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
-  }));
+    if (!button || !image) return;
+    const source = button.dataset.detailGalleryImage;
+    if (!source) return;
+    const reveal = () => image.classList.remove('is-changing');
+    image.classList.add('is-changing');
+    image.addEventListener('load', reveal, { once: true });
+    image.addEventListener('error', reveal, { once: true });
+    image.alt = button.dataset.detailAlt || image.alt;
+    if (button.dataset.detailSrcset) image.setAttribute('srcset', button.dataset.detailSrcset);
+    else image.removeAttribute('srcset');
+    image.src = source;
+    if (image.complete) requestAnimationFrame(reveal);
+    const caption = $('[data-detail-gallery-caption]');
+    if (caption) caption.textContent = button.dataset.detailCaption || '';
+    document.querySelectorAll('[data-detail-gallery-image]').forEach(item => {
+      const active = item === button;
+      item.classList.toggle('is-active', active);
+      item.setAttribute('aria-pressed', String(active));
+    });
+  });
 
   const categoryButtons = $$('.filter-btn[data-category]');
   const menuIngredientButtons = $$('.menu-subfilter[data-menu-ingredient]');

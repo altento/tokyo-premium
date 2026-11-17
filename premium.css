@@ -569,11 +569,14 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .account-dashboard-actions a:hover{border-color:rgba(202,165,107,.7);background:#1b1712}
 .account-dashboard-actions a span{color:#e8c98e}
 .account-dashboard-layout{display:grid;grid-template-columns:200px minmax(0,1fr);align-items:stretch;gap:14px}
-.account-dashboard-nav{position:sticky;top:96px;align-self:stretch;display:grid;align-content:start;gap:4px;padding:8px 8px 220px;border:1px solid rgba(202,165,107,.2);border-radius:9px;background-image:linear-gradient(180deg,rgba(16,14,12,.97) 0%,rgba(16,14,12,.91) 58%,rgba(16,14,12,.28) 100%),url("assets/generated/room-garden-terrace.webp");background-position:center;background-size:cover}
-.account-dashboard-nav a{display:grid;grid-template-columns:27px minmax(0,1fr) auto;align-items:center;gap:8px;min-height:45px;padding:8px 10px;border-bottom:1px solid rgba(202,165,107,.11);color:#eadfcf;font-size:.77rem;transition:background .18s,color .18s}
+.account-dashboard-nav{position:sticky;top:96px;align-self:start;display:grid;align-content:start;gap:4px;padding:8px;border:1px solid rgba(202,165,107,.2);border-radius:9px;background:radial-gradient(ellipse at 100% 0,rgba(111,43,24,.18),transparent 48%),linear-gradient(180deg,#13110e,#100e0c)}
+.account-dashboard-nav a{display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:center;gap:8px;min-height:45px;padding:8px 10px;border:1px solid transparent;border-bottom-color:rgba(202,165,107,.11);border-radius:5px;color:#eadfcf;font-size:.77rem;transition:background .18s,border-color .18s,color .18s}
 .account-dashboard-nav a:last-child{border-bottom:0}
-.account-dashboard-nav a:hover,.account-dashboard-nav a:focus-visible{background:rgba(183,23,34,.16);color:#fff}
-.account-dashboard-nav a>span{color:#d0aa6b;font-size:.65rem}
+.account-dashboard-nav a:hover,.account-dashboard-nav a:focus-visible,.account-dashboard-nav a[aria-current=location]{border-color:rgba(202,165,107,.27);background:linear-gradient(90deg,rgba(183,23,34,.18),rgba(183,23,34,.045));color:#fff}
+.account-dashboard-nav a[aria-current=location]{box-shadow:inset 2px 0 #c71e2a}
+.account-dashboard-nav .account-nav-icon{display:grid;width:22px;height:22px;place-items:center;color:#d0aa6b}
+.account-dashboard-nav .account-nav-icon svg{display:block;width:19px;height:19px;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.35}
+.account-dashboard-nav .account-nav-label{min-width:0;color:inherit;font-size:.77rem}
 .account-dashboard-nav a>small{color:#a99b87;font-size:.62rem;text-align:right}
 .account-dashboard-content{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:14px}
 .account-dashboard-primary,.account-dashboard-aside{display:grid;align-content:start;gap:14px;min-width:0}
@@ -592,7 +595,12 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .account-dashboard .account-order-heading{align-items:flex-start}
 .account-dashboard .account-order-heading>strong{font-size:1rem}
 .account-dashboard .account-order-meta{font-size:.75rem;line-height:1.55}
-.account-status-label{color:#d6be8c}
+.account-status-label{display:inline-flex;min-height:23px;align-items:center;margin:0 5px 3px 0;padding:3px 8px;border:1px solid rgba(202,165,107,.34);border-radius:999px;background:rgba(202,165,107,.08);color:#e5c984;font-size:.68rem;font-weight:600;line-height:1.2;vertical-align:middle;white-space:nowrap}
+.account-status-label[data-status="processing"]{border-color:rgba(214,165,73,.4);background:rgba(214,165,73,.1);color:#f0d18a}
+.account-status-label[data-status="completed"]{border-color:rgba(105,172,111,.4);background:rgba(45,115,60,.18);color:#a8d9a4}
+.account-status-label[data-status="cancelled"]{border-color:rgba(198,75,75,.4);background:rgba(146,35,39,.17);color:#e59b9b}
+.account-order-meta-separator{color:#8c7a60}
+.account-dashboard .account-section[id]{scroll-margin-top:96px}
 .account-dashboard .order-item-details{margin-top:9px;color:#e7ddce}
 .account-dashboard .order-item-details summary{color:#d7b978;font-size:.74rem;cursor:pointer}
 .account-dashboard .order-item-details ul{margin:8px 0 0;font-size:.72rem;line-height:1.6}
@@ -747,6 +755,7 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
   .account-dashboard-actions a{min-height:43px;padding:8px 10px;font-size:.69rem}
   .account-dashboard-nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:3px;padding:6px}
   .account-dashboard-nav a{min-height:48px;padding:7px 8px;font-size:.69rem}
+  .account-dashboard-nav .account-nav-label{font-size:.69rem}
   .account-dashboard-content{gap:9px}
   .account-dashboard-primary,.account-dashboard-aside{grid-template-columns:minmax(0,1fr);gap:9px}
   .account-dashboard .account-dashboard-panel{padding:14px}

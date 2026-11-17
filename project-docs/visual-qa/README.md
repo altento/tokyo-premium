@@ -254,3 +254,7 @@ The populated static Pages account after first visit is captured at `account-fir
 ## 2026-11-17 tablet navigation and menu comparison
 
 `menu-header-tablet-2026-11-17/` contains the pre-change 1024 px capture and fresh 1440, 1024, 1023, 900, and 390 px captures. The 1024 px header now matches the desktop reference navigation pattern with profile, cart, and a compact booking control visible; at 1023 px the accessible mobile menu takes over. The focused static menu regression passed all five widths, verifies header bounds and no overlap, and checks opening the mobile menu, reaching booking, Escape close, and focus restoration. This corrects header collapse alone; it does not claim full page parity with reference 02.
+
+### PHP account dashboard polish — 2026-11-17
+
+Compact PHP account navigation, active-section accessibility state and server-status pills are captured at desktop/mobile in `account-dashboard-polish-2026-11-17/`. The comparison records remaining differences from reference 11; no pixel-perfect claim. The focused and broad local checks passed; hosted CI and publication are pending.

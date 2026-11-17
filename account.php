@@ -264,12 +264,12 @@ header_html();
 
       <div class="account-dashboard-layout">
         <nav class="account-dashboard-nav" aria-label="Разделы личного кабинета">
-          <a href="#account-orders"><span>01</span>Мои заказы<small><?=$orderCount?></small></a>
-          <a href="#account-bookings"><span>02</span>Бронирования<small><?=$bookingCount?></small></a>
-          <a href="#account-browser-favorites"><span>03</span>Избранное<small>в браузере</small></a>
-          <a href="#account-addresses"><span>04</span>Адреса<small><?=count($addresses)?></small></a>
-          <a href="#account-referrals"><span>05</span>Приглашения</a>
-          <a href="#account-settings"><span>06</span>Настройки</a>
+          <a href="#account-orders"><span class="account-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 8h14l1 12H4L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></span><span class="account-nav-label">Мои заказы</span><small><?=$orderCount?></small></a>
+          <a href="#account-bookings"><span class="account-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4m8-4v4M4 10h16m-12 4h3m-3 3h7"/></svg></span><span class="account-nav-label">Бронирования</span><small><?=$bookingCount?></small></a>
+          <a href="#account-browser-favorites"><span class="account-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.8 8.7c0 5.1-8.8 11-8.8 11s-8.8-5.9-8.8-11A4.7 4.7 0 0 1 12 6.2a4.7 4.7 0 0 1 8.8 2.5Z"/></svg></span><span class="account-nav-label">Избранное</span><small>в браузере</small></a>
+          <a href="#account-addresses"><span class="account-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 10c0 5.4-8 11-8 11S4 15.4 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span class="account-nav-label">Адреса</span><small><?=count($addresses)?></small></a>
+          <a href="#account-referrals"><span class="account-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20v-1a6 6 0 0 1 12 0v1m2-10h5m-2.5-2.5v5"/></svg></span><span class="account-nav-label">Приглашения</span></a>
+          <a href="#account-settings"><span class="account-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1m0-12.8-2.1 2.1m-8.6 8.6-2.1 2.1"/><circle cx="12" cy="12" r="5"/></svg></span><span class="account-nav-label">Настройки</span></a>
         </nav>
         <div class="account-dashboard-content">
           <div class="account-dashboard-primary">
@@ -284,7 +284,7 @@ header_html();
                       <?php if ($previewItem): ?><img class="account-order-preview" src="<?=e($previewItem['image_url'])?>" alt="<?=e($previewItem['item_name'])?>" loading="lazy" decoding="async"><?php endif ?>
                       <div class="account-order-content">
                         <div class="account-order-heading"><span>Заказ №<?= (int)$order['id']?></span><strong><?=number_format((int)$order['total'],0,'.',' ')?> ₸</strong></div>
-                        <p class="account-order-meta"><span class="account-status-label"><?=e($orderStatusLabels[$orderStatus] ?? $orderStatus)?></span> · <?=$order['fulfillment']==='pickup'?'Самовывоз':'Доставка'?> · <?=e($order['created_at'])?></p>
+                        <p class="account-order-meta"><span class="account-status-label" data-status="<?=e($orderStatus)?>"><?=e($orderStatusLabels[$orderStatus] ?? $orderStatus)?></span><span class="account-order-meta-separator" aria-hidden="true">·</span> <?=$order['fulfillment']==='pickup'?'Самовывоз':'Доставка'?> <span class="account-order-meta-separator" aria-hidden="true">·</span> <?=e($order['created_at'])?></p>
                         <details class="order-item-details">
                           <summary>Состав заказа · <?=count($order['items'])?> <?=count($order['items'])===1?'позиция':'позиций'?></summary>
                           <ul><?php foreach ($order['items'] as $item): ?><li><?=e($item['item_name'])?> · <?= (int)$item['quantity']?> × <?=number_format((int)$item['price'],0,'.',' ')?> ₸ = <?=number_format((int)$item['price']*(int)$item['quantity'],0,'.',' ')?> ₸</li><?php endforeach ?></ul>
@@ -391,4 +391,5 @@ header_html();
   </section>
 </main>
 <?php if ($user): ?><script src="account-demo.js" defer></script><?php endif ?>
+<script src="account-dashboard.js" defer></script>
 <?php footer_html(); ?>

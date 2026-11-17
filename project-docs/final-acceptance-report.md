@@ -178,3 +178,7 @@ The current Pages-mode browser capture suite passed all 11 static routes at desk
 ## 2026-11-17 — dish composition follow-up
 
 Status: **Implemented locally; visual check passed; SQLite verification pending hosted CI.** Migration v11 adds editable normalized ingredient relations for 19 individual fictional menu items without overwriting existing links. Dish detail pages read these relations; set cards with no explicit components keep a disclosed empty-state note, and the UI does not claim allergen verification. The focused static page capture at desktop 1440 px and mobile 390 px passed; evidence is in `project-docs/visual-qa/dish-composition-2026-11-17/`. PHP lint, JS syntax and diff whitespace checks passed. Local PHP does not include `pdo_sqlite`, so migration integration and the PHP browser route are not yet verified for this change; the next hosted run must validate the v11 migration and all dish routes after static export. Public Pages remains unchanged while PR #19 is a draft.
+
+## Current checkpoint — 2026-11-17
+
+PHP account navigation and order-state presentation have been polished and locally verified. Local static export is refreshed; Playwright browser and Tokyo 2.0 PHP/static regressions passed. Evidence: project-docs/visual-qa/account-dashboard-polish-2026-11-17/. Hosted CI and public Pages verification have not yet run for this checkpoint. The overall Tokyo Premium 2.0 goal remains in progress.

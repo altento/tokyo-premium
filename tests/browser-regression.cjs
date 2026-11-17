@@ -255,13 +255,32 @@ async function run(options = {}) {
       sectionCount: element.querySelectorAll('.account-dashboard-panel').length
     }));
     check(primaryLayout.columns === 1 && primaryLayout.historyWidth > 900 && primaryLayout.sectionCount === 2, `account history and booking use a readable full-width column (layout=${JSON.stringify(primaryLayout)})`);
+    const accountNavState = await page.locator('.account-dashboard-nav').evaluate(element => ({
+      height: Math.round(element.getBoundingClientRect().height),
+      backgroundImage: getComputedStyle(element).backgroundImage
+    }));
+    check(accountNavState.height < 500 && !accountNavState.backgroundImage.includes('url('), `account section navigation remains compact instead of stretching a room photo (state=${JSON.stringify(accountNavState)})`);
+    const firstOrderStatus = page.locator('#account-orders .account-status-label').first();
+    check(await firstOrderStatus.count() > 0, 'account order history exposes the server status');
+    const orderStatusPresentation = await firstOrderStatus.evaluate(element => ({
+      status: element.dataset.status,
+      radius: getComputedStyle(element).borderRadius,
+      borderWidth: getComputedStyle(element).borderTopWidth
+    }));
+    check(['new', 'processing', 'completed', 'cancelled'].includes(orderStatusPresentation.status) && orderStatusPresentation.radius === '999px' && orderStatusPresentation.borderWidth === '1px', `account order status is a state-labelled pill (presentation=${JSON.stringify(orderStatusPresentation)})`);
     check(await page.locator('#account-orders .account-order-preview').first().evaluate(image => image.complete && image.naturalWidth > 0), 'server order history shows a loaded catalogue photograph');
     check(await page.locator('#account-browser-favorites-list .dish-card').count() > 0, 'authenticated dashboard renders browser-local favorites separately');
     const firstOrderDetails = page.locator('#account-orders .account-order-card details').first();
     if (await firstOrderDetails.count()) await firstOrderDetails.locator('summary').click();
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+    await page.waitForFunction(() => window.scrollY === 0 && Math.abs(document.querySelector('.site-header').getBoundingClientRect().top) < 1);
+    await page.mouse.move(0, 0);
     await page.screenshot({ path: path.join(evidence, '11-account-populated-desktop.jpg'), fullPage: true, type: 'jpeg', quality: 72 });
     await page.setViewportSize({ width: 390, height: 844 });
     check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'authenticated account dashboard has no mobile horizontal overflow');
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+    await page.waitForFunction(() => window.scrollY === 0 && Math.abs(document.querySelector('.site-header').getBoundingClientRect().top) < 1);
+    await page.mouse.move(0, 0);
     await page.screenshot({ path: path.join(evidence, '11-account-populated-mobile.jpg'), fullPage: true, type: 'jpeg', quality: 72 });
     await page.setViewportSize({ width: 1440, height: 1000 });
 
