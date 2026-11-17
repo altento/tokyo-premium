@@ -34,10 +34,10 @@
   const nav = document.querySelector('#site-navigation');
   const toggle = header?.querySelector('.mobile-menu');
   if (!header || !nav || !toggle) return;
+  header.querySelector('.header-cta')?.setAttribute('aria-label', 'Бронировать столик');
 
-  // The full navigation no longer fits below 1025px (the booking CTA clips
-  // between tablet and mobile widths), so CSS and interaction share one cutoff.
-  const mobile = window.matchMedia('(max-width: 1024px)');
+  // Keep the desktop reference at 1024px; use the accessible menu below that breakpoint.
+  const mobile = window.matchMedia('(max-width: 1023px)');
   let returnFocus = false;
 
   const mobileUtilities = nav.querySelector('.mobile-nav-utilities');
@@ -104,38 +104,9 @@
   const galleryGrid = document.querySelector('#gallery-grid');
   if (galleryGrid) {
     const zoneGrid = document.querySelector('.zone-grid');
-    const zones = [...(zoneGrid?.querySelectorAll('.zone-card') || [])];
-    const roomAssets = [
-      'assets/generated/room-sushi-counter.webp',
-      'assets/generated/room-main-hall.webp',
-      'assets/generated/room-private-dining.webp',
-      'assets/generated/room-garden-terrace.webp'
-    ];
     zoneGrid?.closest('.section')?.setAttribute('id', 'spaces');
-    zones.forEach((card, index) => {
-      card.removeAttribute('data-gallery-filter');
-      const image = card.querySelector('img');
-      const trigger = card.querySelector('[data-lightbox]');
-      const src = roomAssets[index];
-      if (image && src) image.src = src;
-      if (trigger && src) trigger.dataset.lightbox = src;
-    });
-    const galleryAssets = [
-      'assets/generated/room-main-hall.webp',
-      'assets/generated/room-sushi-counter.webp',
-      'assets/food/17-omakase-set.webp',
-      'assets/generated/room-garden-terrace.webp',
-      'assets/generated/room-private-dining.webp',
-      'assets/food/04-matcha-latte.webp'
-    ];
-    [...galleryGrid.querySelectorAll('.gallery-tile')].forEach((tile, index) => {
-      const src = galleryAssets[index];
-      const image = tile.querySelector('img');
-      if (image && src) image.src = src;
-      if (src) tile.dataset.lightbox = src;
-    });
+    zoneGrid?.querySelectorAll('.zone-card').forEach(card => card.removeAttribute('data-gallery-filter'));
   }
-
   const bookingForm = document.querySelector('.booking-form');
   if (bookingForm) {
     const tableInput = bookingForm.querySelector('[name="table"]');

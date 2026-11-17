@@ -8,7 +8,7 @@ $selectedVariant = $q->fetch() ?: $pdo->query("SELECT * FROM custom_set_variants
 if (!$selectedVariant) $selectedVariant = ['slug'=>'signature','name'=>'Tokyo Signature','minimum_distinct_items'=>3,'maximum_distinct_items'=>5,'maximum_total_quantity'=>8,'demo_only'=>1];
 $variantOptions = $pdo->query('SELECT slug,name,minimum_distinct_items,maximum_distinct_items,maximum_total_quantity FROM custom_set_variants WHERE active=1 ORDER BY sort_order')->fetchAll();
 $catalog = dishes();
-page_start('Конструктор сета — Tokyo Premium', 'Соберите японский сет из демонстрационного меню. Итоговую стоимость и состав перед заказом проверяет сервер.');
+page_start('Конструктор сета — Tokyo Premium', 'Соберите японский сет из демонстрационного меню. Итоговую стоимость и состав перед заказом проверяет сервер.', 'assets/food/17-omakase-set.webp');
 header_html('experience');
 ?>
 <main class="tp20-page tp20-builder-page">

@@ -2,7 +2,7 @@
 declare(strict_types=1);
 require __DIR__ . '/bootstrap.php';
 $certificateDenominations = commerce_certificate_denominations(db());
-page_start('Подарочный опыт — Tokyo Premium', 'Создайте демонстрационный макет подарочного сертификата Tokyo Premium. Предпросмотр не является оплаченным финансовым документом.');
+page_start('Подарочный опыт — Tokyo Premium', 'Создайте демонстрационный макет подарочного сертификата Tokyo Premium. Предпросмотр не является оплаченным финансовым документом.', 'assets/generated/tokyo-seasonal-omakase-v2.webp');
 header_html('offers');
 ?>
 <main class="tp20-page tp20-gift-page">

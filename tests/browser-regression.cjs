@@ -14,6 +14,19 @@ const widths = [320, 390, 768, 1024, 1440, 1920];
 const failures = [];
 const check = (condition, label) => { if (!condition) throw new Error(label); };
 const isRequired = locator => locator.evaluate(element => element.required);
+async function checkEarlyTransitionOptIn(page, label) {
+  const enabled = await page.evaluate(() => {
+    const style = document.querySelector('#tp20-view-transition');
+    const firstStylesheet = document.querySelector('link[rel="stylesheet"]');
+    if (!style?.sheet || !firstStylesheet || !(style.compareDocumentPosition(firstStylesheet) & Node.DOCUMENT_POSITION_FOLLOWING)) return false;
+    const findOptIn = rules => [...rules].some(rule => {
+      if (rule.cssText.startsWith('@view-transition')) return rule.navigation === 'auto';
+      return rule.cssRules ? findOptIn(rule.cssRules) : false;
+    });
+    try { return findOptIn(style.sheet.cssRules); } catch { return false; }
+  });
+  check(enabled, `${label} has an early native page-transition opt-in`);
+}
 async function addCustomSet(page) {
   return page.evaluate(() => {
     const event = new CustomEvent('tokyo:custom-set:add', {
@@ -66,6 +79,7 @@ async function run(options = {}) {
       console.log(`Visual QA: ${name}`);
       const response = await page.goto(base + route, { waitUntil: 'domcontentloaded', timeout: 15000 });
       check(response && response.status() === 200, `${name} HTTP response`);
+      await checkEarlyTransitionOptIn(page, name);
       check(await page.locator('h1').count() > 0, `${name} has a page heading`);
       await prepareVisual(page);
       await page.screenshot({ path: path.join(evidence, `${name}-desktop.jpg`), fullPage: true, type: 'jpeg', quality: 70 });
@@ -76,20 +90,22 @@ async function run(options = {}) {
       await page.setViewportSize({ width: 1440, height: 1000 });
       if (name === '03-dish') {
         const dishCount = await page.evaluate(() => window.DISHES?.length || 0);
-        check(dishCount === 18, `public catalog hides two Secret Menu dishes until access is granted (got ${dishCount})`);
+        check(dishCount === 19, `public catalog hides two Secret Menu dishes until access is granted (got ${dishCount})`);
         const offersPage = await page.goto(`${base}/offers.php`, { waitUntil: 'domcontentloaded' });
         check(offersPage?.status() === 200, 'Secret Menu access page responds');
         await page.locator('[data-tp-secret-unlock] [name="code"]').fill('SECRET');
         await page.locator('[data-tp-secret-unlock] button[type="submit"]').click();
         await page.waitForFunction(() => document.querySelector('[data-tp-secret-results] .dish-card'), null, { timeout: 10000 });
         await page.goto(`${base}/menu.php`, { waitUntil: 'domcontentloaded' });
-        check(await page.evaluate(() => window.DISHES?.length || 0) === 20, 'server unlock grants the two Secret Menu dishes across pages');
-        for (let id = 1; id <= 20; id++) {
+        check(await page.evaluate(() => window.DISHES?.length || 0) === 21, 'server unlock grants the two Secret Menu dishes across pages');
+        for (let id = 1; id <= 21; id++) {
           const detail = await page.goto(`${base}/pages.php?page=dish&id=${id}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
           check(detail?.status() === 200, `dish ${id} responds`);
           check(await page.locator('.detail-actions .add-to-cart').count() === 1, `dish ${id} add button`);
+          check(await page.locator('[data-dish-composition] .detail-ingredient-card').count() > 0, `dish ${id} displays its documented composition or an honest empty note`);
           await page.locator('#dish-main-image').evaluate(img => img.decode());
           check(await page.locator('#dish-main-image').evaluate(img => img.naturalWidth > 0), `dish ${id} image loads`);
+          if (id === 3) check(/Лосось/.test(await page.locator('[data-dish-composition]').innerText()) && /Рис для суши/.test(await page.locator('[data-dish-composition]').innerText()), 'salmon nigiri detail lists its documented salmon and sushi rice');
         }
       }
       if (name === '01-home') {
@@ -158,6 +174,7 @@ async function run(options = {}) {
     await addCustomSet(page);
     check(await page.locator('#cart-page-items .cart-page-custom-set').count() === 1, 'custom set can be combined with a dish');
     check(await page.locator('#cart-page-items .cart-page-item:not(.cart-page-custom-set)').count() === 1, 'add after clear does not restore old dish lines');
+    await page.locator('.cart-checkout-details > summary').click();
     await page.locator('#fulfillment').selectOption('pickup');
     check(await page.locator('#checkout-address').isDisabled(), 'pickup disables address');
     await page.locator('#checkout-name').fill('Гость QA');
@@ -190,11 +207,37 @@ async function run(options = {}) {
     await page.locator('#fulfillment').selectOption('delivery');
     check(await page.locator('#checkout-address-field').isVisible() && await isRequired(page.locator('#checkout-address')), 'switching back to delivery restores required address');
 
+    // Booking retries retain the same key after a recoverable API rejection.
+    await page.goto(base + '/pages.php?page=booking');
+    const bookingForm = page.locator('#full-booking-form');
+    check(await isRequired(page.locator('#full-guest-email')), 'PHP booking form requires an email for the response');
+    await page.locator('#full-guest-name').fill('Гость бронирования QA');
+    await page.locator('#full-guest-phone').fill('+77010000003');
+    await page.locator('#full-guest-email').fill(`booking-qa-${Date.now()}@example.test`);
+    await page.locator('#full-guest-date').fill(await page.locator('#full-guest-date').getAttribute('min'));
+    const bookingKeys = [];
+    let bookingAttempt = 0;
+    await page.route('**/api.php', async route => {
+      if (route.request().method() === 'POST') {
+        bookingKeys.push(route.request().headers()['idempotency-key'] || '');
+        bookingAttempt++;
+        if (bookingAttempt === 1) return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: false, message: 'Temporary test interruption' }) });
+      }
+      await route.continue();
+    });
+    await page.locator('button[type="submit"][form="full-booking-form"]').click();
+    await page.waitForFunction(() => document.querySelector('#full-booking-form .form-status')?.classList.contains('error'));
+    await page.locator('button[type="submit"][form="full-booking-form"]').click();
+    await page.waitForFunction(() => document.querySelector('#full-booking-form .form-status')?.classList.contains('success'));
+    await page.unroute('**/api.php');
+    check(bookingKeys.length === 2 && bookingKeys[0].length >= 16 && bookingKeys[0] === bookingKeys[1], 'same booking payload reuses its idempotency key after an API rejection');
+
     // Scenario C: the cart persists through navigation and reload, while form defaults stay consistent.
     await page.goto(base + '/about.php');
     await page.goto(base + '/pages.php?page=cart');
     check(await page.locator('#cart-page-items .cart-page-item').count() === 1, 'cart survives route change before repeat checkout');
     await page.reload();
+    await page.locator('.cart-checkout-details > summary').click();
     check(await page.locator('#fulfillment').inputValue() === 'delivery' && await page.locator('#checkout-address').isVisible() && await isRequired(page.locator('#checkout-address')), 'delivery and address validation are consistent after reload');
     await page.locator('#cart-clear').click();
     await page.goto(base + '/account.php');
@@ -206,6 +249,13 @@ async function run(options = {}) {
     await page.locator('.dish-card [data-favorite]').first().click();
     await page.goto(base + '/account.php');
     check(await page.locator('#account-orders .account-order-card').count() > 0, 'authenticated account dashboard shows its saved order');
+    const primaryLayout = await page.locator('.account-dashboard-primary').evaluate(element => ({
+      columns: getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/).length,
+      historyWidth: Math.round(element.querySelector('#account-orders').getBoundingClientRect().width),
+      sectionCount: element.querySelectorAll('.account-dashboard-panel').length
+    }));
+    check(primaryLayout.columns === 1 && primaryLayout.historyWidth > 900 && primaryLayout.sectionCount === 2, `account history and booking use a readable full-width column (layout=${JSON.stringify(primaryLayout)})`);
+    check(await page.locator('#account-orders .account-order-preview').first().evaluate(image => image.complete && image.naturalWidth > 0), 'server order history shows a loaded catalogue photograph');
     check(await page.locator('#account-browser-favorites-list .dish-card').count() > 0, 'authenticated dashboard renders browser-local favorites separately');
     const firstOrderDetails = page.locator('#account-orders .account-order-card details').first();
     if (await firstOrderDetails.count()) await firstOrderDetails.locator('summary').click();
@@ -231,6 +281,7 @@ async function run(options = {}) {
     const staticCustomSet = await addCustomSet(page);
     check(staticCustomSet.handled, 'static custom set event is handled by the same cart API');
     check(await page.locator('#cart-page-items .cart-page-custom-set').count() === 1, 'static cart renders custom set lines');
+    await page.locator('.cart-checkout-details > summary').click();
     await page.locator('#fulfillment').selectOption('pickup');
     await page.locator('#checkout-name').fill('Демо-гость');
     await page.locator('#checkout-phone').fill('+77010000000');
@@ -264,14 +315,18 @@ async function run(options = {}) {
     await page.goto(staticBase + '/cart.html');
     check(await page.locator('#cart-page-items .cart-page-item').count() === 1, 'static cart survives route change');
     await page.reload();
-    check(await page.locator('#fulfillment').inputValue() === 'delivery' && await page.locator('#checkout-address').isVisible() && await isRequired(page.locator('#checkout-address')), 'static delivery state is consistent after reload');
+    check(await page.locator('#fulfillment').inputValue() === 'delivery' && await isRequired(page.locator('#checkout-address')), 'static delivery validation is consistent after reload');
+    await page.locator('.cart-checkout-details > summary').click();
+    check(await page.locator('#checkout-address').isVisible(), 'static delivery address is visible when checkout is expanded after reload');
     await page.locator('#cart-clear').click();
 
     await page.goto(staticBase + '/account.html');
     await page.locator('[data-account-tab="history"]').click();
     check((await page.locator('#demo-orders').innerText()).includes('Составлен заказ снова') || await page.locator('#demo-orders .demo-order-items li').count() > 0, 'static profile shows order line snapshot');
-    check((await page.locator('#demo-orders').innerText()).includes('Tokyo Signature QA'), 'static order history retains custom set variant and name');
     const customSetOrder = page.locator('#demo-orders .demo-order').filter({ hasText: 'Tokyo Signature QA' }).first();
+    const customSetDetails = customSetOrder.locator('.demo-order-details');
+    if (await customSetDetails.count()) await customSetDetails.locator('summary').click();
+    check((await customSetOrder.innerText()).includes('Tokyo Signature QA'), 'static order history exposes the custom set variant and name when expanded');
     const repeatButton = customSetOrder.locator('[data-repeat-order]');
     if (await repeatButton.count()) {
       await repeatButton.click();
@@ -297,13 +352,13 @@ async function run(options = {}) {
     check(await page.locator('.dish-card:visible').count() === 6, 'menu pagination advances while preserving page size');
     check(await page.locator('#menu-pagination [aria-current="page"]').innerText() === '2', 'menu pagination exposes the active page accessibly');
     await page.locator('#menu-pagination button[aria-label="Страница 4"]').click();
-    check(await page.locator('.dish-card:visible').count() === 2, 'last menu page shows the remaining catalog items');
+    check(await page.locator('.dish-card:visible').count() === 3, 'last menu page shows the remaining catalog items after the scallop addition');
     await page.locator('.menu-search').fill('нигири');
     check(await page.locator('.dish-card:visible').count() > 0, 'menu search matches dish names');
     check(await page.locator('.dish-card:visible').evaluateAll(cards => cards.every(card => (card.dataset.search || card.textContent).toLocaleLowerCase('ru').includes('нигири'))), 'menu search removes non-matching dishes, including cards left from the previous page');
     const matchingCategory = await page.locator('.dish-card:visible').first().getAttribute('data-category');
     await page.locator(`.menu-category-list [data-category="${matchingCategory}"]`).click();
-    check(await page.locator('.dish-card:visible').evaluateAll((cards, category) => cards.every(card => card.dataset.category === category && card.textContent.toLocaleLowerCase('ru').includes('нигири')), matchingCategory), 'category and search filters combine');
+    check(await page.locator('.dish-card:visible').evaluateAll((cards, category) => cards.every(card => card.dataset.category === category && (card.dataset.search || card.textContent).toLocaleLowerCase('ru').includes('нигири')), matchingCategory), 'category and search filters combine against the same catalog metadata used by search');
     await page.locator('.menu-search').fill('');
     await page.locator('.menu-category-list [data-category="all"]').click();
     await page.goto(staticBase + '/menu.html');
@@ -340,11 +395,12 @@ async function run(options = {}) {
     await page.locator('[data-tp-table]').first().click();
     const tomorrow = await page.evaluate(() => { const d=new Date();d.setDate(d.getDate()+1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; });
     await page.locator('.booking-form [name="date"]').fill(tomorrow);
-    check(await page.locator('[name="table"]').inputValue() === '' && await page.locator('[data-tp-table="1"]').getAttribute('aria-pressed') === 'false', 'booking selection resets when visit date changes');
+    check(await page.locator('[name="table"]').inputValue() === '' && await page.locator('.tp-seat-plan [data-tp-table="1"]').getAttribute('aria-pressed') === 'false', 'booking selection resets when visit date changes');
     await page.goto(base + '/pages.php?page=omakase');
     await page.locator('.tier-card-featured a').click();
     check(await page.locator('#booking-format').inputValue() === 'Сезонный' && await page.evaluate(() => new URL(location.href).searchParams.get('format') === 'Сезонный'), 'PHP booking keeps the selected Omakase set in the shared format field');
     await page.goto(staticBase + '/omakase.html');
+    await checkEarlyTransitionOptIn(page, 'static Omakase');
     await page.locator('.tier-card-featured a').click();
     await page.waitForFunction(() => document.querySelector('#booking-format')?.value === 'Сезонный');
     const staticFormatValue = await page.locator('#booking-format').inputValue();
@@ -379,7 +435,7 @@ async function run(options = {}) {
     await page.screenshot({ path: path.join(evidence, '11-account-mobile.jpg'), fullPage: true, type: 'jpeg', quality: 70 });
     check(failures.length === 0, failures.slice(0, 12).join('\n'));
     progress('browser regression pass');
-    console.log(`PASS: browser regression; 11 routes, 20 details, cart/checkout, tabs, favorites, navigation, filters, 6 widths. Screenshots: ${evidence}`);
+    console.log(`PASS: browser regression; 11 routes, 21 details, cart/checkout, tabs, favorites, navigation, filters, 6 widths. Screenshots: ${evidence}`);
   } finally { await browser.close(); }
 }
 

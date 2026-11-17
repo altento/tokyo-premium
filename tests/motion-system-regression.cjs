@@ -9,15 +9,24 @@ const evidenceDir = path.resolve(process.env.TOKYO_MOTION_EVIDENCE_DIR || path.j
 const waitForScene = async (page, title) => page.waitForFunction(expected => document.querySelector('#home-title')?.textContent.includes(expected), title, { timeout: 5000 });
 async function revealAll(page) {
   await page.evaluate(async () => {
-    const bottom = document.documentElement.scrollHeight;
+    document.documentElement.style.scrollBehavior = 'auto';
     const step = Math.max(320, innerHeight * 0.72);
-    for (let top = 0; top < bottom; top += step) {
-      window.scrollTo(0, top);
-      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    for (let top = 0; top < document.documentElement.scrollHeight; top += step) {
+      window.scrollTo({ top, behavior: 'instant' });
+      await new Promise(resolve => setTimeout(resolve, 90));
     }
-    window.scrollTo(0, 0);
-    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    await Promise.all([...document.images].map(image => image.decode().catch(() => {})));
+    window.scrollTo({ top: 0, behavior: 'instant' });
   });
+  await page.waitForTimeout(850);
+  const hiddenReveals = await page.evaluate(() => [...document.querySelectorAll('.reveal,[data-tp-reveal]')].filter(node => {
+    const rect = node.getBoundingClientRect();
+    const style = getComputedStyle(node);
+    return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity) < 0.95;
+  }).length);
+  assert.equal(hiddenReveals, 0, 'homepage has no visible content left hidden after scrolling');
+  const hiddenStoryTargets = await page.locator('[data-story-reveal]:not(.story-visible)').count();
+  assert.equal(hiddenStoryTargets, 0, 'all homepage story chapters reveal after scrolling');
 }
 
 async function runMode(browser, name, base, route, capture) {
@@ -30,6 +39,26 @@ async function runMode(browser, name, base, route, capture) {
   const response = await page.goto(`${base}${route}`, { waitUntil: 'networkidle' });
   assert.equal(response?.status(), 200, `${name} homepage loads`);
   await page.evaluate(() => document.fonts.ready);
+  assert.equal(await page.evaluate(() => Boolean(window.gsap && window.ScrollTrigger)), true, `${name} loads the locally vendored GSAP motion engine`);
+  assert.ok(await page.evaluate(() => window.ScrollTrigger.getAll().length > 0), `${name} registers ScrollTrigger for scroll storytelling`);
+  assert.equal(await page.evaluate(() => {
+    const style = document.querySelector('#tp20-view-transition');
+    const firstStylesheet = document.querySelector('link[rel="stylesheet"]');
+    if (!style?.sheet || !firstStylesheet || !(style.compareDocumentPosition(firstStylesheet) & Node.DOCUMENT_POSITION_FOLLOWING)) return false;
+    const hasNavigationOptIn = rules => [...rules].some(rule => {
+      if (rule.cssText.startsWith('@view-transition')) return rule.navigation === 'auto';
+      return rule.cssRules ? hasNavigationOptIn(rule.cssRules) : false;
+    });
+    try { return hasNavigationOptIn(style.sheet.cssRules); } catch { return false; }
+  }), true, `${name} opts into native same-origin page transitions`);
+  assert.equal(await page.locator('.story-scroll-progress').count(), 1, `${name} has a single quiet story progress bar`);
+  await page.evaluate(() => {
+    const chapter = document.querySelector('[data-story-chapter="space"]');
+    if (!chapter) return;
+    window.scrollTo({ top: chapter.offsetTop + chapter.offsetHeight / 2 - innerHeight / 2, behavior: 'instant' });
+  });
+  await page.waitForFunction(() => document.querySelector('[data-story-chapter="space"]')?.getAttribute('data-story-active') === 'true');
+  assert.ok(await page.locator('.story-scroll-progress').evaluate(node => Number.parseFloat(getComputedStyle(node).getPropertyValue('--story-progress')) > 0), `${name} updates reading progress during the story`);
 
   const hero = page.locator('[data-home-hero]');
   const dots = page.locator('[data-home-hero-index]');
@@ -50,7 +79,7 @@ async function runMode(browser, name, base, route, capture) {
   assert.match(builderHref, name === 'static' ? /set-builder\.html$/ : /set-builder\.php$/, `${name} Omakase scene links to the live set-builder route`);
 
   await page.locator('[data-home-hero-step="-1"]').click();
-  await waitForScene(page, 'Вкус, которому');
+  await waitForScene(page, 'TOKYO');
   assert.equal(await dots.nth(0).getAttribute('aria-pressed'), 'true', `${name} previous arrow returns to the first scene`);
   await dots.nth(1).focus();
   await page.keyboard.press('ArrowRight');
@@ -60,6 +89,8 @@ async function runMode(browser, name, base, route, capture) {
   assert.match(galleryHref, name === 'static' ? /gallery\.html$/ : /page=gallery$/, `${name} secondary action follows the selected story and static route map`);
   await page.waitForTimeout(1400);
   assert.equal(await dots.nth(2).getAttribute('aria-pressed'), 'true', `${name} carousel does not autoplay`);
+  await dots.nth(0).click();
+  await waitForScene(page, 'TOKYO');
 
   for (const width of [320, 360, 390, 430, 768, 1024, 1440, 1920]) {
     await page.setViewportSize({ width, height: width < 600 ? 844 : 1000 });
@@ -79,6 +110,19 @@ async function runMode(browser, name, base, route, capture) {
     assert.equal(geometry.titleInsideHero, true, `${name} heading fits its hero at ${width}px`);
     assert.equal(geometry.controlsInsideHero, true, `${name} controls fit their hero at ${width}px`);
     assert.equal(geometry.titleVisible, true, `${name} heading remains visible at ${width}px`);
+    if (width === 390) {
+      assert.equal(await hero.getAttribute('data-home-hero-scene'), '0', `${name} starts with the salmon scene's mobile art direction`);
+      const mobileCropX = await page.locator('#home-hero-photo').evaluate(image => Number.parseFloat(getComputedStyle(image).objectPosition));
+      assert.ok(mobileCropX >= 78 && mobileCropX <= 86, `${name} mobile hero crop keeps the salmon in frame (x=${mobileCropX}%)`);
+      const imageCrop = await page.locator('#home-hero-photo').evaluate(image => {
+        const imageRect = image.getBoundingClientRect();
+        const heroRect = image.closest('[data-home-hero]').getBoundingClientRect();
+        return { imageHeight: imageRect.height, heroHeight: heroRect.height, imageTopOffset: imageRect.top - heroRect.top };
+      });
+      assert.ok(imageCrop.imageHeight > imageCrop.heroHeight * 1.15 && imageCrop.imageTopOffset < -100, `${name} mobile salmon crop brings the nigiri above the copy`);
+      const bookingColumns = await page.locator('.home-booking-form').evaluate(form => getComputedStyle(form).gridTemplateColumns.split(' ').length);
+      assert.equal(bookingColumns, 2, `${name} mobile visit form uses a compact two-column layout`);
+    }
   }
 
   if (capture) {
@@ -106,12 +150,16 @@ async function runMode(browser, name, base, route, capture) {
 async function runReducedMotion(browser, name, base, route) {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
   const page = await context.newPage();
+  const hero = page.locator('[data-home-hero]');
   await page.goto(`${base}${route}`, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => !document.querySelector('[data-home-hero-controls]')?.hidden);
+  assert.equal(await page.evaluate(() => matchMedia('(prefers-reduced-motion: no-preference)').matches), false, `${name} reduced-motion mode disables the page-transition opt-in media query`);
+  assert.equal(await page.evaluate(() => window.ScrollTrigger?.getAll().length || 0), 0, `${name} creates no scroll animations when reduced motion is requested`);
   const duration = await page.locator('#home-hero-photo').evaluate(image => getComputedStyle(image).transitionDuration);
   assert.ok(duration.split(',').every(value => Number.parseFloat(value) <= 0.01), `${name} respects prefers-reduced-motion`);
   await page.locator('[data-home-hero-step="1"]').click();
   await waitForScene(page, 'Позвольте вечеру');
+  assert.equal(await hero.getAttribute('data-home-hero-scene'), '1', `${name} updates art direction when changing scenes`);
   assert.equal(await page.locator('#home-hero-photo').evaluate(image => image.naturalWidth > 0), true, `${name} reduced-motion scene still works`);
   await context.close();
 }
@@ -119,11 +167,14 @@ async function runReducedMotion(browser, name, base, route) {
 (async () => {
   fs.mkdirSync(evidenceDir, { recursive: true });
   const browser = await chromium.launch({ headless: true });
+  const staticOnly = process.env.TOKYO_MOTION_STATIC_ONLY === '1';
   try {
-    await runMode(browser, 'php', phpBase, '/', true);
-    await runReducedMotion(browser, 'php', phpBase, '/');
+    if (!staticOnly) {
+      await runMode(browser, 'php', phpBase, '/', true);
+      await runReducedMotion(browser, 'php', phpBase, '/');
+    }
     await runMode(browser, 'static', staticBase, '/index.html', true);
     await runReducedMotion(browser, 'static', staticBase, '/index.html');
-    console.log(`PASS: cinematic homepage scene controls, keyboard, reduced motion, no autoplay, and eight responsive widths in PHP and static modes; screenshots saved to ${evidenceDir}`);
+    console.log(`PASS: cinematic hero and scroll story, scene controls, keyboard, reduced motion, no autoplay, and eight responsive widths${staticOnly ? ' in static mode' : ' in PHP and static modes'}; screenshots saved to ${evidenceDir}`);
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

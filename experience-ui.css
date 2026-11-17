@@ -261,3 +261,104 @@
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
   .tp-motion-ready [data-tp-reveal] { opacity: 1; transform: none; }
 }
+
+/* Loaded after the base and editorial styles so the basket keeps the compact reference hierarchy in PHP and Pages. */
+.editorial-hero.cart-hero { box-sizing: border-box; min-height: clamp(220px, 16vw, 260px); padding-block: 24px; align-items: center; }
+.editorial-hero.cart-hero .editorial-hero-copy { max-width: min(470px, 62vw); }
+.editorial-hero.cart-hero h1 { font-size: clamp(2.65rem, 4.3vw, 4rem); line-height: 1; margin-block: 6px 10px; }
+.editorial-hero.cart-hero .button-row,
+.editorial-hero.cart-hero .school-note { display: none; }
+@media (max-width: 700px) {
+  .editorial-hero.cart-hero { min-height: clamp(210px, 65vw, 245px); padding: 46px 20px 16px; align-items: flex-end; }
+  .editorial-hero.cart-hero .editorial-hero-copy { max-width: 100%; }
+  .editorial-hero.cart-hero h1 { font-size: clamp(2.55rem, 12vw, 3.65rem); line-height: 1.02; overflow-wrap: anywhere; }
+}
+
+/* Keep the booking introduction useful without letting it push the form far below the fold. */
+.editorial-page .editorial-hero.booking-hero { box-sizing: border-box; min-height: clamp(320px, 24vw, 360px); padding-block: 34px; align-items: center; }
+.editorial-page .booking-hero .editorial-hero-copy { max-width: min(590px, 62vw); }
+.editorial-page .booking-hero h1 { font-size: clamp(3rem, 5.4vw, 5rem); line-height: 1.02; overflow-wrap: anywhere; }
+.editorial-page .booking-hero .editorial-hero-copy > p:not(.editorial-sub) { max-width: 500px; font-size: .94rem; line-height: 1.55; margin-block: 8px; }
+.editorial-page .booking-hero .school-note { display: none; }
+@media (max-width: 700px) {
+  .editorial-page .editorial-hero.booking-hero { min-height: clamp(360px, 100vw, 420px); padding: 88px 22px 24px; align-items: flex-end; }
+  .editorial-page .booking-hero .editorial-hero-copy { max-width: 100%; }
+  .editorial-page .booking-hero h1 { font-size: clamp(2.45rem, 11.4vw, 3.5rem); line-height: 1.04; }
+  .editorial-page .booking-hero .editorial-hero-copy > p:not(.editorial-sub) { max-width: 34rem; font-size: .88rem; line-height: 1.5; }
+}
+
+
+/* Booking page rhythm: compact reservation steps without hiding their details. */
+.editorial-page > .booking-benefits-section { padding-block: clamp(16px, 2.2vw, 28px); }
+.editorial-page .booking-benefits { gap: clamp(8px, 1.4vw, 16px); }
+.editorial-page .booking-benefits article {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: center;
+  gap: 3px 12px;
+  min-width: 0;
+  min-height: 102px;
+  padding: 16px;
+  border: 1px solid var(--jp-line);
+  background: linear-gradient(145deg, rgba(201, 164, 103, .07), rgba(16, 14, 12, .2));
+}
+.editorial-page .booking-benefits article > span {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  align-self: start;
+  border: 1px solid var(--jp-line);
+  border-radius: 50%;
+  color: var(--jp-gold);
+  font: 500 .88rem/1 "Playfair Display", serif;
+}
+.editorial-page .booking-benefits article h3 {
+  grid-column: 2;
+  margin: 0;
+  font-size: clamp(1rem, 1.35vw, 1.18rem);
+  line-height: 1.2;
+}
+.editorial-page .booking-benefits article p {
+  grid-column: 2;
+  margin: 0;
+  font-size: .83rem;
+  line-height: 1.42;
+}
+.editorial-page > #booking-form { padding-block: clamp(36px, 4vw, 54px); }
+.editorial-page > #booking-form > .editorial-heading { margin-bottom: clamp(16px, 2vw, 24px); }
+.editorial-page .booking-layout { gap: clamp(18px, 3vw, 36px); }
+.editorial-page .table-map-wrap { padding: clamp(14px, 2vw, 22px); }
+
+@media (max-width: 700px) {
+  .editorial-page > .booking-benefits-section { padding-block: 12px; }
+  .editorial-page .booking-benefits { grid-template-columns: 1fr; gap: 7px; }
+  .editorial-page .booking-benefits article {
+    grid-template-columns: 34px minmax(0, 1fr);
+    min-height: 0;
+    padding: 10px 12px;
+    gap: 2px 11px;
+  }
+  .editorial-page .booking-benefits article > span { width: 30px; height: 30px; font-size: .78rem; }
+  .editorial-page .booking-benefits article h3 { font-size: 1rem; line-height: 1.18; }
+  .editorial-page .booking-benefits article p { font-size: .76rem; line-height: 1.34; }
+  .editorial-page > #booking-form { padding-block: 28px; }
+  .editorial-page > #booking-form > .editorial-heading { margin-bottom: 14px; }
+  .editorial-page .booking-layout { gap: 14px; }
+  .editorial-page .booking-form { gap: 10px; }
+  .editorial-page .booking-form .school-note { margin: 0; }
+  .editorial-page .booking-form input,
+  .editorial-page .booking-form select,
+  .editorial-page .booking-form textarea { min-height: 44px; padding: 10px 12px; }
+  .editorial-page .table-map-wrap { padding: 12px; }
+  .editorial-page .tp20-floorplan-layout { gap: 12px; margin-top: 12px; }
+  .editorial-page [data-tp-zone-photo] { height: 250px; min-height: 0; max-height: none; }
+}
+@media (max-width: 360px) {
+  .editorial-page .booking-benefits article { padding-inline: 10px; column-gap: 9px; }
+  .editorial-page .booking-benefits article p { font-size: .73rem; }
+  .editorial-page .table-map-wrap { padding: 10px; }
+}

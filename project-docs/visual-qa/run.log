@@ -1,28 +1,27 @@
-2026-11-13T00:09:45.227Z route 01-home start
-2026-11-13T00:09:46.794Z route 01-home screenshot done
-2026-11-13T00:09:46.917Z route 02-menu start
-2026-11-13T00:09:47.604Z route 02-menu screenshot done
-2026-11-13T00:09:47.692Z route 03-dish start
-2026-11-13T00:09:48.223Z route 03-dish screenshot done
-2026-11-13T00:09:51.028Z route 04-omakase start
-2026-11-13T00:09:51.554Z route 04-omakase screenshot done
-2026-11-13T00:09:51.696Z route 05-philosophy start
-2026-11-13T00:09:52.156Z route 05-philosophy screenshot done
-2026-11-13T00:09:52.278Z route 06-space start
-2026-11-13T00:09:52.796Z route 06-space screenshot done
-2026-11-13T00:09:52.901Z route 07-booking start
-2026-11-13T00:09:53.259Z route 07-booking screenshot done
-2026-11-13T00:09:53.360Z route 08-reviews start
-2026-11-13T00:09:53.850Z route 08-reviews screenshot done
-2026-11-13T00:09:53.963Z route 09-contacts start
-2026-11-13T00:09:54.270Z route 09-contacts screenshot done
-2026-11-13T00:09:54.351Z route 10-cart start
-2026-11-13T00:09:54.659Z route 10-cart screenshot done
-2026-11-13T00:09:54.751Z route 11-account start
-2026-11-13T00:09:54.962Z route 11-account screenshot done
-2026-11-13T00:09:55.075Z registration start
-2026-11-13T00:09:55.715Z registration done
-2026-11-13T00:09:56.057Z cart flow start
-2026-11-13T00:09:56.283Z cart add done
-2026-11-13T00:09:57.012Z cart page opened
-2026-11-13T00:10:18.554Z browser regression pass
+2026-11-13T02:12:38.398Z route 01-home start
+2026-11-13T02:12:39.963Z route 01-home screenshot done
+2026-11-13T02:12:40.111Z route 02-menu start
+2026-11-13T02:12:40.874Z route 02-menu screenshot done
+2026-11-13T02:12:40.975Z route 03-dish start
+2026-11-13T02:12:41.559Z route 03-dish screenshot done
+2026-11-13T02:12:44.715Z route 04-omakase start
+2026-11-13T02:12:45.149Z route 04-omakase screenshot done
+2026-11-13T02:12:45.259Z route 05-philosophy start
+2026-11-13T02:12:45.716Z route 05-philosophy screenshot done
+2026-11-13T02:12:45.818Z route 06-space start
+2026-11-13T02:12:46.354Z route 06-space screenshot done
+2026-11-13T02:12:46.466Z route 07-booking start
+2026-11-13T02:12:46.808Z route 07-booking screenshot done
+2026-11-13T02:12:46.915Z route 08-reviews start
+2026-11-13T02:12:47.370Z route 08-reviews screenshot done
+2026-11-13T02:12:47.482Z route 09-contacts start
+2026-11-13T02:12:47.788Z route 09-contacts screenshot done
+2026-11-13T02:12:47.872Z route 10-cart start
+2026-11-13T02:12:48.192Z route 10-cart screenshot done
+2026-11-13T02:12:48.290Z route 11-account start
+2026-11-13T02:12:48.488Z route 11-account screenshot done
+2026-11-13T02:12:48.604Z registration start
+2026-11-13T02:12:49.135Z registration done
+2026-11-13T02:12:49.443Z cart flow start
+2026-11-13T02:12:49.687Z cart add done
+2026-11-13T02:12:50.684Z cart page opened

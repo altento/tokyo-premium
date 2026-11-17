@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 // Repeatable HTTP integration checks. Uses a uniquely named SQLite database in the OS temp dir.
 $dbPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'tokyo-integrity-' . bin2hex(random_bytes(6)) . '.sqlite';
+// Never let developer or CI mail credentials escape into this integration test.
+foreach (["TOKYO_SMTP_HOST","TOKYO_SMTP_PORT","TOKYO_SMTP_USER","TOKYO_SMTP_PASSWORD","TOKYO_SMTP_ENCRYPTION","TOKYO_SMTP_SECURE","TOKYO_MAIL_FROM","TOKYO_MAIL_FROM_NAME","TOKYO_BOOKING_NOTIFY_EMAIL"] as $mailEnvironmentKey) putenv($mailEnvironmentKey);
 if (!extension_loaded('pdo_sqlite')) { fwrite(STDERR, "SKIP: pdo_sqlite extension is required.\n"); exit(77); }
 putenv('RESTAURANT_DB=' . $dbPath);
 $checks = 0;
@@ -16,10 +18,8 @@ for ($i = 0; $i < 6; $i++) {
     if (PHP_OS_FAMILY === 'Windows') {
         $workerCommand[] = '-d';
         $workerCommand[] = 'extension_dir=' . ini_get('extension_dir');
-        $workerCommand[] = '-d';
-        $workerCommand[] = 'extension=php_sqlite3.dll';
-        $workerCommand[] = '-d';
-        $workerCommand[] = 'extension=php_pdo_sqlite.dll';
+        if (!extension_loaded('sqlite3')) { $workerCommand[] = '-d'; $workerCommand[] = 'extension=php_sqlite3.dll'; }
+        if (!extension_loaded('pdo_sqlite')) { $workerCommand[] = '-d'; $workerCommand[] = 'extension=php_pdo_sqlite.dll'; }
     }
     array_push($workerCommand, '-r', $initScript, dirname(__DIR__) . '/bootstrap.php', $initGatePath);
     $worker = proc_open($workerCommand, [0 => ['pipe','r'], 1 => ['pipe','w'], 2 => ['pipe','w']], $workerPipes, dirname(__DIR__), null);
@@ -40,8 +40,56 @@ foreach ($initializers as [$worker, $workerPipes, $number]) {
     $checks++;
 }
 require dirname(__DIR__) . '/bootstrap.php';
-$pdo = db();
+$pdo = freshTestDatabase($dbPath);
 check(strtolower((string)$pdo->query('PRAGMA journal_mode')->fetchColumn()) === 'wal', 'SQLite uses WAL for concurrent read and order commits');
+$scallop = $pdo->query("SELECT d.id,d.price,d.image_url,i.slug FROM dishes d JOIN dish_ingredients di ON di.dish_id=d.id JOIN ingredients i ON i.slug=di.ingredient_slug WHERE d.name='Нигири с морским гребешком' AND i.slug='scallop'")->fetch(PDO::FETCH_ASSOC);
+check(is_array($scallop) && (int)$scallop['price']===2200 && $scallop['image_url']==='assets/food/21-nigiri-scallop.webp', 'migration v10 seeds the catalog scallop with its original product photo and server price');
+$pdo->exec('DELETE FROM app_migrations WHERE version=10');
+commerce_migrate($pdo);
+check((int)$pdo->query("SELECT COUNT(*) FROM dishes WHERE name='Нигири с морским гребешком'")->fetchColumn()===1, 'scallop content migration can be retried without duplicate catalog items');
+$pairingCount=(int)$pdo->query('SELECT COUNT(*) FROM dish_pairings')->fetchColumn();
+check($pairingCount>=36,'migration v9 seeds editable pairing recommendations for the catalogue');
+check((string)$pdo->query("SELECT pairing_type FROM dish_pairings WHERE dish_id=3 AND paired_dish_id=20")->fetchColumn()==='drink','salmon nigiri has a catalog-backed yuzu drink pairing');
+$pdo->exec('DELETE FROM app_migrations WHERE version=9');
+commerce_migrate($pdo);
+check((int)$pdo->query('SELECT COUNT(*) FROM dish_pairings')->fetchColumn()===$pairingCount,'pairing migration can be retried without duplicate rows');
+$pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(9)');
+$salmonIngredientCount=(int)$pdo->query("SELECT COUNT(*) FROM dish_ingredients di JOIN dishes d ON d.id=di.dish_id WHERE d.name='Нигири с лососем'")->fetchColumn();
+check($salmonIngredientCount===2,'migration v11 exposes the documented salmon and sushi-rice ingredients');
+$compositionCount=(int)$pdo->query('SELECT COUNT(*) FROM dish_ingredients')->fetchColumn();
+$pdo->exec('DELETE FROM app_migrations WHERE version=11');
+commerce_migrate($pdo);
+check((int)$pdo->query('SELECT COUNT(*) FROM dish_ingredients')->fetchColumn()===$compositionCount,'ingredient migration retries without duplicating ingredient links');
+$upgradeDbPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'tokyo-v6-upgrade-' . bin2hex(random_bytes(6)) . '.sqlite';
+$pdo->query('PRAGMA wal_checkpoint(TRUNCATE)');
+if (!copy($dbPath, $upgradeDbPath)) throw new RuntimeException('Could not create a migration-v6 fixture.');
+$v6Fixture = new PDO('sqlite:' . $upgradeDbPath, null, null, [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);
+$v6Fixture->exec('DROP TABLE api_booking_requests');
+$v6Fixture->exec('DROP TABLE booking_email_rate_limits');
+$v6Fixture->exec('DROP TABLE user_addresses');
+$v6Fixture->exec('DELETE FROM app_migrations WHERE version>=7');
+$v6Fixture = null;
+$oldRestaurantDb = getenv('RESTAURANT_DB');
+putenv('RESTAURANT_DB=' . $upgradeDbPath);
+$upgradeCommand = [PHP_BINARY];
+if (PHP_OS_FAMILY === 'Windows') {
+    array_push($upgradeCommand, '-d', 'extension_dir=' . ini_get('extension_dir'));
+    if (!extension_loaded('sqlite3')) array_push($upgradeCommand, '-d', 'extension=php_sqlite3.dll');
+    if (!extension_loaded('pdo_sqlite')) array_push($upgradeCommand, '-d', 'extension=php_pdo_sqlite.dll');
+}
+array_push($upgradeCommand, '-r', 'require $argv[1]; db(); echo (int)db()->query("SELECT 1 FROM app_migrations WHERE version=8")->fetchColumn() . (int)db()->query("SELECT 1 FROM sqlite_master WHERE type=\'table\' AND name=\'user_addresses\'")->fetchColumn() . (int)db()->query("SELECT 1 FROM app_migrations WHERE version=9")->fetchColumn() . (int)db()->query("SELECT 1 FROM app_migrations WHERE version=10")->fetchColumn() . (int)db()->query("SELECT 1 FROM app_migrations WHERE version=11")->fetchColumn();', dirname(__DIR__) . '/bootstrap.php');
+$upgradePipes = [];
+$upgradeProcess = proc_open($upgradeCommand, [0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']], $upgradePipes, dirname(__DIR__), null);
+if ($oldRestaurantDb === false) putenv('RESTAURANT_DB'); else putenv('RESTAURANT_DB=' . $oldRestaurantDb);
+if (!is_resource($upgradeProcess)) throw new RuntimeException('Could not start a migration-v6 upgrade check.');
+fclose($upgradePipes[0]);
+$upgradeOutput = trim(stream_get_contents($upgradePipes[1]));
+$upgradeError = trim(stream_get_contents($upgradePipes[2]));
+fclose($upgradePipes[1]);
+fclose($upgradePipes[2]);
+$upgradeExit = proc_close($upgradeProcess);
+check($upgradeExit === 0 && $upgradeOutput === '11111', 'an existing migration-v6 database receives booking idempotency, saved addresses, pairings and v10-v11 catalog details during bootstrap' . ($upgradeError !== '' ? ' (' . $upgradeError . ')' : ''));
+foreach ([$upgradeDbPath,$upgradeDbPath.'-wal',$upgradeDbPath.'-shm'] as $fixtureFile) if (is_file($fixtureFile)) @unlink($fixtureFile);
 $password = 'Integration-Only-' . bin2hex(random_bytes(8));
 $pdo->prepare('INSERT INTO admins(email,password_hash) VALUES(?,?)')->execute(['integration@example.test', password_hash($password, PASSWORD_DEFAULT)]);
 $port = random_int(21000, 45000);
@@ -49,11 +97,15 @@ $base = 'http://127.0.0.1:' . $port;
 $env = null; // Inherit SystemRoot and PHP configuration on Windows as well as PATH on Unix.
 $pipes = [];
 $serverLog = $dbPath . '.server.log';
-// The PHP CLI server supports multiple workers on Unix; this makes HTTP requests genuinely concurrent in CI.
+// Keep the general integration server single-worker so it does not retain extra
+// SQLite WAL handles while the test process prepares database fixtures.
 $previousWorkers = getenv('PHP_CLI_SERVER_WORKERS');
-if (PHP_OS_FAMILY !== 'Windows') putenv('PHP_CLI_SERVER_WORKERS=4');
+putenv('PHP_CLI_SERVER_WORKERS');
 $serverCommand = [PHP_BINARY, '-d', 'extension_dir=' . ini_get('extension_dir')];
-if (PHP_OS_FAMILY === 'Windows') array_push($serverCommand, '-d', 'extension=php_sqlite3.dll', '-d', 'extension=php_pdo_sqlite.dll');
+if (PHP_OS_FAMILY === 'Windows') {
+    if (!extension_loaded('sqlite3')) array_push($serverCommand, '-d', 'extension=php_sqlite3.dll');
+    if (!extension_loaded('pdo_sqlite')) array_push($serverCommand, '-d', 'extension=php_pdo_sqlite.dll');
+}
 array_push($serverCommand, '-S', '127.0.0.1:' . $port, '-t', dirname(__DIR__));
 $server = proc_open($serverCommand, [0 => ['pipe','r'], 1 => ['file',$serverLog,'a'], 2 => ['file',$serverLog,'a']], $pipes, dirname(__DIR__), $env);
 if ($previousWorkers === false) putenv('PHP_CLI_SERVER_WORKERS'); else putenv('PHP_CLI_SERVER_WORKERS=' . $previousWorkers);
@@ -74,13 +126,34 @@ function request(string $path, array $fields = [], array $headers = []): array {
  return [(int)($m[1] ?? 0), (string)$body, $responseHeaders];
 }
 function adminPost(array $fields): array {
+ global $pdo, $dbPath;
  [$postedStatus] = request('/admin.php', $fields);
  if (in_array($postedStatus, [302,303], true)) {
+  // Admin writes run in a separate PHP worker; replace the test PDO before
+  // later assertions so a prior WAL read cannot mask the committed result.
+  unset($pdo);
+  $pdo = freshTestDatabase($dbPath);
   [$status,$body,$headers] = request('/admin.php');
   return [$status,$body,$headers,$postedStatus];
  }
  [$status,$body,$headers] = request('/admin.php', [], []);
  return [$status,$body,$headers,$postedStatus];
+}
+function startFakeSmtpServer(string $mode='accept'): array {
+  $portFile=tempnam(sys_get_temp_dir(),'tokyo-smtp-port-'); $captureFile=tempnam(sys_get_temp_dir(),'tokyo-smtp-message-'); $connectedFile=$mode==='slow'?tempnam(sys_get_temp_dir(),'tokyo-smtp-connected-'):''; $releaseFile=$mode==='slow'?tempnam(sys_get_temp_dir(),'tokyo-smtp-release-'):''; @unlink($portFile); if($connectedFile!=='')@unlink($connectedFile); if($releaseFile!=='')@unlink($releaseFile);
+  $pipes=[]; $process=proc_open([PHP_BINARY,dirname(__DIR__).'/tests/fake-smtp-server.php',$portFile,$captureFile,$mode,$connectedFile,$releaseFile],[0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']],$pipes,dirname(__DIR__),null);
+  if(!is_resource($process)) throw new RuntimeException('Could not start the local fake SMTP server.'); fclose($pipes[0]);
+  $port=''; for($wait=0;$wait<300;$wait++){if(is_file($portFile)){$port=trim((string)file_get_contents($portFile));if($port!=='')break;} usleep(10000);}
+  if($port===''||!ctype_digit($port)){proc_terminate($process);throw new RuntimeException('The local fake SMTP server did not become ready.');}
+  return ['process'=>$process,'pipes'=>$pipes,'port'=>(int)$port,'port_file'=>$portFile,'capture_file'=>$captureFile,'connected_file'=>$connectedFile,'release_file'=>$releaseFile];
+}
+function stopFakeSmtpServer(array $server): string {
+  if (($server['release_file']??'')!=='') @file_put_contents($server['release_file'],'release');
+  foreach($server['pipes'] as $pipe) if(is_resource($pipe)) fclose($pipe);
+  $exit=proc_close($server['process']); $capture=is_file($server['capture_file'])?(string)file_get_contents($server['capture_file']):'';
+  foreach([$server['port_file'],$server['capture_file'],$server['connected_file']??'',$server['release_file']??''] as $file) if($file!==''&&is_file($file)) @unlink($file);
+  if($exit!==0) throw new RuntimeException('The local fake SMTP server exited unexpectedly.');
+  return $capture;
 }
 function parallelOrderRequests(array $fields, string $idempotencyKey, int $count): array {
  global $base, $cookie, $pdo;
@@ -122,6 +195,88 @@ function parallelOrderRequests(array $fields, string $idempotencyKey, int $count
  }
  return $responses;
 }
+function parallelBookingRequests(array $fields, string $idempotencyKey, int $count): array {
+ global $base, $cookie, $pdo;
+ $body=http_build_query($fields);$sockets=[];$pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+ try {
+  for($i=0;$i<$count;$i++){
+   $errno=0;$error='';$socket=@stream_socket_client('tcp://'.parse_url($base,PHP_URL_HOST).':'.parse_url($base,PHP_URL_PORT),$errno,$error,5,STREAM_CLIENT_CONNECT);
+   if(!$socket)throw new RuntimeException('Could not open concurrent booking socket: '.$error);
+   $sockets[]=$socket;stream_set_timeout($socket,20);
+   $headers="POST /api.php HTTP/1.1\r\nHost: 127.0.0.1\r\nAccept: application/json\r\nConnection: close\r\nContent-Type: application/x-www-form-urlencoded\r\nIdempotency-Key: {$idempotencyKey}\r\nContent-Length: ".strlen($body)."\r\n";
+   if($cookie!=='')$headers.='Cookie: '.$cookie."\r\n";$request=$headers."\r\n".$body;$offset=0;
+   while($offset<strlen($request)){$written=fwrite($socket,substr($request,$offset));if($written===false||$written===0)throw new RuntimeException('Could not write concurrent booking request.');$offset+=$written;}
+  }
+  if(PHP_OS_FAMILY!=='Windows')usleep(200000);$pdo->exec('COMMIT');
+ }catch(Throwable $error){try{$pdo->exec('ROLLBACK');}catch(Throwable $ignored){}foreach($sockets as $socket)if(is_resource($socket))fclose($socket);throw $error;}
+ $responses=[];foreach($sockets as $socket){$raw=stream_get_contents($socket);fclose($socket);if(!preg_match('/^HTTP\/\d(?:\.\d)?\s+(\d{3})/m',$raw,$match))throw new RuntimeException('Malformed concurrent booking response: '.substr($raw,0,200));$body=substr($raw,strpos($raw,"\r\n\r\n")+4);$responses[]=[(int)$match[1],$body];}
+ return $responses;
+}
+function parallelMailDeliveries(int $outboxId, int $count, array $fakeSmtp): array {
+ if ($count !== 2 || ($fakeSmtp['connected_file'] ?? '') === '' || ($fakeSmtp['release_file'] ?? '') === '') {
+  throw new RuntimeException('Parallel SMTP delivery requires two workers and a gated fake server.');
+ }
+ $script = 'require $argv[1]; db(); echo booking_mail_deliver(db(),(int)$argv[2]);';
+ $startWorker = static function () use ($script, $outboxId): array {
+  $command = [PHP_BINARY];
+  if (PHP_OS_FAMILY === 'Windows') {
+   array_push($command, '-d', 'extension_dir=' . ini_get('extension_dir'));
+   if (!extension_loaded('sqlite3')) array_push($command, '-d', 'extension=php_sqlite3.dll');
+   if (!extension_loaded('pdo_sqlite')) array_push($command, '-d', 'extension=php_pdo_sqlite.dll');
+  }
+  array_push($command, '-r', $script, dirname(__DIR__) . '/bootstrap.php', (string)$outboxId);
+  $pipes = [];
+  $process = proc_open($command, [0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']], $pipes, dirname(__DIR__), null);
+  if (!is_resource($process)) throw new RuntimeException('Could not start parallel SMTP worker.');
+  fclose($pipes[0]);
+  return ['process'=>$process,'pipes'=>$pipes,'stdout'=>'','stderr'=>''];
+ };
+ $waitForWorker = static function (array &$worker, int $timeoutMs): bool {
+  stream_set_blocking($worker['pipes'][1], false);
+  $deadline = microtime(true) + ($timeoutMs / 1000);
+  while (!feof($worker['pipes'][1]) && microtime(true) < $deadline) {
+   $chunk = fread($worker['pipes'][1], 4096);
+   if ($chunk !== false) $worker['stdout'] .= $chunk;
+   usleep(10000);
+  }
+  return feof($worker['pipes'][1]);
+ };
+ $collectWorker = static function (array &$worker): array {
+  foreach ([1=>'stdout',2=>'stderr'] as $index=>$key) {
+   if (is_resource($worker['pipes'][$index])) {
+    $worker[$key] .= stream_get_contents($worker['pipes'][$index]);
+    fclose($worker['pipes'][$index]);
+   }
+  }
+  return [proc_close($worker['process']), trim($worker['stdout']), trim($worker['stderr'])];
+ };
+ $workers = [$startWorker()];
+ $connected = false;
+ for ($wait=0; $wait<500; $wait++) {
+  if (is_file($fakeSmtp['connected_file'])) { $connected = true; break; }
+  usleep(10000);
+ }
+ if (!$connected) {
+  @file_put_contents($fakeSmtp['release_file'], 'release');
+  [$exit,$stdout,$stderr] = $collectWorker($workers[0]);
+  throw new RuntimeException('First SMTP worker did not reach the fake server (exit '.$exit.'; stdout='.$stdout.'; stderr='.$stderr.').');
+ }
+ $workers[] = $startWorker();
+ $secondFinished = $waitForWorker($workers[1], 5000);
+ @file_put_contents($fakeSmtp['release_file'], 'release');
+ $results = [];
+ foreach ($workers as $index=>&$worker) {
+  $workerFinished = $index === 1 && $secondFinished ? true : $waitForWorker($worker, 10000);
+  [$exit,$stdout,$stderr] = $collectWorker($worker);
+  if (!$workerFinished || $exit !== 0) throw new RuntimeException('Parallel SMTP worker '.$index.' failed (finished='.($workerFinished?'yes':'no').'; exit='.$exit.'; stdout='.$stdout.'; stderr='.$stderr.').');
+  $results[] = $stdout;
+ }
+ unset($worker);
+ if (count(array_filter($results, static fn(string $state): bool => $state === 'sending')) !== 1) {
+  throw new RuntimeException('Second SMTP worker did not observe the active lease before release (results='.json_encode($results).').');
+ }
+ return $results;
+}
 function tokenFrom(string $html): string { if (!preg_match('/name="csrf" value="([^"]+)"/', $html, $m)) throw new RuntimeException('CSRF token not found.'); return html_entity_decode($m[1], ENT_QUOTES); }
 function freshTestDatabase(string $path): PDO {
  $connection = new PDO('sqlite:' . $path, null, null, [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
@@ -131,6 +286,10 @@ function freshTestDatabase(string $path): PDO {
 function testDatabaseValue(string $path, string $sql, array $parameters=[]): mixed {
  $connection=freshTestDatabase($path); $query=$connection->prepare($sql); $query->execute($parameters); $value=$query->fetchColumn(); $query->closeCursor();
  return $value;
+}
+function testDatabaseRow(string $path, string $sql, array $parameters=[]): ?array {
+ $connection=freshTestDatabase($path); $query=$connection->prepare($sql); $query->execute($parameters); $value=$query->fetch(PDO::FETCH_ASSOC); $query->closeCursor();
+ return $value === false ? null : $value;
 }
 function setTestOrderStatus(string $path, int $orderId, string $status): void {
  commerce_set_order_status(freshTestDatabase($path), $orderId, $status);
@@ -145,22 +304,85 @@ try {
  [$status,$html] = request('/admin.php'); check($status===200 && str_contains($html,'Вход в панель'), 'admin login page available'); $csrf=tokenFrom($html);
  [$status,$loginBody,$loginHeaders] = request('/admin.php',['csrf'=>$csrf,'action'=>'login','email'=>'integration@example.test','password'=>$password]);
  check($status===302, 'admin login succeeds' . ($status===302 ? '' : ' (HTTP '.$status.'; response '.substr(strip_tags($loginBody),0,180).'; headers '.implode(' | ',$loginHeaders).')'));
- [$status,$html] = request('/admin.php'); check($status===200 && str_contains($html,'Панель сайта') && str_contains($html,'Поиск по панели') && str_contains($html,'Уведомления'), 'authenticated admin loads search and notification center'); $csrf=tokenFrom($html);
+ [$status,$html] = request('/admin.php'); check($status===200 && str_contains($html,'Панель сайта') && str_contains($html,'Поиск по панели') && str_contains($html,'Уведомления') && str_contains($html,'Гастрономические сочетания') && str_contains($html,'data-smtp-state="not_configured"') && str_contains($html,'Как настроить почту'), 'authenticated admin loads search, notifications, pairing manager and clear SMTP readiness'); $csrf=tokenFrom($html);
+ [$status,$marketingHtml]=request('/admin-marketing.php'); check($status===200 && str_contains($marketingHtml,'Правила доступа и остаток подарков'), 'marketing admin opens the Secret Menu access manager'); $marketingCsrf=tokenFrom($marketingHtml);
+ $secretCampaignId=(int)$pdo->query("SELECT id FROM promotion_campaigns WHERE campaign_type='secret_menu' ORDER BY id LIMIT 1")->fetchColumn(); check($secretCampaignId>0, 'seeded Secret Menu campaign is available to the admin');
+ $secretRuleWindow=['campaign_id'=>$secretCampaignId,'campaign_active'=>1,'campaign_start'=>null,'campaign_end'=>null,'timezone'=>'Asia/Qyzylorda','weekday_mask'=>127,'starts_time'=>null,'ends_time'=>null,'access_kind'=>'role','required_value'=>'admin','starts_at'=>null,'ends_at'=>null];
+ check(commerce_secret_rule_matches($pdo,$secretRuleWindow,null,'',true), 'unscheduled Secret Menu rules remain valid');
+ $secretRuleWindow['starts_at']='2999-01-01 00:00:00'; check(!commerce_secret_rule_matches($pdo,$secretRuleWindow,null,'',true), 'Secret Menu access is denied before a rule start date');
+ $secretRuleWindow['starts_at']=null; $secretRuleWindow['ends_at']='2000-01-01 00:00:00'; check(!commerce_secret_rule_matches($pdo,$secretRuleWindow,null,'',true), 'Secret Menu access is denied after a rule end date');
+ $secretRuleValue='QA'.strtoupper(bin2hex(random_bytes(4)));
+ [$status,$marketingHtml]=request('/admin-marketing.php',['csrf'=>$marketingCsrf,'action'=>'secret-rule-save','campaign_id'=>(string)$secretCampaignId,'access_kind'=>'code','required_value'=>$secretRuleValue,'starts_at'=>'','ends_at'=>'','active'=>'on']);
+ check($status===200 && str_contains($marketingHtml,'код доступа связан с кампанией'), 'admin can create a Secret Menu access rule with a linked promo code');
+ $secretRuleId=(int)$pdo->query('SELECT id FROM secret_menu_rules WHERE required_value='.$pdo->quote($secretRuleValue).' ORDER BY id DESC LIMIT 1')->fetchColumn(); check($secretRuleId>0, 'Secret Menu rule persisted');
+ check((int)$pdo->query('SELECT COUNT(*) FROM promo_codes WHERE code='.$pdo->quote($secretRuleValue).' AND campaign_id='.$secretCampaignId.' AND active=1')->fetchColumn()===1, 'saving a code rule provisions its active campaign promo code');
+ $secretRuleQuery=$pdo->prepare('SELECT r.*,c.active AS campaign_active,c.starts_at AS campaign_start,c.ends_at AS campaign_end,c.timezone,c.weekday_mask,c.starts_time,c.ends_time FROM secret_menu_rules r JOIN promotion_campaigns c ON c.id=r.campaign_id WHERE r.id=?');$secretRuleQuery->execute([$secretRuleId]);$provisionedSecretRule=$secretRuleQuery->fetch(PDO::FETCH_ASSOC);
+ // Finish this read before the HTTP request mutates the row on another SQLite connection.
+ $secretRuleQuery->closeCursor();
+ check($provisionedSecretRule&&commerce_secret_rule_matches($pdo,$provisionedSecretRule,null,$secretRuleValue,false), 'new admin-created Secret Menu code passes the server access check');
+ $marketingCsrf=tokenFrom($marketingHtml); check(str_contains($marketingHtml,'name="id" value="'.$secretRuleId.'"'), 'existing Secret Menu rules expose an edit form');
+ [$status,$marketingHtml]=request('/admin-marketing.php',['csrf'=>$marketingCsrf,'action'=>'secret-rule-save','id'=>(string)$secretRuleId,'campaign_id'=>(string)$secretCampaignId,'access_kind'=>'tier','required_value'=>'gold','starts_at'=>'2026-11-16T15:00','ends_at'=>'2027-01-01T00:00','active'=>'on']);
+ // Reopen after this HTTP write to release any earlier WAL snapshot held by the rule matcher.
+ unset($pdo, $secretRuleQuery);
+ $pdo = freshTestDatabase($dbPath);
+ $editedSecretRule=$pdo->query("SELECT access_kind,required_value,starts_at FROM secret_menu_rules WHERE id=$secretRuleId")->fetch(PDO::FETCH_ASSOC);
+ preg_match('~<p class="form-status error" role="alert">(.*?)</p>~s', $marketingHtml, $secretRuleErrorMatch);
+ $secretRuleError = html_entity_decode(strip_tags($secretRuleErrorMatch[1] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+ preg_match('~<p class="booking-confirmation-notice" role="status">(.*?)</p>~s', $marketingHtml, $secretRuleNoticeMatch);
+ $secretRuleNotice = html_entity_decode(strip_tags($secretRuleNoticeMatch[1] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+ $campaignSecretRules = $pdo->prepare('SELECT id,access_kind,required_value,starts_at FROM secret_menu_rules WHERE campaign_id=? ORDER BY id');
+ $campaignSecretRules->execute([$secretCampaignId]);
+ check($status===200 && $editedSecretRule && $editedSecretRule['access_kind']==='tier' && $editedSecretRule['required_value']==='gold' && $editedSecretRule['starts_at']==='2026-11-16 15:00:00', 'admin can edit rule type and validates local schedule values (HTTP '.$status.'; target='.json_encode($editedSecretRule,JSON_UNESCAPED_UNICODE).'; campaign_rules='.json_encode($campaignSecretRules->fetchAll(PDO::FETCH_ASSOC),JSON_UNESCAPED_UNICODE).'; error='.$secretRuleError.'; notice='.$secretRuleNotice.')');
+ $campaignSecretRules->closeCursor();
+ $marketingCsrf=tokenFrom($marketingHtml);
+ [$status,$marketingError]=request('/admin-marketing.php',['csrf'=>$marketingCsrf,'action'=>'secret-rule-save','id'=>(string)$secretRuleId,'campaign_id'=>(string)$secretCampaignId,'access_kind'=>'tier','required_value'=>'gold','starts_at'=>'2026-02-30T12:00','ends_at'=>'2027-01-01T00:00','active'=>'on']);
+ check($status===200 && str_contains($marketingError,'корректные местные дату и время'), 'invalid calendar dates cannot be stored for Secret Menu rules');
+ $marketingCsrf=tokenFrom($marketingError);
+ [$status,$marketingHtml]=request('/admin-marketing.php',['csrf'=>$marketingCsrf,'action'=>'secret-rule-toggle','id'=>(string)$secretRuleId]);
+ // Drop this segment's read snapshot before checking the update from the HTTP worker.
+ unset($pdo, $campaignSecretRules);
+ $pdo = freshTestDatabase($dbPath);
+ check($status===200 && (int)$pdo->query("SELECT active FROM secret_menu_rules WHERE id=$secretRuleId")->fetchColumn()===0, 'admin can disable an existing Secret Menu rule');
+ $csrf=tokenFrom($html);
+ [$status,$settingsHtml]=request('/admin.php');$settingsCsrf=tokenFrom($settingsHtml);$settingsKeys=['site_name','meta_title','meta_description','hero_eyebrow','hero_title','hero_text','address','phone','hours','instagram'];$settingsFields=['csrf'=>$settingsCsrf,'action'=>'settings'];foreach($settingsKeys as $settingsKey)$settingsFields[$settingsKey]=(string)testDatabaseValue($dbPath,'SELECT value FROM settings WHERE key=?',[$settingsKey]);$originalDeliveryFee=(string)testDatabaseValue($dbPath,'SELECT value FROM settings WHERE key=?',['delivery_fee']);$settingsFields['delivery_fee']='1450';[$status,$savedSettingsHtml]=adminPost($settingsFields);check($status===200&&(string)testDatabaseValue($dbPath,'SELECT value FROM settings WHERE key=?',['delivery_fee'])==='1450'&&str_contains($savedSettingsHtml,'Стоимость доставки'),'admin can configure the server-authoritative delivery tariff');
+  $deliveryCampaignSlug='qa-delivery-'.bin2hex(random_bytes(4));$deliveryCode='SHIP'.strtoupper(bin2hex(random_bytes(4)));$deliveryCampaign=$pdo->prepare("INSERT INTO promotion_campaigns(slug,campaign_type,title,reward_type,reward_value,active,stackable) VALUES(?,'exclusive','Доставка QA','free_delivery',0,1,0)");$deliveryCampaign->execute([$deliveryCampaignSlug]);$deliveryCampaign->closeCursor();unset($deliveryCampaign);$deliveryCampaignId=(int)$pdo->lastInsertId();$pdo->prepare('INSERT INTO promo_codes(code,campaign_id,active) VALUES(?,?,1)')->execute([$deliveryCode,$deliveryCampaignId]);$deliveryDishId=(int)$pdo->query('SELECT id FROM dishes WHERE active=1 ORDER BY id LIMIT 1')->fetchColumn();$deliveryQuote=commerce_quote($pdo,[['id'=>$deliveryDishId,'qty'=>1]],[],$deliveryCode,'delivery',null,commerce_actor_key(null,session_id()));check($deliveryQuote['ok']&&$deliveryQuote['delivery_fee']===1450&&$deliveryQuote['discount_total']===1450&&$deliveryQuote['total']===$deliveryQuote['subtotal'],'free-delivery promotion deducts the configurable delivery tariff on the server');$pdo->prepare('DELETE FROM promo_codes WHERE code=?')->execute([$deliveryCode]);$pdo->prepare('DELETE FROM promotion_campaigns WHERE id=?')->execute([$deliveryCampaignId]);
+ $invalidSettings=$settingsFields;$invalidSettings['csrf']=tokenFrom($savedSettingsHtml);$invalidSettings['delivery_fee']='-1';[$status,$invalidSettingsHtml]=request('/admin.php',$invalidSettings);check($status===200&&str_contains($invalidSettingsHtml,'от 0 до 100 000')&&(string)testDatabaseValue($dbPath,'SELECT value FROM settings WHERE key=?',['delivery_fee'])==='1450','admin rejects an invalid delivery tariff without changing the saved value');
+ $restoreSettings=$settingsFields;$restoreSettings['csrf']=tokenFrom($invalidSettingsHtml);$restoreSettings['delivery_fee']=$originalDeliveryFee;[$restoreStatus]=adminPost($restoreSettings);if($restoreStatus!==200)throw new RuntimeException('Could not restore the original delivery setting after test.');
+ [$status,$adminPageAfterSettings]=request('/admin.php');$csrf=tokenFrom($adminPageAfterSettings);
+ [$status,$pairingHtml,$pairingHeaders,$pairingPostStatus]=adminPost(['csrf'=>$csrf,'action'=>'pairing-save','dish_id'=>'3','paired_dish_id'=>'20','pairing_type'=>'drink','sort_order'=>'7']);
+ check($status===200 && $pairingPostStatus===302 && str_contains($pairingHtml,'Сочетание добавлено.'), 'admin can add or reorder a catalogue pairing');
+ check((int)testDatabaseValue($dbPath,"SELECT sort_order FROM dish_pairings WHERE dish_id=3 AND paired_dish_id=20 AND pairing_type='drink'")===7, 'pairing order persists in SQLite');
+ $csrf=tokenFrom($pairingHtml);
+ [$status,$pairingHtml,$pairingHeaders,$pairingPostStatus]=adminPost(['csrf'=>$csrf,'action'=>'pairing-save','dish_id'=>'3','paired_dish_id'=>'20','old_type'=>'drink','pairing_type'=>'sauce','sort_order'=>'8']);
+ check($status===200 && $pairingPostStatus===302 && (int)testDatabaseValue($dbPath,"SELECT COUNT(*) FROM dish_pairings WHERE dish_id=3 AND paired_dish_id=20 AND pairing_type='sauce' AND sort_order=8")===1, 'admin changes a pairing type transactionally');
+ $csrf=tokenFrom($pairingHtml);
+ [$status,$pairingError]=request('/admin.php',['csrf'=>$csrf,'action'=>'pairing-save','dish_id'=>'3','paired_dish_id'=>'3','pairing_type'=>'drink','sort_order'=>'9']);
+ check($status===200 && str_contains($pairingError,'Выберите два разных блюда'), 'admin cannot create a self pairing');
+ [$status,$pairingHtml]=request('/admin.php');
+ $csrf=tokenFrom($pairingHtml);
+ [$status,$pairingHtml,$pairingHeaders,$pairingPostStatus]=adminPost(['csrf'=>$csrf,'action'=>'pairing-delete','dish_id'=>'3','paired_dish_id'=>'20','pairing_type'=>'sauce']);
+ check($status===200 && $pairingPostStatus===302 && (int)testDatabaseValue($dbPath,"SELECT COUNT(*) FROM dish_pairings WHERE dish_id=3 AND paired_dish_id=20 AND pairing_type='sauce'")===0, 'admin can delete a pairing');
+ $csrf=tokenFrom($html);
  $save=['csrf'=>$csrf,'action'=>'dish-save','category'=>'rolls','name'=>'Тестовый ролл','description'=>'Описание для проверки','weight'=>'200 г','price'=>'3450','image_url'=>'assets/food/01-philadelphia.webp','sort_order'=>'99','active'=>'on'];
  [$status,$html,$headers,$postStatus]=adminPost($save); check($status===200 && $postStatus===302 && str_contains($html,'Блюдо добавлено в меню'), 'dish create uses PRG and accepts an existing local webp');
- $dish=(int)$pdo->query("SELECT id FROM dishes WHERE name='Тестовый ролл'")->fetchColumn(); check($dish>0, 'created dish persisted');
+ $dish=(int)testDatabaseValue($dbPath,'SELECT id FROM dishes WHERE name=?',['Тестовый ролл']); check($dish>0, 'created dish persisted');
  $csrf=tokenFrom($html);
  [$status,$html]=adminPost(['csrf'=>$csrf,'action'=>'admin-search','q'=>'тЕСТовый']);
  check($status===200 && str_contains($html,'Тестовый ролл') && str_contains($html,'Результаты по запросу'), 'admin search finds Russian text regardless of case');
  $csrf=tokenFrom($html); $edit=$save; $edit['id']=(string)$dish; $edit['description']='Обновлённое описание'; $edit['price']='3750'; $edit['image_url']='https://images.unsplash.com/photo-1?auto=format&fit=crop&w=800'; $edit['active']='on';
  [$status,$html]=adminPost($edit); check(str_contains($html,'Изменения блюда сохранены'), 'dish edit accepts approved HTTPS image');
- $row=$pdo->query('SELECT description,price,image_url FROM dishes WHERE id='.$dish)->fetch(PDO::FETCH_ASSOC); check($row['description']==='Обновлённое описание' && (int)$row['price']===3750 && str_starts_with($row['image_url'],'https://images.unsplash.com/'), 'description, price, image update persisted');
+ $row=testDatabaseRow($dbPath,'SELECT description,price,image_url FROM dishes WHERE id=?',[$dish]); check($row!==null && $row['description']==='Обновлённое описание' && (int)$row['price']===3750 && str_starts_with($row['image_url'],'https://images.unsplash.com/'), 'description, price, image update persisted');
  foreach (['/../bootstrap.php','//evil.example/x.webp','javascript:alert(1)','https://evil.example/x.webp','https://images.unsplash.com/../../x.webp'] as $bad) { $csrf=tokenFrom($html); $badSave=$edit; $badSave['csrf']=$csrf; $badSave['image_url']=$bad; [$status,$html]=request('/admin.php',$badSave); check(str_contains($html,'Проверьте название, категорию, цену и фото'), 'reject unsafe image: '.$bad); }
- $csrf=tokenFrom($html); $hide=$edit; $hide['csrf']=$csrf; unset($hide['active']); [$status,$html]=adminPost($hide); check(str_contains($html,'Изменения блюда сохранены'), 'dish can be hidden'); check((int)$pdo->query('SELECT active FROM dishes WHERE id='.$dish)->fetchColumn()===0, 'hidden flag persisted');
+ $csrf=tokenFrom($html); $hide=$edit; $hide['csrf']=$csrf; unset($hide['active']); [$status,$html]=adminPost($hide); check(str_contains($html,'Изменения блюда сохранены'), 'dish can be hidden'); check((int)testDatabaseValue($dbPath,'SELECT active FROM dishes WHERE id=?',[$dish])===0, 'hidden flag persisted');
  [$status,$json]=request('/api.php',['csrf'=>$csrf,'type'=>'order','name'=>'Тестовый гость','phone'=>'+77010000000','fulfillment'=>'pickup','items'=>json_encode([['id'=>$dish,'qty'=>1,'price'=>1]])]); check($status===422, 'hidden dish cannot be ordered');
  $csrf=tokenFrom($html); $edit['csrf']=$csrf; $edit['image_url']='assets/food/01-philadelphia.webp'; $edit['active']='on'; [$status,$html]=adminPost($edit); check(str_contains($html,'Изменения блюда сохранены'), 'dish can be reactivated'); $csrf=tokenFrom($html);
- $demoQuote=commerce_quote($pdo,[['id'=>$dish,'qty'=>2]],[],'DEMO10','pickup',null,commerce_actor_key(null,session_id())); check($demoQuote['ok']&&$demoQuote['discount_total']===750&&$demoQuote['total']===6750, 'server promo quote recalculates the current catalog price and cap');
- $invalidQuote=commerce_quote($pdo,[['id'=>$dish,'qty'=>1]],[],'NOT-A-CODE','pickup',null,commerce_actor_key(null,session_id())); check(!$invalidQuote['ok']&&str_contains($invalidQuote['message'],'Промокод не найден'), 'unknown promo code is rejected by server quote validation');
+ // Quote through the same HTTP endpoint as checkout after the admin worker changed the catalog row.
+ $quoteFields=['csrf'=>$csrf,'type'=>'offer_quote','items'=>json_encode([['id'=>$dish,'qty'=>2]]),'custom_sets'=>'[]','promo_code'=>'DEMO10','fulfillment'=>'pickup','points_to_redeem'=>'0','gift_quantity'=>'1'];
+ [$quoteStatus,$demoQuoteBody]=request('/api.php',$quoteFields); $demoQuote=json_decode($demoQuoteBody,true);
+ check($quoteStatus===200&&($demoQuote['ok']??false)&&($demoQuote['discount_total']??null)===750&&($demoQuote['total']??null)===6750, 'server promo quote recalculates the current catalog price and cap (HTTP '.$quoteStatus.'; '.substr((string)$demoQuoteBody,0,360).')');
+ $invalidQuoteFields=$quoteFields; $invalidQuoteFields['items']=json_encode([['id'=>$dish,'qty'=>1]]); $invalidQuoteFields['promo_code']='NOT-A-CODE';
+ [$invalidQuoteStatus,$invalidQuoteBody]=request('/api.php',$invalidQuoteFields); $invalidQuote=json_decode($invalidQuoteBody,true);
+ check($invalidQuoteStatus===422&&str_contains((string)($invalidQuote['message']??''),'Промокод не найден'), 'unknown promo code is rejected by server quote validation');
  $setCandidates=$pdo->query('SELECT id,price FROM dishes WHERE active=1 AND id NOT IN (17,18) ORDER BY id LIMIT 3')->fetchAll(PDO::FETCH_ASSOC); check(count($setCandidates)===3,'custom-set integration fixture has three active public dishes');
  $setItems=[]; $setExpectedSubtotal=0; foreach($setCandidates as $index=>$candidate){$quantity=$index===0?2:1;$setItems[]=['id'=>(int)$candidate['id'],'qty'=>$quantity,'price'=>1];$setExpectedSubtotal+=(int)$candidate['price']*$quantity;}
  $serverSet=['variant'=>'signature','items'=>$setItems]; $setQuote=commerce_quote($pdo,[],[$serverSet],'','pickup',null,commerce_actor_key(null,session_id())); check($setQuote['ok']&&$setQuote['subtotal']===$setExpectedSubtotal&&$setQuote['custom_sets'][0]['subtotal']===$setExpectedSubtotal,'custom-set quote ignores forged client prices and recomputes each component from the active catalog');
@@ -177,28 +399,25 @@ try {
  [$status,$body]=request('/api.php',$orderFields,['Idempotency-Key'=>'integration-order-key-0001']); $first=json_decode($body,true); check($status===201 && $first['ok'], 'valid pickup order succeeds with no address');
  [$status,$body2]=request('/api.php',$orderFields,['Idempotency-Key'=>'integration-order-key-0001']); $second=json_decode($body2,true); check($status===201 && $second['id']===$first['id'], 'same idempotency key replays original order');
  $orderReadPdo=freshTestDatabase($dbPath); $order=$orderReadPdo->query('SELECT total FROM orders WHERE id='.(int)$first['id'])->fetchColumn(); check((int)$order===7500, 'server price used, client price ignored'); check((int)$orderReadPdo->query('SELECT COUNT(*) FROM orders WHERE id='.(int)$first['id'])->fetchColumn()===1, 'retry created no second order');
- unset($setReadPdo,$orderReadPdo,$pdo); gc_collect_cycles(); $pdo=freshTestDatabase($dbPath);
- $concurrentKey='integration-concurrent-order-'.bin2hex(random_bytes(8));
- $parallel=parallelOrderRequests($orderFields,$concurrentKey,6); $parallelIds=[];
- foreach($parallel as [$parallelStatus,$parallelBody]){$parallelResult=json_decode($parallelBody,true);check($parallelStatus===201&&$parallelResult['ok'],'concurrent same-key order request returns the committed result');$parallelIds[]=(int)$parallelResult['id'];}
- check(count(array_unique($parallelIds))===1,'six concurrent requests with one key resolve to one order id');
- $concurrentId=$parallelIds[0];$concurrentReadPdo=freshTestDatabase($dbPath);check((int)$concurrentReadPdo->query('SELECT COUNT(*) FROM orders WHERE id='.$concurrentId)->fetchColumn()===1,'concurrent key creates exactly one order');check((int)$concurrentReadPdo->query('SELECT COUNT(*) FROM order_items WHERE order_id='.$concurrentId)->fetchColumn()===1,'concurrent key creates one order line snapshot');
- $concurrentToken=hash('sha256',substr($cookie,strlen('tokyo_session=')).'|order|'.$concurrentKey);$idem=$concurrentReadPdo->prepare('SELECT order_id,response_status FROM api_order_requests WHERE token=?');$idem->execute([$concurrentToken]);$idemRow=$idem->fetch();$idem->closeCursor();check((int)$idemRow['order_id']===$concurrentId&&(int)$idemRow['response_status']===201,'idempotency reservation and replay result point to the one committed order');
- $rollbackKey='integration-rollback-order-'.bin2hex(random_bytes(8));$pdo->exec("CREATE TRIGGER test_fail_order_line BEFORE INSERT ON order_items BEGIN SELECT RAISE(ABORT, 'forced test rollback'); END");[$failedStatus]=request('/api.php',$orderFields,['Idempotency-Key'=>$rollbackKey]);check($failedStatus===500,'forced item insert error reports failure');$pdo->exec('DROP TRIGGER test_fail_order_line');
- $rollbackToken=hash('sha256',substr($cookie,strlen('tokyo_session=')).'|order|'.$rollbackKey);$rollbackReadPdo=freshTestDatabase($dbPath);$q=$rollbackReadPdo->prepare('SELECT COUNT(*) FROM api_order_requests WHERE token=?');$q->execute([$rollbackToken]);$reservationCount=(int)$q->fetchColumn();$q->closeCursor();check($reservationCount===0,'failed transaction leaves no idempotency reservation');check((int)$rollbackReadPdo->query("SELECT COUNT(*) FROM orders WHERE id NOT IN (".(int)$first['id'].','.$concurrentId.','.$setOrderId.')')->fetchColumn()===0,'failed transaction leaves no partial order');
- [$status,$rollbackRetryBody]=request('/api.php',$orderFields,['Idempotency-Key'=>$rollbackKey]);$rollbackRetry=json_decode($rollbackRetryBody,true);check($status===201&&$rollbackRetry['ok'],'same key can succeed after the failed transaction rolled back (HTTP '.$status.'): '.$rollbackRetryBody);check((int)freshTestDatabase($dbPath)->query('SELECT COUNT(*) FROM order_items WHERE order_id='.(int)$rollbackRetry['id'])->fetchColumn()===1,'successful retry persists exactly one item');
- $independentKey='integration-independent-order-'.bin2hex(random_bytes(8));[$status,$independentBody]=request('/api.php',$orderFields,['Idempotency-Key'=>$independentKey]);$independent=json_decode($independentBody,true);check($status===201&&$independent['ok']&&(int)$independent['id']!==$concurrentId,'independent idempotency key creates a separate order');
- $giftSlug='qa-threshold-'.bin2hex(random_bytes(4)); $q=$pdo->prepare("INSERT INTO promotion_campaigns(slug,campaign_type,title,description,reward_type,minimum_subtotal,maximum_discount,active,stackable,demo_only) VALUES(?,'gift_threshold','QA gift threshold','Integration-only gift','gift_dish',7500,0,1,0,1)"); $q->execute([$giftSlug]); $giftCampaignId=(int)$pdo->lastInsertId(); $pdo->prepare('INSERT INTO campaign_gift_options(campaign_id,dish_id,remaining_quantity,max_per_order,active) VALUES(?,?,1,1,1)')->execute([$giftCampaignId,2]);
+ unset($setLineQuery,$setComponentQuery,$setReadPdo,$orderReadPdo,$pdo); gc_collect_cycles(); $pdo=freshTestDatabase($dbPath);
+  // Parallel order requests run after every direct fixture write below.
+   unset($pdo);gc_collect_cycles();$giftSlug='qa-threshold-'.bin2hex(random_bytes(4));[$status,$giftAdminPage]=request('/admin-marketing.php');$giftAdminCsrf=tokenFrom($giftAdminPage);$giftCampaignFields=['csrf'=>$giftAdminCsrf,'action'=>'campaign-save','slug'=>$giftSlug,'campaign_type'=>'gift_threshold','title'=>'QA gift threshold','description'=>'Integration-only gift','reward_type'=>'gift_dish','reward_value'=>'0','gift_dish_id'=>'2','gift_quantity'=>'3','gift_max_per_order'=>'2','minimum_subtotal'=>'7500','maximum_discount'=>'0','starts_at'=>'','ends_at'=>'','starts_time'=>'','ends_time'=>'','image_url'=>'assets/generated/room-main-hall.webp','required_tier'=>'','sort_order'=>'50','active'=>'on','target_include'=>'','target_exclude'=>''];[$giftCreateStatus,$giftAdminSaved]=request('/admin-marketing.php',$giftCampaignFields);$giftCampaignId=(int)testDatabaseValue($dbPath,'SELECT id FROM promotion_campaigns WHERE slug=?',[$giftSlug]);$giftOption=testDatabaseRow($dbPath,'SELECT remaining_quantity,max_per_order FROM campaign_gift_options WHERE campaign_id=? AND dish_id=?',[$giftCampaignId,2]);$pdo=freshTestDatabase($dbPath);check($giftCreateStatus===200&&str_contains($giftAdminSaved,'Кампания создана как учебная демонстрация')&&$giftCampaignId>0&&$giftOption!==null&&(int)$giftOption['remaining_quantity']===3&&(int)$giftOption['max_per_order']===2,'marketing admin stores the gift stock and per-order limit in the campaign transaction');
+ $apiGiftQuoteFields=['csrf'=>$csrf,'type'=>'offer_quote','items'=>json_encode([['id'=>$dish,'qty'=>2]]),'custom_sets'=>'[]','fulfillment'=>'pickup','gift_dish_id'=>'2','gift_quantity'=>'2']; [$apiGiftQuoteStatus,$apiGiftQuoteBody]=request('/api.php',$apiGiftQuoteFields); $apiGiftQuote=json_decode($apiGiftQuoteBody,true); $apiGiftOption=null; foreach(($apiGiftQuote['gift_options']??[]) as $candidate) if((int)($candidate['id']??0)===2) $apiGiftOption=$candidate; $apiGiftItem=null; foreach(($apiGiftQuote['gift_items']??[]) as $candidate) if((int)($candidate['id']??0)===2) $apiGiftItem=$candidate; check($apiGiftQuoteStatus===200&&($apiGiftQuote['ok']??false)&&(int)($apiGiftOption['max_per_order']??0)===2&&(int)($apiGiftOption['remaining_quantity']??0)===3&&(int)($apiGiftItem['quantity']??0)===2,'offer quote exposes gift limits and accepts quantity two');
+ $forgedGiftQuote=$apiGiftQuoteFields; $forgedGiftQuote['gift_quantity']='3'; [$forgedGiftQuoteStatus]=request('/api.php',$forgedGiftQuote); check($forgedGiftQuoteStatus===422,'offer quote rejects a quantity above max_per_order');
  $suppressedGiftQuote=commerce_quote($pdo,[['id'=>$dish,'qty'=>2]],[],'DEMO10','pickup',null,commerce_actor_key(null,session_id())); check($suppressedGiftQuote['ok']&&$suppressedGiftQuote['discount_total']===750&&!$suppressedGiftQuote['gift_items'],'non-stackable promo does not silently combine with a threshold gift');
  $explicitGiftQuote=commerce_quote($pdo,[['id'=>$dish,'qty'=>2]],[],'DEMO10','pickup',null,commerce_actor_key(null,session_id()),2); check(!$explicitGiftQuote['ok']&&str_contains($explicitGiftQuote['message'],'нельзя сочетать'),'client cannot force a non-stackable gift with a promo');
  $pdo->exec("UPDATE promotion_campaigns SET stackable=1 WHERE slug='demo-privilege'"); $promoStackOnly=commerce_quote($pdo,[['id'=>$dish,'qty'=>2]],[],'DEMO10','pickup',null,commerce_actor_key(null,session_id())); check($promoStackOnly['ok']&&!$promoStackOnly['gift_items'],'both campaigns must allow stacking before a threshold gift is offered');
  $pdo->prepare('UPDATE promotion_campaigns SET stackable=1 WHERE id=?')->execute([$giftCampaignId]); $stackableGiftQuote=commerce_quote($pdo,[['id'=>$dish,'qty'=>2]],[],'DEMO10','pickup',null,commerce_actor_key(null,session_id())); check($stackableGiftQuote['ok']&&count($stackableGiftQuote['gift_items'])===1&&$stackableGiftQuote['discount_total']===750,'compatible campaigns can combine only when both explicitly allow stacking');
- $giftOrderFields=$orderFields; $giftOrderFields['promo_code']='DEMO10'; $giftOrderFields['gift_dish_id']='2'; [$status,$giftOrderBody]=request('/api.php',$giftOrderFields,['Idempotency-Key'=>'integration-gift-order-0001']); $giftOrder=json_decode($giftOrderBody,true); $giftDiscount=$giftOrder['discount_total']??null; check($status===201&&($giftOrder['ok']??false)&&is_numeric($giftDiscount)&&(float)$giftDiscount===750.0,'order persists a server-validated compatible promo and gift (HTTP '.$status.'; body '.substr((string)$giftOrderBody,0,500).')');
+ $giftOrderFields=$orderFields; $giftOrderFields['promo_code']='DEMO10'; $giftOrderFields['gift_dish_id']='2'; $giftOrderFields['gift_quantity']='2'; [$status,$giftOrderBody]=request('/api.php',$giftOrderFields,['Idempotency-Key'=>'integration-gift-order-0001']); $giftOrder=json_decode($giftOrderBody,true); $giftDiscount=$giftOrder['discount_total']??null; check($status===201&&($giftOrder['ok']??false)&&is_numeric($giftDiscount)&&(float)$giftDiscount===750.0,'order persists a server-validated compatible promo and gift quantity two (HTTP '.$status.'; body '.substr((string)$giftOrderBody,0,500).')');
+ unset($pdo); gc_collect_cycles(); $pdo=freshTestDatabase($dbPath);
+ $savedGiftLine=$pdo->prepare("SELECT quantity FROM order_items WHERE order_id=? AND dish_id=2 AND item_name LIKE 'Подарок · %'"); $savedGiftLine->execute([(int)$giftOrder['id']]); check((int)$savedGiftLine->fetchColumn()===2,'HTTP checkout stores two gift units on the order line');
+ [$promoAdminStatus,$promoAdminHtml]=request('/admin-marketing.php#codes'); $demoPromoUses=(int)testDatabaseValue($dbPath,'SELECT uses_count FROM promo_codes WHERE code=?',['DEMO10']); check($promoAdminStatus===200&&str_contains($promoAdminHtml,'data-promo-code="DEMO10"')&&str_contains($promoAdminHtml,'Использован <strong>'.$demoPromoUses.'</strong> из <strong>500</strong>')&&str_contains($promoAdminHtml,'На пользователя: <strong>1</strong>')&&str_contains($promoAdminHtml,'Изменить условия')&&str_contains($promoAdminHtml,'maximum_uses_per_user')&&str_contains($promoAdminHtml,'readonly'),'marketing admin shows the live redemption count and opens a prefilled editor for promo limits');
+ $overLimitOrder=$giftOrderFields; $overLimitOrder['gift_quantity']='3'; $ordersBeforeGiftLimit=(int)$pdo->query('SELECT COUNT(*) FROM orders')->fetchColumn(); [$overLimitStatus]=request('/api.php',$overLimitOrder,['Idempotency-Key'=>'integration-gift-overlimit-order-0001']); check($overLimitStatus===422&&(int)$pdo->query('SELECT COUNT(*) FROM orders')->fetchColumn()===$ordersBeforeGiftLimit,'checkout rejects above-limit gift quantity without creating an order');
  // Read committed state through a new handle rather than a long-lived test
  // connection, which may retain a WAL snapshot from earlier quote assertions.
  unset($q, $pdo);
  $pdo = freshTestDatabase($dbPath);
- $stockQuery=$pdo->prepare('SELECT remaining_quantity FROM campaign_gift_options WHERE campaign_id=? AND dish_id=2'); $stockQuery->execute([$giftCampaignId]); check((int)$stockQuery->fetchColumn()===0,'gift stock decrements exactly once inside the committed order transaction'); $stockQuery->closeCursor(); $outOfStock=commerce_quote($pdo,[['id'=>$dish,'qty'=>2]],[],'','pickup',null,commerce_actor_key(null,session_id()),2); check(!$outOfStock['ok'],'gift cannot be selected after its stock is exhausted'); $pdo->exec("UPDATE promotion_campaigns SET stackable=0 WHERE slug='demo-privilege'");
+ $stockQuery=$pdo->prepare('SELECT remaining_quantity FROM campaign_gift_options WHERE campaign_id=? AND dish_id=2'); $stockQuery->execute([$giftCampaignId]); check((int)$stockQuery->fetchColumn()===1,'gift stock decrements by the persisted quantity inside the committed order transaction'); $stockQuery->closeCursor(); $outOfStock=commerce_quote($pdo,[['id'=>$dish,'qty'=>2]],[],'','pickup',null,commerce_actor_key(null,session_id()),2,0,'',false,2); check(!$outOfStock['ok'],'gift cannot be selected when the remaining stock is below the requested quantity'); $pdo->exec("UPDATE promotion_campaigns SET stackable=0 WHERE slug='demo-privilege'");
  $savedCookie=$cookie; $cookie=''; [$status,$offersPage]=request('/offers.php'); check($status===200&&str_contains($offersPage,'data-tp-secret-unlock'),'unauthenticated guest can reach the Secret Menu access form'); $guestCsrf=tokenFrom($offersPage);
  [$status,$publicMenu]=request('/menu.php'); check($status===200&&!str_contains($publicMenu,'data-id="17"')&&!str_contains($publicMenu,'data-id="18"'),'locked Secret Menu positions are absent from public menu cards');
  [$status,$lockedDetail]=request('/pages.php?page=dish&id=17'); check($status===404&&str_contains($lockedDetail,'Блюдо не найдено'),'direct dish route does not reveal a locked Secret Menu item');
@@ -220,6 +439,33 @@ try {
  [$status]=request('/account.php',['csrf'=>$accountCsrf,'action'=>'register','name'=>'Demo QA','email'=>$accountEmail,'password'=>'Strong-test-password-123']);
  [$status,$accountHtml]=request('/account.php');
  check($status===200 && str_contains($accountHtml,'Здравствуйте, Demo QA'), 'account registration creates a logged-in profile');
+ $inviterLookup=$pdo->prepare('SELECT id FROM users WHERE email=?'); $inviterLookup->execute([$accountEmail]); $profileUserId=(int)$inviterLookup->fetchColumn();
+ $referralCode=commerce_referral_code_for_user($pdo,$profileUserId);
+ check((bool)preg_match('/^TP[A-F0-9]{10}$/',$referralCode)&&commerce_referral_code_for_user($pdo,$profileUserId)===$referralCode,'server stores one stable personal referral code per inviter');
+ check(str_contains($accountHtml,'data-copy-invite=')&&str_contains($accountHtml,'account.php?ref='.$referralCode),'account exposes a same-origin referral link and copy control');
+ $inviterCookie=$cookie; $cookie=''; $invitePath='/account.php?ref='.rawurlencode($referralCode);
+ [$status,$inviteLanding]=request($invitePath); $inviteCsrf=tokenFrom($inviteLanding);
+ check($status===200&&str_contains($inviteLanding,'name="referral_code" value="'.$referralCode.'"'),'referral link carries the validated code into guest registration');
+ $friendEmail='invitee+'.bin2hex(random_bytes(4)).'@example.test';
+ [$status,$registerBody,$registerHeaders]=request($invitePath,['csrf'=>$inviteCsrf,'action'=>'register','name'=>'Приглашённый гость','email'=>$friendEmail,'password'=>'Strong-test-password-123','referral_code'=>$referralCode]);
+ check($status===302&&str_contains(implode("\n",$registerHeaders),'ref='.$referralCode),'registration preserves the invite code for an explicit account attachment');
+ [$status,$friendPage]=request($invitePath); $friendCsrf=tokenFrom($friendPage);
+ check($status===200&&str_contains($friendPage,'name="referral_code" value="'.$referralCode.'"'),'registered invitee sees the code prefilled before attaching it');
+ [$status,$friendPage]=request($invitePath,['csrf'=>$friendCsrf,'action'=>'referral-attach','referral_code'=>$referralCode]);
+ $friendCheck=freshTestDatabase($dbPath); $friendLookup=$friendCheck->prepare('SELECT id FROM users WHERE email=?'); $friendLookup->execute([$friendEmail]); $referredFriendId=(int)$friendLookup->fetchColumn(); $friendLookup->closeCursor();
+ $friendReferralCount=(int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM referrals WHERE inviter_user_id=? AND referred_user_id=?',[$profileUserId,$referredFriendId]);
+ check($status===200&&str_contains($friendPage,'Код приглашения сохранён')&&$friendReferralCount===1,'invitee attaches the referral once through the account form');
+ $friendCheck=null;
+ check(commerce_attach_referral(freshTestDatabase($dbPath),$referredFriendId,$referralCode)&&(int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM referrals WHERE referred_user_id=?',[$referredFriendId])===1,'retrying the same referral attachment is idempotent');
+ $secondFriendEmail='invitee2+'.bin2hex(random_bytes(4)).'@example.test'; $referralDb=freshTestDatabase($dbPath); $referralDb->prepare('INSERT INTO users(email,full_name,password_hash) VALUES(?,?,?)')->execute([$secondFriendEmail,'Второй приглашённый',password_hash('Strong-test-password-123',PASSWORD_DEFAULT)]); $secondFriendId=(int)$referralDb->lastInsertId();
+ check(commerce_attach_referral($referralDb,$secondFriendId,$referralCode)&&(int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM referrals WHERE inviter_user_id=? AND referred_user_id IS NOT NULL',[$profileUserId])===2,'one personal referral code can invite multiple different accounts');
+ $selfInviteRejected=false; try { commerce_attach_referral(freshTestDatabase($dbPath),$profileUserId,$referralCode); } catch (DomainException $error) { $selfInviteRejected=str_contains($error->getMessage(),'самого себя'); }
+ check($selfInviteRejected,'referral system rejects self-invitation');
+ $otherReferralCode=commerce_referral_code_for_user(freshTestDatabase($dbPath),$secondFriendId); $conflictingInviteRejected=false;
+ try { commerce_attach_referral(freshTestDatabase($dbPath),$referredFriendId,$otherReferralCode); } catch (DomainException $error) { $conflictingInviteRejected=str_contains($error->getMessage(),'уже задан'); }
+ check($conflictingInviteRejected,'an invitee cannot replace an already attached inviter');
+ $pdo=freshTestDatabase($dbPath);
+ $cookie=$inviterCookie;
  $profileOrder=$orderFields; $profileOrder['csrf']=tokenFrom($accountHtml); $profileOrder['name']='Demo QA';
  [$status,$profileOrderBody]=request('/api.php',$profileOrder,['Idempotency-Key'=>'integration-profile-order-0001']); $profileOrderResult=json_decode($profileOrderBody,true);
  check($status===201 && $profileOrderResult['ok'], 'authenticated profile order succeeds');
@@ -236,28 +482,78 @@ try {
  setTestOrderStatus($dbPath,(int)$bonusOrderResult['id'],'completed'); $afterBonusBalance=testLoyaltyBalance($dbPath,$profileUserId); check($afterBonusBalance===$restoredBalance+50+(int)floor((int)$pdo->query('SELECT price FROM dishes WHERE id='.$dish)->fetchColumn()*5/100),'completed promo order awards both base and advertised bonus points');
  setTestOrderStatus($dbPath,(int)$bonusOrderResult['id'],'ready'); setTestOrderStatus($dbPath,(int)$bonusOrderResult['id'],'completed'); check(testLoyaltyBalance($dbPath,$profileUserId)===$afterBonusBalance,'bonus-points promo is not re-awarded after a completed status toggle');
  setTestOrderStatus($dbPath,(int)$bonusOrderResult['id'],'cancelled'); check(testLoyaltyBalance($dbPath,$profileUserId)===$restoredBalance,'cancelling the bonus-points order reverses base and campaign points');
+  unset($q,$pdo); gc_collect_cycles(); $pdo=freshTestDatabase($dbPath);
+  $pdo->exec('UPDATE loyalty_settings SET enabled=1,points_per_100=0,referral_inviter_points=100,referral_friend_points=50,referral_minimum_order=500 WHERE id=1');
+ $referralInsert=$pdo->prepare("INSERT INTO orders(user_id,customer_name,phone,address,fulfillment,comment,total,status,subtotal,discount_total,delivery_fee,promo_code) VALUES(?,?,?,'','pickup','',?,'new',?,0,0,'')");
+ $referralInsert->execute([$referredFriendId,'Приглашённый гость','+77010000001',1000,1000]); $referralOrderId=(int)$pdo->lastInsertId();
+ $inviterBalanceBefore=testLoyaltyBalance($dbPath,$profileUserId); $friendBalanceBefore=testLoyaltyBalance($dbPath,$referredFriendId);
+ setTestOrderStatus($dbPath,$referralOrderId,'completed');
+ check(testLoyaltyBalance($dbPath,$profileUserId)===$inviterBalanceBefore+100&&testLoyaltyBalance($dbPath,$referredFriendId)===$friendBalanceBefore+50&&(string)testDatabaseValue($dbPath,'SELECT status FROM referrals WHERE referred_user_id=?',[$referredFriendId])==='rewarded','qualifying completed first order awards both configured referral rewards and updates its status');
+ setTestOrderStatus($dbPath,$referralOrderId,'ready'); setTestOrderStatus($dbPath,$referralOrderId,'completed');
+ check(testLoyaltyBalance($dbPath,$profileUserId)===$inviterBalanceBefore+100&&testLoyaltyBalance($dbPath,$referredFriendId)===$friendBalanceBefore+50,'repeat completion does not duplicate referral rewards');
+ setTestOrderStatus($dbPath,$referralOrderId,'cancelled');
+ check(testLoyaltyBalance($dbPath,$profileUserId)===$inviterBalanceBefore&&testLoyaltyBalance($dbPath,$referredFriendId)===$friendBalanceBefore&&(string)testDatabaseValue($dbPath,'SELECT status FROM referrals WHERE referred_user_id=?',[$referredFriendId])==='cancelled','cancelling a qualifying order reverses referral rewards for both accounts');
+ setTestOrderStatus($dbPath,$referralOrderId,'completed');
+ check(testLoyaltyBalance($dbPath,$profileUserId)===$inviterBalanceBefore+100&&testLoyaltyBalance($dbPath,$referredFriendId)===$friendBalanceBefore+50,'restoring a qualifying order reapplies referral rewards once');
+  unset($referralInsert,$pdo); gc_collect_cycles(); $pdo=freshTestDatabase($dbPath);
+  $pdo->exec('UPDATE loyalty_settings SET points_per_100=5,referral_inviter_points=0,referral_friend_points=0,referral_minimum_order=0 WHERE id=1');
  [$status,$history]=request('/account.php');
  check($status===200 && str_contains($history,'Тестовый ролл') && str_contains($history,'2 × 3 750') && str_contains($history,'Самовывоз'), 'profile history shows snapshot items, quantities, unit prices, line totals, and fulfillment');
+ $birthdayCsrf=tokenFrom($history); $invalidBirth='1992-02-30';
+ [$status,$birthdayPage]=request('/account.php',['csrf'=>$birthdayCsrf,'action'=>'profile-save','birth_date'=>$invalidBirth,'birthday_offer_consent'=>'1']);
+ $storedBirth=testDatabaseValue($dbPath,'SELECT birth_date FROM user_profiles WHERE user_id=?',[$profileUserId]);
+ check($status===200&&str_contains($birthdayPage,'Укажите корректную дату рождения')&&($storedBirth===''||$storedBirth===null),'invalid birth date and consent are rejected without storing invalid data');
+ $localToday=new DateTimeImmutable('today',commerce_timezone()); $nearBirthday=$localToday->modify('+3 days'); $birthYear=(int)$localToday->format('Y')-25; $birthDate=$nearBirthday->setDate($birthYear,(int)$nearBirthday->format('m'),(int)$nearBirthday->format('d'))->format('Y-m-d');
+  $birthdayBalanceBefore=testLoyaltyBalance($dbPath,$profileUserId);
+   unset($pdo); gc_collect_cycles(); $pdo=freshTestDatabase($dbPath); $pdo->exec('UPDATE loyalty_settings SET enabled=1,birthday_window_days=7,birthday_reward_points=75 WHERE id=1');
+  $birthdayCsrf=tokenFrom($birthdayPage); [$status,$birthdayPage]=request('/account.php',['csrf'=>$birthdayCsrf,'action'=>'profile-save','birth_date'=>$birthDate,'birthday_offer_consent'=>'1']); unset($pdo); gc_collect_cycles(); $pdo=freshTestDatabase($dbPath);
+  check($status===200&&str_contains($birthdayPage,'начислено 75 учебных бонусов')&&commerce_birthday_eligible($pdo,$profileUserId)&&testLoyaltyBalance($dbPath,$profileUserId)===$birthdayBalanceBefore+75&&(int)testDatabaseValue($dbPath,"SELECT COUNT(*) FROM loyalty_ledger WHERE user_id=? AND transaction_type='birthday'",[$profileUserId])===1,'valid date and consent award the configured birthday points once');
+  [$status,$birthdayPage]=request('/account.php');
+  check($status===200&&testLoyaltyBalance($dbPath,$profileUserId)===$birthdayBalanceBefore+75&&(int)testDatabaseValue($dbPath,"SELECT COUNT(*) FROM loyalty_ledger WHERE user_id=? AND transaction_type='birthday'",[$profileUserId])===1,'reopening the account does not duplicate birthday points');
+ $farBirthday=$localToday->modify('+20 days'); $farBirthDate=$farBirthday->setDate($birthYear,(int)$farBirthday->format('m'),(int)$farBirthday->format('d'))->format('Y-m-d');
+  $birthdayCsrf=tokenFrom($birthdayPage); [$status,$birthdayPage]=request('/account.php',['csrf'=>$birthdayCsrf,'action'=>'profile-save','birth_date'=>$farBirthDate,'birthday_offer_consent'=>'1']); unset($pdo); gc_collect_cycles(); $pdo=freshTestDatabase($dbPath);
+ check($status===200&&!commerce_birthday_eligible($pdo,$profileUserId),'birthday eligibility follows the configured window rather than any saved birthday');
+  $birthdayCsrf=tokenFrom($birthdayPage); [$status,$birthdayPage]=request('/account.php',['csrf'=>$birthdayCsrf,'action'=>'profile-save','birth_date'=>$farBirthDate]); unset($pdo); gc_collect_cycles(); $pdo=freshTestDatabase($dbPath);
+ check($status===200&&!commerce_birthday_eligible($pdo,$profileUserId)&&testDatabaseValue($dbPath,'SELECT birthday_consent_at FROM user_profiles WHERE user_id=?',[$profileUserId])===null,'withdrawing birthday-offer consent disables eligibility and clears its timestamp');
  foreach ([0,21] as $qty) { $badOrder=$orderFields; $badOrder['items']=json_encode([['id'=>$dish,'qty'=>$qty]]); [$status]=request('/api.php',$badOrder); check($status===422, 'invalid quantity rejected: '.$qty); }
  $badOrder=$orderFields; $badOrder['items']='{"id":1,"qty":2}'; [$status]=request('/api.php',$badOrder); check($status===422, 'non-list item payload rejected');
  $badOrder=$orderFields; $badOrder['items']=json_encode([['id'=>999999,'qty'=>1]]); [$status]=request('/api.php',$badOrder); check($status===422, 'unknown dish rejected');
  $future=(new DateTimeImmutable('tomorrow'))->format('Y-m-d');
- $booking=['csrf'=>$csrf,'type'=>'booking','name'=>'Тестовый гость','phone'=>'+77010000000','guests'=>'2','date'=>'2026-02-31','time'=>'19:00','format'=>'Сезонный']; [$status]=request('/api.php',$booking); check($status===422, 'impossible booking date rejected');
-  $booking['date']=$future; [$status,$body]=request('/api.php',$booking,['Idempotency-Key'=>'integration-booking-key-0001']); $book=json_decode($body,true); check($status===201 && $book['ok'] && str_contains($book['message'],'не зарезервирован'), 'valid booking is explicitly unconfirmed demo request'); check((string)testDatabaseValue($dbPath,'SELECT format FROM bookings WHERE id=?',[(int)$book['id']])==='Сезонный', 'selected Omakase format is saved with booking request');
- [$status,$adminHtml]=request('/admin.php'); $adminCsrf=tokenFrom($adminHtml);
+ $booking=['csrf'=>$csrf,'type'=>'booking','name'=>'Тестовый гость','email'=>'guest@example.test','phone'=>'+77010000000','guests'=>'2','date'=>'2026-02-31','time'=>'19:00','format'=>'Сезонный']; [$status]=request('/api.php',$booking); check($status===422, 'impossible booking date rejected');
+  $badBooking=$booking;$badBooking['email']='not-an-email';[$status]=request('/api.php',$badBooking);check($status===422,'booking rejects an invalid guest email');
+  $booking['date']=$future; [$status,$body]=request('/api.php',$booking,['Idempotency-Key'=>'integration-booking-key-0001']); $book=json_decode($body,true); check($status===201 && $book['ok'] && $book['mail_status']==='pending' && str_contains($book['message'],'SMTP'), 'valid booking is explicitly unconfirmed and queues email when SMTP is not configured'); check((string)testDatabaseValue($dbPath,'SELECT format FROM bookings WHERE id=?',[(int)$book['id']])==='Сезонный', 'selected Omakase format is saved with booking request');check((string)testDatabaseValue($dbPath,'SELECT guest_email FROM bookings WHERE id=?',[(int)$book['id']])==='guest@example.test','booking email is stored with the request');$requestMailId=(int)testDatabaseValue($dbPath,'SELECT id FROM email_outbox WHERE event_key=?',['booking:'.$book['id'].':request:guest']);check($requestMailId>0&&(string)testDatabaseValue($dbPath,'SELECT status FROM email_outbox WHERE id=?',[$requestMailId])==='pending','guest receipt is durably queued without SMTP');
+ putenv('TOKYO_BOOKING_NOTIFY_EMAIL=restaurant@example.test');booking_mail_queue_request($pdo,(int)$book['id']);putenv('TOKYO_BOOKING_NOTIFY_EMAIL');$restaurantMailId=(int)testDatabaseValue($dbPath,'SELECT id FROM email_outbox WHERE event_key=?',['booking:'.$book['id'].':request:restaurant']);check($restaurantMailId>0&&(string)testDatabaseValue($dbPath,'SELECT status FROM email_outbox WHERE id=?',[$restaurantMailId])==='pending','restaurant notification is queued under the configured destination');[$status,$adminHtml]=request('/admin.php'); $adminCsrf=tokenFrom($adminHtml);
  [$status,$adminHtml]=adminPost(['csrf'=>$adminCsrf,'action'=>'admin-search','q'=>'тЕСТовый гость']);
  check($status===200 && str_contains($adminHtml,'Тестовый гость') && str_contains($adminHtml,'Новые брони'), 'admin search finds a booking and shows actionable notification counts');
- [$status,$body]=request('/api.php',$booking,['Idempotency-Key'=>'integration-booking-key-0001']); check($status===201 && json_decode($body,true)['id']===$book['id'], 'booking retry replays original request');
+  $adminCsrf=tokenFrom($adminHtml);[$status,$filteredAdminHtml]=adminPost(['csrf'=>$adminCsrf,'action'=>'admin-search','q'=>'строка-которой-нет-в-записях']);
+  preg_match('~<section class="admin-card" id="bookings".*?</section>~s',$filteredAdminHtml,$filteredBookingSection);
+  check($status===200&&isset($filteredBookingSection[0])&&str_contains($filteredBookingSection[0],'0 найдено')&&str_contains($filteredAdminHtml,'href="?notification=bookings#bookings"'),'new-booking notification remains actionable while the saved search hides the booking');
+  [$status,$notificationRedirect,$notificationHeaders]=request('/admin.php?notification=bookings');
+  $notificationLocation=implode("\n",$notificationHeaders);
+  check($status===302&&str_contains($notificationLocation,'Location: admin.php#bookings'),'booking notification clears the session filter and redirects to its section');
+  [$status,$unfilteredAdminHtml]=request('/admin.php');
+  check($status===200&&str_contains($unfilteredAdminHtml,'Тестовый гость')&&!str_contains($unfilteredAdminHtml,'Результаты по запросу'),'notification destination reveals the new booking after clearing the stale search');preg_match('~<div class="admin-booking-emails">.*?</div>\s*<div class="admin-record-actions">~s',$unfilteredAdminHtml,$restaurantEmailBlock);check(str_contains($unfilteredAdminHtml,'Email · Уведомление ресторану · В очереди')&&isset($restaurantEmailBlock[0])&&str_contains($restaurantEmailBlock[0],'value="'.$restaurantMailId.'"'),'admin shows a retry action for the restaurant request notification');
+ $bookingCountBeforeRetry=(int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM bookings');$mailCountBeforeRetry=(int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM email_outbox WHERE booking_id=?',[(int)$book['id']]);[$status,$body]=request('/api.php',$booking,['Idempotency-Key'=>'integration-booking-key-0001']);check($status===201&&json_decode($body,true)['id']===$book['id']&&(int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM bookings')===$bookingCountBeforeRetry&&(int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM email_outbox WHERE booking_id=?',[(int)$book['id']])===$mailCountBeforeRetry,'booking retry atomically replays the original record and outbox without duplicates');
+ $parallelBookingResponses=parallelBookingRequests($booking,'integration-booking-concurrent-0001',4);$parallelBookingIds=[];foreach($parallelBookingResponses as [$parallelStatus,$parallelBody]){$parallelResult=json_decode($parallelBody,true);if($parallelStatus!==201||empty($parallelResult['ok']))throw new RuntimeException('Concurrent booking request failed: HTTP '.$parallelStatus.' '.$parallelBody);$parallelBookingIds[]=(int)$parallelResult['id'];}$parallelBookingCount=(int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM bookings WHERE booking_date=? AND guest_email=?',[$future,'guest@example.test']);preg_match('/tokyo_session=([^;]+)/',$cookie,$sessionMatch);$parallelBookingToken=hash('sha256',($sessionMatch[1]??'').'|booking|integration-booking-concurrent-0001');$parallelBookingId=(int)testDatabaseValue($dbPath,'SELECT booking_id FROM api_booking_requests WHERE token=?',[$parallelBookingToken]);$parallelOutboxCount=(int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM email_outbox WHERE booking_id=?',[$parallelBookingId]);check(count(array_unique($parallelBookingIds))===1&&$parallelBookingCount===2&&$parallelBookingId===$parallelBookingIds[0]&&$parallelOutboxCount===1,'parallel duplicate booking submissions create one booking and one receipt (ids='.implode(',',$parallelBookingIds).'; rows='.$parallelBookingCount.'; outbox='.$parallelOutboxCount.')');
+ $pdo->exec('DELETE FROM booking_email_rate_limits');$rateBooking=$booking;$rateBooking['email']='rate-limit@example.test';for($i=1;$i<=3;$i++){[$rateStatus,$rateBody]=request('/api.php',$rateBooking,['Idempotency-Key'=>'integration-rate-limit-'.$i.'-0001']);if($rateStatus!==201)throw new RuntimeException('Booking email limit rejected allowed request '.$i.': '.$rateBody);}$rateBooking['email']='rate-limit@example.test';[$rateStatus,$rateBody]=request('/api.php',$rateBooking,['Idempotency-Key'=>'integration-rate-limit-4-0001']);check($rateStatus===429&&str_contains($rateBody,'Слишком много заявок'),'booking email rate limit blocks repeat mail abuse after three requests per recipient per day');$pdo->exec('DELETE FROM booking_email_rate_limits');
   [$status,$adminHtml]=request('/admin.php'); $adminCsrf=tokenFrom($adminHtml);
   [$status,$adminHtml]=adminPost(['csrf'=>$adminCsrf,'action'=>'status','table'=>'bookings','id'=>(string)$book['id'],'status'=>'confirmed']);
-  check($status===200 && str_contains($adminHtml,'Бронь подтверждена') && str_contains($adminHtml,'Статус обновлён в личном кабинете'), 'admin confirms a booking and shows a visible confirmation badge');
+  check($status===200 && str_contains($adminHtml,'Бронь подтверждена') && str_contains($adminHtml,'Email в очереди'), 'admin confirms a booking, shows its badge and reports that mail is queued without SMTP');$confirmationMailId=(int)testDatabaseValue($dbPath,'SELECT id FROM email_outbox WHERE event_key=?',['booking:'.$book['id'].':confirmed:guest']);check($confirmationMailId>0&&(string)testDatabaseValue($dbPath,'SELECT status FROM email_outbox WHERE id=?',[$confirmationMailId])==='pending','confirmation email is queued in the same status transition');check(str_contains($adminHtml,'Email · Подтверждение гостю · В очереди')&&str_contains($adminHtml,'Повторить email'),'admin shows queue status and a CSRF-protected retry control');
+  $retryCsrf=tokenFrom($adminHtml);[$status,$retryHtml]=adminPost(['csrf'=>$retryCsrf,'action'=>'mail-retry','id'=>(string)$confirmationMailId]);check($status===200&&str_contains($retryHtml,'Письмо осталось в очереди')&&(string)testDatabaseValue($dbPath,'SELECT status FROM email_outbox WHERE id=?',[$confirmationMailId])==='pending','manual retry remains queued and reports SMTP is not configured');
+  $fake=startFakeSmtpServer();foreach(['TOKYO_SMTP_HOST'=>'127.0.0.1','TOKYO_SMTP_PORT'=>(string)$fake['port'],'TOKYO_SMTP_ENCRYPTION'=>'none','TOKYO_MAIL_FROM'=>'tokyo@example.test','TOKYO_MAIL_FROM_NAME'=>'Tokyo Premium'] as $key=>$value)putenv($key.'='.$value);check(booking_mail_configuration_state()==='ready','SMTP configuration accepts local test transport without external credentials');$sentState=booking_mail_deliver(freshTestDatabase($dbPath),$confirmationMailId);$captured=stopFakeSmtpServer($fake);check($sentState==='sent'&&(string)testDatabaseValue($dbPath,'SELECT status FROM email_outbox WHERE id=?',[$confirmationMailId])==='sent','SMTP worker marks confirmed booking email as sent only after 250 response');check(str_contains($captured,'To: <guest@example.test>')&&str_contains($captured,'Subject: =?UTF-8?B?')&&!str_contains($captured,'SMTP_PASSWORD'),'SMTP message contains the guest and encoded subject, never credentials');
+  $fake=startFakeSmtpServer();putenv('TOKYO_SMTP_PORT='.(string)$fake['port']);$requestResults=booking_mail_process_pending(freshTestDatabase($dbPath),10);$captured=stopFakeSmtpServer($fake);check(($requestResults[$requestMailId]??'')==='sent'&&(string)testDatabaseValue($dbPath,'SELECT status FROM email_outbox WHERE id=?',[$requestMailId])==='sent','outbox worker sends the queued receipt after SMTP becomes available');
+  $raceMailId=booking_mail_queue(freshTestDatabase($dbPath),(int)$book['id'],'qa:smtp-lock-race','guest@example.test','SMTP lock integration','Concurrent workers must claim this message once.');$fake=startFakeSmtpServer('slow');putenv('TOKYO_SMTP_PORT='.(string)$fake['port']);$raceStates=parallelMailDeliveries($raceMailId,2,$fake);$captured=stopFakeSmtpServer($fake);$raceFinalState=(string)testDatabaseValue($dbPath,'SELECT status FROM email_outbox WHERE id=?',[$raceMailId]);$raceAttempts=(int)testDatabaseValue($dbPath,'SELECT attempts FROM email_outbox WHERE id=?',[$raceMailId]);check($raceFinalState==='sent'&&$raceAttempts===1&&count(array_filter($raceStates,static fn(string $state):bool=>$state==='sent'))===1&&count(array_filter($raceStates,static fn(string $state):bool=>$state==='sending'))===1,'parallel SMTP workers respect the fresh UTC lock and make one delivery attempt (workers='.json_encode($raceStates).'; state='.$raceFinalState.'; attempts='.$raceAttempts.'; bytes='.strlen($captured).')');
+  $failureMailId=booking_mail_queue(freshTestDatabase($dbPath),(int)$book['id'],'qa:smtp-failure','guest@example.test','SMTP retry integration','Test failure then retry.');$fake=startFakeSmtpServer('reject');putenv('TOKYO_SMTP_PORT='.(string)$fake['port']);$failed=booking_mail_deliver(freshTestDatabase($dbPath),$failureMailId);$captured=stopFakeSmtpServer($fake);check($failed==='failed'&&(string)testDatabaseValue($dbPath,'SELECT status FROM email_outbox WHERE id=?',[$failureMailId])==='failed','SMTP rejection leaves a failed, retryable outbox record');check((string)testDatabaseValue($dbPath,'SELECT last_error FROM email_outbox WHERE id=?',[$failureMailId])==='SMTP rejected message (code 550)','SMTP failure stores a safe response without raw server data');$fake=startFakeSmtpServer();putenv('TOKYO_SMTP_PORT='.(string)$fake['port']);$retried=booking_mail_retry(freshTestDatabase($dbPath),$failureMailId);$captured=stopFakeSmtpServer($fake);check($retried==='sent'&&(string)testDatabaseValue($dbPath,'SELECT status FROM email_outbox WHERE id=?',[$failureMailId])==='sent','failed booking email can be explicitly retried successfully');foreach(['TOKYO_SMTP_HOST','TOKYO_SMTP_PORT','TOKYO_SMTP_USER','TOKYO_SMTP_PASSWORD','TOKYO_SMTP_ENCRYPTION','TOKYO_SMTP_SECURE','TOKYO_MAIL_FROM','TOKYO_MAIL_FROM_NAME','TOKYO_BOOKING_NOTIFY_EMAIL'] as $key)putenv($key);
   [$status,$history]=request('/account.php');
   check($status===200 && str_contains($history,'Бронь подтверждена') && str_contains($history,'role="status"'), 'confirmed booking is clearly shown in the guest account');
   [$status,$marketingHtml]=request('/admin-marketing.php'); $marketingCsrf=tokenFrom($marketingHtml);
-  check($status===200 && str_contains($marketingHtml,'Цели включения') && str_contains($marketingHtml,'dish:12, category:rolls'), 'marketing admin exposes campaign include and exclusion targeting');
+   check($status===200 && str_contains($marketingHtml,'Цели включения') && str_contains($marketingHtml,'dish:12, category:rolls') && str_contains($marketingHtml,'<option value="free_delivery">Бесплатная доставка</option>') && str_contains($marketingHtml,'name="gift_max_per_order"'), 'marketing admin exposes campaign targeting, free-delivery reward and gift quantity limits');
   $campaignSlug='qa-target-'.bin2hex(random_bytes(4));
-  $campaignFields=['csrf'=>$marketingCsrf,'action'=>'campaign-save','slug'=>$campaignSlug,'campaign_type'=>'exclusive','reward_type'=>'percent','title'=>'Проверка целей QA','description'=>'Проверка ограничений кампании.','reward_value'=>'10','gift_dish_id'=>'','gift_quantity'=>'0','minimum_subtotal'=>'0','maximum_discount'=>'1000','starts_at'=>'','ends_at'=>'','starts_time'=>'','ends_time'=>'','image_url'=>'assets/generated/room-main-hall.webp','required_tier'=>'','sort_order'=>'50','active'=>'on','target_include'=>'category:rolls','target_exclude'=>'dish:1'];
+   $campaignFields=['csrf'=>$marketingCsrf,'action'=>'campaign-save','slug'=>$campaignSlug,'campaign_type'=>'exclusive','reward_type'=>'percent','title'=>'Проверка целей QA','description'=>'Проверка ограничений кампании.','reward_value'=>'10','gift_dish_id'=>'','gift_quantity'=>'0','gift_max_per_order'=>'1','minimum_subtotal'=>'0','maximum_discount'=>'1000','starts_at'=>'','ends_at'=>'','starts_time'=>'','ends_time'=>'','image_url'=>'assets/generated/room-main-hall.webp','required_tier'=>'','sort_order'=>'50','active'=>'on','target_include'=>'category:rolls','target_exclude'=>'dish:1'];
   [$status,$campaignResponse]=request('/admin-marketing.php',$campaignFields); check($status===200 && str_contains($campaignResponse,'Кампания создана как учебная демонстрация'), 'campaign create accepts validated target rules');
+  $invalidCampaignDate=$campaignFields;$invalidCampaignDate['slug']=$campaignSlug.'-invalid-date';$invalidCampaignDate['starts_at']='2026-02-30T12:00';[$status,$invalidCampaignDateHtml]=request('/admin-marketing.php',$invalidCampaignDate);check($status===200&&str_contains($invalidCampaignDateHtml,'корректные местные дату и время')&&(int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM promotion_campaigns WHERE slug=?',[$campaignSlug.'-invalid-date'])===0,'campaign editor rejects impossible local date values before writing');
+  $campaignId=(int)testDatabaseValue($dbPath,'SELECT id FROM promotion_campaigns WHERE slug=?',[$campaignSlug]);check($campaignId>0&&str_contains($campaignResponse,'Редактировать условия кампании')&&str_contains($campaignResponse,'name="id" value="'.$campaignId.'"'),'campaign list renders a prefilled edit action for saved campaigns');
+  $campaignEditFields=$campaignFields;$campaignEditFields['id']=(string)$campaignId;$campaignEditFields['title']='Изменённая кампания QA';$campaignEditFields['description']='Изменённое описание кампании.';[$status,$campaignEditResponse]=request('/admin-marketing.php',$campaignEditFields);check($status===200&&str_contains($campaignEditResponse,'Кампания обновлена.')&&str_contains($campaignEditResponse,'<details class="tp20-admin-details" open>')&&(string)testDatabaseValue($dbPath,'SELECT title FROM promotion_campaigns WHERE id=?',[$campaignId])==='Изменённая кампания QA'&&(int)testDatabaseValue($dbPath,'SELECT weekday_mask FROM promotion_campaigns WHERE id=?',[$campaignId])===127,'campaign edit saves changes, preserves the weekly schedule, and keeps the editor open');
   $targetCampaignId=(int)testDatabaseValue($dbPath,'SELECT id FROM promotion_campaigns WHERE slug=?',[$campaignSlug]);
   $targetPdo=freshTestDatabase($dbPath); $targets=commerce_campaign_targets($targetPdo,$targetCampaignId); check(count($targets)===2, 'campaign target include and exclusion persist transactionally');
   check(commerce_item_is_targeted(['dish'=>['id'=>$dish,'category'=>'rolls']],$targets), 'included category allows matching catalog item');
@@ -266,9 +562,69 @@ try {
   $invalidTargets=$campaignFields; $invalidTargets['csrf']=$marketingCsrf; $invalidTargets['id']=(string)$targetCampaignId; $invalidTargets['target_include']='dish:999999';
   [$status,$invalidCampaignHtml]=request('/admin-marketing.php',$invalidTargets); check($status===200 && str_contains($invalidCampaignHtml,'Цель кампании не найдена'), 'unknown campaign targets are rejected by server validation');
   check(count(commerce_campaign_targets(freshTestDatabase($dbPath),$targetCampaignId))===2, 'invalid target update leaves existing campaign rules unchanged');
+   [$status,$marketingHtml]=request('/admin-marketing.php');$marketingCsrf=tokenFrom($marketingHtml);check($status===200&&str_contains($marketingHtml,'PRIVATE INVITATIONS')&&str_contains($marketingHtml,'name="user_search"'),'marketing admin exposes the account search area before any private campaign is configured');
+   [$status,$searchedMarketingHtml]=request('/admin-marketing.php?user_search='.rawurlencode($accountEmail));check($status===200&&str_contains($searchedMarketingHtml,'Найденные аккаунты')&&str_contains($searchedMarketingHtml,$accountEmail),'marketing admin can search accounts beyond the latest 200 by email');
+   $personalSlug='qa-personal-'.bin2hex(random_bytes(4));$pdo->prepare("INSERT INTO promotion_campaigns(slug,campaign_type,title,description,reward_type,reward_value,active,stackable,demo_only) VALUES(?,'personal','QA private invitation','Integration-only personalized offer','percent',10,1,1,1)")->execute([$personalSlug]);$personalCampaignId=(int)$pdo->lastInsertId();$personalCode='PRIVATE'.strtoupper(bin2hex(random_bytes(3)));$pdo->prepare('INSERT INTO promo_codes(code,campaign_id,active,maximum_uses) VALUES(?,?,1,10)')->execute([$personalCode,$personalCampaignId]);[$status,$personalSetupHtml]=request('/admin-marketing.php');$marketingCsrf=tokenFrom($personalSetupHtml);check($status===200&&str_contains($personalSetupHtml,'personal-offer-save'),'admin shows the private-offer assignment form after an eligible campaign is configured');$personalExpiry=(new DateTimeImmutable('+2 hours',new DateTimeZone('Asia/Qyzylorda')))->format('Y-m-d\\TH:i');
+  [$status,$personalAdminHtml]=request('/admin-marketing.php',['csrf'=>$marketingCsrf,'action'=>'personal-offer-save','user_id'=>(string)$profileUserId,'campaign_id'=>(string)$personalCampaignId,'expires_at'=>$personalExpiry]);$personalOfferId=(int)testDatabaseValue($dbPath,'SELECT id FROM personalized_offers WHERE user_id=? AND campaign_id=?',[$profileUserId,$personalCampaignId]);check($status===200&&str_contains($personalAdminHtml,'Персональное предложение назначено')&&$personalOfferId>0,'admin assigns a personal campaign to one registered account');
+  check(in_array($personalCampaignId,array_map(static fn(array $row):int=>(int)$row['id'],commerce_public_offers(freshTestDatabase($dbPath),$profileUserId)),true),'assigned personal offer is visible only in the selected account offer set');
+  $assignedCookie=$cookie;$cookie='';[$status,$publicOffersHtml]=request('/offers.php');check($status===200&&!str_contains($publicOffersHtml,$personalCode),'anonymous offers page never discloses an account-scoped promo code');$cookie=$assignedCookie;
+  [$status,$personalOffersHtml]=request('/offers.php');check($status===200&&str_contains($personalOffersHtml,'PERSONAL INVITATION')&&str_contains($personalOffersHtml,'QA private invitation')&&!str_contains($personalOffersHtml,'Undefined array key'),'offers page safely renders the campaign_type returned by SQLite for an assigned personal campaign');
+  [$status,$accountOfferHtml]=request('/account.php');check($status===200&&str_contains($accountOfferHtml,'data-copy-code="'.$personalCode.'"')&&str_contains($accountOfferHtml,'pages.php?page=cart&amp;promo='.$personalCode),'the assigned account can copy its private code and open checkout with the code prefilled');
+  [$status,$personalCartHtml]=request('/pages.php?page=cart&promo='.rawurlencode($personalCode));check($status===200&&str_contains($personalCartHtml,'value="'.$personalCode.'"'),'checkout pre-fills a validated promo query parameter for the account CTA');
+  $personalCsrf=tokenFrom($personalAdminHtml);[$status,$revokeHtml]=request('/admin-marketing.php',['csrf'=>$personalCsrf,'action'=>'personal-offer-revoke','offer_id'=>(string)$personalOfferId]);check($status===200&&str_contains($revokeHtml,'отозвано')&&(int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM personalized_offers WHERE id=?',[$personalOfferId])===0,'admin revokes an unused personal offer');
   [$status,$adminHtml]=request('/admin.php'); $csrf=tokenFrom($adminHtml);
   adminPost(['csrf'=>$csrf,'action'=>'dish-delete','id'=>(string)$dish]); check((int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM dishes WHERE id=?',[$dish])===0, 'dish deleted'); check((int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM order_items WHERE order_id=? AND item_name=?',[(int)$first['id'],'Тестовый ролл'])===1, 'order item snapshot survives dish deletion');
- echo 'Concurrent HTTP mode: ' . (PHP_OS_FAMILY==='Windows'?'client requests queued by single-worker PHP CLI server':'4-worker PHP CLI server') . "\n";
+    // Use workers only for the one scenario that tests concurrent HTTP requests. Keeping
+    // them alive during fixture writes made SQLite/WAL intermittently fail with disk I/O
+    // errors on CI, despite the application requests themselves succeeding.
+    $concurrentServer=null;$concurrentPipes=[];$concurrentServerLog=$dbPath.'.parallel.server.log';$previousBase=$base;
+    try {
+     if(PHP_OS_FAMILY!=='Windows') {
+      $concurrentServerCommand=$serverCommand;$concurrentServerBind=array_search('-S',$concurrentServerCommand,true);if($concurrentServerBind===false)throw new RuntimeException('Could not locate the PHP server bind argument for the concurrency regression.');
+      $concurrentServerPort=random_int(21000,45000);$concurrentServerCommand[$concurrentServerBind+1]='127.0.0.1:'.$concurrentServerPort;$previousRestaurantDb=getenv('RESTAURANT_DB');$previousConcurrentWorkers=getenv('PHP_CLI_SERVER_WORKERS');putenv('RESTAURANT_DB='.$dbPath);putenv('PHP_CLI_SERVER_WORKERS=4');
+      try{$concurrentServer=proc_open($concurrentServerCommand,[0=>['pipe','r'],1=>['file',$concurrentServerLog,'a'],2=>['file',$concurrentServerLog,'a']],$concurrentPipes,dirname(__DIR__),null);}
+      finally{if($previousRestaurantDb===false)putenv('RESTAURANT_DB');else putenv('RESTAURANT_DB='.$previousRestaurantDb);if($previousConcurrentWorkers===false)putenv('PHP_CLI_SERVER_WORKERS');else putenv('PHP_CLI_SERVER_WORKERS='.$previousConcurrentWorkers);}
+      if(!is_resource($concurrentServer))throw new RuntimeException('Could not start the dedicated PHP server for the concurrency regression.');
+      $base='http://127.0.0.1:'.$concurrentServerPort;$concurrentReady=false;for($wait=0;$wait<30;$wait++){[$probeStatus]=request('/cart.php');if($probeStatus===200){$concurrentReady=true;break;}usleep(100000);}if(!$concurrentReady)throw new RuntimeException('Four-worker PHP server did not become ready for the concurrency regression.');
+     }
+     $concurrentDishPdo=freshTestDatabase($dbPath);$concurrentDishId=(int)$concurrentDishPdo->query('SELECT id FROM dishes WHERE active=1 ORDER BY id LIMIT 1')->fetchColumn();unset($concurrentDishPdo);$concurrentOrderFields=$orderFields;$concurrentOrderFields['items']=json_encode([['id'=>$concurrentDishId,'qty'=>1]]);$concurrentKey='integration-concurrent-order-'.bin2hex(random_bytes(8));$parallel=parallelOrderRequests($concurrentOrderFields,$concurrentKey,6);$parallelIds=[];
+     foreach($parallel as [$parallelStatus,$parallelBody]){$parallelResult=json_decode($parallelBody,true);check($parallelStatus===201&&($parallelResult['ok']??false),'concurrent same-key order request returns the committed result (HTTP '.$parallelStatus.'; '.substr((string)$parallelBody,0,260).')');$parallelIds[]=(int)$parallelResult['id'];}
+     check(count(array_unique($parallelIds))===1,'six concurrent requests with one key resolve to one order id');
+     $concurrentId=$parallelIds[0];$concurrentReadPdo=freshTestDatabase($dbPath);check((int)$concurrentReadPdo->query('SELECT COUNT(*) FROM orders WHERE id='.$concurrentId)->fetchColumn()===1,'concurrent key creates exactly one order');check((int)$concurrentReadPdo->query('SELECT COUNT(*) FROM order_items WHERE order_id='.$concurrentId)->fetchColumn()===1,'concurrent key creates one order line snapshot');
+     $concurrentToken=hash('sha256',substr($cookie,strlen('tokyo_session=')).'|order|'.$concurrentKey);$idem=$concurrentReadPdo->prepare('SELECT order_id,response_status FROM api_order_requests WHERE token=?');$idem->execute([$concurrentToken]);$idemRow=$idem->fetch();$idem->closeCursor();check((int)$idemRow['order_id']===$concurrentId&&(int)$idemRow['response_status']===201,'idempotency reservation and replay result point to the one committed order');
+     $independentKey='integration-independent-order-'.bin2hex(random_bytes(8));[$status,$independentBody]=request('/api.php',$concurrentOrderFields,['Idempotency-Key'=>$independentKey]);$independent=json_decode($independentBody,true);check($status===201&&$independent['ok']&&(int)$independent['id']!==$concurrentId,'independent idempotency key creates a separate order');
+    } finally {
+     $base=$previousBase;
+     if(is_resource($concurrentServer)){proc_terminate($concurrentServer);foreach($concurrentPipes as $pipe)if(is_resource($pipe))fclose($pipe);proc_close($concurrentServer);}
+     if(is_file($concurrentServerLog))@unlink($concurrentServerLog);
+    }
+   unset($concurrentReadPdo,$idem);$primaryOrdersBeforeRollback=(int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM orders');$rollbackKey='integration-rollback-order-'.bin2hex(random_bytes(8));$rollbackDbPath=sys_get_temp_dir().DIRECTORY_SEPARATOR.'tokyo-rollback-'.bin2hex(random_bytes(6)).'.sqlite';$rollbackServerLog=$rollbackDbPath.'.server.log';$rollbackPipes=[];$rollbackServer=null;
+  try {
+   $rollbackInitCommand=[PHP_BINARY];if(PHP_OS_FAMILY==='Windows'){array_push($rollbackInitCommand,'-d','extension_dir='.ini_get('extension_dir'));if(!extension_loaded('sqlite3'))array_push($rollbackInitCommand,'-d','extension=php_sqlite3.dll');if(!extension_loaded('pdo_sqlite'))array_push($rollbackInitCommand,'-d','extension=php_pdo_sqlite.dll');}array_push($rollbackInitCommand,'-r','require $argv[1]; db(); echo "rollback-db-ready";',dirname(__DIR__).'/bootstrap.php');
+   $previousRestaurantDb=getenv('RESTAURANT_DB');putenv('RESTAURANT_DB='.$rollbackDbPath);$rollbackInitPipes=[];$rollbackInitProcess=proc_open($rollbackInitCommand,[0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']],$rollbackInitPipes,dirname(__DIR__),null);if($previousRestaurantDb===false)putenv('RESTAURANT_DB');else putenv('RESTAURANT_DB='.$previousRestaurantDb);
+   if(!is_resource($rollbackInitProcess))throw new RuntimeException('Could not initialize the isolated rollback database.');fclose($rollbackInitPipes[0]);$rollbackInitOutput=stream_get_contents($rollbackInitPipes[1]);$rollbackInitError=stream_get_contents($rollbackInitPipes[2]);fclose($rollbackInitPipes[1]);fclose($rollbackInitPipes[2]);$rollbackInitExit=proc_close($rollbackInitProcess);if($rollbackInitExit!==0||!str_contains((string)$rollbackInitOutput,'rollback-db-ready'))throw new RuntimeException('Isolated rollback database initialization failed (exit '.$rollbackInitExit.'): '.trim((string)$rollbackInitOutput.' '.(string)$rollbackInitError));
+   $rollbackPdo=freshTestDatabase($rollbackDbPath);$rollbackOrdersBefore=(int)$rollbackPdo->query('SELECT COUNT(*) FROM orders')->fetchColumn();$rollbackItemsBefore=(int)$rollbackPdo->query('SELECT COUNT(*) FROM order_items')->fetchColumn();$rollbackPdo->exec("CREATE TRIGGER test_fail_order_line BEFORE INSERT ON order_items BEGIN SELECT RAISE(ABORT, 'forced test rollback'); END");$rollbackTriggerCount=(int)$rollbackPdo->query("SELECT COUNT(*) FROM sqlite_master WHERE type='trigger' AND name='test_fail_order_line'")->fetchColumn();$rollbackPdo=null;
+   $rollbackOrderFields=['csrf'=>$csrf,'type'=>'order','name'=>'Тестовый гость','phone'=>'+77010000000','fulfillment'=>'pickup','items'=>json_encode([['id'=>3,'qty'=>1,'price'=>1]]),'custom_sets'=>'[]'];
+   // Inherit the test process environment but point a fresh, single-worker server at the isolated fixture.
+   $rollbackServerCommand=$serverCommand;$rollbackServerBind=array_search('-S',$rollbackServerCommand,true);if($rollbackServerBind===false)throw new RuntimeException('Could not locate the PHP server bind argument for the rollback regression.');
+   $rollbackServerPort=random_int(21000,45000);$rollbackServerCommand[$rollbackServerBind+1]='127.0.0.1:'.$rollbackServerPort;$previousRestaurantDb=getenv('RESTAURANT_DB');$previousRollbackWorkers=getenv('PHP_CLI_SERVER_WORKERS');putenv('RESTAURANT_DB='.$rollbackDbPath);putenv('PHP_CLI_SERVER_WORKERS');
+   try{$rollbackServer=proc_open($rollbackServerCommand,[0=>['pipe','r'],1=>['file',$rollbackServerLog,'a'],2=>['file',$rollbackServerLog,'a']],$rollbackPipes,dirname(__DIR__),null);}
+   finally{if($previousRestaurantDb===false)putenv('RESTAURANT_DB');else putenv('RESTAURANT_DB='.$previousRestaurantDb);if($previousRollbackWorkers===false)putenv('PHP_CLI_SERVER_WORKERS');else putenv('PHP_CLI_SERVER_WORKERS='.$previousRollbackWorkers);}
+   if(!is_resource($rollbackServer))throw new RuntimeException('Could not start a clean PHP server for the rollback regression.');
+   $previousBase=$base;$previousCookie=$cookie;$cookie='';$base='http://127.0.0.1:'.$rollbackServerPort;
+   try {
+    $rollbackServerReady=false;$rollbackGuestPage='';for($wait=0;$wait<30;$wait++){[$probeStatus,$rollbackGuestPage]=request('/cart.php');if($probeStatus===200){$rollbackServerReady=true;break;}usleep(100000);}if(!$rollbackServerReady)throw new RuntimeException('Clean PHP server did not become ready for the rollback regression.');$rollbackOrderFields['csrf']=tokenFrom($rollbackGuestPage);
+    [$failedStatus,$failedBody]=request('/api.php',$rollbackOrderFields,['Idempotency-Key'=>$rollbackKey]);
+    $rollbackReadPdo=freshTestDatabase($rollbackDbPath);$rollbackOrdersAfter=(int)$rollbackReadPdo->query('SELECT COUNT(*) FROM orders')->fetchColumn();$rollbackItemsAfter=(int)$rollbackReadPdo->query('SELECT COUNT(*) FROM order_items')->fetchColumn();$rollbackToken=hash('sha256',substr($cookie,strlen('tokyo_session=')).'|order|'.$rollbackKey);$rollbackReservation=$rollbackReadPdo->prepare('SELECT COUNT(*) FROM api_order_requests WHERE token=?');$rollbackReservation->execute([$rollbackToken]);$reservationCount=(int)$rollbackReservation->fetchColumn();$rollbackReservation->closeCursor();$rollbackTriggerCount=(int)$rollbackReadPdo->query("SELECT COUNT(*) FROM sqlite_master WHERE type='trigger' AND name='test_fail_order_line'")->fetchColumn();$rollbackReadPdo->exec('DROP TRIGGER test_fail_order_line');$rollbackReadPdo=null;
+    check($rollbackTriggerCount===1&&$failedStatus===500&&$rollbackOrdersAfter===$rollbackOrdersBefore&&$rollbackItemsAfter===$rollbackItemsBefore,'forced item insert error rolls back the HTTP order (trigger_rows='.$rollbackTriggerCount.'; HTTP '.$failedStatus.'; orders '.$rollbackOrdersBefore.'→'.$rollbackOrdersAfter.'; items '.$rollbackItemsBefore.'→'.$rollbackItemsAfter.'; body '.substr((string)$failedBody,0,240).')');check($reservationCount===0,'failed transaction leaves no idempotency reservation');
+    [$retryStatus,$rollbackRetryBody]=request('/api.php',$rollbackOrderFields,['Idempotency-Key'=>$rollbackKey]);$rollbackRetry=json_decode($rollbackRetryBody,true);check($retryStatus===201&&($rollbackRetry['ok']??false),'same key succeeds on retry after rollback (HTTP '.$retryStatus.'): '.$rollbackRetryBody);$retryReadPdo=freshTestDatabase($rollbackDbPath);check((int)$retryReadPdo->query('SELECT COUNT(*) FROM orders')->fetchColumn()===$rollbackOrdersBefore+1,'successful retry persists exactly one order');check((int)$retryReadPdo->query('SELECT COUNT(*) FROM order_items WHERE order_id='.(int)$rollbackRetry['id'])->fetchColumn()===1,'successful retry persists exactly one item');
+   } finally {$base=$previousBase;$cookie=$previousCookie;}
+  } finally {
+   if(is_resource($rollbackServer)){proc_terminate($rollbackServer);foreach($rollbackPipes as $pipe)if(is_resource($pipe))fclose($pipe);proc_close($rollbackServer);}
+   foreach([$rollbackDbPath,$rollbackDbPath.'-wal',$rollbackDbPath.'-shm',$rollbackServerLog] as $rollbackFile)if(is_file($rollbackFile))@unlink($rollbackFile);
+  }
+  check((int)testDatabaseValue($dbPath,'SELECT COUNT(*) FROM orders')===$primaryOrdersBeforeRollback,'isolated rollback fixture does not change the primary order database');
+  echo 'Concurrent HTTP mode: ' . (PHP_OS_FAMILY==='Windows'?'client requests queued by single-worker PHP CLI server':'4-worker PHP CLI server') . "\n";
  echo "PASS: {$checks} integration assertions; isolated DB: {$dbPath}\n";
 } catch (Throwable $ex) {
  if (is_file($serverLog)) fwrite(STDERR, "\nPHP test server log:\n" . file_get_contents($serverLog) . "\n");

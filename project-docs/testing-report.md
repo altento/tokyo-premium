@@ -1,5 +1,31 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-17 contacts artwork and cart recommendations
+
+Replaced the repeated terrace photo in the PHP and Pages contact visit block with an original 1600 × 800 WebP landscape illustration (154 KB), captioned to clarify that it is not the restaurant location. The cart now shows four catalog-backed suggestions in a four-column row across the full cart width, after the order and checkout columns. Updated the existing cart visual regression expectations for this layout.
+
+Focused static Chromium verification passed: three cart products, four distinct suggestions, loaded food and contact images, full-width recommendation row, and no JavaScript errors. At 430 px the suggestions use two columns; at 390 px they use one, with no horizontal overflow at 390 or 320 px. PHP/JS syntax and diff checks passed. Desktop cart and mobile contact captures plus notes are in `visual-qa/cart-contact-refresh-2026-11-17/`. PHP browser rendering, full cart screenshot suite, PHP/SQLite integration, CI and public Pages deployment were not run for this change.
+
+## 2026-11-17 account-history layout follow-up
+
+Changed the populated account history to use the full dashboard width, with booking requests below the orders. Local Chromium regression passed against the checked-in Pages export at 1440, 390 and 320 px; it also covered local sample persistence, favorite-to-cart, clear-data and sample restoration. Browser console/page errors were empty. Manually captured desktop and mobile history-panel evidence is in `visual-qa/account-order-flow-2026-11-17/`; these are panel captures, not full-page parity proof. The focused test skipped its expensive full-page screenshot step for this local run. PHP syntax, JavaScript syntax and diff hygiene are checked before commit. No PHP/SQLite integration, hosted CI, 11-reference visual acceptance, or public deployment is claimed for this follow-up.
+
+## 2026-11-17 static account dashboard reference pass
+
+Compared the populated GitHub Pages account with `design-references/11-account.png`. The masthead, browser-local identity cue, privilege cards, metric row and quick actions now use a tighter dashboard rhythm; order and favorite content remain visible and functional. Responsive actions use four desktop columns and two phone columns. Source account CSS and the checked-in Pages copies are synchronized so a future export retains the same styling.
+
+`npm run test:account-demo` passed against `http://127.0.0.1:8765`. The focused regression checked 1440 px masthead geometry, four/two-column quick actions, 390 px and 320 px layout bounds, local record labels and persistence, loaded order/favorite photos, favorite-to-cart, clear-data and sample restoration. Desktop and mobile captures were visually inspected in `visual-qa/account-refresh-2026-11-17/`. This is progress on reference 11, not complete pixel-level parity.
+
+## 2026-11-17 cart checkout and booking notification follow-up
+
+The cart checkout/contact section is now a native disclosure to keep the populated order summary compact. PHP and Pages markup use the same structure; the delivery/pickup selector and total remain visible. The browser regression opens the disclosure before filling checkout fields, then checks pickup reset, repeated delivery validation, and state after route changes/reload. Restaurant booking notification email status and retry are now visible in the admin booking row; the PHP integration suite includes an outbox fixture and retry-action assertion.
+
+Focused verification: `npm run test:cart-visual` passed and captured eight desktop/mobile cart states under `visual-qa/cart-progressive-checkout-2026-11-17/`. `npm run test:browser` passed across 11 routes, 20 dish details, cart/checkout, favorites, navigation, filters, and six viewport widths; captures are under `visual-qa/cart-checkout-browser-2026-11-17/`. `npm run test:tokyo20` then passed in PHP and static modes after updating its checkout scenario to expand the disclosure. PHP syntax, JS syntax, and `git diff --check` passed. Hosted CI passed the PHP/SQLite suite with 198 integration assertions but caught the collapsed-checkout expectation in the Tokyo 2.0 browser test; that test now passes locally and is pending the next hosted run. This machine's PHP CLI lacks `pdo_sqlite`, so it cannot run the integration suite locally.
+
+## 2026-11-16 route-specific social previews
+
+PHP routes and the checked-in GitHub Pages export now emit route-specific Open Graph and Twitter preview images. The existing 11-route static visual regression asserts both metadata values for every route and passed in static mode. PHP syntax and JavaScript syntax checks passed. PHP rendering/export could not be run locally because this PHP CLI lacks `pdo_sqlite`; hosted CI and public deployment remain unverified for this patch.
+
 Updated 2026-11-13
 
 ## Local verification completed
@@ -7,7 +33,7 @@ Updated 2026-11-13
 | Check | Result | Evidence / scope |
 |---|---|---|
 | Cart store | Passed, 12/12 | Input sanitization, old-format migration, quantity limits, cross-tab state, checkout lock/retry key, custom-set bounds and clear/re-add behavior. |
-| PHP + SQLite integration | Passed, 114 assertions | Isolated database; six independent PHP processes race to initialize a clean SQLite file, WAL mode is verified, plus order price authority, idempotent and concurrent same-key orders, rollback, booking date/status, admin search/notifications, campaign targets, loyalty/order history, Secret Menu route/API protection plus session unlock, and server-validated custom-set pricing/composition. The 114-assertion suite passed hosted CI run 43341069860. |
+| PHP + SQLite integration | Passed, 127 assertions locally | Isolated database; six independent PHP processes race to initialize a clean SQLite file, WAL mode is verified, plus order price authority, idempotent and concurrent same-key orders, rollback, booking date/status, admin search/notifications, campaign targets, loyalty/order history, Secret Menu route/API protection plus session unlock, server-validated custom-set pricing/composition, and email outbox queuing, fake-SMTP acceptance/rejection/retry. No external SMTP host is contacted by tests. |
 | PHP syntax | Passed | All 25 PHP application and support files linted with PHP 8.4. |
 | JavaScript syntax | Passed | Application JS and CJS regression files checked by Node. |
 | Core browser regression | Passed | 11 page types, all 20 dish details (18 public; 2 after a server-validated Secret Menu unlock), cart/checkout, tabs, favorites, navigation, menu filters and six viewport widths. |
@@ -16,12 +42,23 @@ Updated 2026-11-13
 | Cart visual states | Passed | Empty/populated, desktop/mobile validation, pickup, delivery; three dishes and quantity two in the populated base scenario. |
 | Responsive regression | Passed | 11 PHP page types × 14 widths (320–1920 px), plus static Pages header at 929/1024/1025 px; heading clipping checks, cart access, mobile/tablet menu keyboard behavior and booking dates across browser time zones. The 901–1023 px overflow band was reproduced on the public menu and fixed by moving the shared header/navigation breakpoint to 1024 px without changing the page-layout breakpoint. |
 | Gallery/profile visual state | Passed | Default gallery and static profile desktop/mobile captures. |
+| Booking email follow-up | Passed locally | Optional SMTP adapter and SQLite outbox exercised with a loopback fake SMTP server for accepted mail, 550 rejection, and retry. No external provider is configured or contacted; the public Pages deployment remains static and does not send email. |
 | Visual fidelity follow-up | Passed | New `tests/visual-fidelity-regression.cjs` checks seven routes in PHP and static mode; unique home/menu heroes, all four visible home recommendations after scrolling, philosophy hero image, eight non-clipped gallery tiles, five catalog-backed Omakase overview photos, SVG preference floorplan, fictional map disclosure, image loading, mobile title geometry and no console errors. Captured 14 PHP desktop/mobile full-page screenshots. |
 | Cinematic home hero | Passed locally in PHP and static export | `test:motion` verifies three manual scenes, image/alt/copy/CTA synchronization, PHP-to-static route mapping, arrows and dots, keyboard control, rapid input queuing, no autoplay, reduced motion, no overflow and title/control bounds at 320, 360, 390, 430, 768, 1024, 1440 and 1920 px. Captures default and Omakase scenes on desktop/mobile. |
 | Static export | Passed | Exporter generated 36 pages; locked Secret Menu detail routes are omitted, stale generated detail pages are removed, and the client-only preview payload is generated separately. No PHP/backend files are exported. |
 | Diff hygiene | Passed | Feature and SQLite follow-up patches passed staged diff checks; release-documentation changes are checked before commit. |
 
 The Playwright evidence suite writes to `TOKYO_EVIDENCE_DIR` when set; by default it writes into `project-docs/visual-qa/`. This keeps the checks reproducible in restricted workspaces without changing what CI captures. Secret Menu unlock desktop/mobile captures are included alongside the route and checkout states.
+
+## 2026-11-16 focused product-pairing check
+
+For the catalogue-pairing change, only the affected dish route and its PHP/schema syntax were checked. PHP lint, JS syntax, and diff hygiene passed. A Python SQLite check executed the canonical schema and seed, verified 40 pairings, and found no foreign-key violations. The static salmon-nigiri page showed four recommendations at desktop and mobile widths; configured yuzu and tuna pairings were present, add-to-order updated the shared count, and no browser errors or horizontal overflow were observed. The machine's PHP build has no `pdo_sqlite`, so `php_integrity_integration.php` was not run. No broad regression, hosted CI, or public deployment was repeated.
+
+The same focused change adds HTTP regression assertions for admin create/reorder, type edit, self-pair rejection and deletion. Those assertions are included in `php_integrity_integration.php` but remain unexecuted locally because the PHP SQLite PDO driver is unavailable.
+
+The Secret Menu follow-up adds focused assertions for rule creation/editing, automatic promo-code provisioning, the resulting server unlock decision, schedule enforcement (unscheduled, future-start and expired rules), date validation and disabling. They are included in the integration file but were not executed locally because `pdo_sqlite` is unavailable. PHP syntax lint is the local verification for those handlers.
+
+For the static account empty-state improvement, one focused Chromium run checked the menu, booking and favorites empty-state links at desktop and mobile widths. Targets were correct, page width matched the 390 px viewport, and no page errors occurred. The full responsive, account, PHP integration and hosted suites were not rerun.
 
 ## Visual inspection performed
 
@@ -90,8 +127,352 @@ New evidence is indexed in `visual-qa/README.md`: menu 1440/390/320 initial stat
 
 ## Not production-certified
 
-- No restaurant SMTP/provider credentials or email delivery adapter is configured; the admin notification center is in-app only.
+- The optional SMTP delivery adapter and email queue are implemented, but no restaurant SMTP/provider credentials are configured. The admin shows message state and retry controls; external delivery remains unverified.
 - No payment provider, live inventory, live table availability service, or production restaurant backend is configured. A booking request is not automatically confirmed.
 - GitHub Pages is a browser-local demonstration, not server authentication or durable shared storage.
 - User, menu, price, contact and offer seed values are fictional educational data.
 - A new full pixel-by-pixel pass across all 11 design references remains outstanding.
+
+## Booking email and migration follow-up — 2026-11-13
+
+- Reproduced an upgrade defect on an existing v6 SQLite file: bootstrap skipped the v7 migration when `api_order_requests` existed. The readiness check now also requires migration 7, `api_booking_requests`, and `booking_email_rate_limits`. An isolated v6 fixture upgrades through bootstrap successfully.
+- `php tests/php_integrity_integration.php`: **131 assertions passed**. Coverage includes migration v6→v7, same-key bookings, recipient throttling, SMTP success/failure/retry, and two competing SMTP workers using a gated local fake server. The Windows PHP built-in server serializes HTTP requests; actual multiworker HTTP contention remains for Linux CI.
+- `npm run test:browser`: **passed** against local PHP + Pages: 11 routes, all 20 dish details, cart/checkout flows, and six viewport widths. A repeat booking reuses the same idempotency key after a recoverable API response.
+- PHP 8.4 lint passed for the changed bootstrap, API, mail adapter and integration fixtures; `git diff --check` passed. SMTP credentials are not configured, so delivery to a real mailbox was not tested.
+- Browser screenshots from this run were written to a temporary evidence directory because these backend changes did not alter layout. Existing visual captures remain in `visual-qa/`; this update does not claim a new 11-reference pixel comparison.
+
+## Homepage scroll-story follow-up — 2026-11-13
+
+Added a single requestAnimationFrame-throttled progress line, one-time chapter reveals and restrained active-chapter accents across the homepage story. Reduced-motion users receive all content immediately with transitions disabled. Static output was regenerated from the PHP routes, and the focused `npm run test:motion` run passed in PHP and Pages modes, including progress updates, chapter activation, all reveals, keyboard controls, reduced motion, no autoplay and eight viewport widths. Four updated full-page captures are saved under `visual-qa/2.0-motion/story-*`. The 11-design pixel comparison remains incomplete.
+
+## Referral and birthday integration follow-up — 2026-11-13
+
+The PHP/SQLite integration suite now passes 150 assertions. New coverage verifies registration via an invite link, explicit attachment, retry idempotency, multiple invitees per personal code, self-invite rejection, inviter replacement rejection, completed-order rewards, duplicate completion, cancellation reversal and re-qualification. Birthday checks cover invalid dates, optional consent, eligibility windows, consent withdrawal, configured points and no repeat grant on account reload. `php -l` passed on the changed PHP files, `node --check tokyo20.js` passed, and `git diff --check` was clean. Browser suites were not repeated because this change affects PHP account/referral logic; the prior focused cinematic-motion browser run remains the relevant visual check.
+
+The suite uses a disposable SQLite database. The earlier checks exposed stale read snapshots in the expanded integration fixture; the fixture now uses fresh connections across concurrent HTTP writes. The application flow itself passed after that isolation fix.
+
+## Homepage GSAP integration — 2026-11-16
+
+- Added assertions to `test:motion` that verify ScrollTrigger is active in PHP and static builds and absent when reduced motion is requested.
+- With `TOKYO_BASE_URL=http://127.0.0.1:8100` and `TOKYO_STATIC_BASE_URL=http://127.0.0.1:8100/docs`, `npm run test:motion` passed. It covers three hero scenes, keyboard controls, chapter state, reading progress, reveals, eight viewport widths, reduced motion and browser errors.
+- `npm run test:visual-fidelity` against the same PHP server and static export passed for seven route families in both modes.
+- PHP 8.4 lint passed for `index.php`; `tools/export-pages.php` generated 36 static pages and copied the vendored GSAP files. `git diff --check` passed.
+- Full-page and hero screenshots were generated in `visual-qa/2.0-motion/` and `visual-qa/2.0-visual-fidelity/`. Homepage desktop/mobile PHP captures were visually inspected against `01-home.png`; this focused motion update does not close the 11-reference pixel comparison.
+- This is local evidence only. No CI run or public Pages deployment was performed for this revision.
+# Focused follow-up — 2026-11-16
+
+- Administrative loyalty debit race: `tests/loyalty-adjustment-atomicity.php` passed 6 assertions. Two concurrent 80-point deductions against 100 points produced exactly one accepted ledger entry and a balance of 20; overdraft rejection left the balance unchanged; a separate credit succeeded.
+- PHP lint passed for `lib/commerce.php`, `account.php`, and the focused regression script under PHP 8.4 with `pdo_sqlite` enabled.
+- Account layout was browser-captured once at desktop 1440 px and mobile 390 px with a synthetic order. Mobile scroll width was 390 px, the page heading remained inside the viewport, and the browser recorded no page errors. Screenshots are indexed in `visual-qa/README.md`.
+- The broad browser, responsive and PHP integration suites were not rerun in this focused cycle.
+
+## Personal offers follow-up — 2026-11-16
+
+`tests/personal-offer-regression.php` passed 10 isolated SQLite assertions, including finding an account older than the latest-200 list by email, server-priced personal-code use, duplicate-free reassignment, expiry validation, eligibility expiry, revocation, and rejection of non-personal or code-less campaigns. PHP 8.4 lint passed for the changed account, offers, cart, commerce, admin, and test PHP files; Node syntax checks passed for both source and static `tokyo20.js`. A local HTTP smoke check confirmed the cart route pre-fills a valid promo query at port 8100. Route assertions for account search by email, private-code visibility, account copy/checkout links, and the public offers page are in the broader integration suite but were not run in this shortened cycle. No browser capture, full regression suite, CI, or Pages deployment is claimed.
+
+## Gift quantity follow-up — 2026-11-16
+
+Added the focused `php tests/gift-quantity-regression.php` check for eligible quantity 2, rejection above the configured cap, zero and insufficient stock, persisted order-line quantity, transactional stock decrement, and the legacy default of one. It passed 9 assertions using PHP 8.5.11 with the installed SQLite extensions loaded explicitly. PHP lint for all changed PHP files, JS syntax checks, source/static CSS/JS parity and `git diff --check` passed. The broader PHP, browser and Pages suites were not run for this change.
+
+## Omakase spacing and gift API assertions — 2026-11-16
+
+- Tightened Omakase course and set-card spacing in `tokyo20.css`; `docs/tokyo20.css` is byte-for-byte synchronized. A focused static-browser check confirmed the course tabs still switch, compact desktop spacing is applied, and the 390 px layout has no horizontal overflow. This was not a full-page visual comparison against `04-omakase.png`.
+- Extended `tests/php_integrity_integration.php` with API assertions for quoted gift quantity/limits, rejecting quantities above the cap, persisted order quantity, stock decrement, and rejecting a request exceeding remaining stock. `php -l` passed; the integration suite was not run in this shortened cycle.
+- No broad PHP, browser, responsive, CI, or Pages deployment checks were run. The already-recorded nine-assertion isolated gift regression remains the latest executed PHP coverage for quantity handling.
+
+## Set-builder draft persistence — 2026-11-16
+
+The set builder now saves only selected dish IDs and quantities in browser-local storage, separately per set format. On reload it validates the draft against the current format's dish list and quantity limits; the displayed estimate is recalculated from the current catalog. An accepted add-to-cart event now returns a result to the builder, which clears the draft and selection only after the shared cart confirms acceptance. Failed adds retain the draft. `npm run test:set-draft` passed 16 focused browser assertions across local PHP and static Pages modes (save, reload, restore, transfer, clear). Node syntax checks and `git diff --check` passed. No broad suite, CI, or public deployment was run.
+
+## Omakase visual review — 2026-11-16
+
+The local PHP Omakase route was captured at 1440 and 390 CSS px, after scrolling to trigger all image reveals, and inspected beside `design-references/04-omakase.png`. The five course photos load and the mobile document remains 390 px wide. The current editorial order and hero framing differ from the mockup; this is a focused page review only, not pixel equivalence. Captures and comparison notes are in `project-docs/visual-qa/`.
+
+## Account saved-address follow-up — 2026-11-16
+
+PHP accounts now support adding, editing, selecting a default, and deleting up to ten saved delivery addresses. Migration 8 adds an account-owned table without changing existing user data; ownership is checked in every read/write operation, and a partial unique index plus transactions keep one default per account. Authenticated checkout pre-fills the default address and lets the guest choose another saved address; switching to pickup clears and disables delivery fields, and delivery restores required validation. The Pages demo offers the same convenience using only its local browser storage. `tests/saved-address-regression.php` passed 12 isolated SQLite assertions, including a v6-to-v8 upgrade. `npm run test:saved-address-browser` passed a focused PHP and Pages browser flow for registration, address CRUD, default switching/fallback, checkout prefill and fulfillment switching, and a 390px viewport with no horizontal overflow. PHP lint, Node syntax, source/static parity, and `git diff --check` passed. The broad integration, browser, CI, and public deployment suites were not rerun in this focused cycle.
+
+## Admin order-status side effects — 2026-11-16
+
+Confirmed that the admin's generic status update bypassed `commerce_set_order_status()`, so completing or cancelling an order could skip its transactional loyalty/referral events. Order status changes now use the shared commerce transition function; non-order records keep their existing status path. `tests/admin-order-status-regression.php` passed 6 focused assertions covering completion, duplicate completion, cancellation/reversal, duplicate cancellation, and invalid status. The personal-offer regression was extended to cover route authorization/CSRF, account isolation, missing owners, and rollback; it passed 16 assertions. These focused PHP checks and syntax validation passed locally. Broad suites, CI, public deployment, and live email delivery were not rerun or verified in this cycle.
+
+## Menu-focused visual follow-up — 2026-11-16
+
+`npm run test:menu-visual` passed four focused Playwright cases against local PHP and the freshly exported Pages build at 1440×1000 and 390×844 CSS px. Both modes returned HTTP 200, loaded the new hero and two story photos, showed the breadcrumb and six visible first-page dishes, linked to the correct set builder route, and had no horizontal overflow or browser console/page errors. The hero measured 432 px on desktop and 370 px on mobile. Full-page captures are indexed in `project-docs/visual-qa/README.md`.
+
+The static exporter generated 36 pages before the browser check. The changed page was visually inspected beside `design-references/02-menu.png`; this does not complete the outstanding 11-page pixel comparison. No broad suite, CI run, GitHub Pages deployment, or public-site check was repeated in this shortened cycle.
+
+## 2026-11-16 dish-detail focused regression
+
+The visual-fidelity browser regression was run only for dish, in PHP and freshly exported static mode, on desktop and mobile. It passed the one-title, loaded-image, editorial-photo and add-to-cart assertions, then saved four full-page screenshots under project-docs/visual-qa/. The static exporter produced 36 pages. PHP syntax for pages.php, JavaScript syntax for the browser test, and git diff --check passed.
+
+This accelerated pass did not rerun the broad browser, responsive or PHP/SQLite suites, hosted CI, or public deployment checks. It does not claim that all twenty product routes or all eleven design references have now been visually reviewed.
+
+## 2026-11-16 Omakase mobile selector
+
+A single focused visual-fidelity run checked the Omakase route in PHP and static mode at desktop and 390 px mobile. It passed with all five stage tabs inside the selector bounds, no tab-strip horizontal scrolling, no page overflow, and the existing five-course/image checks intact. The four full-page screenshots were reviewed. No broad suite, CI, or Pages deployment was run.
+
+## 2026-11-16 Omakase hero follow-up
+
+One focused visual-fidelity run passed for the Omakase route in PHP and exported static mode at desktop and 390 px mobile. It verifies the hero uses its Omakase-only mirrored composition, preserves the five course photos, exposes all five mobile stage tabs without horizontal scrolling, and has no page overflow or browser errors. Four updated full-page captures were visually inspected. No full suite, CI run, or Pages deployment was performed.
+
+## 2026-11-16 accelerated follow-up
+
+- Added per-tier editing in `/admin-marketing.php`; the focused `tests/loyalty-tier-admin-regression.php` passed 8 assertions for authorized update, CSRF, bounded values, stable slug, and rollback. PHP lint and diff hygiene passed.
+- Added an optional native cross-document View Transition fade, enabled only when `prefers-reduced-motion: no-preference`; browsers without support keep regular navigation. The focused `npm run test:motion` passed in PHP and exported Pages mode, including the new opt-in and reduced-motion assertions plus the existing hero/story checks at eight widths.
+- This accelerated pass used focused tests only. It did not run the full regression matrix, hosted CI, or a new public deployment check.
+
+## 2026-11-16 account and reviews visual follow-up
+
+- The account-only PHP/static browser run captured authenticated desktop and mobile states, checked the PHP hero and heading/page bounds at 390 px, seeded a local static demo order/booking, and reported no JavaScript errors. The PHP fixture had no persisted orders/bookings, so its empty history is genuine for that isolated database.
+- The reviews-only PHP/static desktop/mobile browser run verified HTTP routes, four demo review cards, cuisine filtering, sort control, title bounds, 370 px hero height and absence of page errors/overflow. A narrow mobile follow-up verified that all five category filters are visible at 390 px and that Omakase filtering returns the expected card.
+- `php -l account.php`, `php -l reviews.php`, and `git diff --check` passed. Broad suites, CI and public Pages deployment were not run for these visual-only changes.
+
+## 2026-11-16 cart layout follow-up
+
+The cart-only static browser regression passed and saved eight states after recommendations were moved below the order/checkout grid. The populated case contains three catalog items with one quantity of two and a 12,700 ₸ subtotal; empty, pickup, delivery and validation states were also refreshed. The PHP template passed syntax lint, and `premium.css` is synchronized with `docs/premium.css`. PHP browser rendering was not verified in this runtime because the active PHP executable reports `could not find driver` for PDO SQLite. No broad suite, hosted CI or Pages deployment was run.
+
+## 2026-11-16 philosophy hero follow-up
+
+One focused static Playwright route check passed at 320, 390, 768 and 1440 px: the title remains in bounds, the decorative mark avoids the title/actions, section links resolve, and the page has no horizontal overflow. HTTP 200, no console errors, no failed resources; the desktop capture decoded all four content images. `php -l about.php`, CSS hash comparison and `git diff --check` passed. PHP browser rendering, broad suites, hosted CI and public Pages were not checked.
+
+## 2026-11-16 booking hero copy follow-up
+
+One focused static route check passed at 320, 390 and 1440 px. It verified the title, subtitle, description and CTA remain inside the viewport, the booking anchor is present, both images load, and there are no console errors, failed resources or horizontal overflow. `php -l pages.php` and `git diff --check` passed. PHP browser rendering, broad suites, hosted CI and public Pages were not checked.
+
+## 2026-11-16 space gallery hero follow-up
+
+One focused static route check passed at 1440 px and 320 px. It verified the title fits its copy area, the desktop title stays single-line, the gallery anchor exists, and the page has no horizontal overflow, console/page errors or failed requests. Both full-page captures were visually inspected against `design-references/06-gallery.png`. `php -l pages.php`, equality of `premium.css` and `docs/premium.css`, and `git diff --check` passed. PHP browser rendering, the broad suite, hosted CI and public Pages were not checked.
+
+## 2026-11-16 space-zone content follow-up
+
+One static route check passed at 1440 px and 390 px. It verified the four reference-aligned zone names, four distinct descriptions, HTTP 200, no browser errors, and no horizontal overflow. Full-page screenshots were visually inspected. This was a content-only follow-up; no broad suite, PHP browser render, CI run, or deployment was repeated.
+
+## 2026-11-16 Omakase style delivery fix
+
+One static Omakase route check passed at 1440 px and 390 px. It verified that `luxury-refinements.css` returns HTTP 200, the hero image receives its horizontal mirror transform, all five tabs fit at mobile width, and the document has no browser errors or horizontal overflow. `php -l bootstrap.php` passed. No broad suite, full Pages re-export, PHP browser render, hosted CI or deployment was run.
+
+## 2026-11-16 Omakase compact hero
+
+`omakase-compact-hero-2026-11-16/` contains desktop and 320 px full-page captures, focused hero captures, and a comparison against `design-references/04-omakase.png`. The desktop hero is 460 px high and the 320 px hero is 449 px; title/copy bounds fit, five course tabs remain visible, the mirrored chef image is active, and a focused static-browser check reported HTTP 200 with no errors, failed requests, or horizontal overflow. The complete lower page remains an adaptation of the concept. PHP browser rendering, a full export, broad suite, hosted CI, and public deployment were not run.
+
+## 2026-11-16 Omakase current selector check
+
+`npm run test:visual-fidelity` passed with `TOKYO_VISUAL_ROUTES=omakase` and `TOKYO_VISUAL_MODE=static`. It validated the exported static page at 1440 px and 390 px, all five distinct course previews, stage-panel selection, ArrowRight roving focus, centered fifth mobile preview, no horizontal overflow, and no console/page errors. Fresh full-page captures are in `visual-qa/omakase-current-2026-11-16/`. The source and exported `tokyo20.css` files match. PHP browser mode is unverified locally because `php -S` returned PHP source as `application/octet-stream`; no full suite, hosted CI, or deployment was run for this focused pass.
+
+## 2026-11-16 static account refinement delivery
+
+The custom Pages account template had omitted `luxury-refinements.css`; the exporter now includes it and the Pages workflow checks the generated account HTML for the link. The checked-in static route mirrors the template fix. One focused local browser check passed at 1440 px and 390 px: stylesheet loaded, overview uses two columns on desktop and one on mobile, no horizontal overflow, console errors, or failed requests. Captures and a reference comparison are in `visual-qa/account-refinement-static-2026-11-16/`. This is a focused account styling fix; full profile fidelity, PHP rendering, hosted CI, and public deployment were not verified.
+
+## 2026-11-16 menu spacing and visual comparison
+
+`menu-visual-follow-up-2026-11-16/` contains eager-loaded 1440 px and 390 px captures compared against `02-menu.png`. The first full-page capture showed blank lower-card images because the manual screenshot did not scroll to trigger native lazy loading; the replacement capture explicitly decoded all 22 images before taking the screenshot. No asset was missing. Menu-section bottom padding is now limited to 58 px desktop / 32 px mobile. The focused static route had HTTP 200, no overflow, browser errors, or HTTP failures. PHP rendering, full interaction regression, CI, and Pages deployment were not checked.
+
+Follow-up browser check: the category rail was captured at 1440 px and 390 px, has no zero-result filter, and displays the set-builder shortcut within the initial viewport at both widths. The 390 px flow followed the shortcut to `set-builder.html` successfully with no page or console errors. The strip itself remains horizontally scrollable by design. No broad suite or PHP browser render was repeated.
+
+## Home booking progressive step — 2026-11-16
+
+The homepage now starts with date, time, guest count and preferred zone; contact fields appear after the visitor submits those choices. The first step never saves or sends a booking. On the second step, the existing PHP/API or browser-local demo handler receives the same required contact fields; after a successful demo save, the form resets to the compact first step. The no-JavaScript fallback keeps all fields visible. A single focused Playwright check passed in the static demo at 1440 px and 390 px, including empty-contact validation and successful local demo submission. Four section screenshots are in `visual-qa/home-booking-progressive-2026-11-16/`. PHP route rendering was not tested locally because this PHP runtime lacks `pdo_sqlite`; no broad suite or public deployment was run.
+
+The same route-focused suite now includes the reference-aligned grid/list switch. It checks switching both ways and confirms searching the unique dish name “Рамен с говядиной” in list mode leaves one result while hiding nonmatches. Static-only run: two viewports (1440/390); PHP browser mode was not run in this pass.
+
+Ingredient quick-filters combine with category and text search. The focused menu test verifies category, ingredient, and text-filter combinations. In the 2026-11-17 follow-up, a photographed scallop nigiri was added through SQLite migration v10; the scallop filter is now visible and returns that dish in PHP and Pages modes. The same focused Playwright run checks 1440, 1024, and 390 px, including the three-column menu grid at 1024 px and PHP/static detail-page image loading. No full suite was repeated.
+
+## Campaign editor follow-up — 2026-11-16
+
+Added an in-place editor for existing marketing campaigns and two regression assertions for prefilled fields, update persistence, editor retention after POST and weekday-mask preservation. `php -l admin-marketing.php`, `php -l tests/php_integrity_integration.php` and `git diff --check` passed. The campaign, promo-code and collection form handlers now use the same strict `Asia/Qyzylorda` datetime parser, reject impossible local dates and reject reversed collection windows. A regression assertion covers an impossible campaign date. The SQLite HTTP regression was not run locally because this PHP CLI has no `pdo_sqlite`; no full suite was repeated.
+
+## Delivery tariff configuration — 2026-11-16
+
+The protected site settings now validate and persist a delivery tariff from 0 to 100,000 ₸, and the campaign creation form exposes the existing free-delivery reward. The focused integration assertions cover saving a positive rate, rejecting a negative rate without overwriting it, and applying the configured amount to a server-quoted free-delivery promotion. PHP lint and `git diff --check` passed; the SQLite integration suite was not run locally because `pdo_sqlite` is unavailable.
+
+## Browser-only account sample — 2026-11-16
+
+Added an explicit “Заполнить учебный пример” action to the static profile. `npm run test:account-demo` passed: it checks three catalog-backed order snapshots, a locally labeled booking request, favorites, idempotent repeat clicks, updated metrics, mobile overflow, and the existing clear-data control. Full-page desktop/mobile captures were visually inspected at `visual-qa/11-account-seeded-{desktop,mobile}.jpg`. JavaScript syntax, exporter PHP syntax and `git diff --check` passed. The local PHP CLI lacks `pdo_sqlite`, so this pass did not rerun the exporter or PHP server-backed account path; hosted CI must verify the generated export.
+
+## Eleven-route static visual capture — 2026-11-16
+
+Extended `tests/visual-fidelity-regression.cjs` to cover reviews, cart and account, support `TOKYO_VISUAL_MODE=static`, and include animated story targets in its post-scroll visibility assertion. Three focused static-only route batches collectively passed all 11 route families at 1440 px desktop and 390 px mobile. Full-page captures are in `project-docs/visual-qa/2.0-visual-fidelity-2026-11-16/`; the eight populated/empty/validation/pickup/delivery cart captures are included there as well. The existing cart visual regression asserts three distinct catalog dishes, quantity ≥2, decoded photos and a displayed total matching the shared store. Home and populated-cart screenshots were reviewed against references 01 and 10; visible differences remain and are recorded in the visual QA index. PHP browser rendering was not run because this local PHP CLI lacks `pdo_sqlite`; there was no public deployment in this pass.
+
+## 2026-11-16 menu and Omakase visual follow-up
+
+`npm run test:visual-fidelity` passed in static mode with `TOKYO_VISUAL_ROUTES=menu,omakase` and `TOKYO_CAPTURE_STATIC=1`. The focused run validates the food-led menu hero, five distinct loaded catalog photos in the Omakase stage selector, selected stage structure, mobile tab bounds, title geometry, image loading, no console/page errors, and no horizontal overflow. Captures in `visual-qa/visual-fidelity-followup-2026-11-16/` were inspected at 1440 px and 390 px against `02-menu.png` and `04-omakase.png`. The Omakase test also now asserts the desktop screenshot viewport before capture; this fixes a prior false desktop label caused by resizing before the desktop screenshot. PHP browser mode, full suites, hosted CI, and deployment were not run in this focused pass.
+
+## 2026-11-16 philosophy reference refinement
+
+Compared the current static route with `design-references/05-philosophy.png`. The hero now uses the existing sakura entrance photograph; the story row follows copy → room photograph → fictional timeline; chef and ingredient sections use the dark editorial palette, while the warm quote strip stays light. `premium.css` and the Pages copy are synchronized. `npm run test:visual-fidelity` passed for the static philosophy route at 1440 px and 390 px: the hero asset loads, the heading remains within bounds, and there are no JavaScript/page errors or horizontal overflow. Full-page captures in `visual-qa/philosophy-refinement-2026-11-16/` were visually inspected beside the approved reference. This remains a focused single-page comparison; PHP browser mode, full suites, all-11 pixel parity, hosted CI and deployment were not checked in this pass.
+
+## 2026-11-16 account hero refinement
+
+Focused static browser regression: `npm run test:account-demo` passed at 1440 px and 390 px. It checked the stable account title/subtitle, loaded entrance photo, seeded local order/booking/favorites, duplicate prevention, clear-data behavior, mobile title bounds, and zero browser exceptions/overflow. Screenshots: `visual-qa/account-hero-refinement-2026-11-16/`. PHP browser rendering, broad suite, hosted CI, and public deployment were not run.
+
+## 2026-11-16 final focused visual and integrity pass
+
+The cart hero rule had drifted in both PHP and Pages stylesheets, leaving the desktop banner at 430 px. Both copies now use the compact 250 px target, with the mobile spacing kept responsive. The route-focused visual-fidelity regression now asserts that the cart hero stays at or below 270 px in both modes. `TOKYO_VISUAL_MODE=both TOKYO_VISUAL_ROUTES=cart` passed against the local PHP server and current static export.
+
+`npm run test:cart-visual` passed and wrote all eight empty/populated/validation/pickup/delivery captures to `visual-qa/cart-state-final-2026-11-16/`. The populated state contains three distinct catalog dishes, a quantity of two, loaded photos and an exact shared-store total. Those desktop/mobile captures were reviewed beside `design-references/10-cart.png`. `npm run test:account-demo` also passed and produced freshly seeded desktop/mobile account captures in `visual-qa/account-state-final-2026-11-16/`; local-only labels, item snapshots, repeat-seed behavior and clear-data flow passed.
+
+`tests/php_integrity_integration.php` passed 193 assertions against an isolated SQLite database. The packaged SQLite DLLs were enabled through a temporary local `php.ini`; no project configuration or secret was changed. Fresh static desktop/mobile captures cover all 11 route families in `visual-qa/reference-pass-current-2026-11-16/`. The human visual review and remaining differences are recorded in `visual-qa/reference-comparison-current-2026-11-16.md`; it is qualitative, not pixel-difference acceptance.
+
+This focused pass did not run the full browser suite, complete 11-route PHP visual comparison, hosted CI, deployment, or a cache-busted public Pages check. These local checks do not establish the current public site state.
+## Focused account history alignment — 2026-11-16
+
+- `npm run test:account-demo` passed against a freshly served static export.
+- Added a desktop geometry assertion for the top alignment of the orders and bookings headings after seeding; existing assertions also covered empty-by-default state, itemized demo orders, local labels, persistence/idempotency, clear-data, mobile overflow and browser errors.
+- Fresh captures: `project-docs/visual-qa/account-history-alignment-2026-11-16/11-account-seeded-{desktop,mobile}.jpg`. PHP account behavior was not changed or re-tested in this focused CSS pass.
+
+## Threshold gift schedule and static pricing disclosure — 2026-11-16
+
+- `commerce_quote()` now skips threshold-gift campaigns outside their start/end dates, weekday mask, or time window, then selects the next scheduled campaign.
+- Added focused regression cases for future, expired, disabled-weekday and out-of-window campaigns in `tests/gift-quantity-regression.php`.
+- PHP syntax checks passed. The local CLI lacks `pdo_sqlite`; hosted run [#147](https://github.com/altento/tokyo-premium/actions/runs/43914869461) passed PHP/SQLite integrity and the threshold-gift schedule regression.
+- GitHub Pages set-builder, offer and cart copy now identifies amounts and promo results as local estimates without server validation. Dynamic set-builder and evening messages use the same disclosure.
+- `npm run test:offers-evening` passed in the static browser, including the set-builder interaction and pricing disclosure.
+- No merge or publication was performed in this pass.
+
+## Account demo navigation badge spacing — 2026-11-16
+
+- The static account navigation now lays out each tab label and its order/favorite/address count as separate flex items with a compact gold badge.
+- `tests/account-demo-regression.cjs` checks that all three badges remain inside their buttons and have visible separation from their labels at desktop and 390 px mobile widths.
+- `npm run test:account-demo` passed in the static Pages export. Fresh full-page captures are in `project-docs/visual-qa/account-tab-count-refinement-2026-11-16/` and were visually inspected at both widths.
+- This focused CSS change does not modify or verify PHP account storage/authentication. The account dashboard still has broader structural differences from `design-references/11-account.png`.
+
+## Tokyo Premium 2.0 targeted regressions — 2026-11-16
+
+- `npm run test:offers-evening` passed in the static browser after adding restart-state gating and occasion-sensitive recommendation ranking. Updated captures: `project-docs/visual-qa/ideal-evening-budget-desktop-2026-11-16.png` and `ideal-evening-budget-mobile-2026-11-16.png`; both were visually inspected.
+- `npm run test:tokyo20` passed in PHP and static modes with PHP 8.4 + SQLite, including checkout-created browser-local orders and bookings being marked as educational demo records and shown with local badges in account history.
+- Campaign tier checks now cover promo quote/order, public offer visibility and threshold gifts. Birthday assignment checks cover consent, configured eligibility window, promotion code, account display and the admin path in `tests/gift-quantity-regression.php` and `tests/personal-offer-regression.php`.
+- The project-wide CLI lacks `pdo_sqlite`, so the two focused SQLite regressions were not run locally. The workflow runs both `test:gift-quantity` and `test:personal-offer` in its PHP+SQLite job.
+- Admin notification links now clear the session search before jumping to the counted section. The PHP integration regression covers the positive count, empty filtered list and reset destination; `php -l` passed locally. That database-backed integration runs in the same PHP+SQLite job.
+
+## Gallery lightbox caption repair — 2026-11-16
+
+The gallery lightbox now has an accessible live caption. It uses the visible tile label or room title and updates when navigating images. `npm run test:gallery-caption` passed against the static Pages export; it checks the selected, next and previous captions plus Escape at desktop and mobile widths. The desktop and mobile screenshots in `project-docs/visual-qa/gallery-caption-followup-2026-11-16/` were visually inspected. Browser CI is configured to check PHP and Pages modes. No public deployment was performed.
+## Commerce pricing integrity follow-up — 2026-11-16
+
+`commerce_quote()` now allocates a campaign-wide `maximum_discount` across all targeted custom sets before the order lines are stored. Promo redemption rows now record only the promotion portion when loyalty points are also redeemed. `tests/commerce-pricing-regression.php` covers two capped set lines, authoritative total reconciliation, and stackable promo-plus-points attribution. PHP lint passed; the focused SQLite test skipped locally because this CLI lacks `pdo_sqlite`. The workflow now runs it in the PHP+SQLite job. No broad local suite was repeated.
+## Admin Cyrillic search and referral login — 2026-11-16
+
+The admin account finder now compares Russian and Kazakh Cyrillic names without case sensitivity using a local SQLite scalar function; referral codes from validated invite links now survive an existing member's login and remain available for explicit attachment. The focused HTTP regression passed with 8 assertions under PHP 8.4 + SQLite, and PHP lint passed. The test is wired into the PHP+SQLite workflow. No broad suite was run.
+
+## Focused visual and seeded-account follow-up — 2026-11-16
+
+- The detail-page related-product grid selector now matches the page's actual `.editorial-page` class. A focused browser run checked the desktop, tablet and mobile grid geometry at 1440, 900 and 390 px; screenshots were inspected.
+- Rechecked reviews against the current export after identifying that an earlier port served stale markup. Three desktop columns and one mobile column were confirmed; `npm run test:reviews` passed with seeded-card disclosure, photo interlude, local review XSS/persistence, and public score stability checks.
+- `npm run test:cart-visual` passed for all eight cart states. The populated desktop/mobile captures show three distinct dishes, a repeated quantity, working recommendations and matching totals; both were visually inspected beside `design-references/10-cart.png`.
+- `npm run test:account-demo` passed after moving the browser-local privilege summary nearer the profile overview. It now asserts that demo points are recalculated after seeding and return to zero after local data is cleared. Updated full-page desktop/mobile captures are in `project-docs/visual-qa/11-account-seeded-{desktop,mobile}.jpg`.
+- PHP syntax and whitespace checks passed. This accelerated pass did not run the broad browser suite, PHP browser mode or public-site check; the draft branch has not been published to GitHub Pages.
+
+## Draft PR browser release gate — 2026-11-16
+
+The latest prior draft run (`43933421739`) passed its build job but skipped browser QA and deployment because of workflow conditions. Removed the draft-based skips for browser dependency installation and browser/visual regression; deployment remains restricted to non-PR events. The first run with that gate (`43934043720`) passed PHP/SQLite integrity, focused campaign/pricing/admin regressions, PHP syntax, HTTP smoke checks and static export, then stopped at an inaccurate menu regression assertion: it tested visible card text rather than the hidden `data-search` metadata that the search supports. A focused static Playwright reproduction confirmed the feature returns only matching-category cards whose search metadata includes the query. Updated the assertion to match the catalog search contract. The rerun is pending; no browser QA or deployment success is claimed yet.
+## 2026-11-17 — native transitions, booking title, and motion crop
+
+Hosted run 43937788170 (https://github.com/altento/tokyo-premium/actions/runs/43937788170) on 7ff2ba1 passed the PHP/SQLite integrity suite (196 assertions), gift/personal-offer/commerce/admin regressions, PHP lint and smoke checks, static export, the 11-route/20-dish browser regression, and all eight cart visual states. It stopped in the responsive suite because the shared editorial heading rule still reported hyphens: auto at 320 px. The booking title itself fit visibly, but the automatic hyphenation setting contradicted the mobile heading requirement.
+
+The shared rule in editorial.css and the Pages copy now uses hyphens: none while preserving overflow-wrap: anywhere. A focused static browser check passed at 320, 360, 375, 390, 430, 768, 1024, 1440 and 1920 px: one-line title, in-viewport text bounds, no horizontal overflow. Captures are in project-docs/visual-qa/07-booking-heading-fix-2026-11-17/.
+
+The first static-only npm run test:motion exposed an outdated assertion for a 75% hero image crop; the current CSS and screenshot show 82%, with the salmon clearly in frame. The assertion now accepts a narrow 78–86% framing window and also checks image geometry. The static motion regression passed; five captures are in project-docs/visual-qa/2.0-motion-2026-11-17/. Hosted PHP responsive verification for the heading repair is pending.
+## 2026-11-17 review load-more visibility
+
+- Confirmed the review page showed `Показать ещё` while only four seeded demo reviews were present. The button had the `hidden` attribute, but its `.button` display rule overrode the browser default.
+- Added an explicit hidden-state rule to the PHP source stylesheet and the committed Pages stylesheet. Added a Playwright assertion for the four-review state in `tests/reviews-regression.cjs`.
+- `npm run test:reviews` passed against the local static route: review submission, browser-local persistence, XSS-safe rendering, clearing, unchanged public score, and hidden load-more state. Captures are in `project-docs/visual-qa/reviews-load-more-fix-2026-11-17/`.
+- This is a focused review-page regression check, not full-site acceptance or a public deployment check.
+- The PHP `reviews.php` route was also checked in Chromium with SQLite enabled for the isolated local server: four cards, `hidden=true`, computed `display:none`, no JavaScript errors. Screenshot: `project-docs/visual-qa/reviews-load-more-fix-2026-11-17/08-reviews-php-desktop.jpg`.
+
+## 2026-11-17 compact menu hero
+
+- The menu hero was oversized against approved reference 02. Reduced the desktop minimum/height scale and headline/subtitle scale while preserving the mobile composition.
+- Tightened `tests/menu-visual-smoke.cjs` so it enforces a 350 px desktop ceiling and 370 px mobile ceiling; screenshot filenames no longer carry a stale date.
+- `npm run test:menu-visual` passed all four PHP and static cases at 1440 px and 390 px. Measured hero heights were 333 px desktop and 369 px mobile; the hero image loaded, catalog controls rendered, and no horizontal overflow was detected.
+- Current captures: `project-docs/visual-qa/menu-hero-compact-2026-11-17/` (`02-menu-current-php-desktop.jpg`, `02-menu-current-static-desktop.jpg`, and mobile counterparts). This focused pass does not complete the full 11-reference visual acceptance.
+
+## 2026-11-17 mobile booking map order
+
+- Moved the booking submit button after the preferred-seat map and its disclosure. The form still owns the fields and browser validation through the button's `form` attribute; the desktop and mobile routes use the same flow.
+- The shared PHP and Pages script now locates an externally associated submit button if a submit event has no `event.submitter` (including `form.requestSubmit()`).
+- `npm run test:tokyo20` passed against an isolated PHP 8.5 + SQLite server and the static export. It checks that the form precedes the map and that the submit control follows the map caption at 390 px, and submits a static booking via `requestSubmit()`.
+- I visually inspected the PHP and static mobile captures and the selected-seat captures in `project-docs/visual-qa/booking-map-order-2026-11-17/`.
+- This targeted regression does not represent full-site acceptance or a public Pages deployment check.
+
+## 2026-11-17 home hero reference pass
+
+- Replaced the oversized three-line Russian hero title with the approved TOKYO PREMIUM brand lockup, shortened the supporting copy, and reduced the desktop/tablet hero height to a width-based scale closer to reference 01. The mobile crop and scene controls remain intact.
+- Regenerated only the static homepage and its stylesheet into `docs/` from the PHP exporter.
+- `npm run test:motion` passed in PHP and static modes: scene controls, keyboard interaction, reduced motion, image framing and eight responsive widths.
+- PHP/static hero captures at desktop and 390 px mobile are in `project-docs/visual-qa/home-hero-reference-2026-11-17/`; I inspected all four and compared the desktop framing with `design-references/01-home.png`.
+- This is a focused first-screen improvement; the remaining homepage sections have not been brought to full pixel parity with the reference.
+
+## 2026-11-17 order-history photo previews
+
+The PHP account query now joins order items to the current catalogue image while preserving saved order names, quantities, prices, and totals. The static browser demo resolves thumbnails from catalogue dish IDs and never trusts a persisted image URL. The focused static account regression passed with three sample records and verified a loaded catalogue photograph; `php -l account.php`, `node --check account-demo.js`, and `git diff --check` passed. Desktop (1440 px) and mobile (390 px) seeded account screenshots were inspected in `visual-qa/account-order-previews-2026-11-17/`. PHP browser rendering and public Pages publication were not exercised in this pass.
+
+## 2026-11-17 booking floorplan preference picker
+
+- Expanded the booking SVG into four clearly labeled zones with 42 illustrative table choices: 20 main hall, 8 sushi bar, 4 private room, and 10 terrace. These are preferences only; neither static nor PHP mode claims real-time availability.
+- Added a mobile-friendly zone/table picker derived from the same SVG data. Choosing a zone or table updates the existing booking preference state; touch controls are at least 44 px high.
+- `npm run test:floorplan` passed against both the local PHP app and GitHub Pages static export. It checks all four zone counts, selection propagation, availability disclosure, mobile control size, and horizontal overflow. `node --check`, `php -l pages.php`, and `git diff --check` passed.
+- Desktop and mobile screenshots were visually inspected in `visual-qa/booking-floorplan-42-2026-11-17/`. Full booking-page parity, live table availability, and public GitHub Pages deployment were not tested.
+- The first hosted CI run found a stale browser-test selector that assumed a table ID appeared only once. The mobile picker intentionally reuses SVG table IDs, so the booking reset assertion now scopes itself to the SVG. `npm run test:browser` then passed locally across 11 routes, 20 dish details, the core cart/checkout interactions, and six viewport widths; its screenshots are in `visual-qa/browser-regression-current/`. The focused test change does not claim public deployment.
+
+## 2026-11-17 account dashboard hierarchy
+
+- Compared the authenticated, populated PHP account page with `design-references/11-account.png`. The main order history and booking history had been squeezed into two equal columns; order cards now use the full primary column, with secondary account panels retaining their two-column desktop layout. Reduced the account hero's maximum height from 310 px to 280 px to bring the first screen closer to the approved reference.
+- Kept the shared account selectors in sync in `premium.css` and `docs/premium.css`. The GitHub Pages account template uses separate demo markup, so this grid adjustment affects the PHP dashboard only.
+- Added a browser geometry regression that confirms the two primary history sections stack and the order history exceeds 900 px at the desktop test viewport. `npm run test:browser` passed against the local PHP and static routes; it covered 11 routes, all 20 dish detail pages, cart/checkout, navigation, favorites, filters, and six responsive widths. The focused desktop account assertion ran against the authenticated PHP dashboard.
+- Captured and visually inspected populated account screenshots at 1440 px and 390 px in `visual-qa/account-dashboard-layout-2026-11-17/`. The order/booking hierarchy is now readable and remains stacked on mobile. The screenshot still shows the expanded 2.0 account feature set and is not a claim of exact pixel parity with the older reference. Public Pages was not updated or checked in this pass.
+
+## 2026-11-17 static account first-visit preview
+
+- A clean GitHub Pages browser now opens the account with three catalog-backed example orders, one example booking request and three favorites. Each generated record is marked as a local educational example. This behavior is limited to the static account route and does not write PHP/server account data.
+- First-visit seeding is skipped when browser-local account data, cart items, custom sets or favorites already exist. The clear-data action records a dismissal, so reload stays empty; the visitor can explicitly restore the sample afterward.
+- Fixed the CSS cascade for the seed prompt `hidden` state. The focused regression checks visible state, existing-data preservation, persistence, explicit restoration and successful loading of all order thumbnails before capture.
+- `npm run test:account-demo` passed against the local static export. JavaScript syntax checks and `git diff --check` passed. Desktop (1440 px) and mobile (390 px) captures in `project-docs/visual-qa/account-first-visit-2026-11-17/` were inspected.
+- This is a focused static-page improvement; PHP account rendering, hosted CI, public Pages and full 11-reference acceptance remain open.
+
+## 2026-11-17 Tokyo 2.0 checkout and first-visit account regression
+
+The new first-visit examples changed the expected static account history from one checkout row and one booking to three labeled sample rows plus the newly submitted order and booking. Updated `tests/tokyo20-regression.cjs` to verify the submitted guest order itself and both sets of local records. `npm run test:tokyo20` passed against an isolated PHP + SQLite server and the current Pages export. Hosted run 43986099018 exposed the stale count assertions; the correction passed CI in replacement run 43988516200. Artifact upload and deployment were skipped because PR #19 remains a draft.
+
+## 2026-11-17 promo-code administration
+
+The Marketing & Loyalty page now displays each code's persisted use count, global and per-account limits, validity dates in `Asia/Qyzylorda`, and first-order restriction. Every existing code has a prefilled edit form; its code string is read-only there to avoid accidentally creating a replacement while leaving the old code enabled. `tests/php_integrity_integration.php` passed all 199 assertions under PHP 8.4 + SQLite, including a new assertion that matches the seeded `DEMO10` redemption counter and verifies the prefilled editor. `php -l admin-marketing.php`, matching PHP/Pages `tokyo20.css` hashes, and `git diff --check` passed. Hosted CI for this latest change and public Pages deployment have not run; deployment remains skipped while PR #19 is draft.
+
+## 2026-11-17 cart hero refinement
+
+Compared the populated cart against reference 10 and replaced the reused close-up set image with a dedicated generated dining-scene WebP. The PHP route and static Pages export now share `assets/generated/cart-hero.webp`. `npm run test:cart-visual` passed all eight empty/populated/checkout-state captures against the local static export and now asserts that this hero asset loads. `php -l pages.php`, `node --check tests/cart-visual-regression.cjs` and `git diff --check` passed. The inspected 1440 px desktop and 390 px mobile captures are in `project-docs/visual-qa/cart-hero-refinement-2026-11-17/`. Hosted run #177 exposed a stale `test:visual-fidelity` expectation for the old cart social image; the assertion now matches the new cart asset. A hosted rerun is pending. This focused change does not complete the all-11-reference comparison or update the public deployment.
+
+## 2026-11-17 menu tablet header
+
+The earlier header switched to mobile mode at 1024 px, although reference 02 shows desktop navigation at that width. CSS and `navigation.js` now share a 1023 px cutoff, with a compact booking action at 1024 px and an explicit accessible name. `npm run test:menu-visual` passed the focused static route at 1440, 1024, 1023, 900, and 390 px: the 1024 px navigation, profile, cart, and booking controls fit inside header padding without overlap; the 1023/900/390 px mobile menu opens, exposes booking, closes on Escape, and restores focus. The existing browser-fidelity regression was extended with the same 1024/1023 boundary checks and passed for the static menu route, including the booking accessible name. The catalog retained 3/3/2/2/2 columns with no page overflow. Captures and side-by-side notes are in `project-docs/visual-qa/menu-header-tablet-2026-11-17/`. This focused pass did not render PHP locally; the current hosted gate will check PHP and static routes.
+
+Hosted run #178 for `f45a3ecc8fb6ecdce676a3bdb4a3d0b35c7a499f` completed successfully. PHP/SQLite integrity, cart state, browser regression, visual QA, and static export passed; deployment was skipped because PR #19 remains a draft. This confirms the cart-image assertion repair only; it does not cover the later tablet-header changes.
+
+Hosted run #179 for `01b63cff15478ecdec8ccdb5b7cbc05b63c92631` passed PHP/SQLite integrity, static export and the 11-route/20-dish browser regression, then failed in the responsive suite because its breakpoint assertions still treated 1024 px as mobile. The header change intentionally keeps desktop navigation at 1024 px to match reference 02. Updated the responsive regression to test the real 1023/1024 boundary in both PHP and Pages modes. A focused static Playwright visual-fidelity run passed the menu at 1024 and 1023 px; PHP + SQLite responsive verification is pending the next hosted run. No deployment was attempted because PR #19 is draft.
+
+## 2026-11-17 contact layout and visual-fidelity selector follow-up
+
+Hosted run #180 (`ad740e906c4df326714d22d67a758eed3d756d16`) passed PHP/SQLite integrity, cart state, static export, core browser regression, cart visuals, and the responsive suite. It then failed in visual fidelity because the test selected the static-only `booking.html` link while running the PHP route. Commit `9c8ee958e9a846b7bc675e50750f043cc7e011d2` changed the selector to accept the shared booking link in both modes and added the contact layout refinement. A focused static Playwright visual-fidelity run passed for menu and contacts. Contact hero/map dimensions and desktop map-to-summary proportion are asserted; 1440 px desktop and 390 px mobile captures were inspected against reference 09. Evidence and the comparison are in `project-docs/visual-qa/contacts-reference-followup-2026-11-17/`. Public deployment remains pending.
+
+Hosted run #181 for `9c8ee958e9a846b7bc675e50750f043cc7e011d2` passed the PHP/SQLite, cart, core-browser, static-export, and responsive jobs, then failed at the visual-fidelity check immediately after resizing from 1024 to 1023 px: the test read `inert` before the asynchronous `matchMedia` change handler had applied it. The existing navigation handler synchronizes `inert` on that breakpoint change; a focused static run for the home route passed locally. Added a bounded browser wait for the inert state so CI verifies the resulting behavior instead of racing the event loop. Hosted verification of that test adjustment is pending.
+
+
+## Current-head verification — 2026-11-17
+
+Hosted GitHub Actions run [#182](https://github.com/altento/tokyo-premium/actions/runs/44023162925) passed for `7d888d1b24e70e6ec593a2083930522d9db08e58`: PHP/SQLite integrity, cart state, gift threshold, birthday/tier restrictions, capped set pricing and promotion attribution, admin Cyrillic search/referral login, PHP syntax, form/admin smoke, static export, browser regression and visual QA. The Pages deployment job was skipped because PR #19 remains a draft.
+
+A current local static Playwright visual-fidelity pass passed all 11 page routes at 1440 px desktop and 390 px mobile. Full-page captures and four reference comparison sheets are in `project-docs/visual-qa/2.0-visual-fidelity-current-2026-11-17/`; route-by-route findings are in that folder's `comparison.md`. This is a structural/visual review, not pixel-perfect acceptance.
+
+The populated-cart browser capture was created by adding three actual catalog items (Philadelphia ×2, salmon nigiri ×1, matcha latte ×1). The subtotal shown is 12,700 ₸. Desktop and mobile captures show loaded recommendation photography, quantity controls, promo and fulfilment controls, and checkout. The first capture attempt raced lazy image loading; after waiting for image decode the recommendation image rendered correctly, so no asset correction was needed.
+
+Public GitHub Pages is still unchanged because PR #19 is open as draft and deploy was skipped. The full comparison, PHP rendering on this workstation (no local pdo_sqlite), SMTP delivery configuration, and public-site post-deploy checks remain outstanding.
+
+## 2026-11-17 dish ingredient composition follow-up
+
+- Added additive migration v11 to populate the normalized ingredient relations for 19 individually described educational dishes. Set pages keep an honest “components not listed” note; the detail page explicitly says allergen data are not verified. The migration only inserts missing ingredient and dish links.
+- The PHP dish detail now reads ingredient names from SQLite. A local static preview of the salmon nigiri page shows salmon and sushi rice, with no synthetic photo gallery. Full generated static export of all detail pages is delegated to the hosted exporter.
+- Focused static Playwright visual-fidelity check passed for the dish route at 1440 px desktop and 390 px mobile. Captures: `project-docs/visual-qa/dish-composition-2026-11-17/dish-static-desktop.jpg` and `dish-static-mobile.jpg`; both were visually inspected against reference 03.
+- PHP syntax checks passed for `lib/commerce.php`, `bootstrap.php`, `pages.php` and `tests/php_integrity_integration.php`; both updated browser test files pass `node --check`; `git diff --check` passed.
+- SQLite integration assertions now cover the two listed salmon nigiri ingredients, idempotent migration retry and migration of an existing v6 database. They were not run locally because PHP here lacks `pdo_sqlite`; hosted CI is required to verify the database path.
+- This targeted detail-page improvement does not close the remaining all-reference visual gaps or update the public Pages deployment.

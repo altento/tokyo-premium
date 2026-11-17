@@ -43,6 +43,14 @@ jobs:
         run: npm run test:cart
       - name: Run PHP and SQLite integrity checks
         run: php tests/php_integrity_integration.php
+      - name: Check threshold gift schedule regression
+        run: npm run test:gift-quantity
+      - name: Check birthday offers and tier restrictions
+        run: npm run test:personal-offer
+      - name: Check capped set pricing and promo attribution
+        run: npm run test:commerce-pricing
+      - name: Check Cyrillic admin search and referral login
+        run: npm run test:admin-account-search-referral
       - name: Check PHP syntax
         run: find . -maxdepth 2 -type f -name '*.php' -print0 | xargs -0 -n1 php -l
       - name: Smoke test PHP forms and admin access
@@ -62,7 +70,7 @@ jobs:
           csrf=$(printf '%s' "$page" | sed -n 's/.*name="csrf" value="\([^"]*\)".*/\1/p')
           test -n "$csrf"
           booking_date=$(TZ=Asia/Qyzylorda date +%F)
-          booking=$(curl --fail --silent --cookie "$cookies" --cookie-jar "$cookies" --data-urlencode "csrf=$csrf" --data-urlencode 'type=booking' --data-urlencode 'name=Demo Guest' --data-urlencode 'phone=+70000000000' --data-urlencode 'guests=2' --data-urlencode "date=$booking_date" --data-urlencode 'time=18:00' --data-urlencode 'zone=Суши-стойка' --data-urlencode 'table=4' --data-urlencode 'message=Smoke test' http://127.0.0.1:8081/api.php)
+          booking=$(curl --fail --silent --cookie "$cookies" --cookie-jar "$cookies" --data-urlencode "csrf=$csrf" --data-urlencode 'type=booking' --data-urlencode 'name=Demo Guest' --data-urlencode 'email=demo@example.test' --data-urlencode 'phone=+70000000000' --data-urlencode 'guests=2' --data-urlencode "date=$booking_date" --data-urlencode 'time=18:00' --data-urlencode 'zone=Суши-стойка' --data-urlencode 'table=4' --data-urlencode 'message=Smoke test' http://127.0.0.1:8081/api.php)
           printf '%s' "$booking" | grep -q '"ok":true'
           order=$(curl --fail --silent --cookie "$cookies" --cookie-jar "$cookies" --data-urlencode "csrf=$csrf" --data-urlencode 'type=order' --data-urlencode 'name=Demo Guest' --data-urlencode 'phone=+70000000000' --data-urlencode 'address=' --data-urlencode 'fulfillment=pickup' --data-urlencode 'items=[{"id":1,"qty":2}]' http://127.0.0.1:8081/api.php)
           printf '%s' "$order" | grep -q '"ok":true'
@@ -91,7 +99,10 @@ jobs:
           test -s docs/account.html
           test -s docs/assets/food/03-nigiri-salmon.webp
           grep -q 'не зашифровано' docs/account.html
+          grep -q 'href="luxury-refinements.css"' docs/account.html
+          grep -q 'data-account-demo-seed' docs/account.html
       - name: Run browser regression and visual QA
+        id: browser_qa
         run: |
           set -euo pipefail
           export RESTAURANT_DB=/tmp/tokyo-premium-browser.sqlite
@@ -104,7 +115,10 @@ jobs:
             sleep 1
           done
           TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:browser
+          TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:gallery-caption
+          TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:account-demo
           TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:tokyo20
+          TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:offers-evening
           TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:reviews
           TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:cart-visual
           TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:responsive
@@ -112,7 +126,7 @@ jobs:
           TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:visual-fidelity
           TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:motion
       - name: Save visual QA screenshots
-        if: always()
+        if: always() && steps.browser_qa.outcome != 'skipped'
         uses: actions/upload-artifact@v4
         with:
           name: tokyo-premium-visual-qa
@@ -121,6 +135,7 @@ jobs:
             project-docs/visual-qa/**/*.png
           if-no-files-found: warn
       - name: Upload site artifact
+        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
           path: docs

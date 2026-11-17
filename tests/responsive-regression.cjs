@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const evidence = path.resolve(process.env.TOKYO_EVIDENCE_DIR || path.join(root, 'project-docs', 'visual-qa'));
-const widths = [320, 360, 375, 390, 430, 768, 900, 901, 929, 981, 1024, 1025, 1440, 1920];
+const widths = [320, 360, 375, 390, 430, 768, 900, 901, 929, 981, 1023, 1024, 1025, 1440, 1920];
 const routes = [
   ['01-home', '/'], ['02-menu', '/menu.php'], ['03-dish', '/pages.php?page=dish&id=3'],
   ['04-omakase', '/pages.php?page=omakase'], ['05-philosophy', '/about.php'],
@@ -96,9 +96,9 @@ async function run(options = {}) {
         check(geometry.clipped.length === 0, `${name} text clipped at ${width}px: ${JSON.stringify(geometry.clipped.slice(0,3))}`);
         check(geometry.cartCount === 1, `${name} must have one header cart link at ${width}px`);
         check(geometry.visibleCart, `${name} header cart link is hidden at ${width}px`);
-        check(geometry.visibleMenu === (width <= 1024), `${name} mobile menu breakpoint is consistent at ${width}px`);
-        check(geometry.visibleCta === (width > 1024), `${name} booking CTA breakpoint is consistent at ${width}px`);
-        check(geometry.visibleDesktopNav === (width > 1024), `${name} primary navigation breakpoint is consistent at ${width}px`);
+        check(geometry.visibleMenu === (width <= 1023), `${name} mobile menu breakpoint is consistent at ${width}px`);
+        check(geometry.visibleCta === (width > 1023), `${name} booking CTA breakpoint is consistent at ${width}px`);
+        check(geometry.visibleDesktopNav === (width > 1023), `${name} primary navigation breakpoint is consistent at ${width}px`);
         check(!geometry.cartFixed, `${name} cart action must not float over content at ${width}px`);
         check(geometry.visibleToggles === 0, `${name} duplicate floating cart control at ${width}px`);
         check(geometry.cartMinHitTarget, `${name} cart tap target is under 44px at ${width}px`);
@@ -121,7 +121,7 @@ async function run(options = {}) {
           const gallery = await page.locator('.detail-visual').boundingBox();
           check(gallery && gallery.width >= width * .35, `dish hero image keeps editorial desktop width at ${width}px (got ${gallery?.width || 0})`);
         }
-        if (width <= 1024) {
+        if (width <= 1023) {
           const menu=page.locator('.mobile-menu');
           await menu.focus(); await page.keyboard.press('Enter');
           check(await menu.getAttribute('aria-expanded')==='true', `${name} menu opens at ${width}px`);
@@ -151,7 +151,7 @@ async function run(options = {}) {
 
     // The GitHub Pages export shares the responsive header but has its own HTML
     // and relative routes, so guard the breakpoint in both delivery modes.
-    for (const width of [929, 1024, 1025]) {
+    for (const width of [929, 1023, 1024, 1025]) {
       await page.setViewportSize({width, height:900});
       const response=await navigateReady(base+'/docs/menu.html');
       check(response?.status()===200, `static menu loads at ${width}px`);
@@ -160,10 +160,10 @@ async function run(options = {}) {
         return {overflow:document.documentElement.scrollWidth>innerWidth+1,menu:visible(document.querySelector('.mobile-menu')),cta:visible(document.querySelector('.header-cta')),cart:visible(document.querySelector('.header-cart-link'))};
       });
       check(!header.overflow, `static menu has no horizontal overflow at ${width}px`);
-      check(header.menu===(width<=1024), `static menu navigation breakpoint is consistent at ${width}px`);
-      check(header.cta===(width>1024), `static booking CTA breakpoint is consistent at ${width}px`);
+      check(header.menu===(width<=1023), `static menu navigation breakpoint is consistent at ${width}px`);
+      check(header.cta===(width>1023), `static booking CTA breakpoint is consistent at ${width}px`);
       check(header.cart, `static header cart stays available at ${width}px`);
-      if (width<=1024) {
+      if (width<=1023) {
         const menu=page.locator('.mobile-menu');
         await menu.focus(); await page.keyboard.press('Enter');
         check(await menu.getAttribute('aria-expanded')==='true', `static menu opens at ${width}px`);
@@ -178,9 +178,10 @@ async function run(options = {}) {
     for (const fixed of ['2027-01-31T20:00:00.000Z','2027-03-01T19:00:00.000Z']) {
       // Deliberately use a browser zone whose calendar day differs from the restaurant
       // zone at this instant. The date bounds must follow Asia/Qyzylorda, not Date's
-      // browser-local getters (which previously overrode the shared helper).
+      // browser-local getters (which previously overrode the shared helper). Keep the
+      // simulated clock monotonic so GSAP's scroll reveals can still finish.
       const futureContext=await browser.newContext({viewport:{width:390,height:844},timezoneId:'UTC'});
-          await futureContext.addInitScript(`(()=>{const at=${Date.parse(fixed)};const NativeDate=Date;class FrozenDate extends NativeDate{constructor(...args){super(...(args.length?args:[at]))}static now(){return at}}window.Date=FrozenDate})()`);
+      await futureContext.addInitScript(`(()=>{const at=${Date.parse(fixed)};const NativeDate=Date;const started=performance.now();const now=()=>Math.floor(at+performance.now()-started);class FrozenDate extends NativeDate{constructor(...args){super(...(args.length?args:[now()]))}static now(){return now()}}window.Date=FrozenDate})()`);
       const futurePage=await futureContext.newPage();
       const expectedMin=fixed.startsWith('2027-01')?'2027-02-01':'2027-03-02';
       const expectedMax=fixed.startsWith('2027-01')?'2028-02-01':'2028-03-01';
@@ -189,6 +190,11 @@ async function run(options = {}) {
         await futurePage.waitForFunction(() => [...document.styleSheets].some(sheet => sheet.href?.endsWith('/premium.css')));
         await futurePage.evaluate(() => document.fonts.ready);
         for (const input of await futurePage.locator('.home-booking-form input[type="date"], .booking-form input[type="date"]').all()) {
+          // Home booking fields are revealed on scroll. Trigger the reveal before
+          // interacting so this verifies the real, visible form instead of timing
+          // out on an intentionally off-screen story section.
+          await input.evaluate(element => element.scrollIntoView({ block: 'center', inline: 'nearest' }));
+          await input.waitFor({ state: 'visible' });
           check(await input.getAttribute('min')===expectedMin, `booking min date on ${route} at ${fixed}`);
           check(await input.getAttribute('max')===expectedMax, `booking max date on ${route} at ${fixed}`);
           check(await input.getAttribute('data-restaurant-time-zone')==='Asia/Qyzylorda', `restaurant timezone attached on ${route}`);
@@ -230,7 +236,7 @@ async function run(options = {}) {
     await page.screenshot({path:path.join(evidence,'07-mobile-header-cart-390.jpg'),type:'jpeg',quality:80,fullPage:false});
     await page.locator('.header-cart-link').click();
     check(new URL(page.url()).searchParams.get('page')==='cart', 'header cart link opens the full cart page');
-    console.log(`PASS responsive regression: ${routes.length} PHP page types × ${widths.length} widths plus static Pages at 929/1024/1025px; heading clipping, cart access, tablet/mobile keyboard navigation and restaurant-timezone booking dates.`);
+    console.log(`PASS responsive regression: ${routes.length} PHP page types × ${widths.length} widths plus static Pages at 929/1023/1024/1025px; heading clipping, cart access, tablet/mobile keyboard navigation and restaurant-timezone booking dates.`);
   } finally { await browser.close(); }
 }
 

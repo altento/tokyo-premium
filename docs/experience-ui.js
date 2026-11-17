@@ -2,6 +2,7 @@
   'use strict';
 
   const doc = global.document;
+  const staticDemo = Boolean(global.TOKYO_STATIC_DEMO);
   const started = new WeakSet();
   const quickViewRoots = new WeakSet();
   const transitionRoots = new WeakSet();
@@ -111,11 +112,40 @@
     if (started.has(root)) return;
     started.add(root);
     const selected = new Map();
+    const variant = root.dataset.setType || 'signature';
+    const draftKey = `tokyo-custom-set-draft-v1:${variant}`;
+    const allowedDishIds = new Set(many('[data-tp-set-dish]', root).map(card => Number(card.dataset.dishId)).filter(Number.isSafeInteger));
     const minDistinct = Math.max(1, Number(root.dataset.minDistinct) || 3);
     const maxDistinct = Math.max(minDistinct, Number(root.dataset.maxDistinct) || 5);
     const maxQuantity = Math.max(maxDistinct, Number(root.dataset.maxQuantity) || 8);
     const status = one('[data-tp-status]', root);
     const composition = one('[data-tp-set-composition]', root.parentElement || doc);
+
+    const persistDraft = () => {
+      try {
+        if (selected.size) global.localStorage.setItem(draftKey, JSON.stringify(Array.from(selected, ([id, qty]) => ({ id, qty }))));
+        else global.localStorage.removeItem(draftKey);
+      } catch (_) { /* A blocked local store should not block set building. */ }
+    };
+    try {
+      const saved = global.localStorage.getItem(draftKey);
+      if (saved) {
+        const rows = JSON.parse(saved);
+        if (!Array.isArray(rows) || rows.length > maxDistinct) throw new Error('Invalid saved set');
+        let total = 0;
+        for (const row of rows) {
+          const id = Number(row?.id);
+          const qty = Number(row?.qty);
+          if (!Number.isSafeInteger(id) || !allowedDishIds.has(id) || !Number.isSafeInteger(qty) || qty < 1 || qty > 4 || selected.has(id)) throw new Error('Invalid saved set item');
+          total += qty;
+          if (total > maxQuantity) throw new Error('Saved set exceeds the variant limit');
+          selected.set(id, qty);
+        }
+      }
+    } catch (_) {
+      selected.clear();
+      try { global.localStorage.removeItem(draftKey); } catch (_) { /* Ignore unavailable storage. */ }
+    }
 
     const render = () => {
       let pieces = 0;
@@ -186,7 +216,8 @@
       if (delta > 0 && total >= maxQuantity) { setStatus(root, `В этом варианте не больше ${maxQuantity} порций.`); return; }
       if (delta > 0 && !current && selected.size >= maxDistinct) { setStatus(root, `В этом варианте не больше ${maxDistinct} разных блюд.`); return; }
       if (next) selected.set(id, next); else selected.delete(id);
-      if (status) status.textContent = `${dish.name}: ${next ? `выбрано ${next}` : 'удалено из сета'}. Сумма — ориентировочная и перепроверяется сервером.`;
+      persistDraft();
+      if (status) status.textContent = `${dish.name}: ${next ? `выбрано ${next}` : 'удалено из сета'}. Черновик сохранён в этом браузере; ${staticDemo ? 'стоимость — локальная оценка без серверной проверки.' : 'цена ориентировочная и перепроверяется сервером.'}`;
       render();
     };
 
@@ -232,7 +263,12 @@
         if (timeout) global.clearTimeout(timeout);
         const accepted = result === true || Boolean(result && typeof result === 'object' && result.ok === true);
         if (accepted) {
-          setStatus(root, 'Сет добавлен в общую корзину. Итоговая цена будет подтверждена сервером.');
+          selected.clear();
+          persistDraft();
+          render();
+          setStatus(root, staticDemo
+            ? 'Сет добавлен в локальную корзину браузера. Стоимость остаётся демонстрационной и не проверяется сервером.'
+            : 'Сет добавлен в общую корзину. Итоговая цена будет подтверждена сервером.');
           return;
         }
         const reason = result && typeof result === 'object' && typeof result.message === 'string' ? result.message : 'Корзина отклонила этот состав. Проверьте ограничения сета и попробуйте ещё раз.';
@@ -262,6 +298,7 @@
     });
 
     render();
+    if (selected.size && status) status.textContent = `Черновик восстановлен из этого браузера · ${selected.size} блюд. ${staticDemo ? 'Сумма ориентировочная; серверной проверки в этой демоверсии нет.' : 'Сумма ориентировочная; сервер проверит состав и цену.'}`;
   }
 
   const signals = {
@@ -282,11 +319,12 @@
     if ((signals[preference] || []).some(word => text.includes(word))) score += 5;
     if (preference === 'plant' && /мяс|рыб|лосос|тунец|угор|кревет|сашими/.test(text)) score -= 8;
     if (state.mood === 'light' && signals.light.some(word => text.includes(word))) score += 3;
-    if (state.mood === 'celebration' && /сашими|сэт|сет|десерт|икр|премиум|ассорти/.test(text)) score += 2;
+    if (state.occasion === 'romantic' && /тартар|сашими|десерт|чай|матча|моти|тирамису/.test(text)) score += 3;
+    if (state.occasion === 'celebration' && /сашими|сэт|сет|десерт|икр|премиум|ассорти/.test(text)) score += 3;
     if (state.occasion === 'discovery' && /омак|сашими|сэт|сет|авторск/.test(text)) score += 3;
     if (state.occasion === 'friends' && /сет|сэт|ролл|ассорти/.test(text)) score += 2;
     const price = Math.max(0, Number(dish.price) || 0);
-    const perGuest = Number(state.budget || 0) / Math.max(1, Number(state.guests || 1));
+    const perGuest = Math.max(0, Number(state.budget || 0));
     if (perGuest > 0) score += price <= perGuest * 0.72 ? 2 : price <= perGuest ? 0 : -4;
     return score;
   }
@@ -296,8 +334,19 @@
     started.add(root);
     const steps = many('[data-tp-evening-step]', root);
     const options = many('[data-tp-evening-option]', root);
+    const inputs = many('[data-tp-evening-input]', root);
     const state = Object.create(null);
+    const booking = one('[data-tp-evening-booking]', root);
+    const initialBookingHref = booking instanceof HTMLAnchorElement ? booking.getAttribute('href') || booking.href : '';
     let current = 0;
+    const refreshNextButtons = () => {
+      many('[data-tp-evening-next]', root).forEach(next => {
+        const step = next.closest('[data-tp-evening-step]');
+        const option = step && one('[data-tp-evening-option]', step);
+        const input = step && one('[data-tp-evening-input]', step);
+        next.disabled = option ? !state[option.dataset.field] : input ? !input.checkValidity() : false;
+      });
+    };
     const renderStep = () => {
       steps.forEach((step, index) => { step.hidden = index !== current; step.setAttribute('aria-current', index === current ? 'step' : 'false'); });
       const progress = one('[data-tp-evening-progress]', root);
@@ -312,6 +361,7 @@
       }
       many('[data-tp-evening-back]', root).forEach(back => { back.disabled = current === 0; });
       many('[data-tp-evening-next]', root).forEach(next => { next.textContent = current >= steps.length - 1 ? 'Показать подбор ↗' : 'Продолжить ↗'; });
+      refreshNextButtons();
     };
 
     options.forEach(option => option.addEventListener('click', () => {
@@ -324,15 +374,13 @@
         item.classList.toggle('is-selected', active);
       });
       const step = option.closest('[data-tp-evening-step]');
-      const next = step && one('[data-tp-evening-next]', step);
-      if (next) next.disabled = false;
+      if (step) refreshNextButtons();
     }));
 
-    many('[data-tp-evening-input]', root).forEach(input => {
+    inputs.forEach(input => {
       const update = () => {
         state[input.dataset.tpEveningInput] = input.value;
-        const next = input.closest('[data-tp-evening-step]')?.querySelector('[data-tp-evening-next]');
-        if (next) next.disabled = !input.checkValidity();
+        refreshNextButtons();
       };
       input.addEventListener('input', update);
       input.addEventListener('change', update);
@@ -345,15 +393,22 @@
       result.replaceChildren();
       const guestCount = Math.max(1, Math.min(12, Number(state.guests || 2)));
       const budget = Math.max(0, Number(state.budget || 0));
+      const groupBudget = budget * guestCount;
       const dishes = dishRows().filter(dish => dish && Number(dish.active ?? 1) !== 0)
         .sort((a, b) => scoreDish(b, state) - scoreDish(a, state) || Number(a.price) - Number(b.price))
         .slice(0, 3);
       const headline = doc.createElement('p');
       headline.className = 'tp-evening-summary';
-      const zoneByAtmosphere = { sushi: 'Суши-стойка', main: 'Основной зал', private: 'Камерная комната', omakase: 'Зал дегустации' };
+      const zoneByAtmosphere = { sushi: 'Суши-бар', main: 'Основной зал', private: 'Приватная комната', omakase: 'Суши-бар' };
       const zone = zoneByAtmosphere[state.atmosphere] || zoneByAtmosphere.main;
       safeText(headline, `Подбор для ${guestCount} гостей · предпочтительная зона: ${zone}.`);
       result.append(headline);
+      if (budget > 0) {
+        const budgetNode = doc.createElement('p');
+        budgetNode.className = 'tp-evening-budget-summary';
+        safeText(budgetNode, `Ориентир: ${money(budget)} на гостя · ${money(groupBudget)} на компанию.`);
+        result.append(budgetNode);
+      }
       if (!dishes.length) {
         const empty = doc.createElement('p');
         empty.className = 'tp-empty-state';
@@ -389,9 +444,9 @@
       result.append(list);
       const totalNode = doc.createElement('p');
       totalNode.className = 'tp-evening-estimate';
-      safeText(totalNode, `Ориентир на выбранные позиции для ${guestCount} гостей: ${money(total)}. Стоимость учебная; сервер проверяет цены при заказе.`);
+      safeText(totalNode, `Ориентир на выбранные позиции для ${guestCount} гостей: ${money(total)}. ${staticDemo ? 'Демо-стоимость рассчитана в браузере и не проверяется сервером.' : 'Стоимость учебная; сервер проверяет цены при заказе.'}`);
       result.append(totalNode);
-      if (budget && total > budget) {
+      if (budget && total > groupBudget) {
         const budgetNote = doc.createElement('p');
         budgetNote.className = 'tp-budget-note';
         safeText(budgetNote, 'Подбор превышает указанный ориентир бюджета; измените предпочтения или бюджет.');
@@ -402,11 +457,11 @@
       result.append(note);
       result.hidden = false;
       steps.forEach(step => { step.hidden = true; });
-      const booking = one('[data-tp-evening-booking]', root);
       if (booking instanceof HTMLAnchorElement) {
-        const url = new URL(booking.href, doc.baseURI);
+        const url = new URL(initialBookingHref || booking.href, doc.baseURI);
         url.searchParams.set('zone', zone);
         if (state.atmosphere === 'omakase') url.searchParams.set('format', 'Сезонный');
+        else url.searchParams.delete('format');
         booking.href = url.pathname + url.search + url.hash;
       }
       setStatus(root, `Подбор готов. Ориентировочная сумма ${money(total)} для ${guestCount} гостей.`);
@@ -428,8 +483,13 @@
       current = 0;
       Object.keys(state).forEach(key => delete state[key]);
       options.forEach(option => { option.setAttribute('aria-pressed', 'false'); option.classList.remove('is-selected'); });
-      const result = one('[data-tp-evening-result]', root); if (result) result.hidden = true;
-      steps.forEach(step => { step.hidden = false; });
+      inputs.forEach(input => {
+        input.value = input.defaultValue;
+        state[input.dataset.tpEveningInput] = input.value;
+      });
+      const result = one('[data-tp-evening-result]', root);
+      if (result) { result.hidden = true; result.replaceChildren(); }
+      if (booking instanceof HTMLAnchorElement) booking.href = initialBookingHref;
       renderStep(); setStatus(root, 'Подбор сброшен.');
     });
     renderStep();
@@ -438,9 +498,9 @@
   function makeFallbackFloorplan(root, message) {
     const zones = [
       ['Основной зал', ['1', '2', '3', '4', '5', '6']],
-      ['Суши-стойка', ['7', '8', '9']],
-      ['Камерная комната', ['10', '11']],
-      ['Зал дегустации', ['12', '13']]
+      ['Суши-бар', ['7', '8', '9']],
+      ['Приватная комната', ['10', '11']],
+      ['Летняя терраса', ['12', '13']]
     ];
     const wrap = doc.createElement('div'); wrap.className = 'tp-floorplan-fallback';
     const note = doc.createElement('p'); note.className = 'tp-floorplan-note'; safeText(note, message || 'Выберите предпочтительную зону и стол. Доступность не проверяется.'); wrap.append(note);
@@ -475,8 +535,12 @@
       if (message) safeText(message, 'Параметры визита изменились. Выберите столик заново; доступность не проверяется.');
       if (formTableStatus) safeText(formTableStatus, 'Параметры изменились. Выберите стол заново или оставьте поле пустым.');
     };
-    ['date', 'time', 'guests', 'zone'].forEach(name => {
+    ['date', 'time', 'guests'].forEach(name => {
       form?.querySelector(`[name="${name}"]`)?.addEventListener('change', clearTablePreference);
+    });
+    zoneInput?.addEventListener('change', () => {
+      clearTablePreference();
+      applyZone(zoneInput.value, false);
     });
     const applyZone = (zone, announce = true) => {
       if (!zone) return;
@@ -502,6 +566,9 @@
         const active = item.dataset.tpZoneSelect === zone;
         item.classList.toggle('is-selected', active);
         item.setAttribute('aria-pressed', String(active));
+      });
+      many('[data-tp-floorplan-zone-options]', root).forEach(item => {
+        item.hidden = item.dataset.tpFloorplanZoneOptions !== zone;
       });
       many('[data-tp-zone]', root).forEach(item => {
         if (!item.hasAttribute('data-tp-table')) item.classList.toggle('is-selected', item.dataset.tpZone === zone);
@@ -559,8 +626,76 @@
         event.preventDefault(); applyZone(zoneHit.closest('[data-tp-zone]')?.dataset.tpZone);
       }
     });
-    const initialZone = zoneInput?.value || zoneInput?.selectedOptions?.[0]?.textContent?.trim();
+    const requestedZone = new URL(doc.location.href).searchParams.get('zone');
+    const hasRequestedZone = requestedZone && many('[data-tp-zone]', root).some(item => !item.hasAttribute('data-tp-table') && item.dataset.tpZone === requestedZone);
+    const initialZone = hasRequestedZone ? requestedZone : (zoneInput?.value || zoneInput?.selectedOptions?.[0]?.textContent?.trim());
     if (initialZone) applyZone(initialZone, false);
+  }
+
+  function appendMobileFloorplanPicker(root, svg) {
+    const tables = many('[data-tp-table]', svg);
+    const zones = new Map();
+    tables.forEach(table => {
+      const zone = table.dataset.tpZone;
+      if (!zone) return;
+      if (!zones.has(zone)) zones.set(zone, []);
+      zones.get(zone).push(table);
+    });
+    if (!zones.size) return;
+
+    const picker = doc.createElement('section');
+    picker.className = 'tp-floorplan-mobile-picker';
+    picker.setAttribute('aria-label', 'Выбор зоны и предпочтительного столика');
+    const hint = doc.createElement('p');
+    hint.className = 'tp-floorplan-mobile-hint';
+    safeText(hint, 'На телефоне выберите зону, затем крупную кнопку столика. Это пожелание, не проверка наличия.');
+    const zoneNav = doc.createElement('div');
+    zoneNav.className = 'tp-floorplan-mobile-zones';
+    zoneNav.setAttribute('role', 'group');
+    zoneNav.setAttribute('aria-label', 'Зона ресторана');
+    const panels = [];
+
+    zones.forEach((zoneTables, zone) => {
+      const zoneButton = doc.createElement('button');
+      zoneButton.type = 'button';
+      zoneButton.className = 'tp-floorplan-mobile-zone';
+      zoneButton.dataset.tpZoneSelect = zone;
+      zoneButton.setAttribute('aria-pressed', 'false');
+      safeText(zoneButton, zone);
+      zoneNav.append(zoneButton);
+
+      const panel = doc.createElement('div');
+      panel.className = 'tp-floorplan-mobile-zone-options';
+      panel.dataset.tpFloorplanZoneOptions = zone;
+      panel.hidden = true;
+      panel.setAttribute('role', 'group');
+      panel.setAttribute('aria-label', `Предпочтительный столик · ${zone}`);
+      const title = doc.createElement('h3');
+      title.className = 'tp-floorplan-mobile-zone-title';
+      safeText(title, `${zone} · выберите номер`);
+      const buttons = doc.createElement('div');
+      buttons.className = 'tp-floorplan-mobile-table-grid';
+      zoneTables.forEach(table => {
+        const number = table.dataset.tpTable;
+        const capacity = table.dataset.capacity || '';
+        const button = doc.createElement('button');
+        button.type = 'button';
+        button.className = 'tp-floorplan-mobile-table';
+        button.dataset.tpSeatButton = '';
+        button.dataset.tpTable = number;
+        button.dataset.tpZone = zone;
+        if (capacity) button.dataset.capacity = capacity;
+        button.setAttribute('aria-pressed', 'false');
+        button.setAttribute('aria-label', `Выбрать предпочтительный стол ${number}, ${zone}${capacity ? `, до ${capacity} гостей по учебной схеме` : ''}`);
+        safeText(button, `Стол ${number}`);
+        buttons.append(button);
+      });
+      panel.append(title, buttons);
+      panels.push(panel);
+    });
+
+    picker.append(hint, zoneNav, ...panels);
+    root.append(picker);
   }
 
   async function initFloorplan(root) {
@@ -592,6 +727,7 @@
         hit.setAttribute('aria-label', `Выбрать зону «${zone}»`);
       });
       root.replaceChildren(imported);
+      appendMobileFloorplanPicker(root, imported);
       imported.querySelectorAll('[data-tp-table]').forEach((seat, index) => {
         seat.setAttribute('role', 'button');
         seat.setAttribute('tabindex', '0');
@@ -626,7 +762,9 @@
       image.src = src;
       image.alt = thumb?.alt || trigger.getAttribute('aria-label') || 'Иллюстративная фотография учебной концепции';
       const caption = one('[data-tp-gallery-caption]', dialog);
-      safeText(caption, trigger.dataset.caption || thumb?.alt || `Кадр ${active + 1} из ${list.length}`);
+      const tileCaption = trigger.matches('.gallery-tile') ? trigger.querySelector(':scope > span')?.textContent?.trim() : '';
+      const zoneCaption = trigger.closest('.zone-card')?.querySelector('h3')?.textContent?.trim();
+      safeText(caption, trigger.dataset.caption?.trim() || tileCaption || zoneCaption || trigger.getAttribute('aria-label')?.replace(/^Увеличить(?: фото)?:\s*/i, '').trim() || thumb?.alt || `Кадр ${active + 1} из ${list.length}`);
     };
     let previous = one('[data-tp-gallery-prev]', dialog);
     let next = one('[data-tp-gallery-next]', dialog);

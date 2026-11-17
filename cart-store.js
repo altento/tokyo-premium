@@ -415,7 +415,11 @@
   });
 
   global.document && global.document.addEventListener('tokyo:custom-set:add', event => {
-    if (addCustomSet(event.detail)) event.preventDefault();
+    const accepted = addCustomSet(event.detail);
+    if (accepted) event.preventDefault();
+    if (typeof event.detail?.respond === 'function') {
+      event.detail.respond(accepted ? { ok: true } : { ok: false, message: 'Корзина не смогла принять этот сет. Проверьте ограничения и попробуйте ещё раз.' });
+    }
   });
 
   getCart();

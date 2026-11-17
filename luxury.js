@@ -194,15 +194,56 @@ document.addEventListener('DOMContentLoaded', () => {
     addButton.dataset.qty = String(quantity);
   }));
 
-  $$('[data-detail-focus]').forEach(button => button.addEventListener('click', () => {
+  $('[data-detail-gallery]')?.addEventListener('click', event => {
+    const button = event.target.closest?.('[data-detail-gallery-image]');
     const image = $('#dish-main-image');
-    if (image) image.style.objectPosition = button.dataset.detailFocus;
-    $$('[data-detail-focus]').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
-  }));
+    if (!button || !image) return;
+    const source = button.dataset.detailGalleryImage;
+    if (!source) return;
+    const reveal = () => image.classList.remove('is-changing');
+    image.classList.add('is-changing');
+    image.addEventListener('load', reveal, { once: true });
+    image.addEventListener('error', reveal, { once: true });
+    image.alt = button.dataset.detailAlt || image.alt;
+    if (button.dataset.detailSrcset) image.setAttribute('srcset', button.dataset.detailSrcset);
+    else image.removeAttribute('srcset');
+    image.src = source;
+    if (image.complete) requestAnimationFrame(reveal);
+    const caption = $('[data-detail-gallery-caption]');
+    if (caption) caption.textContent = button.dataset.detailCaption || '';
+    document.querySelectorAll('[data-detail-gallery-image]').forEach(item => {
+      const active = item === button;
+      item.classList.toggle('is-active', active);
+      item.setAttribute('aria-pressed', String(active));
+    });
+  });
 
   const categoryButtons = $$('.filter-btn[data-category]');
+  const menuIngredientButtons = $$('.menu-subfilter[data-menu-ingredient]');
+  const menuIngredientMatchers = {
+    tuna: /тун(ец|ца|цу|цом|ц)/u,
+    salmon: /лосос/u,
+    eel: /угор/u,
+    shrimp: /кревет/u,
+    scallop: /гребеш/u,
+    roe: /икр/u
+  };
+  const menuCards = $$('.dish-card[data-category]');
+  const matchesMenuIngredient = (card, ingredient) => {
+    if (!ingredient || ingredient === 'all') return true;
+    const matcher = menuIngredientMatchers[ingredient];
+    return Boolean(matcher?.test((card.dataset.search || card.textContent).toLocaleLowerCase('ru')));
+  };
+  menuIngredientButtons.forEach(button => {
+    const ingredient = button.dataset.menuIngredient;
+    const matchingCount = ingredient === 'all' ? menuCards.length : menuCards.filter(card => matchesMenuIngredient(card, ingredient)).length;
+    button.dataset.matchCount = String(matchingCount);
+    button.hidden = ingredient !== 'all' && matchingCount === 0;
+  });
   const search = $('.menu-search[type="search"]');
   const sort = $('#sort-menu');
+  const menuViewButtons = $$('[data-menu-view]');
+  const menuGrid = $('.menu-page .dish-grid');
   const favoriteOnly = $('#favorites-only');
   const menuPagination = $('#menu-pagination');
   const originalDishOrder = new Map($$('.dish-card[data-category]').map((card, index) => [card, index]));
@@ -222,14 +263,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (resetPage) menuPage = 1;
     const matches = [];
     const category = $('.filter-btn.active[data-category]')?.dataset.category || 'all';
+    const ingredient = $('.menu-subfilter[aria-pressed="true"]')?.dataset.menuIngredient || 'all';
     const query = (search?.value || '').toLocaleLowerCase('ru');
     const favoriteIds = new Set(cart?.getFavorites() || []);
-    const cards = $$('.dish-card[data-category]');
+    const cards = menuCards;
     cards.forEach(card => {
       const id = Number(card.querySelector('[data-favorite]')?.dataset.favorite || card.querySelector('.add-to-cart')?.dataset.id);
       const text = (card.dataset.search || card.textContent).toLocaleLowerCase('ru');
       const show = (category === 'all' || card.dataset.category === category)
         && text.includes(query)
+        && matchesMenuIngredient(card, ingredient)
         && (!favoriteOnly?.classList.contains('active') || favoriteIds.has(id));
       if (show) matches.push(card);
     });
@@ -264,6 +307,10 @@ document.addEventListener('DOMContentLoaded', () => {
     categoryButtons.forEach(item => item.classList.toggle('active', item === button));
     filterMenu();
   }));
+  menuIngredientButtons.forEach(button => button.addEventListener('click', () => {
+    menuIngredientButtons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+    filterMenu();
+  }));
   menuPagination?.addEventListener('click', event => {
     const button = event.target.closest('[data-page-go]');
     if (!button) return;
@@ -276,6 +323,11 @@ document.addEventListener('DOMContentLoaded', () => {
     button?.click();
   }));
   search?.addEventListener('input', filterMenu);
+  menuViewButtons.forEach(button => button.addEventListener('click', () => {
+    if (!menuGrid || !['grid', 'list'].includes(button.dataset.menuView)) return;
+    menuGrid.dataset.view = button.dataset.menuView;
+    menuViewButtons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+  }));
   favoriteOnly?.addEventListener('click', () => { favoriteOnly.classList.toggle('active'); filterMenu(); });
   sort?.addEventListener('change', () => {
     const grid = $('.dish-grid');
@@ -300,11 +352,18 @@ document.addEventListener('DOMContentLoaded', () => {
   renderCart();
   renderFavorites();
 
-  document.querySelectorAll('form[data-api]').forEach(form => form.addEventListener('submit', async event => {
+  document.querySelectorAll('form[data-api]').forEach(form => {
+    if (form.dataset.api === 'booking') {
+      const clearBookingKey = () => { if (form.dataset.submitting !== 'true') delete form.dataset.bookingRequestKey; };
+      form.addEventListener('input', clearBookingKey);
+      form.addEventListener('change', clearBookingKey);
+      form.addEventListener('reset', clearBookingKey);
+    }
+    form.addEventListener('submit', async event => {
     event.preventDefault();
     const type = form.dataset.api;
     const status = $('.form-status', form);
-    const button = $('button[type="submit"]', form);
+    const button = event.submitter instanceof HTMLButtonElement ? event.submitter : $('button[type="submit"], input[type="submit"]', form) || [...document.querySelectorAll('button[type="submit"][form], input[type="submit"][form]')].find(control => control.form === form);
     if (form.dataset.submitting === 'true') return;
     if (type === 'order' && !(cart?.get().length || cart?.getCustomSets().length)) {
       if (status) { status.textContent = 'Добавьте блюда или соберите сет перед оформлением.'; status.className = 'form-status error'; }
@@ -327,6 +386,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       const headers = { 'X-CSRF-Token': data.get('csrf') || '' };
       if (type === 'order' && cart) headers['Idempotency-Key'] = cart.checkoutRequestKey();
+      if (type === 'booking') {
+        if (!form.dataset.bookingRequestKey) {
+          form.dataset.bookingRequestKey = window.crypto?.randomUUID?.() || `${Date.now().toString(36)}.${Math.random().toString(36).slice(2)}`;
+        }
+        headers['Idempotency-Key'] = form.dataset.bookingRequestKey;
+      }
       const response = await fetch('api.php', { method: 'POST', body: data, headers });
       const result = await response.json();
       if (!response.ok || !result.ok) throw new Error(result.message || 'Не удалось отправить форму.');
@@ -335,7 +400,8 @@ document.addEventListener('DOMContentLoaded', () => {
         cart.clear();
         if (window.TokyoCheckout) window.TokyoCheckout.reset(form);
         else form.reset();
-      } else if (type === 'booking' || type === 'review') form.reset();
+      } else if (type === 'booking') { form.reset(); delete form.dataset.bookingRequestKey; }
+      else if (type === 'review') form.reset();
       if (status) { status.textContent = result.message; status.className = 'form-status success'; }
     } catch (error) {
       if (status) { status.textContent = error.message; status.className = 'form-status error'; }
@@ -344,5 +410,6 @@ document.addEventListener('DOMContentLoaded', () => {
       form.dataset.submitting = 'false';
       if (button) button.disabled = type === 'order' ? !(cart?.get().length || cart?.getCustomSets().length) : false;
     }
-  }));
+    });
+  });
 });

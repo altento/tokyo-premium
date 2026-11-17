@@ -3,6 +3,8 @@ require __DIR__ . '/bootstrap.php';
 $pdo = db();
 $err = '';
 $profileNotice = '';
+$incomingReferralCode = strtoupper(trim((string)($_POST['referral_code'] ?? $_GET['ref'] ?? '')));
+if (!preg_match('/^TP[A-F0-9]{10}$/',$incomingReferralCode)) $incomingReferralCode = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     check_csrf();
@@ -25,7 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $insert->execute([$email, $name, password_hash($password, PASSWORD_DEFAULT)]);
                 $_SESSION['user_id'] = (int)$pdo->lastInsertId();
                 session_regenerate_id(true);
-                header('Location: account.php');
+                $redirect = $incomingReferralCode !== '' ? 'account.php?ref='.rawurlencode($incomingReferralCode).'#account-referrals' : 'account.php';
+                header('Location: '.$redirect);
                 exit;
             } catch (Throwable $exception) {
                 $err = 'Этот email уже зарегистрирован.';
@@ -38,7 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($account && password_verify((string)($_POST['password'] ?? ''), $account['password_hash'])) {
             $_SESSION['user_id'] = (int)$account['id'];
             session_regenerate_id(true);
-            header('Location: account.php');
+            $redirect = $incomingReferralCode !== '' ? 'account.php?ref='.rawurlencode($incomingReferralCode).'#account-referrals' : 'account.php';
+            header('Location: '.$redirect);
             exit;
         }
         $err = 'Неверный email или пароль.';
@@ -63,6 +67,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             commerce_attach_referral($pdo, (int)$_SESSION['user_id'], (string)($_POST['referral_code'] ?? ''));
             $profileNotice = 'Код приглашения сохранён. Вознаграждение появится только после подходящего завершённого заказа.';
         } catch (DomainException $exception) { $err = $exception->getMessage(); }
+    } elseif ($action === 'address-save' && !empty($_SESSION['user_id'])) {
+        try {
+            $rawAddressId = $_POST['address_id'] ?? '';
+            $addressId = $rawAddressId === '' ? null : filter_var($rawAddressId, FILTER_VALIDATE_INT);
+            if ($addressId === false || ($addressId !== null && $addressId < 1)) throw new DomainException('Выберите сохранённый адрес.');
+            commerce_save_user_address($pdo, (int)$_SESSION['user_id'], (string)($_POST['label'] ?? ''), (string)($_POST['address'] ?? ''), $addressId === null ? null : (int)$addressId);
+            $profileNotice = $addressId === null ? 'Адрес сохранён в вашем аккаунте.' : 'Адрес обновлён.';
+        } catch (DomainException $exception) { $err = $exception->getMessage(); }
+    } elseif ($action === 'address-default' && !empty($_SESSION['user_id'])) {
+        $addressId = filter_var($_POST['address_id'] ?? null, FILTER_VALIDATE_INT);
+        try {
+            if ($addressId === false || $addressId === null || $addressId < 1) throw new DomainException('Выберите сохранённый адрес.');
+            commerce_set_user_address_default($pdo, (int)$_SESSION['user_id'], (int)$addressId);
+            $profileNotice = 'Основной адрес доставки обновлён.';
+        } catch (DomainException $exception) { $err = $exception->getMessage(); }
+    } elseif ($action === 'address-delete' && !empty($_SESSION['user_id'])) {
+        $addressId = filter_var($_POST['address_id'] ?? null, FILTER_VALIDATE_INT);
+        try {
+            if ($addressId === false || $addressId === null || $addressId < 1) throw new DomainException('Выберите сохранённый адрес.');
+            commerce_delete_user_address($pdo, (int)$_SESSION['user_id'], (int)$addressId);
+            $profileNotice = 'Адрес удалён из вашего аккаунта.';
+        } catch (DomainException $exception) { $err = $exception->getMessage(); }
     }
 }
 
@@ -70,10 +96,12 @@ $user = null;
 $orders = [];
 $bookings = [];
 $profile = null;
+$addresses = [];
 $tier = null;
 $loyaltyBalance = 0;
 $loyaltyEntries = [];
 $referralCode = '';
+$referralInviteHref = '';
 $invitedUsers = [];
 $personalOffers = [];
 $loyaltySpent = 0;
@@ -86,8 +114,11 @@ if (!empty($_SESSION['user_id'])) {
 
     if ($user) {
         $userId = (int)$user['id'];
+        $addresses = commerce_user_addresses($pdo, $userId);
         $query = $pdo->prepare('SELECT birth_date,birthday_offer_consent,birthday_consent_at FROM user_profiles WHERE user_id=?');
         $query->execute([$userId]); $profile = $query->fetch() ?: ['birth_date'=>'','birthday_offer_consent'=>0,'birthday_consent_at'=>null];
+        $birthdayPointsAwarded=commerce_award_birthday_points($pdo,$userId);
+        if ($birthdayPointsAwarded>0) $profileNotice='С днём рождения — начислено '.number_format($birthdayPointsAwarded,0,'.',' ').' учебных бонусов Tokyo Privilege.';
         $tier = commerce_user_tier($pdo, $userId);
         $loyaltyBalance = commerce_get_loyalty_balance($pdo, $userId);
         $query = $pdo->prepare("SELECT COALESCE(SUM(total),0) FROM orders WHERE user_id=? AND status='completed'");
@@ -101,17 +132,25 @@ if (!empty($_SESSION['user_id'])) {
         $query = $pdo->prepare('SELECT transaction_type,points,note,created_at FROM loyalty_ledger WHERE user_id=? ORDER BY id DESC LIMIT 12');
         $query->execute([$userId]); $loyaltyEntries = $query->fetchAll();
         $referralCode = commerce_referral_code_for_user($pdo, $userId);
+        $referralInviteHref = 'account.php?ref='.rawurlencode($referralCode).'#account-referrals';
         $query = $pdo->prepare('SELECT r.code,r.status,r.created_at,u.full_name AS referred_name FROM referrals r LEFT JOIN users u ON u.id=r.referred_user_id WHERE r.inviter_user_id=? ORDER BY r.id DESC LIMIT 20');
         $query->execute([$userId]); $invitedUsers = $query->fetchAll();
-        $query = $pdo->prepare('SELECT c.title,c.description,po.expires_at FROM personalized_offers po JOIN promotion_campaigns c ON c.id=po.campaign_id WHERE po.user_id=? AND po.used_order_id IS NULL AND (po.expires_at IS NULL OR po.expires_at>=CURRENT_TIMESTAMP) AND c.active=1 ORDER BY po.assigned_at DESC');
-        $query->execute([$userId]); $personalOffers = $query->fetchAll();
+        $query = $pdo->prepare("SELECT po.id AS offer_id,po.expires_at,c.id AS campaign_id,c.campaign_type,c.title,c.description,c.active,c.starts_at,c.ends_at,c.weekday_mask,c.starts_time,c.ends_time,c.timezone,c.required_tier,pc.code,pc.starts_at AS code_starts_at,pc.ends_at AS code_ends_at,pc.uses_count,pc.maximum_uses FROM personalized_offers po JOIN promotion_campaigns c ON c.id=po.campaign_id LEFT JOIN promo_codes pc ON pc.campaign_id=c.id AND pc.active=1 AND (pc.maximum_uses IS NULL OR pc.uses_count<pc.maximum_uses) WHERE po.user_id=? AND po.used_order_id IS NULL AND (po.expires_at IS NULL OR po.expires_at>=CURRENT_TIMESTAMP) AND c.active=1 ORDER BY po.assigned_at DESC,pc.created_at DESC");
+        $query->execute([$userId]); $personalOfferRows=$query->fetchAll(); $personalOffers=[];
+        foreach($personalOfferRows as $offerRow){
+            if(!commerce_campaign_is_active($offerRow)||!commerce_campaign_tier_is_eligible($pdo,$offerRow,$userId)||($offerRow['campaign_type']==='birthday'&&!commerce_birthday_eligible($pdo,$userId)))continue;
+            $offerId=(int)$offerRow['offer_id'];
+            if(!isset($personalOffers[$offerId])){$personalOffers[$offerId]=['title'=>$offerRow['title'],'description'=>$offerRow['description'],'expires_at'=>$offerRow['expires_at'],'codes'=>[]];if($offerRow['expires_at'])$personalOffers[$offerId]['expires_at']=(new DateTimeImmutable((string)$offerRow['expires_at'],new DateTimeZone('UTC')))->setTimezone(commerce_timezone())->format('d.m.Y H:i');}
+            if($offerRow['code']&&!isset($personalOffers[$offerId]['codes'][$offerRow['code']])&&commerce_date_window_is_active($offerRow['code_starts_at']?:null,$offerRow['code_ends_at']?:null,(string)$offerRow['timezone']))$personalOffers[$offerId]['codes'][$offerRow['code']]=$offerRow['code'];
+        }
+        $personalOffers=array_values(array_filter($personalOffers,static fn(array $offer):bool=>(bool)$offer['codes']));
         $query = $pdo->prepare('SELECT id,total,status,fulfillment,created_at FROM orders WHERE user_id=? ORDER BY id DESC LIMIT 50');
         $query->execute([$_SESSION['user_id']]);
         $orders = $query->fetchAll();
         if ($orders) {
             $ids = array_column($orders, 'id');
             $placeholders = implode(',', array_fill(0, count($ids), '?'));
-            $itemsQuery = $pdo->prepare("SELECT order_id,item_name,price,quantity FROM order_items WHERE order_id IN ($placeholders) ORDER BY id");
+            $itemsQuery = $pdo->prepare("SELECT oi.order_id,oi.dish_id,oi.item_name,oi.price,oi.quantity,COALESCE(d.image_url,'') AS image_url FROM order_items oi LEFT JOIN dishes d ON d.id=oi.dish_id WHERE oi.order_id IN ($placeholders) ORDER BY oi.id");
             $itemsQuery->execute($ids);
             $itemsByOrder = [];
             foreach ($itemsQuery->fetchAll() as $item) $itemsByOrder[$item['order_id']][] = $item;
@@ -142,7 +181,7 @@ $orderStatusLabels = [
 $orderCount = count($orders);
 $bookingCount = count($bookings);
 
-page_start('Личный кабинет — Tokyo Premium', 'Ваши заказы и бронирования Tokyo Premium.');
+page_start('Личный кабинет — Tokyo Premium', 'Ваши заказы и бронирования Tokyo Premium.', 'assets/generated/contact-exterior.webp');
 header_html();
 ?>
 <main class="admin-shell account-shell account-dashboard">
@@ -151,11 +190,13 @@ header_html();
       <h1>Личный кабинет</h1>
       <p>Сохраняйте историю заказов и бронирований в одном месте.</p>
       <?php if ($err): ?><p class="form-status error"><?=e($err)?></p><?php endif ?>
+      <?php if ($incomingReferralCode): ?><p class="form-status" role="status">Вас пригласили в Tokyo Premium. После регистрации вы сможете привязать код <?=e($incomingReferralCode)?>.</p><?php endif ?>
       <div class="intro-grid account-auth-grid account-dashboard-auth">
         <form method="post" class="admin-form">
           <h2>Войти</h2>
           <input type="hidden" name="csrf" value="<?=e(csrf())?>">
           <input type="hidden" name="action" value="login">
+          <input type="hidden" name="referral_code" value="<?=e($incomingReferralCode)?>">
           <label>Email<input type="email" name="email" required autocomplete="email"></label>
           <label>Пароль<input type="password" name="password" required autocomplete="current-password"></label>
           <button class="button">Войти</button>
@@ -164,6 +205,7 @@ header_html();
           <h2>Создать аккаунт</h2>
           <input type="hidden" name="csrf" value="<?=e(csrf())?>">
           <input type="hidden" name="action" value="register">
+          <input type="hidden" name="referral_code" value="<?=e($incomingReferralCode)?>">
           <label>Имя<input name="name" required minlength="2" maxlength="80" autocomplete="name"></label>
           <label>Email<input type="email" name="email" required autocomplete="email"></label>
           <label>Пароль от 10 символов<input type="password" name="password" required minlength="10" autocomplete="new-password"></label>
@@ -171,12 +213,17 @@ header_html();
         </form>
       </div>
     <?php else: ?>
-      <header class="account-dashboard-hero">
+      <header class="account-dashboard-hero" aria-labelledby="account-dashboard-title">
         <div class="account-dashboard-identity">
           <span class="kicker">Tokyo Premium · личное пространство</span>
-          <h1>Здравствуйте, <?=e($user['full_name'])?></h1>
-          <p><?=e($user['email'])?></p>
-          <small>Участник с <?=e(substr((string)$user['created_at'], 0, 10))?> · история и бонусы видны только после входа в этот аккаунт.</small>
+          <h1 id="account-dashboard-title">Личный кабинет</h1>
+          <p class="account-dashboard-hero-lead">Ваше пространство в Tokyo Premium</p>
+          <p class="account-dashboard-hero-copy">Управляйте заказами, бронированиями, бонусами и личными данными в одном месте.</p>
+          <div class="account-dashboard-member">
+            <strong>Здравствуйте, <?=e($user['full_name'])?></strong>
+            <span class="account-dashboard-member-email" title="<?=e($user['email'])?>"><?=e($user['email'])?></span>
+            <small>Участник с <?=e(substr((string)$user['created_at'], 0, 10))?> · данные видны только после входа в этот аккаунт.</small>
+          </div>
         </div>
         <form method="post" class="account-logout-form">
           <input type="hidden" name="csrf" value="<?=e(csrf())?>">
@@ -220,8 +267,9 @@ header_html();
           <a href="#account-orders"><span>01</span>Мои заказы<small><?=$orderCount?></small></a>
           <a href="#account-bookings"><span>02</span>Бронирования<small><?=$bookingCount?></small></a>
           <a href="#account-browser-favorites"><span>03</span>Избранное<small>в браузере</small></a>
-          <a href="#account-referrals"><span>04</span>Приглашения</a>
-          <a href="#account-settings"><span>05</span>Настройки</a>
+          <a href="#account-addresses"><span>04</span>Адреса<small><?=count($addresses)?></small></a>
+          <a href="#account-referrals"><span>05</span>Приглашения</a>
+          <a href="#account-settings"><span>06</span>Настройки</a>
         </nav>
         <div class="account-dashboard-content">
           <div class="account-dashboard-primary">
@@ -231,14 +279,17 @@ header_html();
                 <div class="account-empty-state"><p>Заказы, оформленные после входа в аккаунт, появятся здесь.</p><a class="button secondary" href="menu.php">Перейти к меню ↗</a></div>
               <?php else: ?>
                 <div class="account-order-list">
-                  <?php foreach ($orders as $order): $orderStatus = (string)$order['status']; ?>
-                    <article class="account-order-card">
-                      <div class="account-order-heading"><span>Заказ №<?= (int)$order['id']?></span><strong><?=number_format((int)$order['total'],0,'.',' ')?> ₸</strong></div>
-                      <p class="account-order-meta"><span class="account-status-label"><?=e($orderStatusLabels[$orderStatus] ?? $orderStatus)?></span> · <?=$order['fulfillment']==='pickup'?'Самовывоз':'Доставка'?> · <?=e($order['created_at'])?></p>
-                      <details class="order-item-details">
-                        <summary>Состав заказа · <?=count($order['items'])?> <?=count($order['items'])===1?'позиция':'позиций'?></summary>
-                        <ul><?php foreach ($order['items'] as $item): ?><li><?=e($item['item_name'])?> · <?= (int)$item['quantity']?> × <?=number_format((int)$item['price'],0,'.',' ')?> ₸ = <?=number_format((int)$item['price']*(int)$item['quantity'],0,'.',' ')?> ₸</li><?php endforeach ?></ul>
-                      </details>
+                  <?php foreach ($orders as $order): $orderStatus = (string)$order['status']; $previewItem = null; foreach ($order['items'] as $orderItem) { if ($orderItem['image_url'] !== '') { $previewItem = $orderItem; break; } } ?>
+                    <article class="account-order-card account-order-card--purchase">
+                      <?php if ($previewItem): ?><img class="account-order-preview" src="<?=e($previewItem['image_url'])?>" alt="<?=e($previewItem['item_name'])?>" loading="lazy" decoding="async"><?php endif ?>
+                      <div class="account-order-content">
+                        <div class="account-order-heading"><span>Заказ №<?= (int)$order['id']?></span><strong><?=number_format((int)$order['total'],0,'.',' ')?> ₸</strong></div>
+                        <p class="account-order-meta"><span class="account-status-label"><?=e($orderStatusLabels[$orderStatus] ?? $orderStatus)?></span> · <?=$order['fulfillment']==='pickup'?'Самовывоз':'Доставка'?> · <?=e($order['created_at'])?></p>
+                        <details class="order-item-details">
+                          <summary>Состав заказа · <?=count($order['items'])?> <?=count($order['items'])===1?'позиция':'позиций'?></summary>
+                          <ul><?php foreach ($order['items'] as $item): ?><li><?=e($item['item_name'])?> · <?= (int)$item['quantity']?> × <?=number_format((int)$item['price'],0,'.',' ')?> ₸ = <?=number_format((int)$item['price']*(int)$item['quantity'],0,'.',' ')?> ₸</li><?php endforeach ?></ul>
+                        </details>
+                      </div>
                     </article>
                   <?php endforeach ?>
                 </div>
@@ -282,20 +333,38 @@ header_html();
               <p id="account-browser-favorites-empty" class="account-empty-copy">Здесь появятся блюда, сохранённые сердцем в меню.</p>
             </section>
 
+            <section id="account-addresses" class="account-section account-dashboard-panel" aria-labelledby="account-addresses-title">
+              <div class="account-dashboard-section-heading"><div><span class="kicker">ТОЛЬКО ВАШ АККАУНТ</span><h2 id="account-addresses-title">Адреса доставки</h2></div><span class="account-section-count"><?=count($addresses)?> / 10</span></div>
+              <p class="account-section-copy">Адреса доступны только после входа в ваш аккаунт. Добавление адреса не отправляет заказ.</p>
+              <form method="post" class="tp20-account-form tp20-address-form"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="address-save"><label>Название адреса<input name="label" minlength="2" maxlength="60" required autocomplete="off" placeholder="Дом, работа"></label><label>Адрес<input name="address" minlength="5" maxlength="240" required autocomplete="street-address" placeholder="Улица, дом, квартира"></label><button class="button secondary" type="submit" <?=count($addresses)>=10?'disabled':''?>>Сохранить адрес ↗</button></form>
+              <?php if (!$addresses): ?><p class="account-empty-copy">Сохранённых адресов пока нет.</p><?php else: ?>
+                <div class="tp20-address-list">
+                  <?php foreach ($addresses as $savedAddress): ?>
+                    <article class="tp20-saved-address"><div><span class="kicker"><?=e($savedAddress['label'])?></span><address><?=e($savedAddress['address'])?></address><?php if (!empty($savedAddress['is_default'])): ?><span class="tp20-address-default">Основной адрес</span><?php endif ?><details class="tp20-address-edit"><summary>Изменить адрес</summary><form method="post" class="tp20-account-form"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="address-save"><input type="hidden" name="address_id" value="<?= (int)$savedAddress['id']?>"><label>Название адреса<input name="label" minlength="2" maxlength="60" required value="<?=e($savedAddress['label'])?>"></label><label>Адрес<input name="address" minlength="5" maxlength="240" required autocomplete="street-address" value="<?=e($savedAddress['address'])?>"></label><button class="button secondary" type="submit">Сохранить изменения</button></form></details></div><div class="tp20-address-actions">
+                      <?php if (empty($savedAddress['is_default'])): ?><form method="post"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="address-default"><input type="hidden" name="address_id" value="<?= (int)$savedAddress['id']?>"><button class="button secondary" type="submit">Сделать основным</button></form><?php endif ?>
+                      <form method="post"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="address-delete"><input type="hidden" name="address_id" value="<?= (int)$savedAddress['id']?>"><button class="text-button" type="submit" aria-label="Удалить адрес <?=e($savedAddress['label'])?>">Удалить</button></form>
+                    </div></article>
+                  <?php endforeach ?>
+                </div>
+              <?php endif ?>
+            </section>
+
             <section class="account-section account-dashboard-panel" aria-labelledby="tp20-personal-offers">
               <div class="account-dashboard-section-heading"><div><span class="kicker">PRIVATE INVITATIONS</span><h2 id="tp20-personal-offers">Персональные предложения</h2></div></div>
               <?php if (!$personalOffers): ?>
                 <p class="account-section-copy">Персональных предложений пока нет. Здесь появятся только адресно назначенные действующие кампании.</p>
               <?php else: ?>
-                <div class="tp20-offer-grid"><?php foreach ($personalOffers as $offer): ?><article class="tp20-offer-card"><div class="tp20-offer-copy"><span class="kicker">PERSONAL INVITATION</span><h3><?=e($offer['title'])?></h3><p><?=e($offer['description'])?></p><?php if ($offer['expires_at']): ?><small>Действует до <?=e($offer['expires_at'])?></small><?php endif ?></div></article><?php endforeach ?></div>
+                <div class="tp20-offer-grid"><?php foreach ($personalOffers as $offer): ?><article class="tp20-offer-card"><div class="tp20-offer-copy"><span class="kicker">PERSONAL INVITATION</span><h3><?=e($offer['title'])?></h3><p><?=e($offer['description'])?></p><?php if ($offer['expires_at']): ?><small>Действует до <?=e($offer['expires_at'])?> · время Кызылорды</small><?php endif ?><?php foreach($offer['codes'] as $code): ?><div class="tp20-private-code"><strong><?=e($code)?></strong><button class="button secondary" type="button" data-copy-code="<?=e($code)?>" data-label="Скопировать код">Скопировать</button><a class="text-link" href="pages.php?page=cart&amp;promo=<?=e(rawurlencode($code))?>">Перейти к заказу ↗</a></div><?php endforeach ?></div></article><?php endforeach ?></div>
               <?php endif ?>
             </section>
 
             <section id="account-referrals" class="account-section account-dashboard-panel" aria-labelledby="tp20-referral-title">
               <div class="account-dashboard-section-heading"><div><span class="kicker">TOKYO PRIVILEGE · ПРИГЛАШЕНИЯ</span><h2 id="tp20-referral-title">Пригласить друга</h2></div></div>
               <p class="account-section-copy">Награда начисляется только после подходящего завершённого заказа. Код не создаёт денежного вознаграждения.</p>
-              <div class="tp20-referral-code"><span>Ваш код</span><strong><?=e($referralCode)?></strong><button class="button secondary" type="button" data-copy-code="<?=e($referralCode)?>" data-label="Скопировать код">Скопировать</button></div>
-              <form method="post" class="tp20-account-form account-referral-form"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="referral-attach"><label>Код того, кто пригласил вас<input name="referral_code" maxlength="12" pattern="TP[A-Fa-f0-9]{10}" placeholder="TP0123ABCDEF" required></label><button class="button secondary" type="submit">Привязать код</button></form>
+              <div class="tp20-referral-code"><span>Ваш персональный код</span><strong><?=e($referralCode)?></strong><button class="button secondary" type="button" data-copy-code="<?=e($referralCode)?>" data-label="Скопировать код">Скопировать</button></div>
+              <div class="tp20-referral-actions"><a class="button secondary" href="<?=e($referralInviteHref)?>">Открыть приглашение ↗</a><button class="button secondary" type="button" data-copy-invite="<?=e($referralInviteHref)?>" data-label="Скопировать ссылку">Скопировать ссылку</button></div>
+              <p class="account-section-copy">Ссылка ведёт на регистрацию. Друг сможет привязать приглашение до первого заказа; награда появится только после выполнения настроенного серверного условия.</p>
+              <form method="post" class="tp20-account-form account-referral-form"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="referral-attach"><label>Код того, кто пригласил вас<input name="referral_code" value="<?=e($incomingReferralCode)?>" maxlength="12" pattern="TP[A-Fa-f0-9]{10}" placeholder="TP0123ABCDEF" required></label><button class="button secondary" type="submit">Привязать код</button></form>
               <div class="tp20-referral-history"><strong>Приглашения</strong><?php if (!$invitedUsers): ?><p>Пока нет привязанных приглашений.</p><?php else: ?><?php foreach ($invitedUsers as $invite): ?><p><?=e($invite['referred_name']?:'Ожидает регистрации')?> · <?=e($invite['status'])?></p><?php endforeach ?><?php endif ?></div>
             </section>
 

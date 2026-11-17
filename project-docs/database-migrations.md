@@ -1,6 +1,6 @@
 # SQLite schema and migration notes
 
-Updated 2026-11-12
+Updated 2026-11-17
 
 The app runs `schema.sql` with `CREATE TABLE/INDEX IF NOT EXISTS`, then records explicit upgrades in `app_migrations`. Existing SQLite files are upgraded additively; migrations avoid deleting menu, user, order or booking data.
 
@@ -11,6 +11,12 @@ The app runs `schema.sql` with `CREATE TABLE/INDEX IF NOT EXISTS`, then records 
 | 3 | Add order subtotals/discount fields and commerce defaults; seed demo set variants, loyalty tiers, campaigns, promo codes, Secret Menu access rules, and the Autumn collection. Transaction is `BEGIN IMMEDIATE`. |
 | 4 | Add certificate-preview actor key, rate-limit index and editable example denominations. |
 | 5 | Update only the untouched sample Autumn collection image to its generated seasonal asset; preserves any administrator-selected image. |
+| 6 | Add optional booking guest email and a unique-event SMTP outbox. Existing bookings are preserved and receive an empty default email; delivery remains disabled until the PHP service is configured. |
+| 7 | Add transactional booking idempotency reservations and hashed email/IP rate-limit buckets. Existing bookings and outbox rows are preserved. |
+| 8 | Add account-owned delivery addresses, a single-default partial unique index, and owner-scoped address operations. Existing accounts are unchanged and begin with no saved addresses. |
+| 9 | Seed editable drink, dish and dessert pairings for the educational catalogue. Inserts are transactional and idempotent; existing relationships are preserved. Product detail pages resolve active, viewable pairings from SQLite and fill remaining slots from the catalogue. Admins can create, edit, reorder and remove pairings in the menu management panel. |
+| 10 | Add the photographed scallop nigiri catalog item and its normalized scallop ingredient/pairing links when absent; preserve an existing dish record and photo. |
+| 11 | Add catalog-derived ingredient notes to dish details using the existing normalized ingredient tables. The additive transaction uses `INSERT OR IGNORE`, preserves administrator edits on future boots, and does not provide or imply allergen verification. Set pages without a component list retain an explicit note instead of invented ingredients. |
 
 `schema.sql` declares the normalized entities for campaigns and targets, gift options, promo-code redemptions, collection membership, set variants, Secret Menu rules, personalized offers, loyalty settings/tiers/ledger, order set components, referral relationships/rewards, certificate previews and status-event idempotency. Foreign keys, unique event constraints, indexes and `CHECK` constraints are used where the domain supports them.
 

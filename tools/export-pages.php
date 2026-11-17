@@ -6,8 +6,11 @@ $root = dirname(__DIR__);
 $docs = rtrim(getenv('TOKYO_EXPORT_DIR') ?: ($root . '/docs'), '/\\');
 $source = getenv('TOKYO_EXPORT_URL') ?: 'http://127.0.0.1:8080';
 if (!is_dir($docs) && !mkdir($docs, 0775, true) && !is_dir($docs)) throw new RuntimeException('Cannot create docs directory');
-foreach (['luxury.css','editorial.css','premium.css','luxury-refinements.css','tokyo20.css','experience-ui.css','cart-store.js','luxury.js','pages-extra.js','pages-demo.js','account-demo.js','reviews.js','navigation.js','experience-ui.js','tokyo-secret-demo.js','tokyo20.js','motion-system.js'] as $asset) {
-    if (!copy($root . '/' . $asset, $docs . '/' . $asset)) throw new RuntimeException('Cannot copy ' . $asset);
+foreach (['luxury.css','editorial.css','premium.css','luxury-refinements.css','tokyo20.css','experience-ui.css','cart-store.js','luxury.js','pages-extra.js','pages-demo.js','account-demo.js','reviews.js','navigation.js','experience-ui.js','tokyo-secret-demo.js','tokyo20.js','home-booking.js','assets/vendor/gsap.min.js','assets/vendor/ScrollTrigger.min.js','motion-system.js'] as $asset) {
+    $target = $docs . '/' . $asset;
+    $targetDirectory = dirname($target);
+    if (!is_dir($targetDirectory) && !mkdir($targetDirectory, 0775, true) && !is_dir($targetDirectory)) throw new RuntimeException('Cannot create ' . $targetDirectory);
+    if (!copy($root . '/' . $asset, $target)) throw new RuntimeException('Cannot copy ' . $asset);
 }
 $copyAssets = function (string $sourceDir, string $targetDir) use (&$copyAssets): void {
     if (!is_dir($targetDir) && !mkdir($targetDir, 0775, true) && !is_dir($targetDir)) throw new RuntimeException('Cannot create ' . $targetDir);
@@ -16,7 +19,7 @@ $copyAssets = function (string $sourceDir, string $targetDir) use (&$copyAssets)
         $sourcePath = $sourceDir . DIRECTORY_SEPARATOR . $entry;
         $targetPath = $targetDir . DIRECTORY_SEPARATOR . $entry;
         if (is_dir($sourcePath)) { $copyAssets($sourcePath, $targetPath); continue; }
-        if (!preg_match('/\.(webp|svg|woff2?)$/i', $entry)) continue;
+        if (!preg_match('/\.(webp|jpe?g|svg|woff2?)$/i', $entry)) continue;
         if (!copy($sourcePath, $targetPath)) throw new RuntimeException('Cannot copy ' . $sourcePath);
     }
 };
@@ -41,12 +44,14 @@ foreach (glob($docs.'/dish-*.html')?:[] as $staleDishPage) {
 foreach ($routes as $route => $filename) {
     $html = @file_get_contents($source . $route);
     if ($html === false || !str_contains($html, '<!doctype html>')) throw new RuntimeException('Could not export ' . $route);
+    if (!str_contains($html, 'id="tp20-view-transition"')) throw new RuntimeException('Page transition opt-in must be present in the document head before exporting ' . $route);
     $html = str_replace(
       ['href="index.php#booking"','href="index.php"','href="menu.php"','href="about.php"','href="reviews.php"','href="account.php"','href="pages.php?page=omakase"','href="pages.php?page=gallery"','href="pages.php?page=booking"','href="pages.php?page=contacts"','href="pages.php?page=cart"'],
       ['href="booking.html"','href="index.html"','href="menu.html"','href="about.html"','href="reviews.html"','href="account.html"','href="omakase.html"','href="gallery.html"','href="booking.html"','href="contacts.html"','href="cart.html"'],
       $html
     );
     $html = str_replace(['href="offers.php"','href="set-builder.php"','href="perfect-evening.php"','href="gift-certificates.php"'], ['href="offers.html"','href="set-builder.html"','href="perfect-evening.html"','href="gift-certificates.html"'], $html);
+    $html = preg_replace('/href="pages\.php\?page=gallery#([^"]*)"/', 'href="gallery.html#$1"', $html) ?? $html;
     $html = preg_replace_callback('/href="set-builder\.php\?variant=([^"&]+)(?:&amp;[^\"]*)?"/', static function (array $match): string {
         $slug = rawurldecode($match[1]);
         return preg_match('/^[a-z0-9][a-z0-9-]{1,50}$/', $slug) ? 'href="set-builder-' . $slug . '.html"' : 'href="set-builder.html"';
@@ -55,12 +60,39 @@ foreach ($routes as $route => $filename) {
         $slug = rawurldecode($match[1]);
         return preg_match('/^[a-z0-9][a-z0-9-]{1,50}$/', $slug) ? 'href="collection-' . $slug . '.html"' : 'href="offers.html"';
     }, $html) ?? $html;
+    $html = str_replace('href="pages.php?page=booking&amp;zone=', 'href="booking.html?zone=', $html);
     $html = preg_replace('/href="pages\.php\?page=booking&amp;format=([^"]*)"/', 'href="booking.html?format=$1"', $html) ?? $html;
     $html = preg_replace_callback('/href="pages\.php\?page=dish&amp;id=(\d+)"/', fn($m) => 'href="dish-'.$m[1].'.html"', $html) ?? $html;
     $html = preg_replace('/<a href="admin(?:-marketing)?\.php">(?:Управление сайтом|Администрирование|Marketing &amp; Loyalty)<\/a>/', '', $html) ?? $html;
     $html = str_replace(
       ['Мы перезвоним и подготовим стол к выбранному времени.','После заявки команда подтвердит время и пожелания к вечеру.','Отзыв появится на сайте после проверки командой ресторана.'],
       ['В этой публичной демоверсии заявка сохраняется только в вашем браузере.','Уведомление ресторану из статической версии не отправляется.','Отзыв останется в этом браузере и не будет опубликован.'],
+      $html
+    );
+    // GitHub Pages cannot enforce the server-side rules used by the PHP checkout.
+    $html = str_replace(
+      [
+        'Соберите японский сет из демонстрационного меню. Итоговую стоимость и состав перед заказом проверяет сервер.',
+        'Выберите формат и составьте сет из каталога. Выбор блюда и отображаемая сумма — предварительные; сервер повторно проверит активность и цену.',
+        'Выберите формат и добавьте разные блюда. Цены будут перепроверены сервером.',
+        'Точная цена и доступность подтвердятся при оформлении.',
+        'Предварительная сумма — сумма демонстрационных цен выбранных блюд. Сервер соберёт окончательное предложение сам.',
+        'Итоговые скидки и подарки подтверждаются сервером. Цифры карточек меню — оценки до проверки.',
+        'Демонстрационный код для проверки корзины и серверного пересчёта. Условия вымышлены и доступны для изменения администратором.',
+        'Применимость каждого кода и итоговая стоимость проверяются сервером при расчёте заказа.',
+        'Сервер проверит приглашение, роль или уровень привилегий.',
+      ],
+      [
+        'Соберите японский сет из демоменю. В GitHub Pages состав и стоимость остаются локальной оценкой в браузере.',
+        'Выберите формат и составьте сет из каталога. В статической демоверсии состав и стоимость — предварительная локальная оценка без серверной проверки.',
+        'Выберите формат и добавьте разные блюда. Цены в GitHub Pages — демо-оценка без серверной проверки.',
+        'В статической демоверсии доступность и цена не проверяются сервером.',
+        'Предварительная сумма — сумма демонстрационных цен выбранных блюд. Статическая демоверсия не проверяет итог на сервере.',
+        'Скидки и подарки в GitHub Pages — локальная демонстрация без серверной проверки. Цены меню также предварительные.',
+        'Демо-код проверяет только локальную корзину и предварительный расчёт в браузере. Условия вымышлены.',
+        'В GitHub Pages коды работают только как локальная демонстрация; серверной проверки скидки и итоговой стоимости нет.',
+        'В этой демоверсии код открывает локальный просмотр; серверной авторизации и проверки уровня доступа нет.',
+      ],
       $html
     );
     // A static export cannot know the visitor's current restaurant-local day.
@@ -75,20 +107,57 @@ foreach ($routes as $route => $filename) {
 $secretIds=commerce_secret_menu_restricted_dish_ids(db());
 $secretDemoItems=[];
 if($secretIds){$marks=implode(',',array_fill(0,count($secretIds),'?'));$q=db()->prepare("SELECT d.*,c.name AS category_name FROM dishes d JOIN categories c ON c.slug=d.category WHERE d.active=1 AND d.id IN ($marks) ORDER BY d.sort_order,d.id");$q->execute($secretIds);$secretDemoItems=$q->fetchAll();}
+foreach($secretDemoItems as &$secretItem) unset($secretItem['created_at']);
+unset($secretItem);
 $secretDemoJson=json_encode($secretDemoItems,JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP|JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR);
 if(file_put_contents($docs.'/tokyo-secret-demo.js','window.TOKYO_SECRET_DEMO_ITEMS = '.$secretDemoJson.";\n")===false)throw new RuntimeException('Cannot write static Secret Menu preview data');
 
 // Browser-only account: no account, password, payment, or private data is sent to a server.
 $account = <<<'HTML'
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Демо-профиль и локальная история Tokyo Premium в этом браузере."><meta name="theme-color" content="#111310"><title>Ваш профиль — Tokyo Premium</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet"><link rel="stylesheet" href="luxury.css"><link rel="stylesheet" href="editorial.css"><link rel="stylesheet" href="premium.css"><link rel="stylesheet" href="tokyo20.css"><link rel="stylesheet" href="experience-ui.css"></head><body><header class="site-header"><a class="wordmark" href="index.html"><span class="wordmark-kanji">東京</span><span>TOKYO <i>PREMIUM</i></span></a><nav class="main-nav" aria-label="Основная навигация"><a href="index.html">Главная</a><a href="about.html">Философия</a><a href="menu.html">Меню</a><a href="reviews.html">Гости</a><a href="gallery.html">Пространство</a><a href="omakase.html">Omakase</a><a href="contacts.html">Контакты</a><a class="active" href="account.html">Профиль</a><a href="cart.html">Корзина</a></nav><a href="booking.html" class="header-cta">Забронировать ↗</a><button class="mobile-menu" aria-label="Открыть меню" aria-expanded="false">☰</button></header><main class="editorial-page"><section class="page-hero"><div class="kicker">Tokyo Premium · браузерная демоверсия</div><h1>Ваш профиль</h1><p>Сохранённые позиции, настройки и записи существуют только в локальном хранилище этого браузера. Хранилище браузера не зашифровано: используйте вымышленные данные; не вводите реальные контакты или адрес.</p></section><section class="section"><div class="account-demo-layout"><nav class="account-demo-nav" aria-label="Разделы профиля"><button class="active" data-account-tab="history">История</button><button data-account-tab="favorites">Избранное</button><button data-account-tab="profile">Профиль</button><button data-account-tab="addresses">Адреса</button><button data-account-tab="settings">Настройки</button></nav><div><section class="account-demo-panel" data-account-panel="history"><div class="intro-grid"><div><div class="kicker">Локальные записи</div><h2>Заказы</h2><div id="demo-orders" class="account-list"></div></div><div><div class="kicker">Локальные записи</div><h2>Бронирования</h2><div id="demo-bookings" class="account-list"></div></div></div></section><section class="account-demo-panel" data-account-panel="favorites" hidden><div class="kicker">Избранное</div><h2>Сохранённые блюда</h2><div id="demo-favorites" class="dish-grid"></div><p id="demo-favorites-empty" class="menu-note" hidden>Пока ничего не сохранено. Добавьте сердце на карточке блюда.</p></section><section class="account-demo-panel" data-account-panel="profile" hidden><div class="kicker">Только этот браузер</div><h2>Контактный профиль</h2><form class="account-demo-form" data-local-form="profile"><div class="field"><label for="demo-name">Имя</label><input id="demo-name" name="name" maxlength="80"></div><div class="field"><label for="demo-phone">Телефон</label><input id="demo-phone" name="phone" maxlength="30"></div><button class="button">Сохранить профиль ↗</button><p class="form-status" aria-live="polite"></p></form></section><section class="account-demo-panel" data-account-panel="addresses" hidden><div class="kicker">Адреса · локально</div><h2>Сохранённые адреса</h2><form class="account-demo-form" data-local-form="address"><div class="field full"><label for="demo-address">Адрес</label><input id="demo-address" name="address" required maxlength="180" autocomplete="street-address"></div><button class="button">Добавить адрес ↗</button><p class="form-status" aria-live="polite"></p></form><div id="demo-addresses" class="account-list"></div></section><section class="account-demo-panel" data-account-panel="settings" hidden><div class="kicker">Контроль данных</div><h2>Настройки демо-профиля</h2><p>Сотрите все локальные записи этого сайта с устройства. Это действие нельзя отменить.</p><button id="demo-clear-data" class="button secondary">Очистить данные в этом браузере</button><p class="form-status" id="demo-settings-status" aria-live="polite"></p></section></div></div></section></main><footer class="footer"><div class="footer-top"><a class="wordmark" href="index.html"><span class="wordmark-kanji">東京</span><span>TOKYO <i>PREMIUM</i></span></a><p>Сезонность. Точность. Тишина.</p><a href="booking.html">Ваш вечер начинается здесь ↗</a></div><div class="footer-bottom"><span>© 2026 Tokyo Premium</span><span>Демонстрационная версия</span></div><p class="school-note">Учебный проект: ресторан, адрес, меню, гости и контакты вымышлены.</p></footer><div class="toast" role="status" aria-live="polite"></div><script src="luxury.js" defer></script><script src="pages-extra.js" defer></script><script src="account-demo.js" defer></script></body></html>
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Демо-профиль и локальная история Tokyo Premium в этом браузере."><meta name="theme-color" content="#111310"><meta property="og:title" content="Личный кабинет — Tokyo Premium"><meta property="og:description" content="Демо-профиль Tokyo Premium хранится только в этом браузере."><meta property="og:type" content="website"><meta property="og:image" content="assets/generated/contact-exterior.webp"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="assets/generated/contact-exterior.webp"><title>Личный кабинет — Tokyo Premium</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet"><link rel="stylesheet" href="luxury.css"><link rel="stylesheet" href="editorial.css"><link rel="stylesheet" href="premium.css"><link rel="stylesheet" href="luxury-refinements.css"><link rel="stylesheet" href="tokyo20.css"><link rel="stylesheet" href="experience-ui.css"></head><body><header class="site-header"><a class="wordmark" href="index.html"><span class="wordmark-kanji">東京</span><span>TOKYO <i>PREMIUM</i></span></a><nav class="main-nav" aria-label="Основная навигация"><a href="index.html">Главная</a><a href="about.html">Философия</a><a href="menu.html">Меню</a><a href="reviews.html">Гости</a><a href="gallery.html">Пространство</a><a href="omakase.html">Omakase</a><a href="contacts.html">Контакты</a><a class="active" href="account.html">Профиль</a><a href="cart.html">Корзина</a></nav><a href="booking.html" class="header-cta">Забронировать ↗</a><button class="mobile-menu" aria-label="Открыть меню" aria-expanded="false">☰</button></header><main class="editorial-page"><section class="page-hero"><div class="kicker">Tokyo Premium · браузерная демоверсия</div><h1>Ваш профиль</h1><p>Сохранённые позиции, настройки и записи существуют только в локальном хранилище этого браузера. Хранилище браузера не зашифровано: используйте вымышленные данные; не вводите реальные контакты или адрес.</p></section><section class="section"><div class="account-demo-layout"><nav class="account-demo-nav" aria-label="Разделы профиля"><button class="active" data-account-tab="history">История</button><button data-account-tab="favorites">Избранное</button><button data-account-tab="profile">Профиль</button><button data-account-tab="addresses">Адреса</button><button data-account-tab="settings">Настройки</button></nav><div><section class="account-demo-panel" data-account-panel="history"><div class="intro-grid"><div><div class="kicker">Локальные записи</div><h2>Заказы</h2><div id="demo-orders" class="account-list"></div></div><div><div class="kicker">Локальные записи</div><h2>Бронирования</h2><div id="demo-bookings" class="account-list"></div></div></div></section><section class="account-demo-panel" data-account-panel="favorites" hidden><div class="kicker">Избранное</div><h2>Сохранённые блюда</h2><div id="demo-favorites" class="dish-grid"></div><p id="demo-favorites-empty" class="menu-note" hidden>Пока ничего не сохранено. Добавьте сердце на карточке блюда.</p></section><section class="account-demo-panel" data-account-panel="profile" hidden><div class="kicker">Только этот браузер</div><h2>Контактный профиль</h2><form class="account-demo-form" data-local-form="profile"><div class="field"><label for="demo-name">Имя</label><input id="demo-name" name="name" maxlength="80"></div><div class="field"><label for="demo-phone">Телефон</label><input id="demo-phone" name="phone" maxlength="30"></div><button class="button">Сохранить профиль ↗</button><p class="form-status" aria-live="polite"></p></form></section><section class="account-demo-panel" data-account-panel="addresses" hidden><div class="kicker">Адреса · локально</div><h2>Сохранённые адреса</h2><form class="account-demo-form" data-local-form="address"><div class="field full"><label for="demo-address">Адрес</label><input id="demo-address" name="address" required maxlength="180" autocomplete="street-address"></div><button class="button">Добавить адрес ↗</button><p class="form-status" aria-live="polite"></p></form><div id="demo-addresses" class="account-list"></div></section><section class="account-demo-panel" data-account-panel="settings" hidden><div class="kicker">Контроль данных</div><h2>Настройки демо-профиля</h2><p>Сотрите все локальные записи этого сайта с устройства. Это действие нельзя отменить.</p><button id="demo-clear-data" class="button secondary">Очистить данные в этом браузере</button><p class="form-status" id="demo-settings-status" aria-live="polite"></p></section></div></div></section></main><footer class="footer"><div class="footer-top"><a class="wordmark" href="index.html"><span class="wordmark-kanji">東京</span><span>TOKYO <i>PREMIUM</i></span></a><p>Сезонность. Точность. Тишина.</p><a href="booking.html">Ваш вечер начинается здесь ↗</a></div><div class="footer-bottom"><span>© 2026 Tokyo Premium</span><span>Демонстрационная версия</span></div><p class="school-note">Учебный проект: ресторан, адрес, меню, гости и контакты вымышлены.</p></footer><div class="toast" role="status" aria-live="polite"></div><script src="luxury.js" defer></script><script src="pages-extra.js" defer></script><script src="account-demo.js" defer></script></body></html>
 HTML;
 $account = preg_replace('/<section class="page-hero">.*?<\/section>/s', '', $account, 1) ?? $account;
 $account = str_replace('<main class="editorial-page">', '<main class="editorial-page account-demo-page">', $account);
 $overview = <<<'HTML'
-<section class="account-overview"><div class="account-overview-art"><img src="assets/generated/room-garden-terrace.webp" alt="Садовая терраса учебной концепции Tokyo Premium" loading="lazy"><span class="account-demo-seal">東京 · ПАМЯТЬ ВЕЧЕРА</span></div><div class="account-overview-body"><div class="kicker">Личный кабинет · данные только в этом браузере</div><h1 id="demo-display-name">Ваш профиль</h1><p>Заказы, бронирования и избранное остаются только в этом браузере. Профиль не защищён серверной авторизацией, а хранилище браузера не зашифровано — используйте вымышленные данные.</p><div class="account-metrics"><article><strong data-account-stat="orders">0</strong><span>сохранённых заказов</span></article><article><strong data-account-stat="bookings">0</strong><span>запросов на бронь</span></article><article><strong data-account-stat="favorites">0</strong><span>избранных блюд</span></article></div><div class="account-quick-actions"><a href="cart.html">Собрать заказ ↗</a><button type="button" data-account-quick-target="favorites">Избранное ♡</button><a href="booking.html">Выбрать вечер ↗</a></div></div></section>
-<section class="section tp20-static-privilege" data-tp-demo-loyalty aria-label="Демонстрационная программа Tokyo Privilege"><article class="tp20-loyalty-card" data-tp-loyalty-card data-tier="Silver"><span class="kicker">TOKYO PRIVILEGE · ЛОКАЛЬНАЯ ДЕМО</span><h2 data-tp-loyalty-tier>Silver</h2><p>Уровень рассчитан только по учебным заказам, сохранённым в этом браузере. Баллы не имеют денежной стоимости и не передаются ресторану.</p><div class="tp20-loyalty-balance"><strong data-tp-loyalty-points>0</strong><span>демо-баллов</span></div><label>Прогресс к следующему уровню<progress data-tp-loyalty-progress max="100" value="0">0%</progress></label><small data-tp-loyalty-progress-label>Статус появится после сохранённого учебного заказа.</small></article><article class="tp20-referral-card"><span class="kicker">INVITE · ONLY THIS BROWSER</span><h3>Пригласить друга</h3><p>Локальный код нужен только для показа интерфейса. Переход по нему не регистрирует гостя и не начисляет вознаграждение.</p><code data-tp-demo-referral>TP-DEMO</code><button class="button secondary" type="button" data-tp-copy-referral>Скопировать код</button></article></section><section class="section account-dashboard"><div class="account-demo-layout">
+<section class="account-overview">
+  <div class="account-overview-art"><img src="assets/generated/contact-exterior.webp" alt="Вход в ресторан Tokyo Premium с цветущей сакурой" loading="eager" fetchpriority="high"><span class="account-demo-seal">東京 · ПАМЯТЬ ВЕЧЕРА</span></div>
+  <div class="account-overview-body"><div class="kicker">Личный кабинет · данные только в этом браузере</div><h1>Личный кабинет</h1><p class="account-overview-lead">Ваше пространство в Tokyo Premium</p><p class="account-overview-greeting" id="demo-display-name">История, избранное и привилегии в одном месте.</p><p class="account-overview-privacy">Заказы и бронирования остаются только в этом браузере; серверной авторизации нет, хранилище браузера не зашифровано. Используйте вымышленные данные.</p></div>
+</section>
+<section class="section account-demo-summary" aria-label="Краткая сводка профиля"><div class="account-metrics"><article><strong data-account-stat="orders">0</strong><span>сохранённых заказов</span></article><article><strong data-account-stat="bookings">0</strong><span>запросов на бронь</span></article><article><strong data-account-stat="favorites">0</strong><span>избранных блюд</span></article></div><div class="account-quick-actions"><a href="menu.html">Открыть меню ↗</a><a href="booking.html">Бронирование ↗</a><button type="button" data-account-quick-target="favorites">Избранное ♡</button><a href="offers.html">Привилегии ↗</a></div></section>
+<section class="section tp20-static-privilege" data-tp-demo-loyalty aria-label="Демонстрационная программа Tokyo Privilege"><article class="tp20-loyalty-card" data-tp-loyalty-card data-tier="Silver"><span class="kicker">TOKYO PRIVILEGE · ЛОКАЛЬНАЯ ДЕМО</span><h2 data-tp-loyalty-tier>Silver</h2><p>Уровень рассчитан только по учебным заказам, сохранённым в этом браузере. Баллы не имеют денежной стоимости и не передаются ресторану.</p><div class="tp20-loyalty-balance"><strong data-tp-loyalty-points>0</strong><span>демо-баллов</span></div><label>Прогресс к следующему уровню<progress data-tp-loyalty-progress max="100" value="0">0%</progress></label><small data-tp-loyalty-progress-label>Статус появится после сохранённого учебного заказа.</small></article><article class="tp20-referral-card"><span class="kicker">ДЕМО-ПРИГЛАШЕНИЕ · ТОЛЬКО ЭТОТ БРАУЗЕР</span><h3>Пригласить друга</h3><p>Локальный код нужен только для показа интерфейса. Переход по нему не регистрирует гостя и не начисляет вознаграждение.</p><code data-tp-demo-referral>TP-DEMO</code><button class="button secondary" type="button" data-tp-copy-referral>Скопировать код</button></article></section><section class="section account-dashboard"><div class="account-demo-layout">
+HTML;
+$privilegeMatch = [];
+if (!preg_match('/<section class="section tp20-static-privilege"[^>]*>.*?<\/section>/s', $overview, $privilegeMatch)) {
+    throw new RuntimeException('Static account privilege section was not found.');
+}
+$privilege = $privilegeMatch[0];
+$overview = str_replace($privilege, '', $overview);
+$privilegeInsertionCount = 0;
+$overview = str_replace('<section class="section account-demo-summary"', $privilege . '<section class="section account-demo-summary"', $overview, $privilegeInsertionCount);
+if ($privilegeInsertionCount !== 1) throw new RuntimeException('Could not place the static loyalty overview before account history.');
+$accountSeedCallout = <<<'HTML'
+<aside class="account-demo-seed"><div><strong>Посмотрите заполненный кабинет</strong><p>Создайте вымышленные учебные заказы, запрос на бронь и избранные блюда. Они останутся только в этом браузере; удалить всё можно в настройках.</p><p class="form-status" data-account-demo-seed-status aria-live="polite"></p></div><button class="button secondary" type="button" data-account-demo-seed>Заполнить учебный пример</button></aside>
+HTML;
+$overview = str_replace('<div class="account-quick-actions">', $accountSeedCallout.'<div class="account-quick-actions">', $overview);
+$accountFavoritesPreview = <<<'HTML'
+<section class="account-favorites-overview" aria-labelledby="account-favorites-overview-title">
+  <div class="account-favorites-overview-heading">
+    <div><span class="kicker">СОХРАНЁННЫЕ ВЫБОРЫ · В ЭТОМ БРАУЗЕРЕ</span><h2 id="account-favorites-overview-title">Избранные блюда</h2></div>
+    <button class="button secondary" type="button" data-account-quick-target="favorites" aria-controls="demo-favorites">Все избранное ↗</button>
+  </div>
+  <div id="demo-favorites-preview" class="account-favorites-overview-grid" data-account-favorites-list data-account-favorites-limit="3" aria-live="polite"></div>
+  <p id="demo-favorites-preview-empty" class="account-favorites-overview-empty" hidden>Пока нет сохранённых блюд. <a class="text-link" href="menu.html">Посмотреть меню ↗</a></p>
+</section>
 HTML;
 $account = str_replace('<section class="section"><div class="account-demo-layout">', $overview, $account);
+$favoritesPanelInsertionCount = 0;
+$account = str_replace(
+    '</div></section><section class="account-demo-panel" data-account-panel="favorites"',
+    '</div>' . $accountFavoritesPreview . '</section><section class="account-demo-panel" data-account-panel="favorites"',
+    $account,
+    $favoritesPanelInsertionCount
+);
+if ($favoritesPanelInsertionCount !== 1) throw new RuntimeException('Could not place account favorites after the order history.');
 $accountPromo = <<<'HTML'
 <section class="account-promo"><div><div class="kicker">Следующий вечер · учебный сценарий</div><h2>Пусть сезон задаст настроение</h2><p>Выберите дату и формат вечера. Бронирование в демоверсии сохраняется только как запрос и не резервирует стол.</p><a class="button" href="booking.html">Перейти к бронированию ↗</a></div><span class="kicker">SEASONAL · TOKYO PREMIUM</span></section>
 HTML;

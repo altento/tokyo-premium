@@ -5,10 +5,10 @@ $pdo = db();
 $userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
 $offers = commerce_public_offers($pdo, $userId);
 $collections = commerce_public_collections($pdo);
-$codeRows = $pdo->query("SELECT pc.code,pc.campaign_id,pc.active AS code_active,pc.starts_at AS code_starts_at,pc.ends_at AS code_ends_at,pc.uses_count,pc.maximum_uses,c.title,c.active,c.starts_at,c.ends_at,c.weekday_mask,c.starts_time,c.ends_time,c.timezone FROM promo_codes pc JOIN promotion_campaigns c ON c.id=pc.campaign_id WHERE pc.active=1 AND c.active=1 AND c.campaign_type<>'secret_menu' ORDER BY c.sort_order,pc.created_at DESC")->fetchAll();
-$codes = array_values(array_filter($codeRows, static fn(array $row): bool => commerce_campaign_is_active($row) && commerce_date_window_is_active($row['code_starts_at'] ?: null, $row['code_ends_at'] ?: null, (string)$row['timezone']) && ($row['maximum_uses'] === null || (int)$row['uses_count'] < (int)$row['maximum_uses'])));
+$codeRows = $pdo->query("SELECT pc.code,pc.campaign_id,pc.active AS code_active,pc.starts_at AS code_starts_at,pc.ends_at AS code_ends_at,pc.uses_count,pc.maximum_uses,c.title,c.active,c.starts_at,c.ends_at,c.weekday_mask,c.starts_time,c.ends_time,c.timezone,c.required_tier FROM promo_codes pc JOIN promotion_campaigns c ON c.id=pc.campaign_id WHERE pc.active=1 AND c.active=1 AND c.campaign_type NOT IN ('secret_menu','personal','birthday') ORDER BY c.sort_order,pc.created_at DESC")->fetchAll();
+$codes = array_values(array_filter($codeRows, static fn(array $row): bool => commerce_campaign_tier_is_eligible($pdo, $row, $userId) && commerce_campaign_is_active($row) && commerce_date_window_is_active($row['code_starts_at'] ?: null, $row['code_ends_at'] ?: null, (string)$row['timezone']) && ($row['maximum_uses'] === null || (int)$row['uses_count'] < (int)$row['maximum_uses'])));
 $secretDishes = commerce_secret_menu_dishes($pdo, $userId, (string)($_SESSION['secret_menu_code']??''), !empty($_SESSION['admin_id']));
-page_start('Привилегии и коллекции — Tokyo Premium', 'Сезонные предложения, меню шефа и привилегии Tokyo Premium. Учебные условия демонстрационные.');
+page_start('Привилегии и коллекции — Tokyo Premium', 'Сезонные предложения, меню шефа и привилегии Tokyo Premium. Учебные условия демонстрационные.', 'assets/generated/restaurant-interior.webp');
 header_html('offers');
 ?>
 <main class="tp20-page tp20-offers-page">
@@ -27,7 +27,7 @@ header_html('offers');
         <?php foreach ($offers as $index => $offer): ?>
           <article class="tp20-offer-card" data-tp-reveal>
             <div class="tp20-offer-image"><img src="<?=e($offer['image_url'] ?: 'assets/generated/room-main-hall.webp')?>" alt="<?=e($offer['title'])?> · учебная визуализация" loading="lazy" decoding="async"><span><?=sprintf('%02d', $index + 1)?></span></div>
-            <div class="tp20-offer-copy"><span class="kicker"><?=e(match($offer['type']) {'golden_hour'=>'GOLDEN HOUR','chef_drop'=>'CHEF’S SECRET DROP','birthday'=>'BIRTHDAY PRIVILEGE','personal'=>'PERSONAL INVITATION',default=>'TOKYO EXCLUSIVE'})?></span><h3><?=e($offer['title'])?></h3><p><?=e($offer['description'])?></p><div class="tp20-offer-meta"><span><?=!empty($offer['demo_only'])?'Учебное предложение':'Предложение ресторана'?></span><?php if (!empty($offer['ends_at'])): ?><span>до <?=e(substr((string)$offer['ends_at'],0,10))?></span><?php endif ?></div>
+            <div class="tp20-offer-copy"><span class="kicker"><?=e(match((string)($offer['campaign_type'] ?? $offer['type'] ?? '')) {'golden_hour'=>'GOLDEN HOUR','chef_drop'=>'CHEF’S SECRET DROP','birthday'=>'BIRTHDAY PRIVILEGE','personal'=>'PERSONAL INVITATION',default=>'TOKYO EXCLUSIVE'})?></span><h3><?=e($offer['title'])?></h3><p><?=e($offer['description'])?></p><div class="tp20-offer-meta"><span><?=!empty($offer['demo_only'])?'Учебное предложение':'Предложение ресторана'?></span><?php if (!empty($offer['ends_at'])): ?><span>до <?=e(substr((string)$offer['ends_at'],0,10))?></span><?php endif ?></div>
               <?php if (in_array($offer['reward_type'], ['percent','fixed'], true) && (int)$offer['reward_value'] > 0): ?><strong class="tp20-reward"><?= $offer['reward_type']==='percent' ? (int)$offer['reward_value'].'%' : number_format((int)$offer['reward_value'],0,'.',' ').' ₸'?> <small>по условиям акции</small></strong><?php endif ?>
               <a class="text-link" href="menu.php">Выбрать блюда ↗</a></div>
           </article>

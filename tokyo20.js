@@ -14,6 +14,24 @@
     });
   });
 
+  document.querySelectorAll('[data-copy-invite]').forEach(button => {
+    button.addEventListener('click', async () => {
+      let invite;
+      try {
+        const url = new URL(String(button.dataset.copyInvite || ''), location.href);
+        if (url.origin !== location.origin) return;
+        invite = url.href;
+      } catch (_) { return; }
+      try {
+        await navigator.clipboard.writeText(invite);
+        button.textContent = 'Ссылка скопирована';
+      } catch (_) {
+        button.textContent = invite;
+      }
+      window.setTimeout(() => { button.textContent = button.dataset.label || 'Скопировать ссылку'; }, 2200);
+    });
+  });
+
   const secretForm = document.querySelector('[data-tp-secret-unlock]');
   if (secretForm) {
     secretForm.addEventListener('submit', async event => {
@@ -138,7 +156,32 @@
     const quoteTotal = quoteRoot.querySelector('[data-tp-quote-total]');
     const giftChoice = quoteRoot.querySelector('[data-tp-gift-choice]');
     const giftSelect = quoteRoot.querySelector('[name="gift_dish_id"]');
-    const clearQuote = message => { quoteTotal.hidden = true; quoteTotal.textContent = ''; if (message) quoteStatus.textContent = message; };
+    const giftQuantity = quoteRoot.querySelector('[name="gift_quantity"]');
+    let currentGiftOptions = [];
+    const promoInput = quoteRoot.querySelector('#checkout-promo-code');
+    const requestedPromo = new URLSearchParams(window.location.search).get('promo') || '';
+    if (promoInput && !promoInput.value && /^[A-Z0-9][A-Z0-9_-]{2,30}$/i.test(requestedPromo)) promoInput.value = requestedPromo.toUpperCase();
+    const selectedGiftLimit = option => Math.max(1, Math.min(10, Number(option.max_per_order) || 1, Number(option.remaining_quantity) || 0));
+    const syncGiftQuantity = () => {
+      if (!giftQuantity) return;
+      const option = currentGiftOptions.find(item => String(item.id) === giftSelect.value);
+      const maximum = option ? selectedGiftLimit(option) : currentGiftOptions.length ? Math.max(...currentGiftOptions.map(selectedGiftLimit)) : 1;
+      giftQuantity.max = String(maximum);
+      const value = Number.parseInt(giftQuantity.value, 10);
+      giftQuantity.value = String(Math.min(Number.isInteger(value) && value > 0 ? value : 1, maximum));
+      giftQuantity.disabled = currentGiftOptions.length === 0;
+      giftQuantity.required = currentGiftOptions.length > 0;
+    };
+    const clearGiftOptions = () => {
+      currentGiftOptions = [];
+      giftSelect.replaceChildren(new Option('Выберите подарок', ''));
+      giftChoice.hidden = true;
+      giftSelect.disabled = true;
+      giftSelect.required = false;
+      if (giftQuantity) giftQuantity.value = '1';
+      syncGiftQuantity();
+    };
+    const clearQuote = message => { quoteTotal.hidden = true; quoteTotal.textContent = ''; clearGiftOptions(); if (message) quoteStatus.textContent = message; };
     const staticQuote = (payload, fields) => {
       const subtotal = Number(window.TokyoCart?.total() || 0);
       const fulfillment = String(fields.get('fulfillment') || 'delivery');
@@ -160,14 +203,17 @@
     const renderQuote = data => {
       quoteTotal.textContent = 'Подытог ' + money(data.subtotal) + ' · скидка ' + money(data.discount_total) + ' · получение ' + money(data.delivery_fee) + ' · итог ' + money(data.total) + (data.estimated ? ' · локальная оценка' : ' · серверный расчёт');
       quoteTotal.hidden = false;
+      const previousGiftId = giftSelect.value;
       giftSelect.replaceChildren(new Option('Выберите подарок', ''));
       const options = Array.isArray(data.gift_options) ? data.gift_options : [];
       options.forEach(item => giftSelect.add(new Option(item.name + ' · подарок', String(item.id))));
-      const needed = Boolean(data.requires_gift_choice && options.length);
-      giftChoice.hidden = !needed;
-      giftSelect.disabled = !needed;
-      giftSelect.required = needed;
-      if (!needed) giftSelect.value = '';
+      currentGiftOptions = options;
+      const preservedGiftId = options.some(item => String(item.id) === previousGiftId) ? previousGiftId : (options.length === 1 ? String(options[0].id) : '');
+      giftSelect.value = preservedGiftId;
+      giftChoice.hidden = options.length === 0;
+      giftSelect.disabled = options.length < 2;
+      giftSelect.required = options.length > 1;
+      syncGiftQuantity();
       quoteStatus.textContent = data.estimated
         ? 'Это только локальный расчёт GitHub Pages. Он не резервирует акцию и не подтверждает скидку.'
         : 'Сервер пересчитал корзину, ограничения и доступный остаток подарков. Цена будет проверена повторно при заказе.';
@@ -196,7 +242,8 @@
       } catch (error) { clearQuote(error.message || 'Не удалось рассчитать итог.'); }
       finally { quoteButton.disabled = false; }
     });
-    form?.addEventListener('reset', () => { giftSelect.required = false; giftSelect.disabled = true; giftChoice.hidden = true; clearQuote('Корзина сброшена. Для нового расчёта проверьте состав и условия ещё раз.'); });
+    giftSelect?.addEventListener('change', syncGiftQuantity);
+    form?.addEventListener('reset', () => { clearQuote('Корзина сброшена. Для нового расчёта проверьте состав и условия ещё раз.'); });
     document.addEventListener('tokyo-cart-updated', () => clearQuote('Состав корзины изменился. Пересчитайте промокод и итог перед оформлением.'));
   }
 
@@ -204,19 +251,24 @@
   const privilegeRoot = document.querySelector('[data-tp-demo-loyalty]');
   if (privilegeRoot && staticDemo) {
     const readArray = key => { try { const value = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(value) ? value : []; } catch (_) { return []; } };
-    const orders = readArray('tokyo-demo-orders');
-    const spend = orders.reduce((sum, order) => sum + Math.max(0, Number(order.total) || 0), 0);
-    const points = Math.floor(spend / 100);
     const tiers = [{name:'Silver',threshold:0},{name:'Gold',threshold:150000},{name:'Platinum',threshold:400000}];
-    const current = tiers.slice().reverse().find(tier => spend >= tier.threshold) || tiers[0];
-    const next = tiers.find(tier => tier.threshold > current.threshold);
-    privilegeRoot.querySelector('[data-tp-loyalty-tier]').textContent = current.name;
-    privilegeRoot.querySelector('[data-tp-loyalty-card]').dataset.tier = current.name;
-    privilegeRoot.querySelector('[data-tp-loyalty-points]').textContent = points.toLocaleString('ru-RU');
-    const progress = privilegeRoot.querySelector('[data-tp-loyalty-progress]');
-    const percent = next ? Math.min(100, Math.round(((spend-current.threshold)/(next.threshold-current.threshold))*100)) : 100;
-    progress.value = percent; progress.setAttribute('aria-label', next ? 'Демо-прогресс к '+next.name : 'Достигнут наивысший демо-уровень');
-    privilegeRoot.querySelector('[data-tp-loyalty-progress-label]').textContent = next ? 'До '+next.name+': '+Math.max(0,next.threshold-spend).toLocaleString('ru-RU')+' ₸ учебного оборота.' : 'Высший уровень локального демонстрационного сценария.';
+    const updateDemoPrivilege = () => {
+      const orders = readArray('tokyo-demo-orders');
+      const spend = orders.reduce((sum, order) => sum + Math.max(0, Number(order?.total) || 0), 0);
+      const points = Math.floor(spend / 100);
+      const current = tiers.slice().reverse().find(tier => spend >= tier.threshold) || tiers[0];
+      const next = tiers.find(tier => tier.threshold > current.threshold);
+      privilegeRoot.querySelector('[data-tp-loyalty-tier]').textContent = current.name;
+      privilegeRoot.querySelector('[data-tp-loyalty-card]').dataset.tier = current.name;
+      privilegeRoot.querySelector('[data-tp-loyalty-points]').textContent = points.toLocaleString('ru-RU');
+      const progress = privilegeRoot.querySelector('[data-tp-loyalty-progress]');
+      const percent = next ? Math.min(100, Math.round(((spend-current.threshold)/(next.threshold-current.threshold))*100)) : 100;
+      progress.value = percent; progress.setAttribute('aria-label', next ? 'Демо-прогресс к '+next.name : 'Достигнут наивысший демо-уровень');
+      privilegeRoot.querySelector('[data-tp-loyalty-progress-label]').textContent = next ? 'До '+next.name+': '+Math.max(0,next.threshold-spend).toLocaleString('ru-RU')+' ₸ учебного оборота.' : 'Высший уровень локального демонстрационного сценария.';
+    };
+    updateDemoPrivilege();
+    document.addEventListener('tokyo-demo-data-updated', updateDemoPrivilege);
+    window.addEventListener('storage', event => { if (!event.key || event.key === 'tokyo-demo-orders') updateDemoPrivilege(); });
     const referral = privilegeRoot.querySelector('[data-tp-demo-referral]');
     let referralCode = '';
     try { referralCode = localStorage.getItem('tokyo-demo-referral-code') || ''; if (!/^TP-DEMO-[A-Z0-9]{6}$/.test(referralCode)) { referralCode = 'TP-DEMO-'+Math.random().toString(36).slice(2,8).toUpperCase(); localStorage.setItem('tokyo-demo-referral-code',referralCode); } } catch (_) { referralCode = 'TP-DEMO-LOCAL'; }

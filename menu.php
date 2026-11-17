@@ -1,6 +1,6 @@
 <?php
 require __DIR__.'/bootstrap.php';
-page_start('Меню — Tokyo Premium','Японское меню Tokyo Premium в Астане: закуски, суши, сеты омакасе, горячие блюда и десерты.');
+page_start('Меню — Tokyo Premium','Японское меню Tokyo Premium в Астане: закуски, суши, сеты омакасе, горячие блюда и десерты.','assets/generated/menu-hero-sushi-assortment-v1.webp');
 header_html('menu');
 $all=dishes();
 $searchMetadata=[];
@@ -9,20 +9,23 @@ foreach($metadataQuery->fetchAll() as $row) $searchMetadata[(int)$row['id']]=str
 $cats=db()->query('SELECT slug,name FROM categories ORDER BY sort_order')->fetchAll();
 ?>
 <main class="menu-page">
-  <section class="menu-hero"><img src="assets/generated/menu-hero-sushi-assortment-v1.webp" width="1672" height="944" alt="Подборка роллов и нигири на тёмном блюде в интерьере с видом на японский сад" fetchpriority="high"><div class="menu-hero-shade"></div><div class="menu-hero-copy"><div class="kicker">旬 · СЕЗОННЫЙ ВЫБОР</div><h1>Меню</h1><p class="menu-hero-sub">Коллекция вкусов Японии</p><p>Авторские блюда концепции — от чистого вкуса нигири до тёплых подач и сезонных десертов.</p><span class="school-note">Все блюда и цены — демонстрационные</span></div><span class="menu-hero-kanji" lang="ja" aria-hidden="true">日本の味</span></section>
+  <section class="menu-hero"><img src="assets/generated/menu-hero-sushi-assortment-v1.webp" width="1680" height="945" alt="Ассорти нигири и роллов на чёрном блюде в интерьере с цветущей сакурой — учебная фотоконцепция" fetchpriority="high" decoding="async"><div class="menu-hero-shade"></div><div class="menu-hero-copy"><div class="kicker">旬 · СЕЗОННЫЙ ВЫБОР</div><h1>Меню</h1><p class="menu-hero-sub">Коллекция вкусов Японии</p><p>Авторские блюда концепции — от чистого вкуса нигири до тёплых подач и сезонных десертов.</p><span class="school-note">Все блюда и цены — демонстрационные</span></div><span class="menu-hero-kanji" lang="ja" aria-hidden="true">日本の味</span></section>
+  <nav class="breadcrumbs menu-breadcrumbs" aria-label="Навигация"><a href="index.php">Главная</a><span aria-hidden="true">›</span><span aria-current="page">Меню</span></nav>
   <section class="section menu-section">
     <div class="menu-layout">
       <aside class="menu-sidebar" aria-label="Разделы меню">
         <div class="menu-sidebar-heading"><span class="kicker">Выберите настроение</span><h2>Категории</h2></div>
         <nav class="menu-category-list" aria-label="Фильтр по категории">
           <button class="filter-btn active" data-category="all"><span>Все блюда</span><b><?=count($all)?></b></button>
-          <?php foreach($cats as $c): $categoryCount=count(array_filter($all,static fn($d)=>$d['category']===$c['slug'])); ?><button class="filter-btn" data-category="<?=e($c['slug'])?>"><span><?=e($c['name'])?></span><b><?=$categoryCount?></b></button><?php endforeach ?>
+          <a class="filter-btn menu-set-link" href="set-builder.php" aria-label="Перейти к конструктору японских сетов"><span>Собрать сет</span><b aria-hidden="true">↗</b></a>
+          <?php foreach($cats as $c): $categoryCount=count(array_filter($all,static fn($d)=>$d['category']===$c['slug'])); if($categoryCount===0) continue; ?><button class="filter-btn" data-category="<?=e($c['slug'])?>"><span><?=e($c['name'])?></span><b><?=$categoryCount?></b></button><?php endforeach ?>
         </nav>
         <article class="menu-tea-card"><img src="assets/food/04-matcha-latte.webp" alt="Матча латте из демонстрационного меню" loading="lazy" decoding="async"><div><span class="kicker">Чайная пауза</span><h3>Японский чай</h3><p>Найдите спокойный финал вечера в разделе напитков.</p><a href="#menu-catalog" data-category-link="drinks">К напиткам ↗</a></div></article>
       </aside>
       <div class="menu-catalog" id="menu-catalog">
         <div class="menu-catalog-heading"><div><span class="kicker">Tokyo Premium · учебный каталог</span><h2>Вкусы на ваш выбор</h2></div><button type="button" class="filter-btn" id="favorites-only">♡ Избранное</button></div>
-        <div class="menu-toolbar"><label class="menu-sort"><span>Сортировка</span><select id="sort-menu" aria-label="Сортировка меню"><option value="default">Сначала по разделам</option><option value="price-asc">Цена: по возрастанию</option><option value="price-desc">Цена: по убыванию</option><option value="name">Название: А–Я</option></select></label><label class="menu-search-wrap"><span class="sr-only">Поиск блюд</span><input class="menu-search" type="search" aria-label="Поиск блюд" placeholder="⌕  Поиск по меню"></label></div>
+        <div class="menu-toolbar"><label class="menu-sort"><span>Сортировка</span><select id="sort-menu" aria-label="Сортировка меню"><option value="default">Сначала по разделам</option><option value="price-asc">Цена: по возрастанию</option><option value="price-desc">Цена: по убыванию</option><option value="name">Название: А–Я</option></select></label><label class="menu-search-wrap"><span class="sr-only">Поиск блюд</span><input class="menu-search" type="search" aria-label="Поиск блюд" placeholder="⌕  Поиск по меню"></label><div class="menu-view-toggle" role="group" aria-label="Вид каталога"><button type="button" data-menu-view="grid" aria-label="Показать сеткой" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button><button type="button" data-menu-view="list" aria-label="Показать списком" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5h12M9 12h12M9 19h12"/><rect x="3" y="3" width="3" height="4" rx=".6"/><rect x="3" y="10" width="3" height="4" rx=".6"/><rect x="3" y="17" width="3" height="4" rx=".6"/></svg></button></div></div>
+        <nav class="menu-subfilters" aria-label="Подбор по основному ингредиенту"><button type="button" class="menu-subfilter" data-menu-ingredient="all" aria-pressed="true">Все</button><button type="button" class="menu-subfilter" data-menu-ingredient="tuna" aria-pressed="false">Тунец</button><button type="button" class="menu-subfilter" data-menu-ingredient="salmon" aria-pressed="false">Лосось</button><button type="button" class="menu-subfilter" data-menu-ingredient="eel" aria-pressed="false">Угорь</button><button type="button" class="menu-subfilter" data-menu-ingredient="shrimp" aria-pressed="false">Креветка</button><button type="button" class="menu-subfilter" data-menu-ingredient="scallop" aria-pressed="false" hidden>Гребешок</button><button type="button" class="menu-subfilter" data-menu-ingredient="roe" aria-pressed="false">Икра</button></nav>
         <div class="dish-grid">
           <?php foreach($all as $d): ?>
           <article class="dish-card" data-category="<?=e($d['category'])?>" data-search="<?=e(strtolower($d['name'].' '.$d['description'].' '.$d['category_name'].' '.($searchMetadata[(int)$d['id']]??'')))?>">
@@ -31,7 +34,7 @@ $cats=db()->query('SELECT slug,name FROM categories ORDER BY sort_order')->fetch
               <h3><a href="pages.php?page=dish&amp;id=<?=(int)$d['id']?>"><?=e($d['name'])?></a></h3><p><?=e($d['description'])?></p>
               <div class="dish-bottom">
                 <div class="menu-card-links"><a class="text-button" href="pages.php?page=dish&amp;id=<?=(int)$d['id']?>">Подробнее ↗</a><button type="button" class="text-button" data-tp-quick-view data-dish-id="<?=(int)$d['id']?>">Быстрый просмотр</button></div>
-                <span class="dish-price"><?=number_format((int)$d['price'],0,'.',' ')?> ₸</span><button class="add-to-cart" type="button" data-id="<?= (int)$d['id']?>">Добавить +</button>
+                <span class="dish-price"><?=number_format((int)$d['price'],0,'.',' ')?> ₸</span><button class="add-to-cart" type="button" data-id="<?= (int)$d['id']?>" aria-label="Добавить <?=e($d['name'])?> в корзину">Добавить +</button>
               </div>
             </div>
           </article>
@@ -42,6 +45,11 @@ $cats=db()->query('SELECT slug,name FROM categories ORDER BY sort_order')->fetch
         <p class="menu-note">Все блюда, цены и гости — часть вымышленной ресторанной концепции для лабораторной работы.</p>
       </div>
     </div>
+  </section>
+  <section class="menu-set-story" aria-labelledby="menu-set-story-title">
+    <div class="menu-set-story-photo menu-set-story-photo--chef"><img src="assets/generated/chef-at-counter.webp" width="1480" height="1000" alt="Иллюстративный кадр: шеф формирует нигири у стойки" loading="lazy" decoding="async"></div>
+    <div class="menu-set-story-copy"><div class="kicker">Авторские композиции</div><h2 id="menu-set-story-title">Соберите свой Tokyo set</h2><p>Выберите формат вечера и состав из позиций меню. Предварительная сумма обновится сразу; PHP-версия пересчитает состав и цены перед оформлением.</p><a class="button" href="set-builder.php?variant=signature">Собрать сет <span aria-hidden="true">↗</span></a><small>Демонстрационные блюда и условия учебной версии</small></div>
+    <div class="menu-set-story-photo menu-set-story-photo--platter"><img src="assets/generated/tokyo-seasonal-omakase-v2.webp" width="1600" height="900" alt="Сезонная композиция из нигири и японских подач на тёмном столе" loading="lazy" decoding="async"></div>
   </section>
 </main>
 <script>window.DISHES=<?=json_encode($all,JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP|JSON_UNESCAPED_UNICODE)?>;</script>

@@ -90,6 +90,213 @@ function commerce_migrate(PDO $pdo): void
             throw $error;
         }
     }
+
+    if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=6')->fetchColumn()) {
+        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        try {
+            $bookingColumns = $pdo->query('PRAGMA table_info(bookings)')->fetchAll(PDO::FETCH_COLUMN, 1);
+            if (!in_array('guest_email', $bookingColumns, true)) {
+                $pdo->exec("ALTER TABLE bookings ADD COLUMN guest_email TEXT NOT NULL DEFAULT ''");
+            }
+            $pdo->exec("CREATE TABLE IF NOT EXISTS email_outbox (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_key TEXT NOT NULL UNIQUE,
+                booking_id INTEGER REFERENCES bookings(id) ON DELETE SET NULL,
+                recipient TEXT NOT NULL,
+                subject TEXT NOT NULL,
+                body TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','sending','sent','failed')),
+                attempts INTEGER NOT NULL DEFAULT 0 CHECK(attempts >= 0),
+                locked_at TEXT,
+                sent_at TEXT,
+                last_error TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )");
+            $pdo->exec('CREATE INDEX IF NOT EXISTS idx_email_outbox_status_id ON email_outbox(status,id)');
+            $pdo->exec('CREATE INDEX IF NOT EXISTS idx_email_outbox_booking_id ON email_outbox(booking_id,id)');
+            $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(6)');
+            $pdo->commit();
+        } catch (Throwable $error) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $error;
+        }
+    }
+
+    if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=7')->fetchColumn()) {
+        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        try {
+            $pdo->exec("CREATE TABLE IF NOT EXISTS api_booking_requests (
+                token TEXT PRIMARY KEY,
+                booking_id INTEGER UNIQUE REFERENCES bookings(id) ON DELETE SET NULL,
+                response_json TEXT,
+                response_status INTEGER,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                CHECK ((response_json IS NULL AND response_status IS NULL) OR (response_json IS NOT NULL AND response_status IS NOT NULL))
+            )");
+            $pdo->exec("CREATE TABLE IF NOT EXISTS booking_email_rate_limits (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                bucket_hash TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )");
+            $pdo->exec('CREATE INDEX IF NOT EXISTS idx_booking_email_rate_bucket_time ON booking_email_rate_limits(bucket_hash,created_at)');
+            $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(7)');
+            $pdo->commit();
+        } catch (Throwable $error) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $error;
+        }
+    }
+
+    $addressTableExists = (bool)$pdo->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='user_addresses'")->fetchColumn();
+    if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=8')->fetchColumn() || !$addressTableExists) {
+        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        try {
+            $pdo->exec("CREATE TABLE IF NOT EXISTS user_addresses (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                label TEXT NOT NULL CHECK(length(label) BETWEEN 2 AND 60),
+                address TEXT NOT NULL CHECK(length(address) BETWEEN 5 AND 240),
+                is_default INTEGER NOT NULL DEFAULT 0 CHECK(is_default IN (0,1)),
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )");
+            $pdo->exec('CREATE INDEX IF NOT EXISTS idx_user_addresses_owner ON user_addresses(user_id,id DESC)');
+            $pdo->exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_user_addresses_one_default ON user_addresses(user_id) WHERE is_default=1');
+            $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(8)');
+            $pdo->commit();
+        } catch (Throwable $error) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $error;
+        }
+    }
+
+    // v9 seeds editable educational pairings for the existing catalogue.
+    // INSERT OR IGNORE preserves any pairings an administrator has already set.
+    if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=9')->fetchColumn()) {
+        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        try {
+            $pdo->exec("CREATE TABLE IF NOT EXISTS dish_pairings (
+                dish_id INTEGER NOT NULL REFERENCES dishes(id) ON DELETE CASCADE,
+                paired_dish_id INTEGER NOT NULL REFERENCES dishes(id) ON DELETE CASCADE,
+                pairing_type TEXT NOT NULL CHECK(pairing_type IN ('drink','sauce','dish','dessert')),
+                sort_order INTEGER NOT NULL DEFAULT 0,
+                PRIMARY KEY(dish_id,paired_dish_id,pairing_type),
+                CHECK(dish_id<>paired_dish_id)
+            )");
+            $pairings = [
+                [1,4,'drink',10],[1,19,'dessert',20],
+                [2,20,'drink',10],[2,8,'dessert',20],
+                [3,20,'drink',10],[3,6,'dish',20],
+                [4,8,'dessert',10],[4,19,'dessert',20],
+                [5,20,'drink',10],[5,19,'dessert',20],
+                [6,20,'drink',10],[6,3,'dish',20],
+                [7,4,'drink',10],[7,8,'dessert',20],
+                [8,4,'drink',10],[8,19,'dessert',20],
+                [9,4,'drink',10],[9,14,'dish',20],
+                [10,20,'drink',10],[10,3,'dish',20],
+                [11,20,'drink',10],[11,8,'dessert',20],
+                [12,20,'drink',10],[12,15,'dish',20],
+                [13,20,'drink',10],[13,14,'dish',20],
+                [14,4,'drink',10],[14,6,'dish',20],
+                [15,20,'drink',10],[15,14,'dish',20],
+                [16,4,'drink',10],[16,19,'dessert',20],
+                [17,20,'drink',10],[17,19,'dessert',20],
+                [18,20,'drink',10],[18,19,'dessert',20],
+                [19,4,'drink',10],[19,8,'dessert',20],
+                [20,12,'dish',10],[20,15,'dish',20],
+            ];
+            $insertPairing = $pdo->prepare('INSERT OR IGNORE INTO dish_pairings(dish_id,paired_dish_id,pairing_type,sort_order) VALUES(?,?,?,?)');
+            foreach ($pairings as $pairing) $insertPairing->execute($pairing);
+            $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(9)');
+            $pdo->commit();
+        } catch (Throwable $error) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $error;
+        }
+    }
+
+    // v10 adds one photographed scallop nigiri to make the existing scallop
+    // ingredient filter useful. Keep it additive: never replace an edited dish.
+    if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=10')->fetchColumn()) {
+        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        try {
+            $pdo->exec("INSERT OR IGNORE INTO ingredients(slug,name,active) VALUES ('scallop','Морской гребешок',1)");
+            $ingredientQuery = $pdo->query("SELECT slug FROM ingredients WHERE slug='scallop' OR name='Морской гребешок' ORDER BY CASE WHEN slug='scallop' THEN 0 ELSE 1 END LIMIT 1");
+            $ingredientSlug = (string)$ingredientQuery->fetchColumn();
+            if ($ingredientSlug === '') throw new RuntimeException('Scallop ingredient could not be resolved.');
+            $dishName = 'Нигири с морским гребешком';
+            $findDish = $pdo->prepare('SELECT id FROM dishes WHERE name=? ORDER BY id LIMIT 1');
+            $findDish->execute([$dishName]);
+            $dishId = $findDish->fetchColumn();
+            if ($dishId === false) {
+                $insertDish = $pdo->prepare('INSERT INTO dishes(category,name,description,weight,price,image_url,featured,active,sort_order) VALUES(?,?,?,?,?,?,?,?,?)');
+                $insertDish->execute(['sushi',$dishName,'Сладкий морской гребешок, слегка обожжённый снаружи, на рисе для суши; цитрусовый акцент юдзу.','40 г',2200,'assets/food/21-nigiri-scallop.webp',0,1,4]);
+                $dishId = (int)$pdo->lastInsertId();
+            }
+            $dishId = (int)$dishId;
+            $linkIngredient = $pdo->prepare('INSERT OR IGNORE INTO dish_ingredients(dish_id,ingredient_slug,is_optional,sort_order) VALUES(?,?,0,10)');
+            $linkIngredient->execute([$dishId,$ingredientSlug]);
+            $linkPairing = $pdo->prepare("INSERT OR IGNORE INTO dish_pairings(dish_id,paired_dish_id,pairing_type,sort_order) VALUES(?,20,'drink',10)");
+            $linkPairing->execute([$dishId]);
+            $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(10)');
+            $pdo->commit();
+        } catch (Throwable $error) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $error;
+        }
+    }
+
+    // v11 adds source-backed ingredient notes for the educational dish cards.
+    // Seed once and only insert missing links so later admin edits are preserved.
+    if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=11')->fetchColumn()) {
+        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        try {
+            $composition = [
+                'Филадельфия' => ['Лосось','Сливочный сыр','Огурец','Рис для суши','Нори'],
+                'Калифорния' => ['Снежный краб','Авокадо','Огурец','Икра тобико','Рис для суши'],
+                'Зелёный дракон' => ['Копчёный угорь','Авокадо','Сливочный сыр','Соус унаги','Кунжут'],
+                'Запечённый ролл «Вулкан»' => ['Лосось','Огурец','Сливочный сыр','Соус спайси'],
+                'Нигири с лососем' => ['Лосось','Рис для суши'],
+                'Нигири с тунцом' => ['Тунец','Рис для суши'],
+                'Гункан с икрой' => ['Икра лосося','Рис для суши','Нори'],
+                'Рамен с говядиной' => ['Говядина','Говяжий бульон','Лапша','Яйцо адзитама'],
+                'Удон с курицей терияки' => ['Лапша удон','Курица','Овощи','Соус терияки'],
+                'Моти' => ['Рисовое тесто','Ягодная начинка'],
+                'Матча латте' => ['Матча','Кокосовое молоко'],
+                'Тартар из тунца с юдзу' => ['Тунец ахи','Юдзу','Соус понзу','Зелёное яблоко','Хрустящий рис'],
+                'Гёдза с уткой' => ['Утка','Имбирь','Кунжутное масло','Соус понзу','Тесто'],
+                'Мисо-суп с вакаме' => ['Бульон даси','Паста сира-мисо','Тофу','Вакаме','Зелёный лук'],
+                'Эби темпура' => ['Тигровые креветки','Тесто темпура','Сезонные овощи','Соус тэнцую','Дайкон'],
+                'Донбури с угрём унаги' => ['Рис косихикари','Угорь','Глазурь кабаяки','Тамаго','Маринованный дайкон'],
+                'Матча-тирамису' => ['Крем маскарпоне','Савоярди','Ходзича','Матча'],
+                'Юдзу-лимонад' => ['Юдзу','Содовая','Свежий имбирь'],
+                'Нигири с морским гребешком' => ['Морской гребешок','Рис для суши','Юдзу'],
+            ];
+            $insertIngredient = $pdo->prepare('INSERT OR IGNORE INTO ingredients(slug,name,active) VALUES(?,?,1)');
+            $findIngredient = $pdo->prepare('SELECT slug FROM ingredients WHERE name=? ORDER BY slug LIMIT 1');
+            $findDish = $pdo->prepare('SELECT id FROM dishes WHERE name=? ORDER BY id LIMIT 1');
+            $insertLink = $pdo->prepare('INSERT OR IGNORE INTO dish_ingredients(dish_id,ingredient_slug,is_optional,sort_order) VALUES(?,?,0,?)');
+            foreach ($composition as $dishName => $ingredientNames) {
+                $findDish->execute([$dishName]);
+                $dishId = $findDish->fetchColumn();
+                if ($dishId === false) continue;
+                foreach ($ingredientNames as $position => $ingredientName) {
+                    $slug = 'dish-note-' . substr(hash('sha256', $ingredientName), 0, 20);
+                    $insertIngredient->execute([$slug,$ingredientName]);
+                    $findIngredient->execute([$ingredientName]);
+                    $resolvedSlug = (string)$findIngredient->fetchColumn();
+                    if ($resolvedSlug === '') throw new RuntimeException('Could not resolve seeded dish ingredient.');
+                    $insertLink->execute([(int)$dishId,$resolvedSlug,($position + 1) * 10]);
+                }
+            }
+            $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(11)');
+            $pdo->commit();
+        } catch (Throwable $error) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $error;
+        }
+    }
 }
 
 function commerce_actor_key(?int $userId, string $sessionId): string
@@ -138,6 +345,24 @@ function commerce_date_window_is_active(?string $startsAt, ?string $endsAt, stri
     return true;
 }
 
+function commerce_campaign_tier_is_eligible(PDO $pdo, array $campaign, ?int $userId): bool
+{
+    $requiredSlug = trim((string)($campaign['required_tier'] ?? ''));
+    if ($requiredSlug === '') return true;
+    if (!$userId || $userId < 1) return false;
+
+    $requiredQuery = $pdo->prepare('SELECT minimum_completed_spend,sort_order FROM loyalty_tiers WHERE slug=? AND active=1');
+    $requiredQuery->execute([$requiredSlug]);
+    $requiredTier = $requiredQuery->fetch();
+    $currentTier = commerce_user_tier($pdo, $userId);
+    if (!$requiredTier || !$currentTier) return false;
+
+    $currentSpend = (int)$currentTier['minimum_completed_spend'];
+    $requiredSpend = (int)$requiredTier['minimum_completed_spend'];
+    return $currentSpend > $requiredSpend
+        || ($currentSpend === $requiredSpend && (int)$currentTier['sort_order'] >= (int)$requiredTier['sort_order']);
+}
+
 function commerce_public_offers(PDO $pdo, ?int $userId = null): array
 {
     $rows = $pdo->query("SELECT c.* FROM promotion_campaigns c
@@ -151,12 +376,26 @@ function commerce_public_offers(PDO $pdo, ?int $userId = null): array
             $q->execute([$userId, $row['id']]);
             if (!$q->fetchColumn()) continue;
             if ($row['campaign_type']==='birthday' && !commerce_birthday_eligible($pdo,$userId)) continue;
+            if (!commerce_campaign_has_usable_promo_code($pdo, (int)$row['id'], (string)$row['timezone'])) continue;
         }
+        if (!commerce_campaign_tier_is_eligible($pdo, $row, $userId)) continue;
         if (!commerce_campaign_is_active($row)) continue;
         $row['demo_only'] = (int)$row['demo_only'] === 1;
         $offers[] = $row;
     }
     return $offers;
+}
+
+function commerce_campaign_has_usable_promo_code(PDO $pdo, int $campaignId, string $timezone): bool
+{
+    if ($campaignId < 1) return false;
+    $query = $pdo->prepare('SELECT starts_at,ends_at,uses_count,maximum_uses FROM promo_codes WHERE campaign_id=? AND active=1');
+    $query->execute([$campaignId]);
+    foreach ($query->fetchAll() as $code) {
+        $hasUses = $code['maximum_uses'] === null || (int)$code['uses_count'] < (int)$code['maximum_uses'];
+        if ($hasUses && commerce_date_window_is_active($code['starts_at'] ?: null, $code['ends_at'] ?: null, $timezone)) return true;
+    }
+    return false;
 }
 
 function commerce_public_collections(PDO $pdo): array
@@ -172,17 +411,17 @@ function commerce_public_collections(PDO $pdo): array
     }));
 }
 
-function commerce_birthday_eligible(PDO $pdo, int $userId): bool
+function commerce_birthday_occurrence(PDO $pdo, int $userId): ?DateTimeImmutable
 {
-    if ($userId<1) return false;
+    if ($userId<1) return null;
     $q=$pdo->prepare('SELECT birth_date,birthday_offer_consent FROM user_profiles WHERE user_id=?');
     $q->execute([$userId]); $profile=$q->fetch();
-    if (!$profile || (int)$profile['birthday_offer_consent']!==1 || empty($profile['birth_date'])) return false;
+    if (!$profile || (int)$profile['birthday_offer_consent']!==1 || empty($profile['birth_date'])) return null;
     $settings=$pdo->query('SELECT birthday_window_days FROM loyalty_settings WHERE id=1')->fetch() ?: [];
     $window=max(0,min(60,(int)($settings['birthday_window_days']??0)));
     try {
         $birth=DateTimeImmutable::createFromFormat('!Y-m-d',(string)$profile['birth_date'],commerce_timezone());
-        if (!$birth || $birth->format('Y-m-d')!==$profile['birth_date']) return false;
+        if (!$birth || $birth->format('Y-m-d')!==$profile['birth_date']) return null;
         $today=new DateTimeImmutable('today',commerce_timezone());
         $month=(int)$birth->format('m'); $day=(int)$birth->format('d');
         $year=(int)$today->format('Y');
@@ -191,26 +430,87 @@ function commerce_birthday_eligible(PDO $pdo, int $userId): bool
             $year++;
             $candidate=$candidate->setDate($year,$month,min($day,(int)$candidate->setDate($year,$month,1)->format('t')));
         }
-        return (int)$today->diff($candidate)->format('%a') <= $window;
-    } catch (Throwable) { return false; }
+        return (int)$today->diff($candidate)->format('%a') <= $window ? $candidate : null;
+    } catch (Throwable) { return null; }
+}
+
+function commerce_birthday_eligible(PDO $pdo, int $userId): bool
+{
+    return commerce_birthday_occurrence($pdo,$userId)!==null;
+}
+
+function commerce_award_birthday_points(PDO $pdo, int $userId): int
+{
+    if ($userId<1) return 0;
+    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    try {
+        $settings=$pdo->query('SELECT enabled,birthday_reward_points FROM loyalty_settings WHERE id=1')->fetch() ?: [];
+        $points=(int)($settings['birthday_reward_points']??0);
+        $occurrence=(!empty($settings['enabled']) && $points>0) ? commerce_birthday_occurrence($pdo,$userId) : null;
+        if (!$occurrence) { $pdo->commit(); return 0; }
+        $eventKey='birthday:'.$userId.':'.$occurrence->format('Y');
+        $insert=$pdo->prepare("INSERT OR IGNORE INTO loyalty_ledger(user_id,event_key,transaction_type,points,note) VALUES(?,?,'birthday',?,'Поздравительные бонусы Tokyo Privilege')");
+        $insert->execute([$userId,$eventKey,$points]);
+        $awarded=$insert->rowCount()===1 ? $points : 0;
+        $pdo->commit();
+        return $awarded;
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
+    }
 }
 
 function commerce_referral_code_for_user(PDO $pdo, int $userId): string
 {
     if ($userId<1) throw new DomainException('Войдите в аккаунт, чтобы получить приглашение.');
-    $q=$pdo->prepare('SELECT code FROM referrals WHERE inviter_user_id=? ORDER BY id LIMIT 1');
-    $q->execute([$userId]); $existing=$q->fetchColumn();
-    if ($existing) return (string)$existing;
-    for ($attempt=0;$attempt<5;$attempt++) {
-        $code='TP'.strtoupper(bin2hex(random_bytes(5)));
-        try {
-            $pdo->prepare('INSERT INTO referrals(code,inviter_user_id) VALUES(?,?)')->execute([$code,$userId]);
-            return $code;
-        } catch (PDOException $error) {
-            if ((string)$error->getCode()!=='23000' && !str_contains(strtolower($error->getMessage()),'unique')) throw $error;
+    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    try {
+        $find=$pdo->prepare('SELECT referral_code FROM user_profiles WHERE user_id=?');
+        $find->execute([$userId]);
+        $existing=$find->fetchColumn();
+        if (is_string($existing) && preg_match('/^TP[A-F0-9]{10}$/',$existing)) {
+            $pdo->commit();
+            return $existing;
         }
+
+        // Keep codes issued before the profile column was used valid and stable.
+        $legacy=$pdo->prepare('SELECT code FROM referrals WHERE inviter_user_id=? ORDER BY id LIMIT 1');
+        $legacy->execute([$userId]);
+        $legacyCode=$legacy->fetchColumn();
+        $save=$pdo->prepare("INSERT INTO user_profiles(user_id,referral_code) VALUES(?,?) ON CONFLICT(user_id) DO UPDATE SET referral_code=COALESCE(NULLIF(user_profiles.referral_code,''),excluded.referral_code)");
+        if (is_string($legacyCode) && preg_match('/^TP[A-F0-9]{10}$/',$legacyCode)) {
+            try {
+                $save->execute([$userId,$legacyCode]);
+                $find->execute([$userId]);
+                $saved=$find->fetchColumn();
+                if (is_string($saved) && preg_match('/^TP[A-F0-9]{10}$/',$saved)) {
+                    $pdo->commit();
+                    return $saved;
+                }
+            } catch (PDOException $error) {
+                if ((string)$error->getCode()!=='23000' && !str_contains(strtolower($error->getMessage()),'unique')) throw $error;
+            }
+        }
+
+        for ($attempt=0;$attempt<5;$attempt++) {
+            $code='TP'.strtoupper(bin2hex(random_bytes(5)));
+            try {
+                $save->execute([$userId,$code]);
+                $find->execute([$userId]);
+                $saved=$find->fetchColumn();
+                if (is_string($saved) && preg_match('/^TP[A-F0-9]{10}$/',$saved)) {
+                    $pdo->commit();
+                    return $saved;
+                }
+            } catch (PDOException $error) {
+                if ((string)$error->getCode()!=='23000' && !str_contains(strtolower($error->getMessage()),'unique')) throw $error;
+            }
+        }
+        throw new RuntimeException('Не удалось создать код приглашения.');
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
     }
-    throw new RuntimeException('Не удалось создать код приглашения.');
 }
 
 function commerce_attach_referral(PDO $pdo, int $referredUserId, string $code): bool
@@ -219,20 +519,39 @@ function commerce_attach_referral(PDO $pdo, int $referredUserId, string $code): 
     if ($referredUserId<1 || !preg_match('/^TP[A-F0-9]{10}$/',$code)) throw new DomainException('Код приглашения имеет неверный формат.');
     $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
     try {
-        $q=$pdo->prepare('SELECT id,inviter_user_id,referred_user_id FROM referrals WHERE code=? COLLATE NOCASE');
-        $q->execute([$code]); $referral=$q->fetch();
-        if (!$referral) throw new DomainException('Код приглашения не найден.');
-        if ((int)$referral['inviter_user_id']===$referredUserId) throw new DomainException('Нельзя пригласить самого себя.');
-        if ($referral['referred_user_id']!==null && (int)$referral['referred_user_id']!==$referredUserId) throw new DomainException('Этот код уже использован.');
-        $q=$pdo->prepare('SELECT COUNT(*) FROM referrals WHERE referred_user_id=?');
-        $q->execute([$referredUserId]);
-        if ((int)$q->fetchColumn()>0) throw new DomainException('Для аккаунта уже задан код приглашения.');
+        $q=$pdo->prepare('SELECT user_id FROM user_profiles WHERE referral_code=? COLLATE NOCASE');
+        $q->execute([$code]); $inviterUserId=(int)$q->fetchColumn();
+        if ($inviterUserId<1) {
+            // Accept a code already issued by the previous one-invite implementation.
+            $q=$pdo->prepare('SELECT inviter_user_id FROM referrals WHERE code=? COLLATE NOCASE ORDER BY id LIMIT 1');
+            $q->execute([$code]); $inviterUserId=(int)$q->fetchColumn();
+        }
+        if ($inviterUserId<1) throw new DomainException('Код приглашения не найден.');
+        if ($inviterUserId===$referredUserId) throw new DomainException('Нельзя пригласить самого себя.');
+        $q=$pdo->prepare('SELECT inviter_user_id FROM referrals WHERE referred_user_id=?');
+        $q->execute([$referredUserId]); $existingInviter=$q->fetchColumn();
+        if ($existingInviter!==false) {
+            if ((int)$existingInviter===$inviterUserId) {
+                $pdo->commit();
+                return true;
+            }
+            throw new DomainException('Для аккаунта уже задан код приглашения.');
+        }
         $q=$pdo->prepare('SELECT COUNT(*) FROM orders WHERE user_id=?');
         $q->execute([$referredUserId]);
         if ((int)$q->fetchColumn()>0) throw new DomainException('Код приглашения можно указать до первого заказа.');
-        $pdo->prepare("UPDATE referrals SET referred_user_id=?,status='pending' WHERE id=? AND referred_user_id IS NULL")->execute([$referredUserId,$referral['id']]);
-        $pdo->commit();
-        return true;
+        $insert=$pdo->prepare("INSERT INTO referrals(code,inviter_user_id,referred_user_id,status) VALUES(?,?,?,'pending')");
+        for ($attempt=0;$attempt<5;$attempt++) {
+            $trackingCode='TP'.strtoupper(bin2hex(random_bytes(5)));
+            try {
+                $insert->execute([$trackingCode,$inviterUserId,$referredUserId]);
+                $pdo->commit();
+                return true;
+            } catch (PDOException $error) {
+                if ((string)$error->getCode()!=='23000' && !str_contains(strtolower($error->getMessage()),'unique')) throw $error;
+            }
+        }
+        throw new RuntimeException('Не удалось сохранить приглашение.');
     } catch (Throwable $error) {
         if ($pdo->inTransaction()) $pdo->rollBack();
         throw $error;
@@ -367,10 +686,11 @@ function commerce_get_loyalty_balance(PDO $pdo, int $userId): int
     return max(0, (int)$q->fetchColumn());
 }
 
-function commerce_quote(PDO $pdo, array $items, array $customSets = [], string $code = '', string $fulfillment = 'delivery', ?int $userId = null, string $actorKey = '', ?int $giftDishId = null, int $pointsToRedeem = 0, string $secretCode = '', bool $isAdmin = false): array
+function commerce_quote(PDO $pdo, array $items, array $customSets = [], string $code = '', string $fulfillment = 'delivery', ?int $userId = null, string $actorKey = '', ?int $giftDishId = null, int $pointsToRedeem = 0, string $secretCode = '', bool $isAdmin = false, int $giftQuantity = 1): array
 {
     try {
         $giftItems=[];
+        if ($giftQuantity < 1 || $giftQuantity > 10) throw new DomainException('Количество подарка должно быть от 1 до 10.');
         if (!in_array($fulfillment, ['delivery','pickup'], true)) throw new DomainException('Выберите способ получения заказа.');
         if (!array_is_list($customSets) || count($customSets) > 3) throw new DomainException('Некорректное количество сетов.');
         $catalog = commerce_catalog_items($pdo, $items, $userId, $secretCode, $isAdmin);
@@ -384,6 +704,7 @@ function commerce_quote(PDO $pdo, array $items, array $customSets = [], string $
         if ($subtotal < 1 || $subtotal > 500000) throw new DomainException('Проверьте сумму заказа.');
         $deliveryFee = $fulfillment === 'delivery' ? max(0, (int)setting('delivery_fee','0')) : 0;
         $discount = 0;
+        $promotionDiscount = 0;
         $adjustments = [];
         $appliedCampaign = null;
         $promoStackable = true;
@@ -393,6 +714,7 @@ function commerce_quote(PDO $pdo, array $items, array $customSets = [], string $
             $q->execute([$promotionCode]);
             $promo = $q->fetch();
             if (!$promo || (int)$promo['code_active'] !== 1 || !commerce_campaign_is_active($promo) || !commerce_date_window_is_active($promo['code_starts_at']??null,$promo['code_ends_at']??null,(string)$promo['timezone'])) throw new DomainException('Промокод не найден, отключён или срок его действия завершён.');
+            if (!commerce_campaign_tier_is_eligible($pdo, $promo, $userId)) throw new DomainException('Это предложение доступно только участникам требуемого уровня.');
             $promoStackable = (int)$promo['stackable'] === 1;
             if ((int)$promo['uses_count'] >= (int)($promo['maximum_uses'] ?? PHP_INT_MAX)) throw new DomainException('Лимит применений промокода исчерпан.');
             if ((int)($promo['minimum_subtotal'] ?? 0) > $subtotal) throw new DomainException('Сумма заказа меньше минимальной для этого предложения.');
@@ -426,14 +748,35 @@ function commerce_quote(PDO $pdo, array $items, array $customSets = [], string $
             if ($type === 'percent') $amount = (int)floor($eligible * min(100, $value) / 100);
             elseif ($type === 'fixed') $amount = min($eligible, $value);
             elseif ($type === 'set_price') {
-                foreach ($sets as &$set) {
+                $desiredSetDiscounts = [];
+                $desiredTotal = 0;
+                foreach ($sets as $index => $set) {
                     if (!commerce_item_is_targeted($set, $targets, true)) continue;
-                    $reduction = max(0, $set['subtotal'] - $value);
-                    if ((int)$promo['maximum_discount'] > 0) $reduction = min($reduction, (int)$promo['maximum_discount']);
-                    $set['discount'] = $reduction;
+                    $desiredSetDiscounts[$index] = max(0, (int)$set['subtotal'] - $value);
+                    $desiredTotal += $desiredSetDiscounts[$index];
+                }
+                $maximumDiscount = (int)$promo['maximum_discount'];
+                if ($maximumDiscount > 0 && $desiredTotal > $maximumDiscount) {
+                    $remaining = $maximumDiscount;
+                    foreach ($desiredSetDiscounts as $index => $desired) {
+                        $allocated = intdiv($desired * $maximumDiscount, $desiredTotal);
+                        $desiredSetDiscounts[$index] = $allocated;
+                        $remaining -= $allocated;
+                    }
+                    // Distribute rounding remainder in set order so the saved
+                    // line prices carry exactly the same total discount.
+                    foreach ($desiredSetDiscounts as $index => $allocated) {
+                        if ($remaining < 1) break;
+                        $desired = max(0, (int)$sets[$index]['subtotal'] - $value);
+                        if ($allocated >= $desired) continue;
+                        $desiredSetDiscounts[$index]++;
+                        $remaining--;
+                    }
+                }
+                foreach ($desiredSetDiscounts as $index => $reduction) {
+                    $sets[$index]['discount'] = $reduction;
                     $amount += $reduction;
                 }
-                unset($set);
             } elseif ($type === 'free_delivery') {
                 if ($deliveryFee < 1) throw new DomainException('Бесплатная доставка недоступна: стоимость доставки не настроена.');
                 $amount = $deliveryFee;
@@ -454,6 +797,7 @@ function commerce_quote(PDO $pdo, array $items, array $customSets = [], string $
             if ((int)$promo['maximum_discount'] > 0 && $amount > 0) $amount = min($amount, (int)$promo['maximum_discount']);
             if ($amount > 0) {
                 $discount += $amount;
+                $promotionDiscount += $amount;
                 $adjustments[] = ['type'=>$type==='free_delivery'?'free_delivery':($type==='set_price'?'set_price':'discount'),'code'=>$promotionCode,'label'=>(string)$promo['title'],'amount'=>$amount,'campaign_id'=>(int)$promo['campaign_id']];
             }
             $appliedCampaign = ['id'=>(int)$promo['campaign_id'],'code'=>$promotionCode,'reward_type'=>$type,'title'=>(string)$promo['title'],'bonus_points'=>$type==='bonus_points'?$value:0];
@@ -468,9 +812,15 @@ function commerce_quote(PDO $pdo, array $items, array $customSets = [], string $
             JOIN dishes d ON d.id=g.dish_id AND d.active=1
             WHERE c.campaign_type='gift_threshold' AND c.active=1 AND g.active=1
               AND g.remaining_quantity>0 AND c.minimum_subtotal<=?
-            ORDER BY c.minimum_subtotal DESC,c.sort_order,c.id LIMIT 1");
+            ORDER BY c.minimum_subtotal DESC,c.sort_order,c.id");
         $q->execute([$subtotal]);
-        $threshold = $q->fetch();
+        $threshold = null;
+        foreach ($q->fetchAll() as $candidate) {
+            if (commerce_campaign_is_active($candidate) && commerce_campaign_tier_is_eligible($pdo, $candidate, $userId)) {
+                $threshold = $candidate;
+                break;
+            }
+        }
         if ($threshold) {
             $thresholdStackable = (int)$threshold['stackable'] === 1;
             $canCombineThresholdGift = ($promotionCode === '' || ($promoStackable && $thresholdStackable)) && ($pointsToRedeem === 0 || $thresholdStackable);
@@ -489,11 +839,14 @@ function commerce_quote(PDO $pdo, array $items, array $customSets = [], string $
                 $option = null;
                 foreach ($giftOptions as $candidate) if ((int)$candidate['dish_id'] === $selected) $option = $candidate;
                 if (!$option || (int)$option['remaining_quantity'] < 1) throw new DomainException('Выбранный подарок закончился.');
-                $giftItems[] = ['dish'=>['id'=>(int)$option['dish_id'],'name'=>$option['name'],'price'=>(int)$option['price'],'category'=>$option['category'],'image_url'=>$option['image_url']],'qty'=>1,'line_total'=>0,'campaign_id'=>(int)$threshold['id'],'gift_key'=>'threshold:'.(int)$threshold['id']];
+                $giftLimit = min(10, max(1, (int)$option['max_per_order']), (int)$option['remaining_quantity']);
+                if ($giftQuantity < 1 || $giftQuantity > $giftLimit) throw new DomainException('Количество подарка превышает доступный остаток или лимит на заказ.');
+                $giftItems[] = ['dish'=>['id'=>(int)$option['dish_id'],'name'=>$option['name'],'price'=>(int)$option['price'],'category'=>$option['category'],'image_url'=>$option['image_url']],'qty'=>$giftQuantity,'line_total'=>0,'campaign_id'=>(int)$threshold['id'],'gift_key'=>'threshold:'.(int)$threshold['id']];
                 $adjustments[] = ['type'=>'gift','code'=>'gift:'.(int)$threshold['id'],'label'=>'Подарок от суммы заказа','amount'=>0,'campaign_id'=>(int)$threshold['id'],'gift_dish_id'=>(int)$option['dish_id']];
             }
         }
         if ($giftDishId && !$threshold && !$giftItems) throw new DomainException('Подарок пока недоступен.');
+        if (!$threshold && $giftQuantity !== 1) throw new DomainException('Количество подарка можно изменить только для доступного подарка от суммы заказа.');
 
         $pointsDiscount = 0;
         if ($pointsToRedeem < 0) throw new DomainException('Количество бонусов не может быть отрицательным.');
@@ -515,7 +868,7 @@ function commerce_quote(PDO $pdo, array $items, array $customSets = [], string $
         if ($total > 500000) throw new DomainException('Сумма заказа превышает допустимый предел.');
         $requiresGiftChoice = $threshold && count($giftOptions) > 1 && !$giftDishId;
         return [
-            'ok'=>true,'subtotal'=>$subtotal,'discount_total'=>$discount,'delivery_fee'=>$deliveryFee,'total'=>$total,
+            'ok'=>true,'subtotal'=>$subtotal,'discount_total'=>$discount,'promotion_discount'=>$promotionDiscount,'delivery_fee'=>$deliveryFee,'total'=>$total,
             'items'=>$catalog,'custom_sets'=>$sets,'gift_items'=>$giftItems,'gift_options'=>$giftOptions,
             'requires_gift_choice'=>(bool)$requiresGiftChoice,'promo_code'=>$promotionCode,
             'points_to_redeem'=>$pointsToRedeem,'points_discount'=>$pointsDiscount,
@@ -539,7 +892,7 @@ function commerce_find_active_dish(PDO $pdo, int $id): array
 function commerce_persist_order(PDO $pdo, array $input, ?int $userId, string $actorKey): array
 {
     if (!$pdo->inTransaction()) throw new LogicException('Создание заказа требует активной транзакции.');
-    $quote=commerce_quote($pdo,$input['items']??[], $input['custom_sets']??[], (string)($input['promo_code']??''), (string)($input['fulfillment']??'delivery'), $userId, $actorKey, isset($input['gift_dish_id'])?(int)$input['gift_dish_id']:null, (int)($input['points_to_redeem']??0), (string)($input['secret_code']??''), !empty($input['is_admin']));
+    $quote=commerce_quote($pdo,$input['items']??[], $input['custom_sets']??[], (string)($input['promo_code']??''), (string)($input['fulfillment']??'delivery'), $userId, $actorKey, isset($input['gift_dish_id'])?(int)$input['gift_dish_id']:null, (int)($input['points_to_redeem']??0), (string)($input['secret_code']??''), !empty($input['is_admin']), (int)($input['gift_quantity']??1));
     if (!$quote['ok']) throw new DomainException((string)$quote['message']);
     if ($quote['requires_gift_choice']) throw new DomainException('Выберите доступный подарок.');
 
@@ -568,8 +921,9 @@ function commerce_persist_order(PDO $pdo, array $input, ?int $userId, string $ac
         foreach ($quote['gift_items'] as $gift) {
         $insert->execute([$orderId,$gift['dish']['id'],'Подарок · '.$gift['dish']['name'],0,$gift['qty']]);
         if (isset($gift['campaign_id'])) {
-            $update=$pdo->prepare('UPDATE campaign_gift_options SET remaining_quantity=remaining_quantity-1 WHERE campaign_id=? AND dish_id=? AND active=1 AND remaining_quantity>=1');
-            $update->execute([$gift['campaign_id'],$gift['dish']['id']]);
+            $giftQuantity=(int)$gift['qty'];
+            $update=$pdo->prepare('UPDATE campaign_gift_options SET remaining_quantity=remaining_quantity-? WHERE campaign_id=? AND dish_id=? AND active=1 AND remaining_quantity>=?');
+            $update->execute([$giftQuantity,$gift['campaign_id'],$gift['dish']['id'],$giftQuantity]);
             if ($update->rowCount()!==1) throw new DomainException('Подарок закончился, обновите корзину.');
         }
     }
@@ -589,7 +943,7 @@ function commerce_persist_order(PDO $pdo, array $input, ?int $userId, string $ac
         $update->execute([$quote['promo_code']]);
         if ($update->rowCount()!==1) throw new DomainException('Лимит применений промокода исчерпан.');
         $q=$pdo->prepare('INSERT INTO promo_redemptions(promo_code,campaign_id,user_id,actor_key,order_id,discount_amount) VALUES(?,?,?,?,?,?)');
-        $q->execute([$quote['promo_code'],$promo['resolved_campaign_id'],$userId,$actorKey,$orderId,$quote['discount_total']]);
+        $q->execute([$quote['promo_code'],$promo['resolved_campaign_id'],$userId,$actorKey,$orderId,(int)($quote['promotion_discount']??0)]);
     }
     if ($quote['points_to_redeem']>0 && $userId) {
         $q=$pdo->prepare("INSERT INTO loyalty_ledger(user_id,order_id,event_key,transaction_type,points,note) VALUES(?,?,?,'redeem',?,?)");
@@ -617,6 +971,7 @@ function commerce_can_access_secret(PDO $pdo, ?int $userId, string $code = '', b
 function commerce_secret_rule_matches(PDO $pdo, array $rule, ?int $userId, string $code, bool $isAdmin): bool
 {
     if (!commerce_campaign_is_active(['active'=>$rule['campaign_active'],'starts_at'=>$rule['campaign_start'],'ends_at'=>$rule['campaign_end'],'timezone'=>$rule['timezone'],'weekday_mask'=>$rule['weekday_mask'],'starts_time'=>$rule['starts_time'],'ends_time'=>$rule['ends_time']])) return false;
+    if (!commerce_date_window_is_active($rule['starts_at'] ?? null, $rule['ends_at'] ?? null, (string)($rule['timezone'] ?? 'Asia/Qyzylorda'))) return false;
     if ($rule['access_kind']==='role' && (($rule['required_value']==='admin' && $isAdmin) || ($rule['required_value']==='member' && $userId))) return true;
     if ($rule['access_kind']==='tier' && $userId) {
         $tier=commerce_user_tier($pdo,$userId);
@@ -677,7 +1032,8 @@ function commerce_apply_referral_for_completed_order(PDO $pdo, int $orderId, int
         [(int)$referral['inviter_user_id'],(int)($settings['referral_inviter_points']??0)],
         [(int)$order['user_id'],(int)($settings['referral_friend_points']??0)],
     ];
-    $pdo->prepare("UPDATE referrals SET status='qualified',qualifying_order_id=?,qualified_at=CURRENT_TIMESTAMP WHERE id=?")->execute([$orderId,$referral['id']]);
+    $status=array_sum(array_column($points,1))>0?'rewarded':'qualified';
+    $pdo->prepare('UPDATE referrals SET status=?,qualifying_order_id=?,qualified_at=CURRENT_TIMESTAMP WHERE id=?')->execute([$status,$orderId,$referral['id']]);
     foreach ($points as [$userId,$count]) {
         if ($count<1) continue;
         $event='referral:'.$referral['id'].':status-event:'.$statusEventId.':user:'.$userId;
@@ -764,12 +1120,171 @@ function commerce_set_order_status(PDO $pdo, int $orderId, string $newStatus): b
     }
 }
 
+function commerce_user_addresses(PDO $pdo, int $userId): array
+{
+    $query = $pdo->prepare('SELECT id,label,address,is_default,created_at,updated_at FROM user_addresses WHERE user_id=? ORDER BY is_default DESC,id DESC');
+    $query->execute([$userId]);
+    return $query->fetchAll();
+}
+
+function commerce_save_user_address(PDO $pdo, int $userId, string $label, string $address, ?int $addressId = null): int
+{
+    $label = trim($label);
+    $address = trim($address);
+    $labelLength = preg_match_all('/./us', $label, $matches);
+    $addressLength = preg_match_all('/./us', $address, $matches);
+    if ($userId < 1 || $labelLength === false || $labelLength < 2 || $labelLength > 60 || strlen($label) > 240 || $addressLength === false || $addressLength < 5 || $addressLength > 240 || strlen($address) > 1000) {
+        throw new DomainException('Укажите название адреса и адрес длиной от 5 до 240 символов.');
+    }
+    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    try {
+        if ($addressId !== null) {
+            $exists = $pdo->prepare('SELECT 1 FROM user_addresses WHERE id=? AND user_id=?');
+            $exists->execute([$addressId, $userId]);
+            if (!$exists->fetchColumn()) throw new DomainException('Сохранённый адрес не найден.');
+            $save = $pdo->prepare('UPDATE user_addresses SET label=?,address=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND user_id=?');
+            $save->execute([$label, $address, $addressId, $userId]);
+            $id = $addressId;
+        } else {
+            $count = $pdo->prepare('SELECT COUNT(*) FROM user_addresses WHERE user_id=?');
+            $count->execute([$userId]);
+            if ((int)$count->fetchColumn() >= 10) throw new DomainException('Можно сохранить не больше 10 адресов.');
+            $save = $pdo->prepare('INSERT INTO user_addresses(user_id,label,address,is_default) VALUES(?,?,?,CASE WHEN EXISTS(SELECT 1 FROM user_addresses WHERE user_id=?) THEN 0 ELSE 1 END)');
+            $save->execute([$userId, $label, $address, $userId]);
+            $id = (int)$pdo->lastInsertId();
+        }
+        $pdo->commit();
+        return $id;
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
+    }
+}
+
+function commerce_set_user_address_default(PDO $pdo, int $userId, int $addressId): void
+{
+    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    try {
+        $exists = $pdo->prepare('SELECT 1 FROM user_addresses WHERE id=? AND user_id=?');
+        $exists->execute([$addressId, $userId]);
+        if (!$exists->fetchColumn()) throw new DomainException('Сохранённый адрес не найден.');
+        $pdo->prepare('UPDATE user_addresses SET is_default=0 WHERE user_id=?')->execute([$userId]);
+        $pdo->prepare('UPDATE user_addresses SET is_default=1,updated_at=CURRENT_TIMESTAMP WHERE id=? AND user_id=?')->execute([$addressId, $userId]);
+        $pdo->commit();
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
+    }
+}
+
+function commerce_delete_user_address(PDO $pdo, int $userId, int $addressId): void
+{
+    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    try {
+        $query = $pdo->prepare('SELECT is_default FROM user_addresses WHERE id=? AND user_id=?');
+        $query->execute([$addressId, $userId]);
+        $wasDefault = $query->fetchColumn();
+        if ($wasDefault === false) throw new DomainException('Сохранённый адрес не найден.');
+        $pdo->prepare('DELETE FROM user_addresses WHERE id=? AND user_id=?')->execute([$addressId, $userId]);
+        if ((int)$wasDefault === 1) {
+            $next = $pdo->prepare('SELECT id FROM user_addresses WHERE user_id=? ORDER BY id DESC LIMIT 1');
+            $next->execute([$userId]);
+            $nextId = $next->fetchColumn();
+            if ($nextId !== false) $pdo->prepare('UPDATE user_addresses SET is_default=1,updated_at=CURRENT_TIMESTAMP WHERE id=? AND user_id=?')->execute([(int)$nextId, $userId]);
+        }
+        $pdo->commit();
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
+    }
+}
+
 function commerce_adjust_loyalty(PDO $pdo, int $userId, int $points, string $eventKey, string $note, ?int $adminId = null): void
 {
     if ($points===0 || $userId<1 || !$adminId || $adminId<1 || !preg_match('/^[A-Za-z0-9._:-]{8,160}$/',$eventKey)) throw new DomainException('Некорректная операция с бонусами.');
-    if ($points<0 && commerce_get_loyalty_balance($pdo,$userId)<abs($points)) throw new DomainException('Нельзя списать больше доступного баланса.');
-    $q=$pdo->prepare("INSERT INTO loyalty_ledger(user_id,event_key,transaction_type,points,admin_id,note) VALUES(?,?,'admin_adjustment',?,?,?)");
-    $q->execute([$userId,$eventKey,$points,$adminId,substr($note,0,240)]);
+    if ($pdo->inTransaction()) throw new LogicException('Административная корректировка бонусов должна владеть транзакцией.');
+    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    try {
+        // Serialize the balance check with the ledger write so concurrent
+        // deductions cannot both spend the same points.
+        if ($points<0 && commerce_get_loyalty_balance($pdo,$userId)<abs($points)) throw new DomainException('Нельзя списать больше доступного баланса.');
+        $q=$pdo->prepare("INSERT INTO loyalty_ledger(user_id,event_key,transaction_type,points,admin_id,note) VALUES(?,?,'admin_adjustment',?,?,?)");
+        $q->execute([$userId,$eventKey,$points,$adminId,substr($note,0,240)]);
+        $pdo->commit();
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
+    }
+}
+
+function commerce_assign_personal_offer(PDO $pdo, int $userId, int $campaignId, ?string $expiresAt = null): int
+{
+    if ($userId < 1 || $campaignId < 1) throw new DomainException('Выберите аккаунт и персональную кампанию.');
+    if ($pdo->inTransaction()) throw new LogicException('Назначение предложения должно владеть транзакцией.');
+    // `personalized_offers.expires_at` is compared with SQLite CURRENT_TIMESTAMP,
+    // so keep the persisted value in UTC even though the admin enters local time.
+    $timezone = new DateTimeZone('UTC');
+    if ($expiresAt !== null) {
+        $expiry = DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', $expiresAt, $timezone);
+        $parseErrors = DateTimeImmutable::getLastErrors();
+        if (!$expiry || ($parseErrors !== false && ($parseErrors['warning_count'] > 0 || $parseErrors['error_count'] > 0)) || $expiry->format('Y-m-d H:i:s') !== $expiresAt || $expiry <= new DateTimeImmutable('now', $timezone)) {
+            throw new DomainException('Срок предложения должен быть корректной будущей датой.');
+        }
+    }
+
+    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    try {
+        $user = $pdo->prepare('SELECT 1 FROM users WHERE id=?');
+        $user->execute([$userId]);
+        if (!$user->fetchColumn()) throw new DomainException('Аккаунт не найден.');
+        $campaign = $pdo->prepare("SELECT * FROM promotion_campaigns WHERE id=? AND campaign_type IN ('personal','birthday') AND active=1");
+        $campaign->execute([$campaignId]);
+        $campaignRow=$campaign->fetch();
+        if (!$campaignRow) throw new DomainException('Выберите активную персональную или birthday-кампанию.');
+        if ($campaignRow['campaign_type']==='birthday' && !commerce_birthday_eligible($pdo,$userId)) {
+            throw new DomainException('Для назначения birthday-предложения нужны дата рождения, отдельное согласие и актуальное окно дня рождения.');
+        }
+        if (!commerce_campaign_tier_is_eligible($pdo,$campaignRow,$userId)) throw new DomainException('Аккаунт не соответствует требуемому уровню кампании.');
+        $codes=$pdo->prepare('SELECT starts_at,ends_at,uses_count,maximum_uses FROM promo_codes WHERE campaign_id=? AND active=1');
+        $codes->execute([$campaignId]); $hasRedeemableCode=false;
+        foreach($codes->fetchAll() as $code){
+            if(($code['maximum_uses']===null||(int)$code['uses_count']<(int)$code['maximum_uses'])&&commerce_date_window_is_active($code['starts_at']?:null,$code['ends_at']?:null,(string)$campaignRow['timezone'])){$hasRedeemableCode=true;break;}
+        }
+        if(!$hasRedeemableCode)throw new DomainException('Добавьте к кампании действующий промокод с доступным лимитом, затем назначайте её аккаунту.');
+
+        $existing = $pdo->prepare('SELECT id,used_order_id FROM personalized_offers WHERE user_id=? AND campaign_id=?');
+        $existing->execute([$userId, $campaignId]);
+        $row = $existing->fetch();
+        if ($row) {
+            if ($row['used_order_id'] !== null) throw new DomainException('Это предложение уже использовано; повторно назначить его нельзя.');
+            $offerId = (int)$row['id'];
+            $pdo->prepare('UPDATE personalized_offers SET expires_at=? WHERE id=?')->execute([$expiresAt, $offerId]);
+        } else {
+            $pdo->prepare('INSERT INTO personalized_offers(user_id,campaign_id,expires_at) VALUES(?,?,?)')->execute([$userId, $campaignId, $expiresAt]);
+            $offerId = (int)$pdo->lastInsertId();
+        }
+        $pdo->commit();
+        return $offerId;
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
+    }
+}
+
+function commerce_revoke_personal_offer(PDO $pdo, int $offerId): void
+{
+    if ($offerId < 1) throw new DomainException('Персональное предложение не найдено.');
+    if ($pdo->inTransaction()) throw new LogicException('Отзыв предложения должен владеть транзакцией.');
+    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    try {
+        $delete = $pdo->prepare('DELETE FROM personalized_offers WHERE id=? AND used_order_id IS NULL');
+        $delete->execute([$offerId]);
+        if ($delete->rowCount() !== 1) throw new DomainException('Предложение уже использовано или не найдено.');
+        $pdo->commit();
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
+    }
 }
 
 function commerce_certificate_denominations(PDO $pdo): array

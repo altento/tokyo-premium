@@ -55,7 +55,7 @@
 | Макет | Что реализовано и проверено | Остаточный разрыв, не блокирующий работу |
 |---|---|---|
 | 01 Home | Кинематографический hero, блок ценностей, четыре рекомендации с различными фотографиями, философия и форма визита. | Меньше орнаментальной графики и дополнительных редакционных полос, чем в концепции. |
-| 02 Menu | Пищевой hero, категория rail, промо чая, карточки, сортировка, поиск и пагинация. | Нет отдельных подкатегорий по видам рыбы, режима list/grid и отдельной нижней полосы авторских сетов. |
+| 02 Menu | Пищевой hero, непустые фильтры категорий, быстрый переход в конструктор, промо чая, карточки, сортировка, поиск, пагинация, режимы «сетка / список» и сочетаемые фильтры по ингредиентам, которые представлены в актуальном каталоге. | В учебном seed-каталоге нет блюда с гребешком, поэтому соответствующий фильтр скрывается; полное сравнение всех состояний каталога с макетом остаётся в общем визуальном аудите. |
 | 03 Dish | Широкое фото, описание, цена, количество, избранное и рекомендации; ложная фотогалерея удалена. | Только одна фотография каждого блюда; дополнительные ракурсы не имитируются. Нет отдельной пищевой таблицы, фотосостава и портрета шефа. |
 | 04 Omakase | Самостоятельный hero, пять фотокурсов, три сета, выделенный сезонный вариант, фото процесса и передача выбора в бронирование. | Меньше декора и крупнее интервалы между секциями, чем в плотной композиции макета. |
 | 05 Philosophy | История, этапы, шеф, принципы, выбор ингредиентов и редакционный цитатный блок. | Визуальная плотность/орнамент спокойнее, чем на PNG-референсе. |
@@ -126,3 +126,55 @@
 - **Проверено на публичном Pages:** Chromium открыл сайт с cache-buster и проверил главную, меню, Omakase, привилегии, «Идеальный вечер», конструктор сета, бронирование и профиль. Hero-изображение вернуло HTTP 200 и декодировалось; на 1440 и 390 px нет горизонтальной прокрутки, мобильный заголовок полностью виден; ошибок консоли и страницы нет. Скриншоты: `visual-qa/2.0-visual-fidelity/home-public-postdeploy-desktop.jpg` и `home-public-postdeploy-mobile.jpg`.
 - **Проверка сервера конструктора сетов:** добавлены случаи подмены цены, скрытого блюда, неактивного/несуществующего варианта, дублирующего блюда, слишком малого состава и лишнего количества; проверены сохранённые цены-компоненты и откат заказа при невалидном составе. Локально PHP/SQLite набор прошёл 114 утверждений. Эти новые проверки ещё не вошли в hosted CI.
 - **Остаётся открытым:** полный pixel-by-pixel разбор всех 11 PNG, отдельные тесты квалификации рефералов и birthday-предложения, а также цельная cinematic scroll-story. Нет настоящей SMTP-отправки, оплаты, проверки остатков или доступности столов; Pages остаётся локальной демоверсией.
+
+## Дополнение — 2026-11-16
+
+В ускоренном проходе выявлено, что `luxury-refinements.css` копировался экспортёром, но не подключался в общем PHP-шаблоне. Исправлено подключение; на статической странице Omakase проверено, что шеф расположен справа, мобильные этапы дегустации видимы, страница не переполняется по ширине. Полный экспорт Pages, PHP browser QA, CI и публичная публикация для этой правки пока не выполнялись.
+
+## Дополнение 2026-11-16 — галерея и статус ветки
+
+На странице пространства исправлена структура статической разметки: полоса принципов теперь находится после hero, а 8 подписей галереи связаны с соответствующими отдельными фотографиями. Удалён повторный список путей в `navigation.js`, который подменял часть изображений после загрузки. Галерея приведена к 4×2 на 1440 px и 2×4 на 390 px; в PHP-шаблоне сохранены те же принципы и сетка. Снимки и краткое визуальное сравнение: `visual-qa/gallery-balanced-grid-2026-11-16/`.
+
+Проверка одной страницы в Chromium прошла: все 12 изображений страницы загружены, фильтр показывает 3 фотографии деталей, все 4 карточки зон остаются видимыми, lightbox закрывается клавишей Escape, переполнения и ошибок браузера нет. `php -l pages.php` и `git diff --check` прошли.
+
+Изменение отправлено в `tokyo20-booking-email` (`22f4eab`). GitHub Actions run 43858529754 успешно выполнил PHP/SQLite проверки, синтаксис, smoke проверку и экспорт Pages. Запуск был для draft PR: браузерные наборы и публикация намеренно пропущены; публичный сайт этим изменением не обновлялся. Полный релиз остаётся незавершённым.
+
+## Добавление — форма бронирования на главной — 2026-11-16
+
+Сначала гость выбирает дату, время, количество гостей и желаемую зону; контактные поля появляются перед отправкой. Серверная форма и статическая локальная демо-форма сохраняют прежнюю обработку. Отдельная Playwright-проверка прошла на 1440 и 390 px, включая проверку пустых контактов, сохранение демо-запроса и сброс к первому шагу. PHP-рендер и публикация Pages этой правкой не проверялись.
+## Latest acceptance delta — 2026-11-17
+
+The previous hosted run 43937788170 passed PHP/SQLite, the full browser regression, and all eight cart states, then failed on the 320 px booking-title hyphenation assertion. The source and Pages editorial styles now set hyphens: none. Focused static-browser checks passed at nine widths (320–1920 px), including visible text bounds and no horizontal overflow. The static motion regression also passed after its 82% hero-crop assertion was aligned with the visually inspected image. Evidence: project-docs/visual-qa/07-booking-heading-fix-2026-11-17/ and project-docs/visual-qa/2.0-motion-2026-11-17/.
+
+Status: CSS repair is locally verified; hosted PHP + SQLite/responsive regression for the new head is pending. This does not change the previously recorded outstanding all-reference visual review, draft PR state, or public Pages deployment status.
+
+## Local follow-up — 2026-11-17
+
+Added a fictional scallop nigiri with original 1200×1200 WebP photography. Additive SQLite migration v10 inserts the dish and ingredient only when missing; seed data and the static export include it. The scallop filter now has a matching item. Also kept the three-column menu grid at 1024 px to match reference 02; it switches to two columns below 900 px. Focused Playwright smoke passed for PHP and static Pages at 1440, 1024, and 390 px, including the scallop filter, product detail page, image decoding, divider, and overflow checks. PHP lint passed. The full suite and hosted CI for these latest changes have not run; the public Pages site has not been updated.
+
+## Status update — 2026-11-17
+
+The earlier “hosted CI pending” status is superseded for commit `f45a3ecc8fb6ecdce676a3bdb4a3d0b35c7a499f`: hosted run [#178](https://github.com/altento/tokyo-premium/actions/runs/44009506920) passed PHP/SQLite integrity, cart-store, the full browser regression, visual QA and Pages export. Deployment was skipped because PR #19 remains a draft. A subsequent focused menu-header change passed the static Playwright check at 1440, 1024, 1023, 900 and 390 px, but still needs a hosted run. Full pixel-by-pixel acceptance for all 11 references and publication verification remain incomplete.
+
+Hosted run #179 for tablet-header commit `01b63cff15478ecdec8ccdb5b7cbc05b63c92631` passed PHP/SQLite, static export and the 11-route/20-dish browser regression, then failed because the responsive suite still expected a mobile menu at 1024 px. Updated the test matrix and assertions to the implemented 1023 px boundary. The focused static Playwright visual-fidelity check passed; a new hosted run is required to verify the corrected PHP + SQLite responsive suite. No deployment occurred.
+
+## Focused follow-up — contacts and hosted visual-fidelity failure — 2026-11-17
+
+Hosted run #180 for `ad740e906c4df326714d22d67a758eed3d756d16` passed PHP/SQLite integrity, cart-state, export, core browser, cart visual, and responsive checks. The visual-fidelity step failed because a booking-link assertion only matched the Pages filename while that test was on the PHP route. The selector was corrected in the local working tree. Focused static-browser visual fidelity passed for menu and contacts; contact desktop/mobile captures were compared with reference 09 and recorded in `visual-qa/contacts-reference-followup-2026-11-17/comparison.md`. The contact layout now has a shorter hero, a capped schematic map, and a more map-dominant desktop grid. These changes are not yet hosted-verified. The local comparison also records remaining reference differences; the all-11-page visual acceptance and public deployment remain incomplete.
+
+Hosted run #181 for `9c8ee958e9a846b7bc675e50750f043cc7e011d2` verified the preceding booking-selector/contact correction across PHP/SQLite, cart, browser, responsive and export jobs. The visual-fidelity browser step then read the mobile menu's `inert` state before the resize-triggered `matchMedia` handler had settled. Added a bounded wait to that assertion; the affected home route passes the focused local static check. A hosted rerun is needed to verify the race fix. No public Pages deployment has occurred.
+
+
+## Current verification delta — 2026-11-17
+
+**Verified on the current branch head:** hosted run [#182](https://github.com/altento/tokyo-premium/actions/runs/44023162925) passed the PHP/SQLite integrity, cart, promotions/loyalty restrictions, set pricing, admin/search, PHP syntax, forms/admin smoke, static export, browser regression and visual QA jobs for `7d888d1b24e70e6ec593a2083930522d9db08e58`. Deployment was skipped because PR #19 remains a draft.
+
+The current Pages-mode browser capture suite passed all 11 static routes at desktop 1440 px and mobile 390 px. The new evidence folder contains 22 full-page route captures, four side-by-side contact sheets, and separate populated-cart desktop/mobile captures. The populated cart was assembled through real menu interactions (Philadelphia ×2, salmon nigiri ×1, matcha latte ×1; subtotal 12,700 ₸), and recommendation images were verified after decoding.
+
+**Visual acceptance remains in progress:** all 11 captures were inspected against their matching references and the route-specific gaps are recorded in `project-docs/visual-qa/2.0-visual-fidelity-current-2026-11-17/comparison.md`. The luxury direction is consistent, but section density and the dish, booking and account compositions differ materially from the PNG references. This pass does not claim pixel-perfect equivalence.
+
+**Still not verified/done:** public Pages is unchanged (draft PR, deployment skipped); PHP could not be run with local SQLite because this workstation lacks `pdo_sqlite` (hosted PHP/SQLite CI did pass); actual SMTP delivery depends on host-side credentials/configuration; payment and live table/stock availability are not integrated. The project goal is not complete.
+
+## 2026-11-17 — dish composition follow-up
+
+Status: **Implemented locally; visual check passed; SQLite verification pending hosted CI.** Migration v11 adds editable normalized ingredient relations for 19 individual fictional menu items without overwriting existing links. Dish detail pages read these relations; set cards with no explicit components keep a disclosed empty-state note, and the UI does not claim allergen verification. The focused static page capture at desktop 1440 px and mobile 390 px passed; evidence is in `project-docs/visual-qa/dish-composition-2026-11-17/`. PHP lint, JS syntax and diff whitespace checks passed. Local PHP does not include `pdo_sqlite`, so migration integration and the PHP browser route are not yet verified for this change; the next hosted run must validate the v11 migration and all dish routes after static export. Public Pages remains unchanged while PR #19 is a draft.

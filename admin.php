@@ -5,6 +5,7 @@ require __DIR__ . '/bootstrap.php';
 
 $pdo = db();
 $error = '';
+$adminPairingTypes = ['drink'=>'Напиток','sauce'=>'Соус','dish'=>'Блюдо','dessert'=>'Десерт'];
 
 function admin_valid_dish_image(string $image): bool
 {
@@ -164,6 +165,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $query->execute([$category,$name,$description,$weight,$price,$image,$featured,$active,$sort]);
                 }
                 $_SESSION['admin_flash'] = $id > 0 ? 'Изменения блюда сохранены.' : 'Блюдо добавлено в меню.';
+            } elseif ($action === 'pairing-save') {
+                $dishId = filter_var($_POST['dish_id'] ?? null, FILTER_VALIDATE_INT);
+                $pairedDishId = filter_var($_POST['paired_dish_id'] ?? null, FILTER_VALIDATE_INT);
+                $sortOrder = filter_var($_POST['sort_order'] ?? 0, FILTER_VALIDATE_INT);
+                $pairingType = (string)($_POST['pairing_type'] ?? '');
+                $oldType = (string)($_POST['old_type'] ?? '');
+                if (!$dishId || !$pairedDishId || $dishId === $pairedDishId
+                    || $sortOrder === false || $sortOrder < -10000 || $sortOrder > 10000
+                    || !isset($adminPairingTypes[$pairingType])
+                    || ($oldType !== '' && !isset($adminPairingTypes[$oldType]))) {
+                    throw new RuntimeException('Выберите два разных блюда и допустимый тип сочетания.');
+                }
+                $dishCheck = $pdo->prepare('SELECT COUNT(*) FROM dishes WHERE id IN (?,?)');
+                $dishCheck->execute([$dishId, $pairedDishId]);
+                if ((int)$dishCheck->fetchColumn() !== 2) throw new RuntimeException('Одно из выбранных блюд не найдено.');
+                $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+                try {
+                    if ($oldType !== '') {
+                        $removeOld = $pdo->prepare('DELETE FROM dish_pairings WHERE dish_id=? AND paired_dish_id=? AND pairing_type=?');
+                        $removeOld->execute([$dishId, $pairedDishId, $oldType]);
+                        if ($removeOld->rowCount() !== 1) throw new RuntimeException('Сочетание уже изменено или удалено. Обновите страницу.');
+                    }
+                    $savePairing = $pdo->prepare('INSERT INTO dish_pairings(dish_id,paired_dish_id,pairing_type,sort_order) VALUES(?,?,?,?) ON CONFLICT(dish_id,paired_dish_id,pairing_type) DO UPDATE SET sort_order=excluded.sort_order');
+                    $savePairing->execute([$dishId, $pairedDishId, $pairingType, $sortOrder]);
+                    $pdo->commit();
+                } catch (Throwable $exception) {
+                    if ($pdo->inTransaction()) $pdo->rollBack();
+                    throw $exception;
+                }
+                $_SESSION['admin_flash'] = $oldType === '' ? 'Сочетание добавлено.' : 'Сочетание обновлено.';
+            } elseif ($action === 'pairing-delete') {
+                $dishId = filter_var($_POST['dish_id'] ?? null, FILTER_VALIDATE_INT);
+                $pairedDishId = filter_var($_POST['paired_dish_id'] ?? null, FILTER_VALIDATE_INT);
+                $pairingType = (string)($_POST['pairing_type'] ?? '');
+                if (!$dishId || !$pairedDishId || !isset($adminPairingTypes[$pairingType])) throw new RuntimeException('Сочетание не найдено.');
+                $removePairing = $pdo->prepare('DELETE FROM dish_pairings WHERE dish_id=? AND paired_dish_id=? AND pairing_type=?');
+                $removePairing->execute([$dishId, $pairedDishId, $pairingType]);
+                if ($removePairing->rowCount() !== 1) throw new RuntimeException('Сочетание уже удалено. Обновите страницу.');
+                $_SESSION['admin_flash'] = 'Сочетание удалено.';
             } elseif ($action === 'dish-delete') {
                 $query = $pdo->prepare('DELETE FROM dishes WHERE id=?');
                 $query->execute([(int)($_POST['id'] ?? 0)]);
@@ -181,20 +221,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!isset($allowed[$table]) || !in_array($status, $allowed[$table], true)) {
                     throw new RuntimeException('Недопустимый статус.');
                 }
-                $query = $pdo->prepare('UPDATE ' . $table . ' SET status=? WHERE id=?');
-                $query->execute([$status, (int)($_POST['id'] ?? 0)]);
-                if ($query->rowCount() === 0) {
-                    $exists = $pdo->prepare('SELECT 1 FROM ' . $table . ' WHERE id=?');
-                    $exists->execute([(int)($_POST['id'] ?? 0)]);
-                    if (!$exists->fetchColumn()) throw new RuntimeException('Запись не найдена.');
+                $recordId = filter_var($_POST['id'] ?? null, FILTER_VALIDATE_INT);
+                if (!$recordId || $recordId < 1) throw new RuntimeException('Запись не найдена.');
+                if ($table === 'bookings' && $status === 'confirmed') {
+                    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+                    try {
+                        $exists = $pdo->prepare('SELECT 1 FROM bookings WHERE id=?');
+                        $exists->execute([$recordId]);
+                        if (!$exists->fetchColumn()) throw new RuntimeException('Запись не найдена.');
+                        $pdo->prepare("UPDATE bookings SET status='confirmed' WHERE id=?")->execute([$recordId]);
+                        $confirmationMailId = booking_mail_queue_confirmation($pdo,(int)$recordId);
+                        $pdo->commit();
+                    } catch (Throwable $error) {
+                        if ($pdo->inTransaction()) $pdo->rollBack();
+                        throw $error;
+                    }
+                    $mailState = $confirmationMailId ? booking_mail_deliver($pdo,$confirmationMailId) : 'missing';
+                    $_SESSION['admin_flash'] = match ($mailState) {
+                        'sent' => 'Бронь подтверждена. Письмо гостю отправлено.',
+                        'failed' => 'Бронь подтверждена. Email не отправлено; запись доступна для повтора.',
+                        'pending' => 'Бронь подтверждена. Email в очереди; настройте SMTP и запустите отправку.',
+                        default => 'Бронь подтверждена. Email гостя не указан, письмо не отправлялось.',
+                    };
+                } else {
+                    if ($table === 'orders') {
+                        try {
+                            $changed = commerce_set_order_status($pdo, (int)$recordId, $status);
+                        } catch (DomainException $exception) {
+                            throw new RuntimeException($exception->getMessage(), 0, $exception);
+                        }
+                        $_SESSION['admin_flash'] = $changed ? 'Статус заказа обновлён.' : 'Этот статус заказа уже установлен.';
+                    } else {
+                        $query = $pdo->prepare('UPDATE ' . $table . ' SET status=? WHERE id=?');
+                        $query->execute([$status, $recordId]);
+                        if ($query->rowCount() === 0) {
+                            $exists = $pdo->prepare('SELECT 1 FROM ' . $table . ' WHERE id=?');
+                            $exists->execute([$recordId]);
+                            if (!$exists->fetchColumn()) throw new RuntimeException('Запись не найдена.');
+                        }
+                        $_SESSION['admin_flash'] = 'Статус обновлён.';
+                    }
                 }
-                $_SESSION['admin_flash'] = $table === 'bookings' && $status === 'confirmed'
-                    ? 'Бронь подтверждена. Статус обновлён в личном кабинете гостя.'
-                    : 'Статус обновлён.';
+            } elseif ($action === 'mail-retry') {
+                $mailId = filter_var($_POST['id'] ?? null, FILTER_VALIDATE_INT);
+                if (!$mailId || $mailId < 1) throw new RuntimeException('Письмо не найдено.');
+                $mailQuery = $pdo->prepare('SELECT 1 FROM email_outbox WHERE id=? AND booking_id IS NOT NULL');
+                $mailQuery->execute([$mailId]);
+                if (!$mailQuery->fetchColumn()) throw new RuntimeException('Письмо бронирования не найдено.');
+                $mailState = booking_mail_retry($pdo,(int)$mailId);
+                $_SESSION['admin_flash'] = match ($mailState) {
+                    'sent' => 'Письмо отправлено.',
+                    'pending' => 'Письмо осталось в очереди. Проверьте настройки SMTP.',
+                    'failed' => 'Повтор не удался. Письмо оставлено в очереди ошибок.',
+                    'sending' => 'Письмо уже отправляется.',
+                    default => 'Не удалось найти письмо для повтора.',
+                };
             } elseif ($action === 'settings') {
-                $keys = ['site_name','meta_title','meta_description','hero_eyebrow','hero_title','hero_text','address','phone','hours','instagram'];
+                $deliveryFee = null;
+                if (array_key_exists('delivery_fee', $_POST)) {
+                    $deliveryFee = filter_var($_POST['delivery_fee'], FILTER_VALIDATE_INT);
+                    if ($deliveryFee === false || $deliveryFee < 0 || $deliveryFee > 100000) {
+                        throw new RuntimeException('Стоимость доставки должна быть целым числом от 0 до 100 000 ₸.');
+                    }
+                }
+                $keys = ['site_name','meta_title','meta_description','hero_eyebrow','hero_title','hero_text','address','phone','hours','instagram','delivery_fee'];
                 foreach ($keys as $key) {
-                    $value = trim((string)($_POST[$key] ?? ''));
+                    if ($key === 'delivery_fee') {
+                        if ($deliveryFee === null) continue;
+                        $value = (string)$deliveryFee;
+                    } else {
+                        $value = trim((string)($_POST[$key] ?? ''));
+                    }
                     $pdo->prepare('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value')
                         ->execute([$key, admin_unicode_slice($value, 500)]);
                 }
@@ -209,6 +306,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             error_log($exception->getMessage());
         }
     }
+}
+
+$notificationTarget = (string)($_GET['notification'] ?? '');
+if ($_SERVER['REQUEST_METHOD'] === 'GET'
+    && !empty($_SESSION['admin_id'])
+    && in_array($notificationTarget, ['orders','bookings','reviews','contact_messages'], true)) {
+    // Counts are global, while the admin search is intentionally session-wide.
+    // Clear that filter before jumping so a positive count cannot lead to an empty list.
+    unset($_SESSION['admin_search']);
+    header('Location: admin.php#' . $notificationTarget);
+    exit;
 }
 
 $logged = !empty($_SESSION['admin_id']);
@@ -241,13 +349,32 @@ $items = admin_rows($pdo,
     'SELECT d.*,c.name AS category_name FROM dishes d LEFT JOIN categories c ON c.slug=d.category'
     . $dishFilter[0] . ' ORDER BY d.sort_order,d.id DESC LIMIT 100',
     $dishFilter[1]);
+$pairingWhere = admin_search_where([
+    'CAST(source.id AS TEXT)','source.name','CAST(paired.id AS TEXT)','paired.name',
+    "CASE dp.pairing_type WHEN 'drink' THEN 'Напиток' WHEN 'sauce' THEN 'Соус' WHEN 'dish' THEN 'Блюдо' WHEN 'dessert' THEN 'Десерт' ELSE dp.pairing_type END",
+], $search);
+$pairingRows = admin_rows($pdo,
+    'SELECT dp.dish_id,dp.paired_dish_id,dp.pairing_type,dp.sort_order,source.name AS source_name,paired.name AS paired_name
+     FROM dish_pairings dp JOIN dishes source ON source.id=dp.dish_id JOIN dishes paired ON paired.id=dp.paired_dish_id'
+     . $pairingWhere[0] . ' ORDER BY source.sort_order,source.id,dp.sort_order,paired.name LIMIT 200',
+    $pairingWhere[1]);
+$pairingsByDish = [];
+foreach ($pairingRows as $pairingRow) $pairingsByDish[(int)$pairingRow['dish_id']][] = $pairingRow;
+$pairingDishOptions = $pdo->query('SELECT id,name,active FROM dishes ORDER BY active DESC,sort_order,id')->fetchAll(PDO::FETCH_ASSOC);
 $orderFilter = admin_search_where(['CAST(o.id AS TEXT)','o.customer_name','o.phone','o.address','o.fulfillment','o.status','CAST(o.total AS TEXT)','oi.item_name'], $search);
 $orders = admin_rows($pdo,
     "SELECT o.*,GROUP_CONCAT(oi.item_name || ' × ' || oi.quantity,' · ') AS items_summary
      FROM orders o LEFT JOIN order_items oi ON oi.order_id=o.id" . $orderFilter[0] . '
      GROUP BY o.id ORDER BY o.id DESC LIMIT 100', $orderFilter[1]);
-$bookingFilter = admin_search_where(['CAST(b.id AS TEXT)','b.guest_name','b.phone','b.booking_date','b.booking_time','b.zone','b.preferred_table','b.format','b.message','b.status'], $search);
-$bookings = admin_rows($pdo, 'SELECT b.* FROM bookings b' . $bookingFilter[0] . ' ORDER BY b.booking_date DESC,b.booking_time DESC,b.id DESC LIMIT 100', $bookingFilter[1]);
+$bookingFilter = admin_search_where(['CAST(b.id AS TEXT)','b.guest_name','b.guest_email','b.phone','b.booking_date','b.booking_time','b.zone','b.preferred_table','b.format','b.message','b.status'], $search);
+$bookings = admin_rows($pdo, "SELECT b.*,
+    (SELECT m.id FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':request:guest' ORDER BY m.id DESC LIMIT 1) AS request_mail_id,
+    (SELECT m.status FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':request:guest' ORDER BY m.id DESC LIMIT 1) AS request_mail_status,
+    (SELECT m.id FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':request:restaurant' ORDER BY m.id DESC LIMIT 1) AS restaurant_mail_id,
+    (SELECT m.status FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':request:restaurant' ORDER BY m.id DESC LIMIT 1) AS restaurant_mail_status,
+    (SELECT m.id FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':confirmed:guest' ORDER BY m.id DESC LIMIT 1) AS confirmation_mail_id,
+    (SELECT m.status FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':confirmed:guest' ORDER BY m.id DESC LIMIT 1) AS confirmation_mail_status
+    FROM bookings b" . $bookingFilter[0] . ' ORDER BY b.booking_date DESC,b.booking_time DESC,b.id DESC LIMIT 100', $bookingFilter[1]);
 $reviewFilter = admin_search_where(['CAST(r.id AS TEXT)','r.guest_name','r.theme','r.body','CAST(r.rating AS TEXT)','r.status'], $search);
 $reviews = admin_rows($pdo, 'SELECT r.* FROM reviews r' . $reviewFilter[0] . ' ORDER BY r.id DESC LIMIT 100', $reviewFilter[1]);
 $messageFilter = admin_search_where(['CAST(m.id AS TEXT)','m.guest_name','m.email','m.subject','m.message','m.status'], $search);
@@ -271,6 +398,13 @@ $notificationCounts = [
     'contact_messages'=>(int)$pdo->query("SELECT COUNT(*) FROM contact_messages WHERE status='new'")->fetchColumn(),
 ];
 $notificationLabels = ['orders'=>'Новые заказы','bookings'=>'Новые брони','reviews'=>'Отзывы на проверке','contact_messages'=>'Новые сообщения'];
+$bookingMailState = booking_mail_configuration_state();
+$bookingNotifyConfigured = filter_var(trim((string)booking_mail_env('TOKYO_BOOKING_NOTIFY_EMAIL', '')), FILTER_VALIDATE_EMAIL) !== false;
+$bookingMailReadiness = match ($bookingMailState) {
+    'ready' => ['class'=>'ready', 'title'=>'Параметры SMTP заполнены', 'text'=>'Письмо о получении заявки ставится в очередь сразу; подтверждение брони отправляется после ручного решения администратора. Фактический статус смотрите в карточке бронирования.'],
+    'invalid' => ['class'=>'invalid', 'title'=>'Настройки SMTP неполные или некорректны', 'text'=>'Заявки сохраняются, но письмо не будет отправлено, пока настройки сервера не исправлены.'],
+    default => ['class'=>'missing', 'title'=>'SMTP не настроен', 'text'=>'Заявки сохраняются, но письма останутся в очереди. Инструкция по настройке находится в документации.'],
+};
 ?>
 <main class="admin-shell admin-dashboard">
   <div class="admin-topline">
@@ -285,7 +419,7 @@ $notificationLabels = ['orders'=>'Новые заказы','bookings'=>'Новы
   <?php if ($error !== ''): ?><p class="form-status error admin-notice" role="alert"><?=e($error)?></p><?php endif ?>
 
   <nav class="admin-jump-nav" aria-label="Разделы панели">
-    <a href="#notifications">Уведомления</a><a href="#menu">Меню</a><a href="#orders">Заказы</a>
+    <a href="#notifications">Уведомления</a><a href="#menu">Меню</a><a href="#pairings">Сочетания</a><a href="#orders">Заказы</a>
     <a href="#bookings">Брони</a><a href="#reviews">Отзывы</a><a href="#contact_messages">Сообщения</a><a href="#settings">Настройки</a>
   </nav>
 
@@ -307,10 +441,15 @@ $notificationLabels = ['orders'=>'Новые заказы','bookings'=>'Новы
 
   <section class="admin-card" id="notifications" aria-labelledby="admin-notifications-title">
     <h2 id="admin-notifications-title">Уведомления</h2>
-    <p class="admin-muted">Счётчики показывают новые записи в базе. Уведомления обновляются при открытии панели; письма и SMS не отправляются.</p>
+    <p class="admin-muted">Счётчики показывают новые записи в базе и обновляются при открытии панели. SMS не подключены. Email подтверждается только после ручного решения администратора.</p>
+    <div class="admin-mail-readiness is-<?=e($bookingMailReadiness['class'])?>" role="status" data-smtp-state="<?=e($bookingMailState)?>">
+      <strong><?=e($bookingMailReadiness['title'])?></strong>
+      <p><?=e($bookingMailReadiness['text'])?></p>
+      <p>Уведомление ресторану: <b><?=$bookingNotifyConfigured ? 'адрес настроен' : 'адрес не настроен'?></b>. Адрес и SMTP-пароль панель не показывает. <a href="project-docs/booking-email.md">Как настроить почту</a></p>
+    </div>
     <div class="admin-notification-grid">
       <?php foreach ($notificationCounts as $key=>$count): ?>
-        <a class="admin-notification" href="#<?=$key?>">
+        <a class="admin-notification" href="?notification=<?=e($key)?>#<?=$key?>">
           <span><?=e($notificationLabels[$key])?></span><strong class="<?=$count > 0 ? 'has-unread' : ''?>"><?=$count?></strong>
         </a>
       <?php endforeach ?>
@@ -372,6 +511,53 @@ $notificationLabels = ['orders'=>'Новые заказы','bookings'=>'Новы
     </div>
   </section>
 
+  <section class="admin-card" id="pairings" aria-labelledby="admin-pairings-title">
+    <h2 id="admin-pairings-title">Гастрономические сочетания <span class="admin-result-count"><?=$search !== '' ? count($pairingRows) . ' найдено' : count($pairingRows) . ' настроено'?></span></h2>
+    <p class="admin-muted">Связанные активные блюда появятся в рекомендациях на страницах товаров. Сочетания доступны гостям только вместе с блюдами, которые разрешено показывать в их режиме доступа.</p>
+    <form method="post" class="admin-form admin-create-form admin-pairing-create">
+      <input type="hidden" name="csrf" value="<?=e(csrf())?>">
+      <input type="hidden" name="action" value="pairing-save">
+      <label>Основное блюдо<select name="dish_id" required><?php foreach ($pairingDishOptions as $option): ?><option value="<?=(int)$option['id']?>"><?=e($option['name'])?><?=$option['active'] ? '' : ' · скрыто'?></option><?php endforeach ?></select></label>
+      <label>Рекомендуемое блюдо<select name="paired_dish_id" required><?php foreach ($pairingDishOptions as $option): ?><option value="<?=(int)$option['id']?>"><?=e($option['name'])?><?=$option['active'] ? '' : ' · скрыто'?></option><?php endforeach ?></select></label>
+      <label>Тип сочетания<select name="pairing_type" required><?php foreach ($adminPairingTypes as $key=>$label): ?><option value="<?=e($key)?>"><?=e($label)?></option><?php endforeach ?></select></label>
+      <label>Порядок показа<input type="number" name="sort_order" value="10" min="-10000" max="10000"></label>
+      <button class="button" type="submit">Добавить сочетание</button>
+    </form>
+    <?php if (!$pairingsByDish): ?><p class="admin-empty">Сочетания пока не настроены.</p><?php endif ?>
+    <div class="admin-pairing-groups">
+      <?php foreach ($pairingsByDish as $sourceId=>$dishPairings): ?>
+        <details class="admin-pairing-group">
+          <summary><?=e($dishPairings[0]['source_name'])?><span><?=count($dishPairings)?> сочет.</span></summary>
+          <div class="admin-pairing-rows">
+            <?php foreach ($dishPairings as $pairing): ?>
+              <article class="admin-record admin-pairing-row">
+                <h3><?=e($pairing['source_name'])?> <span aria-hidden="true">→</span> <?=e($pairing['paired_name'])?></h3>
+                <form method="post" class="admin-form admin-edit-form">
+                  <input type="hidden" name="csrf" value="<?=e(csrf())?>">
+                  <input type="hidden" name="action" value="pairing-save">
+                  <input type="hidden" name="dish_id" value="<?=(int)$pairing['dish_id']?>">
+                  <input type="hidden" name="paired_dish_id" value="<?=(int)$pairing['paired_dish_id']?>">
+                  <input type="hidden" name="old_type" value="<?=e($pairing['pairing_type'])?>">
+                  <label>Тип сочетания<select name="pairing_type"><?php foreach ($adminPairingTypes as $key=>$label): ?><option value="<?=e($key)?>" <?=$pairing['pairing_type'] === $key ? 'selected' : ''?>><?=e($label)?></option><?php endforeach ?></select></label>
+                  <label>Порядок<input type="number" name="sort_order" value="<?=(int)$pairing['sort_order']?>" min="-10000" max="10000"></label>
+                  <button class="button secondary" type="submit">Сохранить</button>
+                </form>
+                <form method="post" onsubmit="return confirm('Удалить это сочетание?')">
+                  <input type="hidden" name="csrf" value="<?=e(csrf())?>">
+                  <input type="hidden" name="action" value="pairing-delete">
+                  <input type="hidden" name="dish_id" value="<?=(int)$pairing['dish_id']?>">
+                  <input type="hidden" name="paired_dish_id" value="<?=(int)$pairing['paired_dish_id']?>">
+                  <input type="hidden" name="pairing_type" value="<?=e($pairing['pairing_type'])?>">
+                  <button class="admin-danger" type="submit">Удалить</button>
+                </form>
+              </article>
+            <?php endforeach ?>
+          </div>
+        </details>
+      <?php endforeach ?>
+    </div>
+  </section>
+
   <?php foreach ($collections as $table=>$collection): ?>
   <section class="admin-card" id="<?=$table?>" aria-labelledby="admin-<?=$table?>-title">
     <h2 id="admin-<?=$table?>-title"><?=e($collection['label'])?> <span class="admin-result-count"><?=count($collection['rows'])?> <?=$search !== '' ? 'найдено' : 'последних записей'?></span></h2>
@@ -399,6 +585,7 @@ $notificationLabels = ['orders'=>'Новые заказы','bookings'=>'Новы
             <?php if (!empty($row['comment'])): ?><span>Комментарий: <?=e($row['comment'])?></span><?php endif ?>
           <?php elseif ($table === 'bookings'): ?>
             <span><?=e($row['booking_date'])?> · <?=e($row['booking_time'])?> · <?=(int)$row['guest_count']?> гостей</span>
+            <?php if ($row['guest_email'] !== ''): ?><span>Email гостя: <?=e($row['guest_email'])?></span><?php endif ?>
             <?php if ($row['zone'] !== ''): ?><span>Зона: <?=e($row['zone'])?></span><?php endif ?>
             <?php if ($row['preferred_table'] !== ''): ?><span>Стол: <?=e($row['preferred_table'])?></span><?php endif ?>
             <?php if ($row['format'] !== ''): ?><span>Формат Omakase: <?=e($row['format'])?></span><?php endif ?>
@@ -410,7 +597,16 @@ $notificationLabels = ['orders'=>'Новые заказы','bookings'=>'Новы
           <?php endif ?>
           <time datetime="<?=e(str_replace(' ', 'T', (string)$row['created_at']))?>"><?=e($row['created_at'])?></time>
         </div>
-        <div class="admin-record-actions">
+        <?php if ($table === 'bookings'): ?>
+        <div class="admin-booking-emails">
+            <?php foreach ([['Заявка гостю',$row['request_mail_id']??null,$row['request_mail_status']??null],['Уведомление ресторану',$row['restaurant_mail_id']??null,$row['restaurant_mail_status']??null],['Подтверждение гостю',$row['confirmation_mail_id']??null,$row['confirmation_mail_status']??null]] as [$mailLabel,$mailId,$mailStatus]): if ($mailStatus !== null): ?>
+              <div class="admin-booking-email-row"><span class="admin-status status-<?=e($mailStatus)?>">Email · <?=e($mailLabel)?> · <?=e(booking_mail_status_label((string)$mailStatus))?></span>
+                <?php if (in_array($mailStatus,['pending','failed'],true)): ?><form method="post"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="mail-retry"><input type="hidden" name="id" value="<?=(int)$mailId?>"><button class="button secondary admin-mail-retry" type="submit">Повторить email</button></form><?php endif ?>
+              </div>
+            <?php endif; endforeach ?>
+          </div>
+        <?php endif ?>
+          <div class="admin-record-actions">
           <form method="post" class="admin-status-form">
             <input type="hidden" name="csrf" value="<?=e(csrf())?>">
             <input type="hidden" name="action" value="status">
@@ -447,10 +643,13 @@ $notificationLabels = ['orders'=>'Новые заказы','bookings'=>'Новы
     <form method="post" class="admin-form admin-settings-form">
       <input type="hidden" name="csrf" value="<?=e(csrf())?>">
       <input type="hidden" name="action" value="settings">
-      <?php foreach (['site_name'=>'Название сайта','meta_title'=>'SEO title','meta_description'=>'SEO description','hero_eyebrow'=>'Надзаголовок первого экрана','hero_title'=>'Заголовок первого экрана','hero_text'=>'Текст первого экрана','address'=>'Адрес','phone'=>'Телефон','hours'=>'График','instagram'=>'Instagram URL'] as $key=>$label): ?>
+      <?php foreach (['site_name'=>'Название сайта','meta_title'=>'SEO title','meta_description'=>'SEO description','hero_eyebrow'=>'Надзаголовок первого экрана','hero_title'=>'Заголовок первого экрана','hero_text'=>'Текст первого экрана','address'=>'Адрес','phone'=>'Телефон','hours'=>'График','instagram'=>'Instagram URL','delivery_fee'=>'Стоимость доставки, ₸'] as $key=>$label): ?>
         <label><?=$label?>
           <?php if (in_array($key, ['meta_description','hero_text'], true)): ?>
             <textarea name="<?=e($key)?>" maxlength="500" rows="3"><?=e(setting($key))?></textarea>
+          <?php elseif ($key === 'delivery_fee'): ?>
+            <input type="number" name="delivery_fee" min="0" max="100000" step="1" value="<?=e(setting('delivery_fee','0'))?>">
+            <small>0 — доставка бесплатна; скидка «Бесплатная доставка» применяется только при тарифе выше нуля.</small>
           <?php else: ?>
             <input name="<?=e($key)?>" value="<?=e(setting($key))?>" maxlength="500">
           <?php endif ?>
@@ -459,7 +658,7 @@ $notificationLabels = ['orders'=>'Новые заказы','bookings'=>'Новы
       <button class="button" type="submit">Сохранить настройки</button>
     </form>
   </section>
-  <p class="admin-demo-note">Учебная панель PHP + SQLite. Подтверждение меняет статус в базе и личном кабинете; отправки email/SMS здесь нет.</p>
+  <p class="admin-demo-note">Учебная панель PHP + SQLite. Бронь считается подтверждённой только после действия администратора. Email отправляется только при настроенном SMTP; GitHub Pages не отправляет письма. Реальные платежи и SMS не подключены.</p>
 </main>
 <?php endif; ?>
 <?php footer_html(); ?>

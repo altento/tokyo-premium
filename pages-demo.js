@@ -1,10 +1,15 @@
-const applyBookingFormat = () => {
-  const format = new URLSearchParams(location.search).get('format');
-  const select = document.querySelector('#booking-format');
-  if (select && ['Начало', 'Сезонный', 'Премиальный'].includes(format || '')) select.value = format;
+const applyBookingContext = () => {
+  const params = new URLSearchParams(location.search);
+  const format = params.get('format');
+  const formatSelect = document.querySelector('#booking-format');
+  if (formatSelect && ['Начало', 'Сезонный', 'Премиальный'].includes(format || '')) formatSelect.value = format;
+
+  const zone = params.get('zone');
+  const zoneSelect = document.querySelector('#booking-zone');
+  if (zoneSelect && ['Основной зал', 'Суши-бар', 'Приватная комната', 'Летняя терраса'].includes(zone || '')) zoneSelect.value = zone;
 };
-applyBookingFormat();
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyBookingFormat, { once: true });
+applyBookingContext();
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyBookingContext, { once: true });
 
 document.addEventListener('submit', async event => {
   const form = event.target;
@@ -74,6 +79,7 @@ document.addEventListener('submit', async event => {
       name: data.name,
       date: new Date().toLocaleString('ru-RU'),
       orderId: `DEMO-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      demo: true,
       subtotal,
       discountTotal,
       promoCode,
@@ -85,7 +91,7 @@ document.addEventListener('submit', async event => {
       custom_sets: payload.custom_sets
     });
   } else if (type === 'booking') {
-    rows.unshift({ name: data.name, date: data.date, time: data.time, guests: data.guests, zone: data.zone, table: data.table, format: data.format || '' });
+    rows.unshift({ name: data.name, date: data.date, time: data.time, guests: data.guests, zone: data.zone, table: data.table, format: data.format || '', demo: true });
   } else if (type === 'review') {
     if (String(data.body || '').trim().length < 20) {
       status.textContent = 'Добавьте отзыв не короче 20 символов.';
@@ -116,7 +122,9 @@ document.addEventListener('submit', async event => {
     ? 'Спасибо. Отзыв сохранён в этом браузере и не публикуется.'
     : type === 'contact'
       ? 'Сообщение сохранено только в этом браузере. Оно не отправлено ресторану.'
-      : 'Готово: демо-запись сохранена только в этом браузере. Это не подтверждённая бронь и не отправленный заказ.';
+      : type === 'booking'
+        ? 'Демо-заявка сохранена только в этом браузере. Email не отправляется, бронь не подтверждена.'
+        : 'Готово: демо-запись сохранена только в этом браузере. Это не подтверждённая бронь и не отправленный заказ.';
   if (type === 'order' && window.TokyoCheckout) window.TokyoCheckout.reset(form);
   else form.reset();
   status.textContent = successMessage;

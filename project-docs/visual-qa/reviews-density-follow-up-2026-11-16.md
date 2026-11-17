@@ -1,0 +1,5 @@
+# Reviews density follow-up — 2026-11-16
+
+Review cards now use a denser three-column editorial layout on desktop, two columns at tablet width, and a single column on phones. The former horizontal photo/text tiles are stacked so the photo and review remain legible inside each card. Between the review list and submission form, a still-photo interlude uses an existing room asset and links to the gallery. Its caption explicitly says it is an illustration, not a guest video. Both the PHP and static Pages routes were updated; the exporter now preserves the gallery fragment when rewriting this route for Pages.
+
+`php -l reviews.php`, `php -l tools/export-pages.php`, `git diff --check`, and CSS-copy parity passed. No browser screenshot or full reviews interaction regression is claimed in this accelerated slice; the browser automation profile was busy earlier in the session, and PHP rendering still depends on unavailable `pdo_sqlite`.

@@ -261,3 +261,28 @@
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
   .tp-motion-ready [data-tp-reveal] { opacity: 1; transform: none; }
 }
+
+/* Loaded after the base and editorial styles so the basket keeps the compact reference hierarchy in PHP and Pages. */
+.editorial-hero.cart-hero { box-sizing: border-box; min-height: clamp(220px, 16vw, 260px); padding-block: 24px; align-items: center; }
+.editorial-hero.cart-hero .editorial-hero-copy { max-width: min(470px, 62vw); }
+.editorial-hero.cart-hero h1 { font-size: clamp(2.65rem, 4.3vw, 4rem); line-height: 1; margin-block: 6px 10px; }
+.editorial-hero.cart-hero .button-row,
+.editorial-hero.cart-hero .school-note { display: none; }
+@media (max-width: 700px) {
+  .editorial-hero.cart-hero { min-height: clamp(210px, 65vw, 245px); padding: 46px 20px 16px; align-items: flex-end; }
+  .editorial-hero.cart-hero .editorial-hero-copy { max-width: 100%; }
+  .editorial-hero.cart-hero h1 { font-size: clamp(2.55rem, 12vw, 3.65rem); line-height: 1.02; overflow-wrap: anywhere; }
+}
+
+/* Keep the booking introduction useful without letting it push the form far below the fold. */
+.editorial-page .editorial-hero.booking-hero { box-sizing: border-box; min-height: clamp(320px, 24vw, 360px); padding-block: 34px; align-items: center; }
+.editorial-page .booking-hero .editorial-hero-copy { max-width: min(590px, 62vw); }
+.editorial-page .booking-hero h1 { font-size: clamp(3rem, 5.4vw, 5rem); line-height: 1.02; overflow-wrap: anywhere; }
+.editorial-page .booking-hero .editorial-hero-copy > p:not(.editorial-sub) { max-width: 500px; font-size: .94rem; line-height: 1.55; margin-block: 8px; }
+.editorial-page .booking-hero .school-note { display: none; }
+@media (max-width: 700px) {
+  .editorial-page .editorial-hero.booking-hero { min-height: clamp(360px, 100vw, 420px); padding: 88px 22px 24px; align-items: flex-end; }
+  .editorial-page .booking-hero .editorial-hero-copy { max-width: 100%; }
+  .editorial-page .booking-hero h1 { font-size: clamp(2.45rem, 11.4vw, 3.5rem); line-height: 1.04; }
+  .editorial-page .booking-hero .editorial-hero-copy > p:not(.editorial-sub) { max-width: 34rem; font-size: .88rem; line-height: 1.5; }
+}

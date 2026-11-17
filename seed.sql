@@ -22,6 +22,11 @@ INSERT OR IGNORE INTO dishes(id,category,name,description,weight,price,image_url
 (18,'sets','Сет «Ханами»','Филадельфия, калифорния, нигири с лососем и тёплый ролл «Вулкан» для вечера на двоих.','780 г',19800,'assets/food/18-hanami-set.webp',0,1,2),
 (19,'desserts','Матча-тирамису','Крем маскарпоне, савоярди с ходзича и пудра из церемониальной матчи.','170 г',3600,'assets/food/19-matcha-tiramisu.webp',1,1,2),
 (20,'drinks','Юдзу-лимонад','Домашняя цитрусовая основа юдзу, содовая и тонкая нота свежего имбиря.','300 мл',2300,'assets/food/20-yuzu-lemonade.webp',0,1,2);
+INSERT OR IGNORE INTO dishes(id,category,name,description,weight,price,image_url,featured,active,sort_order) VALUES
+(21,'sushi','Нигири с морским гребешком','Сладкий морской гребешок, слегка обожжённый снаружи, на рисе для суши; цитрусовый акцент юдзу.','40 г',2200,'assets/food/21-nigiri-scallop.webp',0,1,4);
+INSERT OR IGNORE INTO ingredients(slug,name,active) VALUES ('scallop','Морской гребешок',1);
+INSERT OR IGNORE INTO dish_ingredients(dish_id,ingredient_slug,is_optional,sort_order) VALUES (21,'scallop',0,10);
+INSERT OR IGNORE INTO dish_pairings(dish_id,paired_dish_id,pairing_type,sort_order) VALUES (21,20,'drink',10);
 INSERT OR IGNORE INTO settings(key,value) VALUES
 ('site_name','Tokyo Premium'),('meta_title','Tokyo Premium — японский ресторан и омакасе в Астане'),('meta_description','Ресторан японской кухни Tokyo Premium в Астане: сезонное меню, сет омакасе и внимательное гостеприимство. Бронируйте стол онлайн.'),('hero_eyebrow','АСТАНА · ЯПОНСКАЯ КУХНЯ · С 2022 ГОДА'),('hero_title','Тишина, в которой слышно вкус'),('hero_text','Авторский японский стол, сезонные продукты и ритуал гостеприимства omotenashi — в самом сердце квартала Ханами.'),('address','Астана, улица Сакура, 17 · квартал Ханами'),('phone','+7 (7172) 55-18-26'),('hours','Ежедневно · 12:00–23:00'),('instagram','https://instagram.com/tokyo.premium.demo');
 
@@ -47,3 +52,25 @@ UPDATE reviews SET theme='Кухня' WHERE id=1;
 UPDATE reviews SET theme='Омакасе' WHERE id=2;
 UPDATE reviews SET theme='Атмосфера' WHERE id=3;
 UPDATE reviews SET theme='Сервис' WHERE id=4;
+
+INSERT OR IGNORE INTO dish_pairings(dish_id,paired_dish_id,pairing_type,sort_order) VALUES
+(1,4,'drink',10),(1,19,'dessert',20),
+(2,20,'drink',10),(2,8,'dessert',20),
+(3,20,'drink',10),(3,6,'dish',20),
+(4,8,'dessert',10),(4,19,'dessert',20),
+(5,20,'drink',10),(5,19,'dessert',20),
+(6,20,'drink',10),(6,3,'dish',20),
+(7,4,'drink',10),(7,8,'dessert',20),
+(8,4,'drink',10),(8,19,'dessert',20),
+(9,4,'drink',10),(9,14,'dish',20),
+(10,20,'drink',10),(10,3,'dish',20),
+(11,20,'drink',10),(11,8,'dessert',20),
+(12,20,'drink',10),(12,15,'dish',20),
+(13,20,'drink',10),(13,14,'dish',20),
+(14,4,'drink',10),(14,6,'dish',20),
+(15,20,'drink',10),(15,14,'dish',20),
+(16,4,'drink',10),(16,19,'dessert',20),
+(17,20,'drink',10),(17,19,'dessert',20),
+(18,20,'drink',10),(18,19,'dessert',20),
+(19,4,'drink',10),(19,8,'dessert',20),
+(20,12,'dish',10),(20,15,'dish',20);

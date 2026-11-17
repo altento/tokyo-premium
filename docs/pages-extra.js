@@ -22,7 +22,25 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(tableStatus)tableStatus.textContent='Выбран предпочтительный стол №'+button.dataset.tableSelect+'. Доступность подтвердит ресторан.';
   }));
   const fulfillment=$('#fulfillment'), addressField=$('#checkout-address'), addressWrap=$('#checkout-address-field');
+  let savedAddressSelect=$('#checkout-saved-address'), savedAddressWrap=$('#checkout-saved-address-field');
   const checkoutForm=$('#checkout-form');
+  if(!savedAddressSelect&&window.TOKYO_STATIC_DEMO&&addressField&&addressWrap){
+    let addresses=[];
+    try{const stored=JSON.parse(localStorage.getItem('tokyo-demo-addresses')||'[]');if(Array.isArray(stored))addresses=stored.filter(value=>typeof value==='string'&&value.trim().length>=5&&value.trim().length<=180).slice(0,10)}catch(_){addresses=[]}
+    if(addresses.length){
+      savedAddressWrap=document.createElement('div');savedAddressWrap.className='field';savedAddressWrap.id='checkout-saved-address-field';
+      const label=document.createElement('label');label.htmlFor='checkout-saved-address';label.textContent='Мой сохранённый адрес';
+      savedAddressSelect=document.createElement('select');savedAddressSelect.id='checkout-saved-address';
+      const other=document.createElement('option');other.value='';other.textContent='Ввести другой адрес';savedAddressSelect.append(other);
+      addresses.forEach((address,index)=>{const option=document.createElement('option');option.value=String(index+1);option.dataset.address=address;option.textContent='Адрес '+(index+1)+' · '+address;savedAddressSelect.append(option)});
+      savedAddressWrap.append(label,savedAddressSelect);addressWrap.before(savedAddressWrap);savedAddressSelect.value='1';
+    }
+  }
+  function copySavedAddress(){
+    if(!addressField||!savedAddressSelect)return;
+    addressField.value=savedAddressSelect.selectedOptions[0]?.dataset.address||'';
+    addressField.dispatchEvent(new Event('input',{bubbles:true}));
+  }
   function syncFulfillment(){
     if(!fulfillment||!addressField)return;
     const delivery=fulfillment.value!=='pickup';
@@ -31,7 +49,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     addressField.setCustomValidity('');
     addressField.removeAttribute('aria-invalid');
     if(addressWrap)addressWrap.hidden=!delivery;
-    if(!delivery)addressField.value='';
+    if(savedAddressWrap)savedAddressWrap.hidden=!delivery;
+    if(!delivery){addressField.value='';if(savedAddressSelect)savedAddressSelect.value=''}
   }
   function resetCheckout(form=checkoutForm){
     if(!form||form!==checkoutForm)return;
@@ -49,6 +68,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(status){status.textContent='';status.className='form-status';}
   }
   fulfillment?.addEventListener('change',()=>{syncFulfillment();clearCheckoutStatus()});
+  savedAddressSelect?.addEventListener('change',copySavedAddress);
   checkoutForm?.addEventListener('input',clearCheckoutStatus);
   checkoutForm?.addEventListener('change',clearCheckoutStatus);
   addressField?.addEventListener('input',clearCheckoutStatus);
@@ -56,6 +76,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   checkoutForm?.addEventListener('reset',()=>queueMicrotask(syncFulfillment));
   window.TokyoCheckout=Object.freeze({syncFulfillment,reset:resetCheckout});
   syncFulfillment();
+  if(savedAddressSelect?.value)copySavedAddress();
   const esc=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const recommendationContainer=$('.cart-recommendations');
   const allRecommendations=recommendationContainer?$$('.dish-card',recommendationContainer):[];
@@ -66,7 +87,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     const cartIds=new Set(cart.map(item=>Number(item.id)));
     customSets.forEach(set=>set.items.forEach(item=>cartIds.add(Number(item.id))));
     if(recommendationContainer){
-      const suggestions=allRecommendations.filter(card=>{const id=Number(card.querySelector('.add-to-cart')?.dataset.id);return id>0&&!cartIds.has(id)}).slice(0,3);
+      const suggestions=allRecommendations.filter(card=>{const id=Number(card.querySelector('.add-to-cart')?.dataset.id);return id>0&&!cartIds.has(id)}).slice(0,4);
       recommendationContainer.replaceChildren(...suggestions);
     }
     container.innerHTML='';
