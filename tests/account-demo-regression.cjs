@@ -7,6 +7,16 @@ const base = process.env.TOKYO_STATIC_BASE_URL || 'http://127.0.0.1:8091';
 const evidence = process.env.TOKYO_EVIDENCE_DIR || path.join(root, 'project-docs', 'visual-qa');
 const captureScreenshots = process.env.TOKYO_CAPTURE_ACCOUNT_SCREENSHOTS !== '0';
 
+async function captureFullPage(page, filename) {
+  const style = await page.addStyleTag({ content: '.site-header{position:static!important;top:auto!important}' });
+  try {
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+    await page.screenshot({ path: path.join(evidence, filename), fullPage: true, type: 'jpeg', quality: 74 });
+  } finally {
+    await style.evaluate(node => node.remove());
+  }
+}
+
 async function run() {
   const { chromium } = require('playwright');
   fs.mkdirSync(evidence, { recursive: true });
@@ -21,6 +31,9 @@ async function run() {
     await page.reload({ waitUntil: 'domcontentloaded' });
     assert.equal(await page.locator('#demo-orders .demo-order').count(), 3, 'first visit opens with three clearly labeled local demo orders');
     assert.equal(await page.locator('#demo-bookings article').count(), 1, 'first visit includes one labeled demo booking request');
+    assert.equal(await page.locator('#demo-notifications .account-notification-card').count(), 4, 'local order and booking events appear in the separate demo notification center');
+    assert.match(await page.locator('#demo-notifications').innerText(), /ресторан его не получил, стол не подтверждён/i, 'demo booking notification does not claim a real confirmation');
+    assert.equal(await page.locator('[data-account-stat="notifications"]').innerText(), '4', 'unread local demo notifications update the dashboard metric');
     assert.equal(await page.locator('#demo-favorites-preview .dish-card').count(), 3, 'first visit includes three catalog-backed favorites');
     assert.equal(await page.locator('[data-account-demo-seed]').count(), 1, 'account retains an explicit sample-data action for later use');
     assert.ok(!(await page.locator('.account-demo-seed').isVisible()), 'sample prompt is hidden after first-visit seeding');
@@ -30,7 +43,7 @@ async function run() {
     assert.equal(await page.locator('.account-overview-art img').getAttribute('src'), 'assets/generated/contact-exterior.webp', 'account uses an entrance photograph rather than a room photo');
     assert.ok(await page.locator('.account-overview-art img').evaluate(image => image.complete && image.naturalWidth > 0), 'account entrance photograph is decoded');
     assert.ok(await page.locator('.account-overview').evaluate(hero => hero.getBoundingClientRect().height <= 330), 'desktop account masthead stays compact beside the approved account reference');
-    assert.equal(await page.locator('.account-quick-actions').evaluate(node => getComputedStyle(node).gridTemplateColumns.split(' ').length), 4, 'desktop account quick actions form four balanced tiles');
+    assert.equal(await page.locator('.account-quick-actions').evaluate(node => getComputedStyle(node).gridTemplateColumns.split(' ').length), 5, 'desktop account quick actions form five balanced tiles including notifications');
 
     assert.match(await page.locator('[data-account-demo-seed-status]').evaluate(node => node.textContent), /только в этом браузере/i, 'first-visit status clearly identifies browser-local demo data');
     const privilege = page.locator('[data-tp-demo-loyalty]');
@@ -47,7 +60,19 @@ async function run() {
       const badge = button.querySelector('.account-demo-tab-count').getBoundingClientRect();
       return getComputedStyle(button).display === 'flex' && badge.left - labelRight >= 8 && badge.right <= button.getBoundingClientRect().right;
     }));
-    assert.deepEqual(tabBadgeLayout, [true, true, true], 'history, favorites and address counts are separated from their labels');
+    assert.deepEqual(tabBadgeLayout, [true, true, true, true], 'history, notification, favorites and address counts are separated from their labels');
+    await page.locator('[data-account-quick-target="notifications"]').click();
+    assert.ok(await page.locator('[data-account-tab="notifications"]').evaluate(button => button.classList.contains('active')), 'quick action opens the notifications tab');
+    const unreadDemoNotification = page.locator('#demo-notifications .account-notification-card.is-unread').first();
+    if (captureScreenshots) await captureFullPage(page, '11-account-notifications-unread-desktop.jpg');
+    await unreadDemoNotification.locator('[data-demo-notification-read]').click();
+    assert.equal(await page.locator('#demo-notifications .account-notification-card.is-unread').count(), 3, 'mark-read action updates the visible local notification state');
+    assert.equal(await page.locator('[data-account-stat="notifications"]').innerText(), '3', 'mark-read action updates unread metric and tab count');
+    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('tokyo-demo-read-notifications') || '[]').length), 1, 'read state is persisted only in browser-local storage');
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    assert.equal(await page.locator('#demo-notifications .account-notification-card.is-unread').count(), 3, 'read state survives a page reload');
+    assert.equal(await page.locator('#demo-notifications .account-notification-card.is-read').count(), 1, 'read notification remains visible after a reload');
+    await page.locator('[data-account-tab="history"]').click();
     const historyLayout = await page.locator('.account-demo-panel[data-account-panel="history"] .intro-grid').evaluate(grid => {
       const orders = grid.children[0].getBoundingClientRect();
       const bookings = grid.children[1].getBoundingClientRect();
@@ -91,7 +116,7 @@ async function run() {
     });
     assert.deepEqual(reloadedOrderImageStates, [true, true, true], 'all lazy order photographs are decoded again after reload before the desktop capture');
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
-    if (captureScreenshots) await page.screenshot({ path: path.join(evidence, '11-account-seeded-desktop.jpg'), fullPage: true, type: 'jpeg', quality: 74 });
+    if (captureScreenshots) await captureFullPage(page, '11-account-seeded-desktop.jpg');
     await page.setViewportSize({ width: 390, height: 844 });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'seeded account has no mobile horizontal overflow');
     assert.equal(await page.locator('.account-quick-actions').evaluate(node => getComputedStyle(node).gridTemplateColumns.split(' ').length), 2, 'mobile quick actions remain an easy two-column grid');
@@ -103,10 +128,13 @@ async function run() {
       const badge = button.querySelector('.account-demo-tab-count').getBoundingClientRect();
       return badge.left - labelRight >= 6 && badge.right <= button.getBoundingClientRect().right;
     }));
-    assert.deepEqual(mobileTabBadges, [true, true, true], 'mobile account tab counts remain legible and inside their buttons');
+    assert.deepEqual(mobileTabBadges, [true, true, true, true], 'mobile account tab counts remain legible and inside their buttons');
+    await page.locator('[data-account-tab="notifications"]').click();
+    if (captureScreenshots) await captureFullPage(page, '11-account-notifications-mobile.jpg');
+    await page.locator('[data-account-tab="history"]').click();
     assert.ok(await page.evaluate(() => { const title=document.querySelector('.account-overview h1').getBoundingClientRect(); const hero=document.querySelector('.account-overview').getBoundingClientRect(); return title.left >= hero.left && title.right <= hero.right && title.width > 0; }), 'account title stays inside the mobile masthead');
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
-    if (captureScreenshots) await page.screenshot({ path: path.join(evidence, '11-account-seeded-mobile.jpg'), fullPage: true, type: 'jpeg', quality: 74 });
+    if (captureScreenshots) await captureFullPage(page, '11-account-seeded-mobile.jpg');
     await page.setViewportSize({ width: 320, height: 844 });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'favorites preview has no overflow at 320 px');
     assert.ok(await page.locator('#demo-favorites-preview .dish-card').evaluateAll(cards => { const box=document.querySelector('#demo-favorites-preview').getBoundingClientRect(); return cards.every(card => { const rect=card.getBoundingClientRect(); return rect.width>0 && rect.left>=box.left && rect.right<=box.right; }); }), 'favorite cards stay within their panel at 320 px');
@@ -120,8 +148,10 @@ async function run() {
     assert.equal(await page.locator('[data-account-stat="orders"]').innerText(), '0', 'clear-data action removes seeded orders');
     assert.equal(await page.locator('[data-tp-loyalty-points]').innerText(), '0', 'clearing local orders refreshes the demo loyalty balance');
     assert.equal(await page.locator('[data-account-stat="bookings"]').innerText(), '0', 'clear-data action removes seeded booking');
+    assert.equal(await page.locator('[data-account-stat="notifications"]').innerText(), '0', 'clear-data action removes local notification and read state');
     assert.equal(await page.evaluate(() => window.TokyoCart.getFavorites().length), 0, 'clear-data action removes seeded favorites');
     assert.equal(await page.evaluate(() => localStorage.getItem('tokyo-demo-account-seed-dismissed')), '1', 'clear-data action persists the choice to keep the profile empty');
+    assert.equal(await page.evaluate(() => localStorage.getItem('tokyo-demo-read-notifications')), null, 'clear-data action also clears notification read state');
     await page.reload({ waitUntil: 'domcontentloaded' });
     assert.equal(await page.locator('#demo-orders .demo-order').count(), 0, 'cleared account stays empty after reload');
     assert.ok(await page.locator('.account-demo-seed').isVisible(), 'cleared account offers an explicit way to restore the sample');
@@ -134,19 +164,21 @@ async function run() {
     preservedPage.on('pageerror', error => preservedErrors.push(error.message));
     await preservedPage.addInitScript(() => {
       localStorage.setItem('tokyo-demo-profile', JSON.stringify({ name: 'Сохранённый гость', phone: '' }));
-      localStorage.setItem('tokyo-demo-orders', JSON.stringify([{ orderId: 'MY-DEMO-ORDER', date: 'Локальная запись', name: 'Сохранённый гость', count: 1, subtotal: 1200, total: 1200, fulfillment: 'pickup', items: [{ id: 3, qty: 1, unitPrice: 1200, lineTotal: 1200 }] }]));
+      localStorage.setItem('tokyo-demo-orders', JSON.stringify([{ orderId: '<img src=x onerror=alert(1)>', date: 'Локальная запись', name: 'Сохранённый гость', count: 1, subtotal: 1200, total: 1200, fulfillment: 'pickup', items: [{ id: 3, qty: 1, unitPrice: 1200, lineTotal: 1200 }] }]));
     });
     const preservedResponse = await preservedPage.goto(`${base}/account.html`, { waitUntil: 'domcontentloaded' });
     assert.equal(preservedResponse?.status(), 200, 'account with existing local data loads');
     assert.equal(await preservedPage.locator('#demo-orders .demo-order').count(), 1, 'first visit does not replace existing local order history with samples');
-    assert.equal(await preservedPage.locator('#demo-orders .demo-order small').first().innerText(), 'MY-DEMO-ORDER', 'existing order identifier remains intact');
+    assert.equal(await preservedPage.locator('#demo-orders .demo-order small').first().innerText(), '<img src=x onerror=alert(1)>', 'existing order identifier remains intact as text');
+    assert.equal(await preservedPage.locator('#demo-notifications img').count(), 0, 'browser-local notification content cannot inject HTML elements');
+    assert.match(await preservedPage.locator('#demo-notifications').innerText(), /не оплачен и не отправлен ресторану/i, 'saved demo order notification keeps its local-only status');
     assert.equal(await preservedPage.locator('#demo-orders .account-demo-record-badge').count(), 0, 'an existing user order is not relabeled as a system sample');
     assert.equal(await preservedPage.evaluate(() => JSON.parse(localStorage.getItem('tokyo-demo-profile') || '{}').name), 'Сохранённый гость', 'existing local profile data is preserved');
     assert.ok(await preservedPage.locator('.account-demo-seed').isVisible(), 'sample opt-in remains available when user data already exists');
     assert.equal(preservedErrors.length, 0, `no errors with existing data: ${preservedErrors.join('; ')}`);
     await preservedPage.close();
     assert.equal(errors.length, 0, `no browser exceptions: ${errors.join('; ')}`);
-    console.log(`PASS: browser-only account sample, idempotency, local labels and clear-data flow. Screenshots: ${evidence}`);
+    console.log(`PASS: browser-only account, local notifications, read-state persistence, XSS-safe rendering and clear-data flow. Screenshots: ${evidence}`);
   } finally {
     await browser.close();
   }

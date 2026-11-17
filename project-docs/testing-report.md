@@ -1,5 +1,11 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-17 account notifications
+
+PHP order and booking status changes now create durable, owner-scoped account notifications in the same database transaction as each real status transition. Repeating an unchanged status creates no duplicate notification. The authenticated account can mark its own notifications read through a CSRF-protected action. In GitHub Pages, the notification panel reflects only browser-local demo orders and booking requests; it explicitly says those records are not sent to the restaurant and do not confirm a table.
+
+Focused verification passed: `npm run test:account-demo` covered local notification rendering, read state across reload, clear-data behavior, safe rendering of hostile text, and desktop/mobile captures. `tests/php_integrity_integration.php` passed 214 assertions using PHP 8.4 with SQLite, including notification ownership, status transitions, duplicate suppression, account rendering, CSRF-protected mark-read, booking confirmation, and the existing mail outbox checks. PHP lint and `git diff --check` passed. Captures: `11-account-notifications-unread-desktop.jpg` and `11-account-notifications-mobile.jpg`. This change is not yet published; hosted CI and the public Pages route remain to be checked after release.
+
 ## 2026-11-17 contacts artwork and cart recommendations
 
 Replaced the repeated terrace photo in the PHP and Pages contact visit block with an original 1600 × 800 WebP landscape illustration (154 KB), captioned to clarify that it is not the restaurant location. The cart now shows four catalog-backed suggestions in a four-column row across the full cart width, after the order and checkout columns. Updated the existing cart visual regression expectations for this layout.

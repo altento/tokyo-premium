@@ -223,26 +223,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $recordId = filter_var($_POST['id'] ?? null, FILTER_VALIDATE_INT);
                 if (!$recordId || $recordId < 1) throw new RuntimeException('Запись не найдена.');
-                if ($table === 'bookings' && $status === 'confirmed') {
+                if ($table === 'bookings') {
                     $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
                     try {
-                        $exists = $pdo->prepare('SELECT 1 FROM bookings WHERE id=?');
-                        $exists->execute([$recordId]);
-                        if (!$exists->fetchColumn()) throw new RuntimeException('Запись не найдена.');
-                        $pdo->prepare("UPDATE bookings SET status='confirmed' WHERE id=?")->execute([$recordId]);
-                        $confirmationMailId = booking_mail_queue_confirmation($pdo,(int)$recordId);
+                        $bookingQuery = $pdo->prepare('SELECT id,user_id,status FROM bookings WHERE id=?');
+                        $bookingQuery->execute([$recordId]);
+                        $booking = $bookingQuery->fetch(PDO::FETCH_ASSOC);
+                        if (!$booking) throw new RuntimeException('Запись не найдена.');
+                        $previousStatus = (string)$booking['status'];
+                        if ($previousStatus !== $status) {
+                            $pdo->prepare('UPDATE bookings SET status=? WHERE id=?')->execute([$status,$recordId]);
+                            $pdo->prepare('INSERT INTO booking_status_events(booking_id,previous_status,new_status) VALUES(?,?,?)')->execute([$recordId,$previousStatus,$status]);
+                            $statusEventId = (int)$pdo->lastInsertId();
+                            if (!empty($booking['user_id'])) commerce_notify_booking_status($pdo,(int)$booking['user_id'],(int)$recordId,$statusEventId,$status);
+                        }
+                        // Confirmation email keeps its existing unique event key. A repeated
+                        // confirmation can safely retry the same outbox event without a
+                        // second account notification or a duplicate message.
+                        if ($status === 'confirmed') $confirmationMailId = booking_mail_queue_confirmation($pdo,(int)$recordId);
                         $pdo->commit();
                     } catch (Throwable $error) {
                         if ($pdo->inTransaction()) $pdo->rollBack();
                         throw $error;
                     }
-                    $mailState = $confirmationMailId ? booking_mail_deliver($pdo,$confirmationMailId) : 'missing';
-                    $_SESSION['admin_flash'] = match ($mailState) {
-                        'sent' => 'Бронь подтверждена. Письмо гостю отправлено.',
-                        'failed' => 'Бронь подтверждена. Email не отправлено; запись доступна для повтора.',
-                        'pending' => 'Бронь подтверждена. Email в очереди; настройте SMTP и запустите отправку.',
-                        default => 'Бронь подтверждена. Email гостя не указан, письмо не отправлялось.',
-                    };
+                    if ($status === 'confirmed') {
+                        $mailState = $confirmationMailId ? booking_mail_deliver($pdo,$confirmationMailId) : 'missing';
+                        $_SESSION['admin_flash'] = match ($mailState) {
+                            'sent' => 'Бронь подтверждена. Письмо гостю отправлено.',
+                            'failed' => 'Бронь подтверждена. Email не отправлено; запись доступна для повтора.',
+                            'pending' => 'Бронь подтверждена. Email в очереди; настройте SMTP и запустите отправку.',
+                            default => 'Бронь подтверждена. Email гостя не указан, письмо не отправлялось.',
+                        };
+                    } else {
+                        $_SESSION['admin_flash'] = $previousStatus === $status ? 'Этот статус брони уже установлен.' : 'Статус брони обновлён.';
+                    }
                 } else {
                     if ($table === 'orders') {
                         try {

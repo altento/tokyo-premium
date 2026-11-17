@@ -89,12 +89,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             commerce_delete_user_address($pdo, (int)$_SESSION['user_id'], (int)$addressId);
             $profileNotice = 'Адрес удалён из вашего аккаунта.';
         } catch (DomainException $exception) { $err = $exception->getMessage(); }
+    } elseif ($action === 'notification-read' && !empty($_SESSION['user_id'])) {
+        $notificationId = filter_var($_POST['notification_id'] ?? null, FILTER_VALIDATE_INT);
+        if ($notificationId === false || $notificationId === null || $notificationId < 1) {
+            $err = 'Выберите корректное уведомление.';
+        } elseif (commerce_mark_account_notification_read($pdo, (int)$_SESSION['user_id'], (int)$notificationId)) {
+            $profileNotice = 'Уведомление отмечено как прочитанное.';
+        } else {
+            $err = 'Уведомление не найдено в вашем аккаунте.';
+        }
     }
 }
 
 $user = null;
 $orders = [];
 $bookings = [];
+$accountNotifications = [];
+$unreadNotifications = 0;
 $profile = null;
 $addresses = [];
 $tier = null;
@@ -114,6 +125,8 @@ if (!empty($_SESSION['user_id'])) {
 
     if ($user) {
         $userId = (int)$user['id'];
+        $accountNotifications = commerce_account_notifications($pdo, $userId);
+        $unreadNotifications = count(array_filter($accountNotifications, static fn(array $notification): bool => empty($notification['read_at'])));
         $addresses = commerce_user_addresses($pdo, $userId);
         $query = $pdo->prepare('SELECT birth_date,birthday_offer_consent,birthday_consent_at FROM user_profiles WHERE user_id=?');
         $query->execute([$userId]); $profile = $query->fetch() ?: ['birth_date'=>'','birthday_offer_consent'=>0,'birthday_consent_at'=>null];
@@ -264,6 +277,7 @@ header_html();
 
       <div class="account-dashboard-layout">
         <nav class="account-dashboard-nav" aria-label="Разделы личного кабинета">
+          <a href="#account-notifications"><span class="account-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg></span><span class="account-nav-label">Уведомления</span><small><?=$unreadNotifications?></small></a>
           <a href="#account-orders"><span class="account-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 8h14l1 12H4L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></span><span class="account-nav-label">Мои заказы</span><small><?=$orderCount?></small></a>
           <a href="#account-bookings"><span class="account-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4m8-4v4M4 10h16m-12 4h3m-3 3h7"/></svg></span><span class="account-nav-label">Бронирования</span><small><?=$bookingCount?></small></a>
           <a href="#account-browser-favorites"><span class="account-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.8 8.7c0 5.1-8.8 11-8.8 11s-8.8-5.9-8.8-11A4.7 4.7 0 0 1 12 6.2a4.7 4.7 0 0 1 8.8 2.5Z"/></svg></span><span class="account-nav-label">Избранное</span><small>в браузере</small></a>
@@ -273,6 +287,23 @@ header_html();
         </nav>
         <div class="account-dashboard-content">
           <div class="account-dashboard-primary">
+            <section id="account-notifications" class="account-section account-dashboard-panel" aria-labelledby="account-notifications-title">
+              <div class="account-dashboard-section-heading"><div><span class="kicker">СТАТУСЫ · ТОЛЬКО ВАШ АККАУНТ</span><h2 id="account-notifications-title">Уведомления</h2></div><span class="account-section-count"><?=$unreadNotifications?> непрочитано</span></div>
+              <?php if (!$accountNotifications): ?>
+                <div class="account-empty-state"><p>Здесь появятся обновления статуса ваших заказов и бронирований.</p></div>
+              <?php else: ?>
+                <div class="account-notification-list">
+                  <?php foreach ($accountNotifications as $notification): $notificationRead = !empty($notification['read_at']); $notificationTarget = $notification['notification_type'] === 'booking_status' ? '#account-bookings' : '#account-orders'; ?>
+                    <article class="account-notification-card <?=$notificationRead ? 'is-read' : 'is-unread'?>">
+                      <div class="account-notification-copy"><div class="account-notification-heading"><h3><?=e($notification['title'])?></h3><span class="account-notification-state"><?=$notificationRead ? 'Прочитано' : 'Новое'?></span></div><p><?=e($notification['message'])?></p><time datetime="<?=e($notification['created_at'])?>"><?=e($notification['created_at'])?></time></div>
+                      <div class="account-notification-actions"><a class="account-inline-link" href="account.php<?=$notificationTarget?>">Открыть запись ↗</a>
+                        <?php if (!$notificationRead): ?><form method="post"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="notification-read"><input type="hidden" name="notification_id" value="<?=(int)$notification['id']?>"><button class="button secondary" type="submit">Отметить прочитанным</button></form><?php endif ?>
+                      </div>
+                    </article>
+                  <?php endforeach ?>
+                </div>
+              <?php endif ?>
+            </section>
             <section id="account-orders" class="account-section account-dashboard-panel" aria-labelledby="account-orders-title">
               <div class="account-dashboard-section-heading"><div><span class="kicker">ИСТОРИЯ · ТОЛЬКО ВАШ АККАУНТ</span><h2 id="account-orders-title">Мои заказы</h2></div><span class="account-section-count"><?=$orderCount?> записей</span></div>
               <?php if (!$orders): ?>

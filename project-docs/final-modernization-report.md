@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-17 account notifications — local verification
+
+Added in-app notifications for actual order and booking status changes in the PHP/SQLite account. Notifications are owner-scoped, written transactionally with each status transition, and can be marked read with a CSRF-protected account action. The static Pages profile shows only local demo notifications and keeps the non-confirmation disclosure visible. The focused account browser regression passed, and the PHP/SQLite integration suite passed 214 assertions on the configured PHP 8.4 runtime. Visual evidence is saved as `project-docs/visual-qa/11-account-notifications-unread-desktop.jpg` and `11-account-notifications-mobile.jpg`. This checkpoint has not yet been pushed or deployed; broader 2.0 acceptance remains open.
+
 ## Focused visual follow-up · 2026-11-17
 
 The contacts visit section now uses an original, optimized torii-and-Fuji landscape image instead of repeating the interior terrace photo; its caption identifies it as a decorative illustration, not the venue location. Cart recommendations now span the full cart layout and display four catalog-backed dishes. A focused static browser pass and responsive checks passed; PHP rendering, broad integration suites, CI and deployment were not repeated. Evidence: [cart and contacts comparison](visual-qa/cart-contact-refresh-2026-11-17/comparison.md).

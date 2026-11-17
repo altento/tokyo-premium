@@ -37,6 +37,10 @@ The focused captures are paired with automated checks in `tests/menu-visual-regr
 
 The screenshots were captured in Chromium at 1440 px, 390 px and 320 px and inspected. The mobile document width equals the viewport, the main heading stays in bounds, and there were no page errors. This is a page-specific visual review, not a rerun of the broad responsive suite or a full comparison against all eleven references.
 
+## 2026-11-17 account notifications
+
+`11-account-notifications-unread-desktop.jpg` and `11-account-notifications-mobile.jpg` show the notifications panel with unread entries. The static records are labeled as browser-local examples and state that no order is paid or sent to the restaurant and that a saved booking request is not a confirmed reservation. The PHP account uses database-backed status changes and owner-scoped read actions; its account and SQLite behavior is covered by `tests/php_integrity_integration.php`. These captures document the notification state, not full visual parity with `design-references/11-account.png`.
+
 ## 2026-11-13 Tokyo 2.0 visual-fidelity pass
 
 `2.0-visual-fidelity/` contains full-page PHP browser captures at desktop and 390 px mobile for home, menu, Omakase, philosophy, space, booking and contacts. The Playwright test scrolls through each page so reveal animations and lazy photos are actually exercised before capture. It separately opens the seven routes in the exported static build, checks image loading, gallery bounds, floorplan rendering, headings, overflow and browser errors.

@@ -6,6 +6,7 @@ session_name('tokyo_session');
 session_set_cookie_params(['httponly'=>true,'secure'=>$isHttps,'samesite'=>'Lax','path'=>'/']);
 if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 require_once __DIR__.'/lib/commerce.php';
+require_once __DIR__.'/lib/notifications.php';
 require_once __DIR__.'/lib/booking_mail.php';
 header('X-Content-Type-Options: nosniff'); header('Referrer-Policy: strict-origin-when-cross-origin'); header('X-Frame-Options: DENY');
 function db(): PDO
@@ -55,12 +56,14 @@ function db(): PDO
         // are present.
         $ready = false;
         try {
-            $ready = (bool)$connection->query("SELECT 1 FROM app_migrations WHERE version=11")->fetchColumn()
+            $ready = (bool)$connection->query("SELECT 1 FROM app_migrations WHERE version=12")->fetchColumn()
                 && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='api_order_requests'")->fetchColumn()
                 && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='api_booking_requests'")->fetchColumn()
                 && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='booking_email_rate_limits'")->fetchColumn()
                 && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='user_addresses'")->fetchColumn()
-                && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='dish_pairings'")->fetchColumn();
+                && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='dish_pairings'")->fetchColumn()
+                && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='user_notifications'")->fetchColumn()
+                && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='booking_status_events'")->fetchColumn();
         } catch (Throwable) {
             $ready = false;
         }

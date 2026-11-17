@@ -2,10 +2,18 @@ document.addEventListener('DOMContentLoaded',()=>{
  const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const read=key=>{try{return JSON.parse(localStorage.getItem(key)||'[]')}catch{return[]}};
+ const readRows=key=>{const value=read(key);return Array.isArray(value)?value.filter(row=>row&&typeof row==='object'):[]};
  const writeStatus=(form,msg)=>{const s=$('.form-status',form);if(s){s.textContent=msg;s.className='form-status success'}};
  const staticMode=Boolean($('.account-demo-page'));
  const menuHref=staticMode?'menu.html':'menu.php';
  const bookingHref=staticMode?'booking.html':'pages.php?page=booking';
+ const demoNotifications=()=>{
+  const orders=readRows('tokyo-demo-orders').map((row,index)=>({id:'order:'+String(row.orderId||row.createdAt||index),kind:'order',title:'Демо-заказ сохранён',message:'Заказ '+String(row.orderId||'из истории')+' сохранён только в этом браузере. Он не оплачен и не отправлен ресторану.',date:String(row.date||'')}));
+  const bookings=readRows('tokyo-demo-bookings').map((row,index)=>({id:'booking:'+String(row.demoId||[row.date,row.time,row.name,row.zone,index].join('|')),kind:'booking',title:'Демо-запрос на бронь сохранён',message:'Запрос существует только в этом браузере; ресторан его не получил, стол не подтверждён.',date:[row.date,row.time].filter(Boolean).join(' · ')}));
+  const readState=read('tokyo-demo-read-notifications');
+  const readIds=new Set(Array.isArray(readState)?readState.filter(value=>typeof value==='string'):[]);
+  return [...orders,...bookings].map(row=>({...row,read:readIds.has(row.id)})).sort((a,b)=>b.id.localeCompare(a.id));
+ };
  function render(){
   const orders=$('#demo-orders'),bookings=$('#demo-bookings');
   if(orders){
@@ -31,6 +39,9 @@ document.addEventListener('DOMContentLoaded',()=>{
    }).join(''):'<div class="account-empty-state"><p>Здесь появятся локальные учебные заказы после демонстрационного оформления. Сейчас история пуста.</p><a class="button secondary" href="'+menuHref+'">Открыть меню ↗</a></div>'
   }
   if(bookings){const rows=read('tokyo-demo-bookings');bookings.innerHTML=rows.length?rows.map(row=>'<article><div>'+(row.demo===true?'<span class="account-demo-record-badge">Учебный пример · локально</span>':'')+'<strong>'+esc(row.date)+' · '+esc(row.time)+'</strong><p>'+esc(row.name)+' · гостей: '+esc(row.guests)+' · '+esc(row.zone||'Зона не выбрана')+(row.format?' · формат Omakase «'+esc(row.format)+'»':'')+(row.table?' · стол '+esc(row.table):'')+'</p></div></article>').join(''):'<div class="account-empty-state"><p>Запросов на бронирование пока нет. Выберите дату и предпочтительную зону; демоверсия не резервирует стол.</p><a class="button secondary" href="'+bookingHref+'">Выбрать дату и зону ↗</a></div>'}
+  const notificationList=$('#demo-notifications');
+  const notifications=demoNotifications();
+  if(notificationList){notificationList.innerHTML=notifications.length?notifications.map(item=>'<article class="account-notification-card '+(item.read?'is-read':'is-unread')+'"><div class="account-notification-copy"><div class="account-notification-heading"><h3>'+esc(item.title)+'</h3><span class="account-notification-state">'+(item.read?'Прочитано':'Новое · демо')+'</span></div><p>'+esc(item.message)+'</p><time>'+esc(item.date)+'</time></div><div class="account-notification-actions"><a class="account-inline-link" href="'+(item.kind==='booking'?'booking.html':'cart.html')+'">'+(item.kind==='booking'?'К бронированию ↗':'К корзине ↗')+'</a>'+(item.read?'':'<button class="button secondary" type="button" data-demo-notification-read="'+esc(item.id)+'">Отметить прочитанным</button>')+'</div></article>').join(''):'<div class="account-empty-state"><p>Уведомления появятся после сохранения заказа или запроса на бронирование в этом браузере.</p></div>'}
   const favs=$('#demo-favorites'),phpFavs=$('#account-browser-favorites-list'),overviewFavs=$('#demo-favorites-preview'),empty=$('#demo-favorites-empty'),phpEmpty=$('#account-browser-favorites-empty'),overviewEmpty=$('#demo-favorites-preview-empty');
   if(favs||phpFavs||overviewFavs){
    const ids=window.TokyoCart?.getFavorites()||[],dishes=window.DISHES||[];
@@ -49,9 +60,10 @@ document.addEventListener('DOMContentLoaded',()=>{
   const statNodes=$$('[data-account-stat]');
   if(statNodes.length){
    const ordersCount=read('tokyo-demo-orders').length,bookingsCount=read('tokyo-demo-bookings').length,favoritesCount=window.TokyoCart?.getFavorites().length||0,addressesCount=read('tokyo-demo-addresses').length;
-   const stats={orders:ordersCount,bookings:bookingsCount,favorites:favoritesCount};
+   const unreadNotifications=notifications.filter(item=>!item.read).length;
+   const stats={orders:ordersCount,bookings:bookingsCount,favorites:favoritesCount,notifications:unreadNotifications};
    statNodes.forEach(node=>{node.textContent=String(stats[node.dataset.accountStat]??0)});
-   const tabCounts={history:ordersCount+bookingsCount,favorites:favoritesCount,addresses:addressesCount};
+   const tabCounts={history:ordersCount+bookingsCount,notifications:unreadNotifications,favorites:favoritesCount,addresses:addressesCount};
    $$('[data-account-tab]').forEach(button=>{
     const key=button.dataset.accountTab;if(!Object.prototype.hasOwnProperty.call(tabCounts,key))return;
     let badge=$('.account-demo-tab-count',button);
@@ -60,6 +72,14 @@ document.addEventListener('DOMContentLoaded',()=>{
    });
   }
  }
+ $('#demo-notifications')?.addEventListener('click',event=>{
+  const button=event.target.closest('[data-demo-notification-read]');if(!button)return;
+  const id=button.dataset.demoNotificationRead;
+  const saved=read('tokyo-demo-read-notifications').filter(value=>typeof value==='string');
+  if(!saved.includes(id))saved.push(id);
+  localStorage.setItem('tokyo-demo-read-notifications',JSON.stringify(saved));
+  render();
+ });
  $$('[data-account-tab]').forEach(button=>button.addEventListener('click',()=>{$$('[data-account-tab]').forEach(b=>{b.classList.toggle('active',b===button);b.setAttribute('aria-current',b===button?'page':'false')});$$('[data-account-panel]').forEach(panel=>panel.hidden=panel.dataset.accountPanel!==button.dataset.accountTab)}));
  $$('[data-account-quick-target]').forEach(button=>button.addEventListener('click',()=>document.querySelector('.account-demo-nav [data-account-tab="'+button.dataset.accountQuickTarget+'"]')?.click()));
  $('[data-account-demo-seed]')?.addEventListener('click',()=>{
@@ -110,7 +130,7 @@ document.addEventListener('DOMContentLoaded',()=>{
  });
  document.addEventListener('submit',event=>{const form=event.target;if(!form.matches('[data-local-form]'))return;event.preventDefault();const values=Object.fromEntries(new FormData(form).entries());if(form.dataset.localForm==='profile'){localStorage.setItem('tokyo-demo-profile',JSON.stringify(values));writeStatus(form,'Профиль сохранён только в этом браузере.')}else if(form.dataset.localForm==='address'){const list=read('tokyo-demo-addresses');list.unshift(values.address.trim());localStorage.setItem('tokyo-demo-addresses',JSON.stringify(list.slice(0,10)));form.reset();writeStatus(form,'Адрес сохранён только в этом браузере.');render()}});
  $('#demo-addresses')?.addEventListener('click',event=>{const b=event.target.closest('[data-address-remove]');if(!b)return;const list=read('tokyo-demo-addresses');list.splice(Number(b.dataset.addressRemove),1);localStorage.setItem('tokyo-demo-addresses',JSON.stringify(list));render()});
- $('#demo-clear-data')?.addEventListener('click',()=>{window.TokyoCart?.clear();window.TokyoCart?.setFavorites([]);['tokyo-demo-orders','tokyo-demo-bookings','tokyo-demo-reviews','tokyo-demo-contacts','tokyo-demo-profile','tokyo-demo-addresses','tokyo-demo-account-seeded'].forEach(key=>localStorage.removeItem(key));localStorage.setItem('tokyo-demo-account-seed-dismissed','1');const seedPanel=$('.account-demo-seed');if(seedPanel)seedPanel.hidden=false;const s=$('#demo-settings-status');if(s)s.textContent='Локальные данные этого сайта очищены.';render();document.dispatchEvent(new Event('tokyo-demo-data-updated'))});
+ $('#demo-clear-data')?.addEventListener('click',()=>{window.TokyoCart?.clear();window.TokyoCart?.setFavorites([]);['tokyo-demo-orders','tokyo-demo-bookings','tokyo-demo-reviews','tokyo-demo-contacts','tokyo-demo-profile','tokyo-demo-addresses','tokyo-demo-account-seeded','tokyo-demo-read-notifications'].forEach(key=>localStorage.removeItem(key));localStorage.setItem('tokyo-demo-account-seed-dismissed','1');const seedPanel=$('.account-demo-seed');if(seedPanel)seedPanel.hidden=false;const s=$('#demo-settings-status');if(s)s.textContent='Локальные данные этого сайта очищены.';render();document.dispatchEvent(new Event('tokyo-demo-data-updated'))});
  document.addEventListener('tokyo-demo-data-updated',render);document.addEventListener('tokyo-favorites-updated',render);
  const accountDataKeys=['tokyo-demo-orders','tokyo-demo-bookings','tokyo-demo-reviews','tokyo-demo-contacts','tokyo-demo-profile','tokyo-demo-addresses'];
  const hasExistingLocalData=()=>{try{const stored=accountDataKeys.some(key=>{const raw=localStorage.getItem(key);if(!raw)return false;let value;try{value=JSON.parse(raw)}catch{return true}return Array.isArray(value)?value.length>0:!!(value&&typeof value==='object'&&Object.keys(value).length)});const cart=window.TokyoCart;return stored||Boolean(cart?.get?.().length||cart?.getCustomSets?.().length||cart?.getFavorites?.().length)}catch{return true}};

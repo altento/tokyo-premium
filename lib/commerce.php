@@ -297,6 +297,40 @@ function commerce_migrate(PDO $pdo): void
             throw $error;
         }
     }
+
+    // v12 adds durable, account-scoped status notifications and booking event
+    // IDs. Both tables are also declared in schema.sql for new installations.
+    if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=12')->fetchColumn()) {
+        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        try {
+            $pdo->exec("CREATE TABLE IF NOT EXISTS booking_status_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                booking_id INTEGER NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+                previous_status TEXT NOT NULL,
+                new_status TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )");
+            $pdo->exec('CREATE INDEX IF NOT EXISTS idx_booking_status_events_booking ON booking_status_events(booking_id,id DESC)');
+            $pdo->exec("CREATE TABLE IF NOT EXISTS user_notifications (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                event_key TEXT NOT NULL UNIQUE,
+                notification_type TEXT NOT NULL CHECK(notification_type IN ('order_status','booking_status')),
+                title TEXT NOT NULL CHECK(length(title) BETWEEN 1 AND 120),
+                message TEXT NOT NULL CHECK(length(message) BETWEEN 1 AND 600),
+                target_url TEXT NOT NULL CHECK(target_url IN ('account.php#account-orders','account.php#account-bookings')),
+                read_at TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )");
+            $pdo->exec('CREATE INDEX IF NOT EXISTS idx_user_notifications_owner_created ON user_notifications(user_id,created_at DESC,id DESC)');
+            $pdo->exec('CREATE INDEX IF NOT EXISTS idx_user_notifications_owner_unread ON user_notifications(user_id,read_at,id DESC)');
+            $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(12)');
+            $pdo->commit();
+        } catch (Throwable $error) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $error;
+        }
+    }
 }
 
 function commerce_actor_key(?int $userId, string $sessionId): string
@@ -1055,6 +1089,7 @@ function commerce_set_order_status(PDO $pdo, int $orderId, string $newStatus): b
         $pdo->prepare('UPDATE orders SET status=? WHERE id=?')->execute([$newStatus,$orderId]);
         $pdo->prepare('INSERT INTO order_status_events(order_id,previous_status,new_status) VALUES(?,?,?)')->execute([$orderId,$previous,$newStatus]);
         $eventId=(int)$pdo->lastInsertId();
+        if (!empty($order['user_id'])) commerce_notify_order_status($pdo,(int)$order['user_id'],$orderId,$eventId,$newStatus);
         if ($newStatus==='completed') {
             if (!empty($order['user_id'])) {
                 $userId=(int)$order['user_id'];

@@ -278,6 +278,27 @@ CREATE TABLE IF NOT EXISTS order_status_events (
  new_status TEXT NOT NULL,
  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS booking_status_events (
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ booking_id INTEGER NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+ previous_status TEXT NOT NULL,
+ new_status TEXT NOT NULL,
+ created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_booking_status_events_booking ON booking_status_events(booking_id,id DESC);
+CREATE TABLE IF NOT EXISTS user_notifications (
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+ event_key TEXT NOT NULL UNIQUE,
+ notification_type TEXT NOT NULL CHECK(notification_type IN ('order_status','booking_status')),
+ title TEXT NOT NULL CHECK(length(title) BETWEEN 1 AND 120),
+ message TEXT NOT NULL CHECK(length(message) BETWEEN 1 AND 600),
+ target_url TEXT NOT NULL CHECK(target_url IN ('account.php#account-orders','account.php#account-bookings')),
+ read_at TEXT,
+ created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_user_notifications_owner_created ON user_notifications(user_id,created_at DESC,id DESC);
+CREATE INDEX IF NOT EXISTS idx_user_notifications_owner_unread ON user_notifications(user_id,read_at,id DESC);
 CREATE TABLE IF NOT EXISTS gift_certificate_previews (
  id INTEGER PRIMARY KEY AUTOINCREMENT,
  user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,

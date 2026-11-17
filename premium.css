@@ -578,6 +578,20 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .account-dashboard-nav .account-nav-icon svg{display:block;width:19px;height:19px;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.35}
 .account-dashboard-nav .account-nav-label{min-width:0;color:inherit;font-size:.77rem}
 .account-dashboard-nav a>small{color:#a99b87;font-size:.62rem;text-align:right}
+.account-dashboard-nav a:first-child>small,.account-demo-nav [data-account-tab="notifications"] .account-demo-tab-count{min-width:20px;padding:3px 6px;border:1px solid rgba(212,75,79,.48);border-radius:999px;background:rgba(160,25,32,.2);color:#f0b5ac;text-align:center}
+.account-notification-list{display:grid;gap:9px}
+.account-notification-card{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:16px;padding:14px 15px;border:1px solid rgba(202,165,107,.22);border-radius:8px;background:linear-gradient(145deg,rgba(255,255,255,.025),rgba(12,10,9,.5))}
+.account-notification-card.is-unread{border-color:rgba(194,36,47,.48);background:linear-gradient(100deg,rgba(148,22,30,.13),rgba(16,14,12,.92) 42%)}
+.account-notification-copy{min-width:0}
+.account-notification-heading{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.account-notification-heading h3{margin:0;color:#f2e4cc;font:500 1.03rem/1.25 'Playfair Display',Georgia,serif}
+.account-notification-state{padding:3px 8px;border:1px solid rgba(202,165,107,.3);border-radius:999px;color:#c9b997;font-size:.62rem;white-space:nowrap}
+.account-notification-card.is-unread .account-notification-state{border-color:rgba(214,63,70,.45);color:#f0a5a2}
+.account-notification-copy p{margin:7px 0;color:#c6b9a5;font-size:.76rem;line-height:1.55;overflow-wrap:anywhere}
+.account-notification-copy time{color:#938775;font-size:.65rem}
+.account-notification-actions{display:flex;align-items:flex-end;flex-direction:column;gap:8px}
+.account-notification-actions form{margin:0}
+.account-notification-actions .button{min-height:34px;padding:6px 10px;font-size:.67rem}
 .account-dashboard-content{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:14px}
 .account-dashboard-primary,.account-dashboard-aside{display:grid;align-content:start;gap:14px;min-width:0}
 .account-dashboard-primary{grid-template-columns:minmax(0,1fr)}
@@ -727,13 +741,16 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
   .account-dashboard-aside{grid-template-columns:repeat(2,minmax(0,1fr))}
   .account-ledger-details{grid-column:1/-1}
   .account-dashboard-layout{grid-template-columns:1fr}
-  .account-dashboard-nav{position:static;grid-template-columns:repeat(5,minmax(0,1fr))}
+  .account-dashboard-nav{position:static;grid-template-columns:repeat(4,minmax(0,1fr))}
   .account-dashboard-nav a{grid-template-columns:22px minmax(0,1fr);align-content:center;min-height:52px}
   .account-dashboard-nav a>small{grid-column:2;text-align:left}
   .account-demo-page .account-demo-layout{grid-template-columns:1fr}
-  .account-demo-page .account-demo-nav{position:static;grid-template-columns:repeat(5,minmax(0,1fr))}
+  .account-demo-page .account-demo-nav{position:static;grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 @media(max-width:680px){
+  .account-notification-card{grid-template-columns:minmax(0,1fr);gap:9px;padding:12px}
+  .account-notification-actions{align-items:flex-start;flex-direction:row;flex-wrap:wrap;justify-content:space-between}
+  .account-notification-actions .button{min-height:40px}
   .account-dashboard.account-shell{margin:20px auto;padding-inline:10px}
   .account-dashboard .account-dashboard-card{padding:17px 13px}
   .account-dashboard-hero{align-items:flex-start;min-height:0;margin:-4px -4px 4px;padding:20px 13px 22px}
@@ -944,9 +961,10 @@ body.story-motion-gsap [data-story-reveal].story-visible img{animation:none}
 .account-demo-page .tp20-referral-card .button{min-height:38px;padding:8px 12px;font-size:.7rem}
 .account-demo-page .account-demo-summary{margin:10px auto 8px;gap:10px}
 .account-demo-page .account-demo-summary .account-metrics{min-height:76px}
+.account-demo-page .account-demo-summary .account-metrics{grid-template-columns:repeat(4,minmax(0,1fr))}
 .account-demo-page .account-demo-summary .account-metrics article{display:flex;align-items:baseline;gap:8px;padding:10px 16px}
 .account-demo-page .account-demo-summary .account-metrics strong{font-size:1.45rem}
-.account-demo-page .account-demo-summary .account-quick-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.account-demo-page .account-demo-summary .account-quick-actions{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
 .account-demo-page .account-demo-summary .account-quick-actions a,.account-demo-page .account-demo-summary .account-quick-actions button{min-height:48px;justify-content:space-between;padding-inline:13px;border-radius:6px;text-align:left}
 .account-demo-page .account-dashboard.section{max-width:1320px;padding-top:18px;padding-bottom:24px}
 .account-demo-page .account-dashboard .account-demo-layout{grid-template-columns:210px minmax(0,1fr);gap:12px}
@@ -978,10 +996,12 @@ body.story-motion-gsap [data-story-reveal].story-visible img{animation:none}
   .account-demo-page .tp20-static-privilege .tp20-loyalty-card,.account-demo-page .tp20-referral-card{min-height:0;padding:18px}
   .account-demo-page .account-demo-summary{margin-top:8px;gap:8px}
   .account-demo-page .account-demo-summary .account-metrics{min-height:68px}
+  .account-demo-page .account-demo-summary .account-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
   .account-demo-page .account-demo-summary .account-metrics article{display:grid;gap:2px;padding:8px 7px}
   .account-demo-page .account-demo-summary .account-metrics strong{font-size:1.22rem}
   .account-demo-page .account-demo-summary .account-metrics span{font-size:.61rem}
   .account-demo-page .account-demo-summary .account-quick-actions{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  .account-demo-page .account-demo-summary .account-quick-actions>*:last-child{grid-column:1/-1}
   .account-demo-page .account-demo-summary .account-quick-actions a,.account-demo-page .account-demo-summary .account-quick-actions button{min-height:44px;padding:8px 10px;font-size:.67rem}
   .account-demo-page .account-dashboard.section{padding-top:12px;padding-bottom:15px}
   .account-demo-page .account-dashboard .account-demo-nav{grid-template-columns:repeat(2,minmax(0,1fr))}
