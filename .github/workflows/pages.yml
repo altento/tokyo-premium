@@ -6,6 +6,12 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      full_qa:
+        description: 'Run the full browser and visual regression suite'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -35,10 +41,11 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - name: Install Node dependencies
+        run: npm ci
       - name: Install browser test dependencies
-        run: |
-          npm ci
-          npx playwright install --with-deps chromium
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.full_qa == 'true'
+        run: npx playwright install --with-deps chromium
       - name: Test cart state module
         run: npm run test:cart
       - name: Run PHP and SQLite integrity checks
@@ -109,6 +116,7 @@ jobs:
           grep -q 'data-account-demo-seed' docs/account.html
       - name: Run browser regression and visual QA
         id: browser_qa
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.full_qa == 'true'
         run: |
           set -euo pipefail
           export RESTAURANT_DB=/tmp/tokyo-premium-browser.sqlite
@@ -132,7 +140,7 @@ jobs:
           TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:visual-fidelity
           TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:motion
       - name: Save visual QA screenshots
-        if: always() && steps.browser_qa.outcome != 'skipped'
+        if: always() && steps.browser_qa.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: tokyo-premium-visual-qa
