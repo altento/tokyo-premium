@@ -550,3 +550,7 @@ The Marketing & Loyalty admin was also checked in an authenticated browser: sear
 ## 2026-11-18 — live operational notifications
 
 Pending order, booking, review, contact-message, and booking-email counts now update every minute in the open operations dashboard without reloading forms. A manual refresh is available; the authenticated read-only endpoint returns counts and restaurant-local time only and rejects unauthenticated requests. The focused existing PHP/SQLite admin regression passed 19 assertions, alongside PHP/JS syntax and diff checks. Broad suites were skipped to keep this admin-only iteration short. GitHub Pages still does not host the PHP administrator.
+
+## 2026-11-18 — admin workspace focus and Kazakh search
+
+The PHP operations and Marketing & Loyalty screens now suppress the public site navigation in their shared masthead, leaving the brand/home link and the task-specific sticky admin navigation. The operations search now folds uppercase Kazakh Cyrillic characters as well as Russian, and the existing PHP integration regression includes a Kazakh-name case. `php -l` passed for the changed PHP files, `node --check admin-dashboard.js` and `git diff --check` passed, and a focused Chromium check confirmed the admin masthead at 1440 px and 390 px. PHP SQLite integration could not run because the available PHP 8.4 CLI has PDO but no SQLite driver. Full admin mutation flows, full-site visual acceptance, and Tokyo Premium 2.0 remain open.

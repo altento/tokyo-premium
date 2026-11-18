@@ -888,6 +888,23 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
   .account-dashboard-actions a,.account-dashboard-nav a,.account-demo-page .account-demo-nav button{transition:none}
 }
 
+/* Keep staff pages focused: their own sticky workspace navigation replaces the public site menu. */
+.site-header:has(+ main.admin-dashboard),
+.site-header:has(+ main.admin-login),
+.site-header:has(+ main.tp20-admin-page){justify-content:flex-start}
+.site-header:has(+ main.admin-dashboard) .main-nav,
+.site-header:has(+ main.admin-dashboard) .header-actions,
+.site-header:has(+ main.admin-dashboard) .header-cta,
+.site-header:has(+ main.admin-dashboard) .mobile-menu,
+.site-header:has(+ main.admin-login) .main-nav,
+.site-header:has(+ main.admin-login) .header-actions,
+.site-header:has(+ main.admin-login) .header-cta,
+.site-header:has(+ main.admin-login) .mobile-menu,
+.site-header:has(+ main.tp20-admin-page) .main-nav,
+.site-header:has(+ main.tp20-admin-page) .header-actions,
+.site-header:has(+ main.tp20-admin-page) .header-cta,
+.site-header:has(+ main.tp20-admin-page) .mobile-menu{display:none!important}
+
 /* Quiet, coordinated scroll-story cues on the homepage. */
 .story-scroll-progress{position:fixed;z-index:1002;inset:0 0 auto;height:2px;pointer-events:none;overflow:hidden;background:transparent}
 .story-scroll-progress:after{content:"";position:absolute;inset:0 auto 0 0;width:100%;background:linear-gradient(90deg,#a21b22,#d1ad6d 60%,#e3c790);transform:scaleX(var(--story-progress,0));transform-origin:left center;transition:transform .12s linear}
@@ -1017,6 +1034,31 @@ body.story-motion-gsap [data-story-reveal].story-visible img{animation:none}
 .about-page .about-source .source-copy .text-link{color:#e0bd7b}
 .about-page .about-source .source-images figcaption{color:#cbb896}
 @media(max-width:760px){.about-page .about-hero{background-position:61% center}.about-page .about-source{grid-template-columns:1fr}}
+
+/* Keep the philosophy story editorial and compact on wide screens; the mobile stack remains unchanged. */
+@media(min-width:1101px){
+  .about-page .about-story{gap:clamp(22px,2.6vw,36px);padding-top:clamp(42px,4.5vw,68px);padding-bottom:clamp(42px,4.5vw,68px)}
+  .about-page .about-story .about-intro-image img{height:clamp(260px,25vw,340px)}
+  .about-page .about-story .about-copy h2{margin:10px 0 16px;font-size:clamp(34px,3.4vw,48px);line-height:1.02}
+  .about-page .about-story .about-copy p{margin-block:10px;font-size:12px;line-height:1.65}
+  .about-page .about-story .about-copy .about-lead{font-size:17px;line-height:1.45}
+  .about-page .about-story .editorial-heading{margin-bottom:10px}
+  .about-page .about-story .editorial-heading h2{font-size:clamp(26px,2.2vw,32px);line-height:1.08}
+  .about-page .about-story .editorial-heading p{margin:4px 0;font-size:11px}
+  .about-page .about-story .timeline-list{margin-top:16px}
+  .about-page .about-story .timeline-list li{padding-bottom:9px}
+  .about-page .about-story .timeline-list li>span{font-size:19px}
+  .about-page .about-story .timeline-list h3{margin:0 0 3px;font-size:clamp(15px,1.1vw,16px);line-height:1.15}
+  .about-page .about-story .timeline-list p{max-width:44ch;margin:0;font-size:10px;line-height:1.4}
+}
+.about-page .about-principles{padding-block:clamp(54px,6vw,82px)}
+.about-page .principle-grid{margin-top:30px}
+.about-page .principle-grid article{min-height:190px}
+.about-page .about-source{padding-block:clamp(52px,6vw,84px)}
+.about-page .source-images img{height:clamp(200px,23vw,300px)}
+.about-page .source-images figure:first-child{margin-top:32px}
+.about-page .about-quote{padding-block:clamp(52px,5.5vw,78px)}
+@media(min-width:1101px){.about-page .about-chef{padding-top:clamp(44px,5vw,68px);padding-bottom:clamp(44px,5vw,68px)}.about-page .chef-portrait img{height:clamp(320px,28vw,400px)}.about-page .chef-landscape{min-height:240px}.about-page .chef-landscape img{max-height:380px}}
 .account-dashboard-hero:before{background-image:linear-gradient(90deg,rgba(12,11,9,.95) 0%,rgba(12,11,9,.83) 40%,rgba(12,11,9,.46) 76%,rgba(12,11,9,.28) 100%),url("assets/generated/contact-exterior.webp");background-position:center 48%}
 @media(max-width:900px){.account-dashboard-hero:before{background-image:linear-gradient(90deg,rgba(12,11,9,.96) 0%,rgba(12,11,9,.86) 58%,rgba(12,11,9,.62) 100%),url("assets/generated/contact-exterior.webp");background-position:58% center}}
 

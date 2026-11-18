@@ -383,6 +383,11 @@ try {
  $csrf=tokenFrom($html);
  [$status,$html]=adminPost(['csrf'=>$csrf,'action'=>'admin-search','q'=>'тЕСТовый']);
  check($status===200 && str_contains($html,'Тестовый ролл') && str_contains($html,'Результаты по запросу'), 'admin search finds Russian text regardless of case');
+ $pdo->prepare('UPDATE dishes SET name=? WHERE id=?')->execute(['Әлия Қайрат · тестовое блюдо',$dish]);
+ [$status,$html]=adminPost(['csrf'=>tokenFrom($html),'action'=>'admin-search','q'=>'ӘЛИЯ ҚАЙРАТ']);
+ check($status===200 && str_contains($html,'Әлия Қайрат · тестовое блюдо') && str_contains($html,'Результаты по запросу'), 'admin search matches Kazakh Cyrillic regardless of case');
+ $pdo->prepare('UPDATE dishes SET name=? WHERE id=?')->execute(['Тестовый ролл',$dish]);
+ [$status,$html]=adminPost(['csrf'=>tokenFrom($html),'action'=>'admin-search','q'=>'']);
  $csrf=tokenFrom($html); $edit=$save; $edit['id']=(string)$dish; $edit['description']='Обновлённое описание'; $edit['price']='3750'; $edit['image_url']='https://images.unsplash.com/photo-1?auto=format&fit=crop&w=800'; $edit['active']='on';
  [$status,$html]=adminPost($edit); check(str_contains($html,'Изменения блюда сохранены'), 'dish edit accepts approved HTTPS image');
  $row=testDatabaseRow($dbPath,'SELECT description,price,image_url FROM dishes WHERE id=?',[$dish]); check($row!==null && $row['description']==='Обновлённое описание' && (int)$row['price']===3750 && str_starts_with($row['image_url'],'https://images.unsplash.com/'), 'description, price, image update persisted');
