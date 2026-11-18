@@ -131,6 +131,12 @@ $overview = <<<'HTML'
 <section class="section account-demo-summary" aria-label="Краткая сводка профиля"><div class="account-metrics"><article><strong data-account-stat="orders">0</strong><span>сохранённых заказов</span></article><article><strong data-account-stat="bookings">0</strong><span>запросов на бронь</span></article><article><strong data-account-stat="favorites">0</strong><span>избранных блюд</span></article><article><strong data-account-stat="notifications">0</strong><span>непрочитанных уведомлений</span></article></div><div class="account-quick-actions"><a href="menu.html">Открыть меню ↗</a><a href="booking.html">Бронирование ↗</a><button type="button" data-account-quick-target="notifications">Уведомления</button><button type="button" data-account-quick-target="favorites">Избранное ♡</button><a href="offers.html">Привилегии ↗</a></div></section>
 <section class="section tp20-static-privilege" data-tp-demo-loyalty aria-label="Демонстрационная программа Tokyo Privilege"><article class="tp20-loyalty-card" data-tp-loyalty-card data-tier="Silver"><span class="kicker">TOKYO PRIVILEGE · ЛОКАЛЬНАЯ ДЕМО</span><h2 data-tp-loyalty-tier>Silver</h2><p>Уровень рассчитан только по учебным заказам, сохранённым в этом браузере. Баллы не имеют денежной стоимости и не передаются ресторану.</p><div class="tp20-loyalty-balance"><strong data-tp-loyalty-points>0</strong><span>демо-баллов</span></div><label>Прогресс к следующему уровню<progress data-tp-loyalty-progress max="100" value="0">0%</progress></label><small data-tp-loyalty-progress-label>Статус появится после сохранённого учебного заказа.</small></article><article class="tp20-referral-card"><span class="kicker">ДЕМО-ПРИГЛАШЕНИЕ · ТОЛЬКО ЭТОТ БРАУЗЕР</span><h3>Пригласить друга</h3><p>Локальный код нужен только для показа интерфейса. Переход по нему не регистрирует гостя и не начисляет вознаграждение.</p><code data-tp-demo-referral>TP-DEMO</code><button class="button secondary" type="button" data-tp-copy-referral>Скопировать код</button></article></section><section class="section account-dashboard"><div class="account-demo-layout">
 HTML;
+$accountHeroMatch = [];
+if (!preg_match('/<section class="account-overview">.*?<\/section>/s', $overview, $accountHeroMatch)) {
+    throw new RuntimeException('Static account masthead was not found.');
+}
+$accountHero = $accountHeroMatch[0];
+$overview = str_replace($accountHero, '', $overview);
 $privilegeMatch = [];
 if (!preg_match('/<section class="section tp20-static-privilege"[^>]*>.*?<\/section>/s', $overview, $privilegeMatch)) {
     throw new RuntimeException('Static account privilege section was not found.');
@@ -154,7 +160,18 @@ $accountFavoritesPreview = <<<'HTML'
   <p id="demo-favorites-preview-empty" class="account-favorites-overview-empty" hidden>Пока нет сохранённых блюд. <a class="text-link" href="menu.html">Посмотреть меню ↗</a></p>
 </section>
 HTML;
-$account = str_replace('<section class="section"><div class="account-demo-layout">', $overview, $account);
+$accountDashboardStart = '<section class="section account-dashboard"><div class="account-demo-layout">';
+$accountDashboardStartCount = 0;
+$overview = str_replace($accountDashboardStart, '', $overview, $accountDashboardStartCount);
+if ($accountDashboardStartCount !== 1) throw new RuntimeException('Could not separate the static account summary from its history panels.');
+$accountDemoContent = $privilege . $overview;
+$accountHeroCount = 0;
+$account = preg_replace('/<section class="page-hero">.*?<\/section>/s', $accountHero, $account, 1, $accountHeroCount);
+if ($accountHeroCount !== 1) throw new RuntimeException('Could not place the static account masthead.');
+$account = str_replace('<section class="section"><div class="account-demo-layout">', $accountDashboardStart, $account, $accountLayoutCount);
+if (($accountLayoutCount ?? 0) !== 1) throw new RuntimeException('Could not place the static account dashboard.');
+$account = str_replace('</nav><div>', '</nav><div class="account-demo-content">' . $accountDemoContent, $account, $accountContentCount);
+if (($accountContentCount ?? 0) !== 1) throw new RuntimeException('Could not align the static account overview with its navigation.');
 $favoritesPanelInsertionCount = 0;
 $account = str_replace(
     '</div></section><section class="account-demo-panel" data-account-panel="favorites"',
