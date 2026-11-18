@@ -879,7 +879,8 @@ if ($exportTable !== '') {
           <?php else: ?>
             <span><?php if (filter_var($row['email'], FILTER_VALIDATE_EMAIL)): ?><a class="admin-record-contact" href="mailto:<?=e($row['email'])?>"><?=e($row['email'])?></a><?php else: ?><?=e($row['email'])?><?php endif ?> · <?=e($row['subject'])?></span><p><?=e($row['message'])?></p>
           <?php endif ?>
-          <time datetime="<?=e(str_replace(' ', 'T', (string)$row['created_at']))?>"><?=e($row['created_at'])?></time>
+          <?php $createdAtLocal = (new DateTimeImmutable((string)$row['created_at'], $utcZone))->setTimezone($restaurantZone); ?>
+          <time datetime="<?=e($createdAtLocal->format(DateTimeInterface::ATOM))?>">Создано <?=e($createdAtLocal->format('d.m.Y · H:i'))?> · время ресторана</time>
         </div>
         <?php if ($table === 'bookings'): ?>
         <div class="admin-booking-emails">
