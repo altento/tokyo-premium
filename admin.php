@@ -508,8 +508,11 @@ $bookingMailReadiness = match ($bookingMailState) {
   <?php if ($error !== ''): ?><p class="form-status error admin-notice" role="alert"><?=e($error)?></p><?php endif ?>
 
   <nav class="admin-jump-nav" aria-label="Разделы панели">
-    <a href="#search">Поиск</a><a href="#notifications">Уведомления</a><a href="#menu">Меню</a><a href="#pairings">Сочетания</a><a href="#orders">Заказы</a>
-    <a href="#bookings">Брони</a><a href="#reviews">Отзывы</a><a href="#contact_messages">Сообщения</a><a href="#settings">Настройки</a>
+    <a href="#search">Поиск</a><a href="#notifications">Уведомления</a><a href="#menu">Меню</a><a href="#pairings">Сочетания</a>
+    <?php foreach ([['orders','Заказы'],['bookings','Брони'],['reviews','Отзывы'],['contact_messages','Сообщения']] as [$navKey,$navLabel]): $navCount=$notificationCounts[$navKey]??0; ?>
+      <a href="#<?=$navKey?>" aria-label="<?=$navLabel?>, новых: <?=$navCount?>"><?=$navLabel?><span class="admin-jump-count<?=$navCount>0?' has-unread':''?>" aria-hidden="true"><?=$navCount?></span></a>
+    <?php endforeach ?>
+    <a href="#settings">Настройки</a>
   </nav>
 
   <section class="admin-kpi-grid" aria-label="Оперативная сводка · <?=e($localDayStart->format('d.m.Y'))?>, Asia/Qyzylorda">

@@ -506,3 +506,7 @@ The authenticated operations dashboard and Marketing & Loyalty admin now warn be
 The PHP and Pages account overviews now show profile/contact information and shortcuts; the static dashboard also has a settings/privacy preview. Existing order, favorite, booking, address, and privacy data behavior remains browser-local where applicable. Desktop summary panels use a denser grid; the phone layout remains stacked. The avatar is a neutral silhouette, not a user portrait.
 
 PHP lint, JavaScript syntax, and CSS checks passed. The local export command could not be run because this PHP environment lacks PDO SQLite; the checked-in static account page and copied CSS/JS were updated to match the export template. No browser screenshot or full visual comparison was performed in this pass, so responsive appearance still needs an interactive review.
+
+## 2026-11-18 — Operational admin navigation
+
+The operations dashboard now shows live counts of new orders, bookings, reviews, and messages in the sticky section navigation. Each link also exposes its count to assistive technology. This makes pending work visible without first opening the notifications panel. Only focused PHP lint and diff checks were run; the PHP admin is not hosted by GitHub Pages, and the broader browser suite was intentionally skipped in this accelerated pass.
