@@ -21,9 +21,9 @@ Push to `main` and wait for the Pages workflow to finish. Inspect the workflow s
 
 ## Latest verified publication
 
-- Main commit: `7d6e9e147683d3e4a7ee16efc5d72983ec59633b`
-- Workflow: [run 44211881185](https://github.com/altento/tokyo-premium/actions/runs/44211881185) — build and deploy both succeeded; PHP/SQLite, set-format admin regression, browser and visual-QA steps passed.
-- Public checks: [Tokyo Premium Pages](https://altento.github.io/tokyo-premium/) and `/set-builder.html` returned HTTP 200 after deployment.
+- Main commit: `431a0a6cb3131627d736f6b447475e4f095ea300`
+- Workflow: [run 44221178924](https://github.com/altento/tokyo-premium/actions/runs/44221178924) — build and deploy both succeeded; PHP/SQLite integration, cart tests, browser regression and visual-QA passed.
+- Cache-busted public checks returned HTTP 200 for the home page, `/account.html`, `/cart-store.js`, and `/luxury.js`. The published cart-store and account demo contain the atomic repeat-order handler.
 - This verifies the published static demo. PHP-only admin features remain unavailable on Pages; browser storage is not durable/server-synced, and no payment or live table availability is enabled.
 
 The latest verification record is in [testing-report.md](testing-report.md). A new pixel-by-pixel comparison of all 11 source references against current pages remains outstanding; existing screenshots and older gap notes do not constitute that acceptance claim.

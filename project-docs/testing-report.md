@@ -539,3 +539,11 @@ The account route passed `npm run test:visual-fidelity` in both PHP and static m
 ## 2026-11-18 published checkpoint — 7828998
 
 GitHub Actions run [44179154931](https://github.com/altento/tokyo-premium/actions/runs/44179154931) completed successfully for commit `7828998c75f1dbb2d386af56683ce9a72cf3557e`; both build and deploy jobs passed. Cache-busted public checks returned HTTP 200 for the Ideal Evening static page (including the active set-variant payload) and the new Chef's Secret Drop WebP asset. The subsequent hero image-failure fix recorded above is a later local change and is not yet part of the deployed commit.
+
+## 2026-11-18 — account repeat-order release
+
+- Added migration v14 to preserve the custom-set format slug on saved order lines and backfill older lines by their stored name. The account only reconstructs current eligible catalogue IDs and quantities; historical prices are never passed to the cart.
+- Repeat-order now merges dishes and custom sets in one cart-store write. Invalid/unavailable components, quantity overflow, or line limits reject the entire operation without a partial cart update. The browser-local account uses the same API.
+- `npm run test:cart` passed 14/14; PHP lint passed for `account.php`, `lib/commerce.php`, and the SQLite integration test. GitHub Actions run [44221178924](https://github.com/altento/tokyo-premium/actions/runs/44221178924) passed PHP/SQLite integration, browser regression/visual QA, static export, and Pages deployment.
+- Cache-busted public requests for the home page, `account.html`, `cart-store.js`, and `luxury.js` returned HTTP 200 and contained the expected release code. This is static Pages verification; the repeat-order PHP route is exercised in hosted CI, not on Pages.
+- A local browser run could not start because this checkout has no installed `playwright` package. The workflow installed its pinned browser dependencies and passed the project browser suite. Pixel-by-pixel comparison of all 11 references remains incomplete.

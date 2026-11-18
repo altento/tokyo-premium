@@ -430,3 +430,11 @@ Commit `1ef05bf2b3dcdafccc1b452bbe71877bc6dc204b` is on `main`. GitHub Actions r
 ## 2026-11-18 · Hosted release: set-format administration
 
 Commit `7d6e9e147683d3e4a7ee16efc5d72983ec59633b` was pushed to `main`. GitHub Actions run [44211881185](https://github.com/altento/tokyo-premium/actions/runs/44211881185) completed successfully: PHP/SQLite integrity, the focused set-format admin regression, browser/visual QA, static build and deployment all passed. The public home and set-builder route return HTTP 200. Set-format management is a PHP/SQLite admin capability and is intentionally not executable on GitHub Pages. This release does not complete Tokyo Premium 2.0; full visual reconciliation and remaining product/security acceptance items are still open.
+
+## 2026-11-18 — account repeat-order release
+
+Commit `431a0a6cb3131627d736f6b447475e4f095ea300` is the current `main` and public Pages revision. Account order history now builds repeat payloads from currently eligible dishes and saved set components; it omits gift lines and passes IDs/quantities only. SQLite migration v14 stores the set format for future orders and backfills recognized existing order snapshots. Both PHP history and the static account demo feed the shared cart-store's atomic `addOrder` operation, so invalid lines do not partially mutate the cart and checkout still resolves current prices server-side.
+
+Verification: `npm run test:cart` passed 14/14, PHP syntax checks passed, and hosted Actions run [44221178924](https://github.com/altento/tokyo-premium/actions/runs/44221178924) passed PHP/SQLite integration, browser regression/visual QA, static export and deployment. Cache-busted public checks verified HTTP 200 and expected contents for the home, account demo, cart store and interaction script. Local Playwright was unavailable in this clone because dependencies were not installed; browser verification ran in CI.
+
+The broad modernization is still incomplete. This release does not prove full visual parity with the 11 references; no PHP web host, live mail provider, payment provider or live table inventory is configured. The connected Runway workspace has zero video credits and no available video model, so no generated hero video was added; current still-image motion remains the fallback.

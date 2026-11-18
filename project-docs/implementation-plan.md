@@ -1,6 +1,12 @@
 # Tokyo Premium 2.0 implementation record
 
-Updated 2026-11-13
+Updated 2026-11-18
+
+## Current release checkpoint
+
+The latest verified public release is `431a0a6` (GitHub Actions run [44221178924](https://github.com/altento/tokyo-premium/actions/runs/44221178924)). The PHP account can rebuild an owned past order from currently eligible catalogue records and saved set components; prices are resolved again at checkout. Static account repeats now use the same atomic cart-store API. Migration v14 records/backfills custom-set format IDs on order lines.
+
+The full modernization remains open. The remaining acceptance work includes a fresh full-page visual comparison against all 11 approved references, a consolidated security/performance review, and deployment of the PHP/SQLite runtime on an actual PHP host if one is configured. GitHub Pages stays a browser-local demonstration; payment, live seating, and outbound email are not configured. Runway reports that this workspace has no video models or credits, so a hero video cannot be generated here; keep the existing still-image fallback.
 
 ## Foundation preserved
 
@@ -14,6 +20,7 @@ The project remains the existing PHP 8+ application with SQLite. Public PHP rout
 - Quick view for actual catalog records, search metadata, campaign/collection routes, server-validated promotion quotes, Secret Menu access checks and threshold gift options.
 - Loyalty tiers/ledger, completed-order event handling, optional birthday consent, referral association and non-financial certificate previews with rate limiting.
 - Marketing & Loyalty admin forms for campaigns, codes and collections behind existing admin session and CSRF protection.
+- Account order history has server-side repeat-order payloads built from current eligible dishes and saved custom-set components; the client applies the payload atomically and never submits historical prices.
 - Browser-local counterparts on Pages for supported presentation scenarios. These do not claim server delivery, authentication, payment, live availability or a redeemable certificate.
 - Secret Menu visibility is filtered server-side from public catalog/detail/collection/API routes; PHP unlocks are session-backed and rechecked during order quotes. The Pages preview payload is explicitly public demo content, not access control.
 - Promotion stacking, bonus-points promo eligibility and completed-order loyalty events are checked transactionally so a status cycle cannot award the same order repeatedly.
@@ -37,6 +44,7 @@ The project remains the existing PHP 8+ application with SQLite. Public PHP rout
 - Local `npm ci` completed successfully with the pinned Playwright 1.65.0 dependency; browser suites ran against the current PHP app and a freshly exported 36-page static build.
 - Cinematic hero follow-up: manual three-scene controls, same-origin route mapping for static Pages, keyboard arrows, queued rapid input, no autoplay, reduced-motion behavior, and pointer-limited parallax are implemented and covered by `test:motion` at eight responsive widths in both modes.
 - Screenshot evidence is stored in `project-docs/visual-qa/`. Screenshots were inspected for selected states; this is not a pixel-by-pixel comparison of every section against all 11 reference PNGs.
+- Current published checkpoint `431a0a6`: 14/14 cart-store tests passed; hosted PHP/SQLite integration, browser regression/visual-QA, static export and deployment all passed in run 44221178924. The local Playwright package was absent in this checkout, so the repeat-order browser scenario was verified in hosted CI rather than locally.
 
 ## Boundaries
 

@@ -20,6 +20,10 @@ GitHub Actions uploads the JPEG and PNG evidence as `tokyo-premium-visual-qa`. T
 
 The cart suite's `cart-*.png` captures contain empty and populated desktop/mobile states, validation errors, pickup and delivery. The static counterpart is prefixed `static-`. Re-run into a temporary output directory with `TOKYO_EVIDENCE_DIR` to avoid overwriting checked-in captures. These files are automated regression evidence; only the cart, set builder, offers, static account, booking heading, and booking-table selected states were visually spot-checked in the latest local pass. See `project-docs/testing-report.md` for the verification limits.
 
+## Latest hosted account capture — 2026-11-18
+
+GitHub Actions run [44221178924](https://github.com/altento/tokyo-premium/actions/runs/44221178924) saved `11-account-populated-desktop.jpg` and `11-account-populated-mobile.jpg` in the `tokyo-premium-visual-qa` artifact. The PHP browser scenario creates an owned test order, invokes the new server-history repeat action through the shared cart store, and captures the authenticated history at both widths. The local checkout had no Playwright package, so these release captures are retained in the hosted artifact rather than copied into this folder. They verify the tested state; they do not establish full visual parity with `design-references/11-account.png`.
+
 ## 2026-11-13 focused visual remediation
 
 The following current-source screenshots were reviewed after fixing initial-render defects in the catalog, dish detail, Omakase and account:
