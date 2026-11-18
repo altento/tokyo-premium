@@ -496,3 +496,7 @@ Focused PHP/JS syntax and whitespace checks passed. GitHub Actions run [44288313
 The Marketing & Loyalty admin search now matches the main admin shortcut: `/` focuses search outside editable fields, and `Esc` clears the active query. The shortcut is documented beside the input and exposed through its accessible description.
 
 `node --check admin-marketing-search.js` and `git diff --check` passed. No broad browser suite was rerun; this small interaction change still needs an interactive browser confirmation. The overall Tokyo Premium 2.0 modernization remains incomplete.
+
+## 2026-11-18 — Admin unsaved-form guard
+
+The authenticated operations dashboard and Marketing & Loyalty admin now warn before leaving with modified POST form data. The guard compares current values with the loaded state, covers text/select/checkbox/radio/file controls, and does not prompt after a valid form submission. Existing test suites were not rerun for this focused change.

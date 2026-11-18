@@ -797,5 +797,5 @@ $bookingMailReadiness = match ($bookingMailState) {
   <p class="admin-demo-note">Учебная панель PHP + SQLite. Бронь считается подтверждённой только после действия администратора. Email отправляется только при настроенном SMTP; GitHub Pages не отправляет письма. Реальные платежи и SMS не подключены.</p>
 </main>
 <?php endif; ?>
-<?php if (!empty($_SESSION['admin_id'])): ?><script src="admin-dashboard.js" defer></script><?php endif ?>
+<?php if (!empty($_SESSION['admin_id'])): ?><script src="admin-dashboard.js" defer></script><script src="admin-form-guard.js" defer></script><?php endif ?>
 <?php footer_html(); ?>

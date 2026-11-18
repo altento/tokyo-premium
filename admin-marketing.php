@@ -563,5 +563,5 @@ header_html();
     <?php endif ?>
   </section>
 </main>
-<script src="admin-marketing-search.js" defer></script>
+<script src="admin-marketing-search.js" defer></script><script src="admin-form-guard.js" defer></script>
 <?php footer_html(); ?>
