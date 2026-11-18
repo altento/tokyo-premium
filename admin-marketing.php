@@ -435,7 +435,7 @@ header_html();
     <div class="tp20-admin-performance-wrap" role="region" aria-label="Показатели кампаний" aria-describedby="campaign-performance-hint" tabindex="0">
       <table class="tp20-admin-performance-table"><caption>Использование сохранённых кампаний · до 50 строк</caption><thead><tr><th scope="col">Кампания</th><th scope="col">Статус</th><th scope="col">Использования</th><th scope="col">Заказы без отменённых</th><th scope="col">Скидки в этих заказах</th><th scope="col">Последнее использование</th></tr></thead><tbody>
       <?php foreach($campaignPerformance as $performance): ?>
-        <tr class="tp20-admin-ledger-row" data-campaign-performance="<?=(int)$performance['id']?>" data-performance-redemptions="<?=(int)$performance['redemption_count']?>" data-performance-orders="<?=(int)$performance['order_count']?>" data-performance-discount="<?=(int)$performance['discount_total']?>">
+        <tr class="tp20-admin-performance-row" data-campaign-performance="<?=(int)$performance['id']?>" data-performance-redemptions="<?=(int)$performance['redemption_count']?>" data-performance-orders="<?=(int)$performance['order_count']?>" data-performance-discount="<?=(int)$performance['discount_total']?>">
           <td><strong><?=e($performance['title'])?></strong><small><?=e(strtoupper((string)$performance['campaign_type']))?> · <?=!empty($performance['demo_only'])?'DEMO':'LIVE'?></small></td>
           <td><span class="admin-status <?=!empty($performance['active'])?'is-confirmed':'status-hidden'?>"><?=!empty($performance['active'])?'Активна':'Отключена'?></span></td>
           <td><?=number_format((int)$performance['redemption_count'],0,'.',' ')?></td>

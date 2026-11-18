@@ -37,7 +37,7 @@
   const status = document.getElementById('marketing-admin-search-status');
   if (!input || !clearButton || !status) return;
 
-  const records = Array.from(document.querySelectorAll('.tp20-admin-list > article, .tp20-admin-list > details, .tp20-admin-ledger-row'));
+  const records = Array.from(document.querySelectorAll('.tp20-admin-list > article, .tp20-admin-list > details, .tp20-admin-performance-row, .tp20-admin-ledger-row'));
   const normalize = (value) => value.trim().toLocaleLowerCase('ru');
 
   const filterRecords = () => {
