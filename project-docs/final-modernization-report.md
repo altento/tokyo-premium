@@ -533,3 +533,5 @@ The mobile operations cards now keep the status selector and update button on th
 
 ## 2026-11-18 — homepage visual follow-up
 A targeted desktop CSS refinement brings the home page closer to the approved reference through a shorter hero, tighter section cadence, and a four-card desktop menu row. Local browser measurements were checked at 1440/1024/390px, and one desktop visual was inspected. Evidence: `project-docs/visual-qa/home-compact-desktop-2026-11-18.png`. This improves one page only; Tokyo Premium 2.0, full reference parity, and final acceptance remain in progress.
+## 2026-11-18 — admin booking workflow polish
+The admin's booking queue now surfaces the next visit first, keeps CSV order consistent, excludes cancelled bookings from today's KPI, and allows staff to call/email directly from operational cards. PHP syntax, whitespace, and an isolated SQLite sort/count check passed. Authenticated browser verification remains outstanding; this is a focused admin correction, not final admin acceptance.

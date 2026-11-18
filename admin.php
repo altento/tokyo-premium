@@ -554,6 +554,9 @@ $orders = admin_rows($pdo,
     "SELECT o.*,GROUP_CONCAT(oi.item_name || ' × ' || oi.quantity,' · ') AS items_summary
      FROM orders o LEFT JOIN order_items oi ON oi.order_id=o.id" . $orderFilter[0] . '
      GROUP BY o.id ORDER BY o.id DESC LIMIT ' . $adminPageSize . ' OFFSET ' . $recordPageOffsets['orders'], $orderFilter[1]);
+$restaurantZone = new DateTimeZone('Asia/Qyzylorda');
+$localNow = new DateTimeImmutable('now', $restaurantZone);
+$bookingSortCutoff = $localNow->format('Y-m-d H:i:s');
 $bookings = admin_rows($pdo, "SELECT b.*,
     (SELECT m.id FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':request:guest' ORDER BY m.id DESC LIMIT 1) AS request_mail_id,
     (SELECT m.status FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':request:guest' ORDER BY m.id DESC LIMIT 1) AS request_mail_status,
@@ -561,7 +564,10 @@ $bookings = admin_rows($pdo, "SELECT b.*,
     (SELECT m.status FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':request:restaurant' ORDER BY m.id DESC LIMIT 1) AS restaurant_mail_status,
     (SELECT m.id FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':confirmed:guest' ORDER BY m.id DESC LIMIT 1) AS confirmation_mail_id,
     (SELECT m.status FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':confirmed:guest' ORDER BY m.id DESC LIMIT 1) AS confirmation_mail_status
-    FROM bookings b" . $bookingFilter[0] . ' ORDER BY b.booking_date DESC,b.booking_time DESC,b.id DESC LIMIT ' . $adminPageSize . ' OFFSET ' . $recordPageOffsets['bookings'], $bookingFilter[1]);
+    FROM bookings b" . $bookingFilter[0] . " ORDER BY
+      CASE WHEN datetime(b.booking_date || ' ' || b.booking_time) >= ? THEN 0 ELSE 1 END ASC,
+      CASE WHEN datetime(b.booking_date || ' ' || b.booking_time) >= ? THEN datetime(b.booking_date || ' ' || b.booking_time) END ASC,
+      b.booking_date DESC,b.booking_time DESC,b.id DESC LIMIT " . $adminPageSize . ' OFFSET ' . $recordPageOffsets['bookings'], array_merge($bookingFilter[1], [$bookingSortCutoff, $bookingSortCutoff]));
 $reviews = admin_rows($pdo, 'SELECT r.* FROM reviews r' . $reviewFilter[0] . ' ORDER BY r.id DESC LIMIT ' . $adminPageSize . ' OFFSET ' . $recordPageOffsets['reviews'], $reviewFilter[1]);
 $contactMessages = admin_rows($pdo, 'SELECT m.* FROM contact_messages m' . $messageFilter[0] . ' ORDER BY m.id DESC LIMIT ' . $adminPageSize . ' OFFSET ' . $recordPageOffsets['contact_messages'], $messageFilter[1]);
 $collections = [
@@ -576,14 +582,13 @@ $notificationCounts = [
     'reviews'=>(int)$pdo->query("SELECT COUNT(*) FROM reviews WHERE status='pending'")->fetchColumn(),
     'contact_messages'=>(int)$pdo->query("SELECT COUNT(*) FROM contact_messages WHERE status='new'")->fetchColumn(),
 ];
-$restaurantZone = new DateTimeZone('Asia/Qyzylorda');
 $utcZone = new DateTimeZone('UTC');
-$localDayStart = (new DateTimeImmutable('now', $restaurantZone))->setTime(0, 0, 0);
+$localDayStart = $localNow->setTime(0, 0, 0);
 $localDayEnd = $localDayStart->modify('+1 day');
 $ordersTodayQuery = $pdo->prepare("SELECT COUNT(*) AS orders_count,COALESCE(SUM(CASE WHEN status<>'cancelled' THEN total ELSE 0 END),0) AS order_volume FROM orders WHERE created_at>=? AND created_at<?");
 $ordersTodayQuery->execute([$localDayStart->setTimezone($utcZone)->format('Y-m-d H:i:s'),$localDayEnd->setTimezone($utcZone)->format('Y-m-d H:i:s')]);
 $ordersToday = $ordersTodayQuery->fetch(PDO::FETCH_ASSOC) ?: ['orders_count'=>0,'order_volume'=>0];
-$bookingsTodayQuery = $pdo->prepare("SELECT COUNT(*) AS bookings_count,COALESCE(SUM(CASE WHEN status='new' THEN 1 ELSE 0 END),0) AS new_count FROM bookings WHERE booking_date=?");
+$bookingsTodayQuery = $pdo->prepare("SELECT COUNT(*) AS bookings_count,COALESCE(SUM(CASE WHEN status='new' THEN 1 ELSE 0 END),0) AS new_count FROM bookings WHERE booking_date=? AND status<>'cancelled'");
 $bookingsTodayQuery->execute([$localDayStart->format('Y-m-d')]);
 $bookingsToday = $bookingsTodayQuery->fetch(PDO::FETCH_ASSOC) ?: ['bookings_count'=>0,'new_count'=>0];
 $bookingMailQueue = $pdo->query("SELECT COALESCE(SUM(CASE WHEN status='pending' THEN 1 ELSE 0 END),0) AS pending_count,COALESCE(SUM(CASE WHEN status='failed' THEN 1 ELSE 0 END),0) AS failed_count FROM email_outbox WHERE booking_id IS NOT NULL")->fetch(PDO::FETCH_ASSOC) ?: ['pending_count'=>0,'failed_count'=>0];
@@ -608,8 +613,11 @@ if ($exportTable !== '') {
         'bookings' => [
             'headers'=>['№ брони','Создана','Статус','Гость','Email','Телефон','Дата','Время','Гостей','Зона','Стол предпочтения','Формат','Комментарий'],
             'columns'=>['id','created_at','status','guest_name','guest_email','phone','booking_date','booking_time','guest_count','zone','preferred_table','format','message'],
-            'sql'=>'SELECT b.id,b.created_at,b.status,b.guest_name,b.guest_email,b.phone,b.booking_date,b.booking_time,b.guest_count,b.zone,b.preferred_table,b.format,b.message FROM bookings b' . $bookingFilter[0] . ' ORDER BY b.booking_date DESC,b.booking_time DESC,b.id DESC',
-            'params'=>$bookingFilter[1],
+            'sql'=>"SELECT b.id,b.created_at,b.status,b.guest_name,b.guest_email,b.phone,b.booking_date,b.booking_time,b.guest_count,b.zone,b.preferred_table,b.format,b.message FROM bookings b" . $bookingFilter[0] . " ORDER BY
+              CASE WHEN datetime(b.booking_date || ' ' || b.booking_time) >= ? THEN 0 ELSE 1 END ASC,
+              CASE WHEN datetime(b.booking_date || ' ' || b.booking_time) >= ? THEN datetime(b.booking_date || ' ' || b.booking_time) END ASC,
+              b.booking_date DESC,b.booking_time DESC,b.id DESC",
+            'params'=>array_merge($bookingFilter[1], [$bookingSortCutoff, $bookingSortCutoff]),
         ],
         'reviews' => [
             'headers'=>['№ отзыва','Создан','Статус','Гость','Оценка','Тема','Текст'],
@@ -838,6 +846,9 @@ if ($exportTable !== '') {
       <?php foreach ($collection['rows'] as $row):
         $confirmedBooking = $table === 'bookings' && $row['status'] === 'confirmed';
         $recordName = admin_record_name($table, $row);
+        $phoneValue = trim((string)($row['phone'] ?? ''));
+        $phoneDigits = preg_replace('/\D+/', '', $phoneValue) ?? '';
+        $phoneHref = $phoneDigits === '' ? '' : (str_starts_with($phoneValue, '+') ? '+' : '') . $phoneDigits;
       ?>
       <article class="admin-record">
         <div class="admin-record-top">
@@ -850,7 +861,7 @@ if ($exportTable !== '') {
         </div>
         <h3><?=e($recordName)?></h3>
         <div class="admin-record-meta">
-          <?php if (!empty($row['phone'])): ?><span>Телефон: <?=e($row['phone'])?></span><?php endif ?>
+          <?php if ($phoneValue !== ''): ?><span>Телефон: <?php if ($phoneHref !== ''): ?><a class="admin-record-contact" href="tel:<?=e($phoneHref)?>"><?=e($phoneValue)?></a><?php else: ?><?=e($phoneValue)?><?php endif ?></span><?php endif ?>
           <?php if ($table === 'orders'): ?>
             <span><?=$row['fulfillment'] === 'pickup' ? 'Самовывоз' : 'Доставка'?><?=$row['address'] !== '' ? ' · ' . e($row['address']) : ''?></span>
             <span>Сумма: <?=number_format((int)$row['total'], 0, '.', ' ')?> ₸</span>
@@ -858,7 +869,7 @@ if ($exportTable !== '') {
             <?php if (!empty($row['comment'])): ?><span>Комментарий: <?=e($row['comment'])?></span><?php endif ?>
           <?php elseif ($table === 'bookings'): ?>
             <span><?=e($row['booking_date'])?> · <?=e($row['booking_time'])?> · <?=(int)$row['guest_count']?> гостей</span>
-            <?php if ($row['guest_email'] !== ''): ?><span>Email гостя: <?=e($row['guest_email'])?></span><?php endif ?>
+            <?php if ($row['guest_email'] !== ''): ?><span>Email гостя: <?php if (filter_var($row['guest_email'], FILTER_VALIDATE_EMAIL)): ?><a class="admin-record-contact" href="mailto:<?=e($row['guest_email'])?>"><?=e($row['guest_email'])?></a><?php else: ?><?=e($row['guest_email'])?><?php endif ?></span><?php endif ?>
             <?php if ($row['zone'] !== ''): ?><span>Зона: <?=e($row['zone'])?></span><?php endif ?>
             <?php if ($row['preferred_table'] !== ''): ?><span>Стол: <?=e($row['preferred_table'])?></span><?php endif ?>
             <?php if ($row['format'] !== ''): ?><span>Формат Omakase: <?=e($row['format'])?></span><?php endif ?>
@@ -866,7 +877,7 @@ if ($exportTable !== '') {
           <?php elseif ($table === 'reviews'): ?>
             <span><?=str_repeat('★', (int)$row['rating'])?> · <?=e($row['theme'])?></span><p><?=e($row['body'])?></p>
           <?php else: ?>
-            <span><?=e($row['email'])?> · <?=e($row['subject'])?></span><p><?=e($row['message'])?></p>
+            <span><?php if (filter_var($row['email'], FILTER_VALIDATE_EMAIL)): ?><a class="admin-record-contact" href="mailto:<?=e($row['email'])?>"><?=e($row['email'])?></a><?php else: ?><?=e($row['email'])?><?php endif ?> · <?=e($row['subject'])?></span><p><?=e($row['message'])?></p>
           <?php endif ?>
           <time datetime="<?=e(str_replace(' ', 'T', (string)$row['created_at']))?>"><?=e($row['created_at'])?></time>
         </div>
