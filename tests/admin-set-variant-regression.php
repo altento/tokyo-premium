@@ -28,7 +28,10 @@ try{
         $seed='session_name("tokyo_session");session_save_path('.$sessionPath.');session_id('.var_export($sessionId,true).');session_start();$_SESSION["admin_id"]=1;$_SESSION["csrf"]='.var_export($token,true).';session_write_close();';
         $runPhp($seed);$post['csrf']=$validCsrf?$token:'invalid-token';
         $request='session_name("tokyo_session");session_save_path('.$sessionPath.');session_id('.var_export($sessionId,true).');$_SERVER["REQUEST_METHOD"]="POST";$_POST='.var_export($post,true).';require '.$route.';';
-        return$runPhp($request);
+        $postOutput=$runPhp($request);
+        if($postOutput!=='')return$postOutput;
+        $redirectedGet='session_name("tokyo_session");session_save_path('.$sessionPath.');session_id('.var_export($sessionId,true).');$_SERVER["REQUEST_METHOD"]="GET";require '.$route.';';
+        return$runPhp($redirectedGet);
     };
     $renderBuilder=static function(string $slug)use($runPhp,$builderRoute,$sessionPath):string{
         $request='session_name("tokyo_session");session_save_path('.$sessionPath.');$_SERVER["REQUEST_METHOD"]="GET";$_GET=["variant"=>'.var_export($slug,true).'];require '.$builderRoute.';';
