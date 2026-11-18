@@ -128,6 +128,57 @@ function admin_export_url(string $table, string $notificationTarget, string $rec
     return 'admin.php?' . http_build_query($query);
 }
 
+function admin_post_section(string $action, array $post): string
+{
+    $section = match ($action) {
+        'dish-save', 'dish-delete' => 'menu',
+        'pairing-save', 'pairing-delete' => 'pairings',
+        'settings' => 'settings',
+        'mail-retry' => 'bookings',
+        'status' => (string)($post['table'] ?? ''),
+        default => '',
+    };
+    $tables = ['orders', 'bookings', 'reviews', 'contact_messages'];
+    return in_array($section, array_merge($tables, ['menu', 'pairings', 'settings']), true) ? $section : '';
+}
+
+function admin_post_return_url(string $action, array $query, array $post): string
+{
+    $section = admin_post_section($action, $post);
+    if ($section === '') return 'admin.php';
+    $tables = ['orders', 'bookings', 'reviews', 'contact_messages'];
+
+    $safeQuery = [];
+    if (in_array($section, $tables, true)) {
+        $notification = (string)($query['notification'] ?? '');
+        if ($notification === $section || ($section === 'bookings' && $notification === 'booking_emails')) {
+            $safeQuery['notification'] = $notification;
+        } elseif (($query['filter_table'] ?? '') === $section) {
+            $status = (string)($query['filter_status'] ?? '');
+            $allowedStatuses = [
+                'orders' => ['new','confirmed','preparing','ready','completed','cancelled'],
+                'bookings' => ['new','confirmed','completed','cancelled'],
+                'reviews' => ['pending','published','hidden'],
+                'contact_messages' => ['new','read','archived'],
+            ];
+            if (in_array($status, $allowedStatuses[$section], true)) {
+                $safeQuery['filter_table'] = $section;
+                $safeQuery['filter_status'] = $status;
+            }
+        }
+
+        $pageKey = 'page_' . $section;
+        $page = filter_var($query[$pageKey] ?? null, FILTER_VALIDATE_INT);
+        if ($page !== false && $page !== null && $page > 1) {
+            $safeQuery[$pageKey] = $page;
+        }
+    }
+
+    $url = 'admin.php';
+    if ($safeQuery !== []) $url .= '?' . http_build_query($safeQuery);
+    return $url . '#' . rawurlencode($section);
+}
+
 function admin_csv_text(mixed $value): string
 {
     if (!is_scalar($value) && $value !== null) return '';
@@ -198,7 +249,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!empty($_SESSION['admin_id'])) {
         try {
             if ($action === 'logout') {
-                unset($_SESSION['admin_id'], $_SESSION['admin_search'], $_SESSION['admin_flash']);
+                unset($_SESSION['admin_id'], $_SESSION['admin_search'], $_SESSION['admin_flash'], $_SESSION['admin_flash_section']);
                 session_regenerate_id(true);
                 header('Location: admin.php');
                 exit;
@@ -389,7 +440,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['admin_flash'] = 'Настройки сайта сохранены.';
             }
             if (isset($_SESSION['admin_flash'])) {
-                header('Location: admin.php');
+                $_SESSION['admin_flash_section'] = admin_post_section($action, $_POST);
+                header('Location: ' . admin_post_return_url($action, $_GET, $_POST));
                 exit;
             }
         } catch (Throwable $exception) {
@@ -411,7 +463,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_SESSION['admin_id']) && $no
 
 $logged = !empty($_SESSION['admin_id']);
 $notice = (string)($_SESSION['admin_flash'] ?? '');
+$noticeSection = (string)($_SESSION['admin_flash_section'] ?? '');
 unset($_SESSION['admin_flash']);
+unset($_SESSION['admin_flash_section']);
 $search = $logged ? trim((string)($_SESSION['admin_search'] ?? '')) : '';
 
 page_start('Управление сайтом — Tokyo Premium', 'Защищённая панель управления сайтом.');
@@ -589,7 +643,7 @@ if ($exportTable !== '') {
       <button class="button secondary" type="submit">Выйти</button>
     </form>
   </div>
-  <?php if ($notice !== ''): ?><p class="form-status success admin-notice" role="status"><?=e($notice)?></p><?php endif ?>
+  <?php if ($notice !== '' && $noticeSection === ''): ?><p class="form-status success admin-notice" role="status"><?=e($notice)?></p><?php endif ?>
   <?php if ($error !== ''): ?><p class="form-status error admin-notice" role="alert"><?=e($error)?></p><?php endif ?>
 
   <nav class="admin-jump-nav" aria-label="Разделы панели">
@@ -653,6 +707,7 @@ if ($exportTable !== '') {
   </section>
 
   <section class="admin-card" id="menu" aria-labelledby="admin-menu-title">
+    <?php if ($notice !== '' && $noticeSection === 'menu'): ?><p class="form-status success admin-notice" role="status"><?=e($notice)?></p><?php endif ?>
     <h2 id="admin-menu-title">Позиции меню <span class="admin-result-count"><?=$search !== '' ? count($items) . ' найдено' : count($items) . ' показано'?></span></h2>
     <form method="post" class="admin-form admin-create-form">
       <input type="hidden" name="csrf" value="<?=e(csrf())?>">
@@ -714,6 +769,7 @@ if ($exportTable !== '') {
   </section>
 
   <section class="admin-card" id="pairings" aria-labelledby="admin-pairings-title">
+    <?php if ($notice !== '' && $noticeSection === 'pairings'): ?><p class="form-status success admin-notice" role="status"><?=e($notice)?></p><?php endif ?>
     <h2 id="admin-pairings-title">Гастрономические сочетания <span class="admin-result-count"><?=$search !== '' ? count($pairingRows) . ' найдено' : count($pairingRows) . ' настроено'?></span></h2>
     <p class="admin-muted">Связанные активные блюда появятся в рекомендациях на страницах товаров. Сочетания доступны гостям только вместе с блюдами, которые разрешено показывать в их режиме доступа.</p>
     <form method="post" class="admin-form admin-create-form admin-pairing-create">
@@ -762,6 +818,7 @@ if ($exportTable !== '') {
 
   <?php foreach ($collections as $table=>$collection): ?>
   <section class="admin-card" id="<?=$table?>" aria-labelledby="admin-<?=$table?>-title">
+    <?php if ($notice !== '' && $noticeSection === $table): ?><p class="form-status success admin-notice" role="status"><?=e($notice)?></p><?php endif ?>
     <h2 id="admin-<?=$table?>-title"><?=e($collection['label'])?> <span class="admin-result-count"><?=number_format($recordTotalCounts[$table], 0, '.', ' ')?> записей · <?=$recordPages[$table]?> из <?=$recordPageCounts[$table]?> страниц</span></h2>
     <?php $selectedRecordStatus = $recordFilterTable === $table ? $recordFilterStatus : ($notificationTarget === $table ? 'new' : ''); ?>
     <form method="get" action="admin.php#<?=$table?>" class="admin-record-filter" role="search">
@@ -864,6 +921,7 @@ if ($exportTable !== '') {
   <?php endforeach ?>
 
   <section class="admin-card" id="settings" aria-labelledby="admin-settings-title">
+    <?php if ($notice !== '' && $noticeSection === 'settings'): ?><p class="form-status success admin-notice" role="status"><?=e($notice)?></p><?php endif ?>
     <h2 id="admin-settings-title">Контакты и SEO</h2>
     <form method="post" class="admin-form admin-settings-form">
       <input type="hidden" name="csrf" value="<?=e(csrf())?>">

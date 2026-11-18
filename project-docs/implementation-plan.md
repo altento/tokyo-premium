@@ -62,6 +62,10 @@ The protected operations dashboard now has CSV exports for orders, bookings, rev
 
 Promo code rows now include a copy-to-clipboard action with an accessible result message and legacy-browser fallback. PHP/JS syntax and diff checks passed; no browser interaction was run for this control.
 
+## 2026-11-18 — admin action context
+
+Successful admin updates now return to the affected section instead of resetting to the dashboard top. List actions retain only validated status/notification filters and the current page, and the one-time confirmation appears inside the section the administrator just changed. This focused change passed PHP syntax and whitespace checks; browser interaction is not available for the PHP admin in the Pages runtime.
+
 ## Boundaries
 
 The restaurant, prices, campaign defaults, guest examples and address are fictional school-project data. Only a completed server order event changes the PHP loyalty ledger. Pages stores supported demo data in the current browser's `localStorage`; it is not encrypted or synced with PHP. No external mail provider or payment gateway is configured, and a booking request is not a confirmed reservation.

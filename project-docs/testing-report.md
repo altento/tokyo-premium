@@ -599,3 +599,7 @@ Added filtered CSV downloads for the four operational record lists. `php -l admi
 Added Clipboard API copy with a legacy selection fallback and screen-reader status text. `php -l admin-marketing.php`, `node --check admin-marketing-search.js` and `git diff --check` passed. No browser interaction or PHP login session was available for this quick pass.
 
 GitHub Actions run [44307539160](https://github.com/altento/tokyo-premium/actions/runs/44307539160) for commit `261ec7e` passed build and deployment. Cache-busted public home, Offers and Menu returned HTTP 200. Full browser/visual QA was skipped by the fast profile; the PHP admin routes are unavailable on Pages.
+
+## 2026-11-18 — admin action context
+
+`php -l admin.php` and `git diff --check` passed. The change routes successful admin saves back to their section, preserves validated list filters/page state, and places the one-time success notice beside that section. No long browser suite was run for this small PHP-only update; hosted CI/deploy result is recorded after publication.

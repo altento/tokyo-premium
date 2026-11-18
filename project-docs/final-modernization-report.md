@@ -524,3 +524,7 @@ Orders, bookings, reviews and guest messages can now be downloaded by an authent
 Promo code records now have a one-click copy action, accessible success/failure announcement, and a fallback for browsers without Clipboard API support. PHP and JavaScript syntax checks and `git diff --check` passed. Browser interaction was not tested; the PHP admin is unavailable on Pages. This is a focused workflow improvement, not a claim of complete admin acceptance.
 
 Commit `261ec7e` is published; GitHub Actions run [44307539160](https://github.com/altento/tokyo-premium/actions/runs/44307539160) passed, and the public home, Offers and Menu routes returned HTTP 200. No browser interaction was run for the PHP-only admin controls.
+
+## 2026-11-18 — admin action context
+
+Successful operational, menu, pairing, and settings updates now redirect back to their validated section. Operational list actions retain the relevant status/notification filter and page number, while a one-time confirmation appears inside the section just changed. PHP syntax and whitespace checks passed. The authenticated PHP dashboard is not part of GitHub Pages, and this focused update was not browser-tested; Tokyo Premium 2.0 and full admin visual acceptance remain in progress.
