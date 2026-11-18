@@ -605,3 +605,6 @@ GitHub Actions run [44307539160](https://github.com/altento/tokyo-premium/action
 `php -l admin.php` and `git diff --check` passed. The change routes successful admin saves back to their section, preserves validated list filters/page state, and places the one-time success notice beside that section. GitHub Actions run [44310591339](https://github.com/altento/tokyo-premium/actions/runs/44310591339) passed the configured checks and deployment for commit `8d63abf`; the authenticated admin route was not browser-tested.
 
 Mobile admin action controls received a focused `git diff --check`. No broad or screenshot-based test was run for this small CSS adjustment.
+
+## 2026-11-18 — focused homepage visual follow-up
+Compacted the desktop homepage rhythm and aligned the recommendation row to four columns from 1024px upward. Checked the static page in Playwright at 1440px, 1024px and 390px; viewport/document widths matched, and the 1440px page reported no JavaScript errors. Inspected the 1440px hero/menu viewport and saved a full-page capture in `project-docs/visual-qa/`. No full browser matrix, PHP test suite, or mobile screenshot review was run for this CSS-only adjustment.

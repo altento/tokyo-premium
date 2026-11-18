@@ -1151,3 +1151,138 @@ body.story-motion-gsap [data-story-reveal].story-visible img{animation:none}
   .account-dashboard #account-notifications .account-empty-state{grid-template-columns:minmax(0,1fr)}
   .account-dashboard .account-empty-state .button{min-height:36px;padding:7px 11px;font-size:.68rem}
 }
+
+/* Desktop homepage rhythm: keep the cinematic art direction while bringing
+   the section cadence closer to the approved compact editorial composition. */
+@media (min-width: 1024px) {
+  .home-hero {
+    height: min(clamp(400px, 32vw, 470px), calc(100svh - 76px));
+    min-height: min(clamp(400px, 32vw, 470px), calc(100svh - 76px));
+  }
+
+  .home-hero-copy {
+    padding-block: 56px 52px;
+  }
+
+  .home-values {
+    padding-block: 12px;
+  }
+
+  .home-values > div {
+    min-height: 48px;
+  }
+
+  .home-menu-section {
+    padding-top: 40px;
+    padding-bottom: 46px;
+  }
+
+  .home-section-head {
+    margin-bottom: 22px;
+  }
+
+  .home-section-head h2 {
+    font-size: clamp(32px, 3.1vw, 44px);
+    line-height: 1;
+  }
+
+  .home-dish-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .home-dish-photo {
+    height: clamp(155px, 13.8vw, 198px);
+  }
+
+  .home-dish-copy {
+    padding: 13px 14px 12px;
+  }
+
+  .dish-description {
+    min-height: 34px;
+    margin: 6px 0 10px;
+    line-height: 1.45;
+  }
+
+  .home-dish-bottom {
+    padding-top: 9px;
+  }
+
+  .home-disclaimer {
+    margin-top: 10px;
+  }
+
+  .home-philosophy,
+  .philosophy-photo-wrap {
+    min-height: 400px;
+  }
+
+  .philosophy-copy {
+    padding-block: 48px;
+  }
+
+  .japanese-line {
+    margin-block: 17px;
+  }
+
+  .fictional-chef {
+    margin-top: 16px;
+  }
+
+  .home-space,
+  .space-photo {
+    min-height: 360px;
+  }
+
+  .space-copy {
+    padding-block: 48px;
+  }
+
+  .home-omakase-strip {
+    gap: 22px;
+    padding-block: 34px;
+  }
+
+  .omakase-seal {
+    width: 128px;
+    height: 128px;
+  }
+
+  .omakase-decoration {
+    font-size: 36px;
+  }
+
+  .home-review-note {
+    padding-block: 40px;
+  }
+
+  .home-review-note blockquote {
+    margin-block: 13px 9px;
+    line-height: 1.25;
+  }
+
+  .home-review-note .text-link {
+    margin-top: 8px;
+  }
+
+  .home-booking {
+    gap: clamp(28px, 5vw, 76px);
+    padding-block: 44px;
+  }
+
+  .home-booking-form {
+    gap: 10px;
+    padding: 18px;
+  }
+
+  .home-booking-form input,
+  .home-booking-form select {
+    min-height: 40px;
+    padding: 8px 10px;
+  }
+
+  .booking-jp {
+    margin-top: 16px;
+  }
+}

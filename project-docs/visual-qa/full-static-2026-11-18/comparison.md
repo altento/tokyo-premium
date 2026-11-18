@@ -35,3 +35,6 @@
 - Этот отчёт подтверждает просмотр свежих сравнительных листов и отдельных полных экранов, но не утверждает пиксельную идентичность макетам.
 - Корзина здесь представлена отдельным набором seeded-состояний; свежие default captures намеренно показывают чистый первый визит.
 - Наличие статических скриншотов не подтверждает PHP/SQLite поведение или опубликованный результат; эти проверки фиксируются отдельно.
+
+## 2026-11-18 — homepage desktop rhythm
+The approved home reference is denser than the previous desktop implementation. A focused CSS pass shortens the hero and selected section spacing at widths >=1024px and shows four recommendation cards per row, while leaving the smaller-screen rules in place. Source and Pages CSS are aligned. A local Playwright visual pass checked the homepage at 1440px (hero 461px, four equal columns), 1024px (four columns), and 390px (single column); document scroll width matched the viewport at all three sizes and no page errors occurred. The full-page capture is `../home-compact-desktop-2026-11-18.png`. This is one focused homepage comparison, not a renewed 11-page acceptance pass; known visual differences remain as recorded above.
