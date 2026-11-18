@@ -6,6 +6,10 @@ Updated 2026-11-18
 
 The latest verified public code release is `59b9258` (GitHub Actions run [44263546045](https://github.com/altento/tokyo-premium/actions/runs/44263546045)). The PHP admin includes global search, per-section status filters, actionable notification queues, date-aware KPIs and a searchable Marketing & Loyalty dashboard; this release also adds atomic SQLite cooldown buckets for administrator login attempts and advances the database readiness guard through migration v15. CI passed the PHP/SQLite integrity suite, admin regressions, browser regression/visual QA, static export and Pages deployment. A cache-busted public booking page returned HTTP 200 at 1440 px and 390 px with the expanded map layout and no page errors. The fresh static comparison set with desktop/mobile screenshots for all 11 references and its documented remaining visual gaps is in [the 2026-11-18 comparison](visual-qa/full-static-2026-11-18/comparison.md).
 
+### Admin workflow follow-up — local, not published
+
+The operational lists in `admin.php` now page through orders, bookings, reviews and contact messages in batches of 25 instead of silently stopping at the latest 100. Each section reports the total for its active search/status filter, clamps stale page numbers, and keeps the relevant filter when moving between pages. Responsive previous/next controls were added to `premium.css`. PHP syntax was checked locally; a full HTTP regression and publication have not been run for this working-tree change.
+
 The full modernization remains open. The comparison identifies concrete follow-up work for dish photography/information, home/account density, and the booking seating visual; it does not claim pixel-perfect parity. A consolidated security/performance review and deployment of the PHP/SQLite runtime on an actual PHP host are still outstanding if a host is configured. GitHub Pages stays a browser-local demonstration; payment, live seating, and outbound email are not configured. Runway reports that this workspace has no video models or credits, so a hero video cannot be generated here; keep the existing still-image fallback.
 
 ## Foundation preserved

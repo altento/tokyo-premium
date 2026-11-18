@@ -40,7 +40,17 @@ $metaImage = match($view) {
  'cart' => 'assets/generated/cart-hero.webp',
  default => 'assets/generated/home-hero-salmon-nigiri-v3.webp'
 };
-page_start($metaTitle,$metaDescription,$metaImage);
+if ($view === 'dish') {
+    ob_start();
+    page_start($metaTitle,$metaDescription,$metaImage);
+    $documentStart = (string) ob_get_clean();
+    $headEnd = stripos($documentStart, '</head>');
+    if ($headEnd === false) throw new RuntimeException('Cannot attach dish detail stylesheet: document head is missing.');
+    $dishStylesheet = '<link rel="stylesheet" href="assets/dish-detail-refinement.css">';
+    echo substr($documentStart, 0, $headEnd) . $dishStylesheet . substr($documentStart, $headEnd);
+} else {
+    page_start($metaTitle,$metaDescription,$metaImage);
+}
 header_html($view);
 ?>
 <main class="editorial-page">

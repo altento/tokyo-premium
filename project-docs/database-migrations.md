@@ -20,6 +20,7 @@ The app runs `schema.sql` with `CREATE TABLE/INDEX IF NOT EXISTS`, then records 
 | 12 | Add account-owned persisted notifications with unique event keys, owner-scoped read helpers, and booking status event IDs. Order and booking status notifications are committed in the same transaction as the underlying status event; unchanged status requests do not emit notifications. Existing accounts keep an empty inbox. |
 | 13 | Assign dedicated generated WebP imagery to unchanged seeded offers without overwriting administrator edits, and add a 30-day demo Chef's Secret Drop linked to the active scallop nigiri item. |
 | 14 | Save the selected custom-set format slug on each order line and backfill older set lines by their saved format name. Existing order snapshots and component rows remain intact, allowing account repeat-order to rebuild only currently available items at current catalogue prices. |
+| 15 | Add atomic administrator login cooldown buckets. SQLite stores keyed hashes only, with a 15-minute IP window and a higher account threshold; bootstrap readiness now requires v15 and the attempt table, so older v13/v14 databases continue through later migrations. |
 
 The account notification helpers are `commerce_account_notifications($pdo, $userId, $limit)` and `commerce_mark_account_notification_read($pdo, $userId, $notificationId)`. The mark-read helper only updates rows owned by the supplied user and is safe to retry. The authenticated `account.php` page exposes the `notification-read` POST action and checks CSRF before invoking the helper.
 

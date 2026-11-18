@@ -496,6 +496,10 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .admin-record-filter select:focus-visible{outline:2px solid #d5aa5c;outline-offset:2px}
 .admin-record-filter .button{min-height:40px;padding-inline:14px}
 .admin-filter-reset{color:#e7c579;font-size:.78rem;text-decoration:underline;text-underline-offset:3px}
+.admin-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1px solid rgba(200,164,99,.16);color:#b9ad98;font-size:.8rem}
+.admin-pagination-links{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.admin-pagination .button{min-height:40px;padding-inline:14px;text-decoration:none}
+.admin-pagination a:focus-visible{outline:2px solid #d5aa5c;outline-offset:3px}
 .admin-record-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}
 .admin-status-form{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .admin-status-form select{width:auto;min-width:170px}
@@ -545,6 +549,9 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
   .admin-dish-row>form{grid-column:3;grid-row:2}
   .admin-edit-details[open]{grid-column:1/-1;grid-row:auto}
   .admin-record{padding:14px}
+  .admin-pagination{align-items:stretch;flex-direction:column}
+  .admin-pagination-links{display:grid;grid-template-columns:1fr 1fr}
+  .admin-pagination .button{width:100%}
   .admin-record-filter{align-items:stretch}
   .admin-record-filter label{width:100%}
   .admin-record-filter select,.admin-record-filter .button{width:100%}

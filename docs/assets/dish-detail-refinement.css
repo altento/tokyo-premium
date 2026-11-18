@@ -1,0 +1,100 @@
+/* Dish-only visual adjustments. Loaded after the shared site styles. */
+@media (min-width: 901px) {
+  .editorial-page .section.detail-feature--product {
+    padding-top: clamp(10px, 1vw, 16px);
+    padding-bottom: clamp(16px, 1.6vw, 24px);
+  }
+}
+
+.dish-related-section .dish-grid-related {
+  align-items: stretch;
+}
+
+.dish-related-section .dish-grid-related .dish-card {
+  display: flex;
+  min-width: 0;
+  height: 100%;
+  flex-direction: column;
+}
+
+.dish-related-section .dish-grid-related .editorial-product-image {
+  flex: 0 0 auto;
+  aspect-ratio: 1.42;
+  background: #15110d;
+}
+
+.dish-related-section .dish-grid-related .editorial-product-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dish-related-section .dish-grid-related .dish-meta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 36px;
+  align-content: start;
+  gap: 7px 10px;
+  min-width: 0;
+  flex: 1 1 auto;
+  padding: 15px 16px 16px;
+}
+
+.dish-related-section .dish-grid-related .dish-meta > small {
+  display: block;
+  grid-column: 1;
+  min-width: 0;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.dish-related-section .dish-grid-related .dish-meta > .editorial-badge {
+  justify-self: start;
+  margin: 0;
+}
+
+.dish-related-section .dish-grid-related .dish-meta > .favorite-btn {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  align-self: start;
+  min-width: 34px;
+  min-height: 34px;
+}
+
+.dish-related-section .dish-grid-related .dish-meta > h3,
+.dish-related-section .dish-grid-related .dish-meta > p,
+.dish-related-section .dish-grid-related .dish-meta > .dish-bottom {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.dish-related-section .dish-grid-related .dish-meta > h3 {
+  margin: 3px 0 0;
+  line-height: 1.2;
+  text-wrap: pretty;
+}
+
+.dish-related-section .dish-grid-related .dish-meta > p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.dish-related-section .dish-grid-related .dish-bottom {
+  gap: 10px;
+  margin-top: auto;
+}
+
+@media (max-width: 640px) {
+  .dish-related-section .dish-grid-related .dish-meta {
+    gap: 7px 8px;
+    padding: 13px 13px 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dish-related-section .dish-grid-related .editorial-product-image img,
+  .dish-related-section .dish-grid-related .dish-card {
+    transition: none;
+  }
+}

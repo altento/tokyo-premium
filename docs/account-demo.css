@@ -1,0 +1,362 @@
+/* Account-only dashboard refinements. Kept separate so PHP and Pages share
+   the same hierarchy without changing the site's global design system. */
+
+/* Authenticated PHP dashboard: orders stay primary; local favorites and
+   account tools form a calm, narrower companion column. */
+@media (min-width: 1181px) {
+  .account-dashboard .account-dashboard-content {
+    grid-template-columns: minmax(0, 1.42fr) minmax(310px, .88fr);
+    align-items: start;
+    gap: 12px;
+  }
+
+  .account-dashboard .account-dashboard-primary,
+  .account-dashboard .account-dashboard-aside {
+    gap: 10px;
+  }
+
+  .account-dashboard .account-dashboard-aside {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .account-dashboard .account-dashboard-panel {
+    padding: 18px;
+  }
+
+  .account-dashboard .account-order-card--purchase {
+    grid-template-columns: 58px minmax(0, 1fr);
+    gap: 10px;
+    padding: 11px 12px;
+  }
+
+  .account-dashboard .account-order-card--purchase .account-order-preview {
+    width: 58px;
+    height: 62px;
+  }
+
+  .account-dashboard .account-order-meta {
+    margin-block: 5px;
+  }
+}
+
+@media (min-width: 761px) {
+  .account-dashboard .account-dashboard-hero {
+    min-height: 220px;
+    padding-block: 25px;
+  }
+
+  .account-dashboard .account-dashboard-overview {
+    grid-template-columns: minmax(0, 1.28fr) minmax(300px, .72fr);
+    gap: 12px;
+    margin-block: 14px;
+  }
+
+  .account-dashboard .account-dashboard-metrics {
+    gap: 8px;
+  }
+
+  .account-dashboard .account-dashboard-metrics article {
+    min-height: 84px;
+    padding: 11px 14px;
+  }
+
+  .account-dashboard .account-dashboard-actions {
+    gap: 8px;
+    margin-block: 12px;
+  }
+
+  .account-dashboard .account-dashboard-actions a {
+    min-height: 42px;
+    padding: 9px 12px;
+  }
+}
+
+@media (max-width: 1180px) {
+  .account-dashboard .account-dashboard-content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .account-dashboard .account-dashboard-aside {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .account-dashboard .account-dashboard-content,
+  .account-dashboard .account-dashboard-primary,
+  .account-dashboard .account-dashboard-aside {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .account-dashboard .account-dashboard-hero {
+    min-height: 0;
+    padding-block: 20px;
+  }
+
+  .account-dashboard .account-dashboard-overview {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 9px;
+    margin-block: 11px;
+  }
+
+  .account-dashboard .account-dashboard-metrics article {
+    min-height: 74px;
+  }
+
+  .account-dashboard .account-dashboard-panel {
+    padding: 15px 13px;
+  }
+}
+
+/* Browser-local Pages dashboard. History, favorites and addresses share a
+   compact two-column overview on desktop. Source order naturally stacks on
+   smaller screens: orders, bookings, favorites, then addresses. */
+.account-demo-page .account-overview {
+  min-height: clamp(190px, 16vw, 228px);
+  margin-top: 12px;
+}
+
+.account-demo-page .account-overview-body {
+  padding-block: clamp(20px, 2.3vw, 29px);
+}
+
+.account-demo-page .tp20-static-privilege {
+  margin-top: 9px;
+  gap: 9px;
+}
+
+.account-demo-page .tp20-static-privilege .tp20-loyalty-card,
+.account-demo-page .tp20-referral-card {
+  min-height: 154px;
+  padding: 16px 19px;
+}
+
+.account-demo-page .account-demo-summary {
+  margin-block: 8px 10px;
+  gap: 8px;
+}
+
+.account-demo-page .account-demo-summary .account-metrics {
+  min-height: 66px;
+}
+
+.account-demo-page .account-demo-summary .account-metrics article {
+  padding-block: 8px;
+}
+
+.account-demo-page .account-demo-summary .account-quick-actions {
+  gap: 7px;
+}
+
+.account-demo-page .account-demo-summary .account-quick-actions a,
+.account-demo-page .account-demo-summary .account-quick-actions button {
+  min-height: 42px;
+}
+
+.account-demo-page .account-dashboard.section {
+  padding-top: 12px;
+  padding-bottom: 18px;
+}
+
+.account-demo-page .account-dashboard .account-demo-layout {
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: 11px;
+}
+
+.account-demo-page .account-dashboard .account-demo-nav {
+  top: 84px;
+}
+
+.account-demo-page .account-demo-panel[data-account-panel="history"] {
+  min-height: 0;
+}
+
+.account-demo-page .account-demo-order {
+  grid-template-columns: 58px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 10px 11px;
+}
+
+.account-demo-page .account-demo-order .account-order-preview {
+  width: 58px;
+  height: 62px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.account-demo-order .demo-order-content {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.account-demo-order-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px;
+}
+
+.account-demo-order-title {
+  display: grid;
+  min-width: 0;
+  justify-items: start;
+  gap: 4px;
+}
+
+.account-demo-order-title > small {
+  color: #b9a98e;
+  font-size: .62rem;
+  letter-spacing: .035em;
+}
+
+.account-demo-order-title > strong {
+  color: #f2e4cc;
+  font: 500 .9rem/1.25 'Playfair Display', Georgia, serif;
+  overflow-wrap: anywhere;
+}
+
+.account-demo-order-total {
+  display: grid;
+  justify-items: end;
+  gap: 3px;
+  text-align: right;
+}
+
+.account-demo-order-total > span {
+  color: #a99b87;
+  font-size: .58rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.account-demo-order-total > strong {
+  color: #f0d29a;
+  font: 500 .98rem/1.1 'Playfair Display', Georgia, serif;
+  white-space: nowrap;
+}
+
+.account-demo-order-meta {
+  margin: 0;
+  color: #c8baa5;
+  font-size: .68rem;
+  line-height: 1.4;
+}
+
+.account-demo-page .account-demo-repeat {
+  justify-self: start;
+  min-height: 32px;
+  margin-top: 1px;
+  padding: 5px 9px;
+  font-size: .65rem;
+}
+
+.account-demo-page .account-demo-panel[data-account-panel="history"] > .intro-grid {
+  align-items: start;
+  gap: 16px;
+}
+
+.account-demo-page .account-demo-panel[data-account-panel="history"] .account-favorites-overview {
+  margin: 0;
+  padding: 16px;
+}
+
+.account-demo-page .account-demo-panel[data-account-panel="history"] .account-favorites-overview-grid {
+  gap: 8px;
+}
+
+@media (min-width: 1181px) {
+  .account-demo-page .account-demo-panel[data-account-panel="history"] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 16px 14px;
+  }
+
+  .account-demo-page .account-demo-panel[data-account-panel="history"] > .intro-grid {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .account-demo-page .account-demo-panel[data-account-panel="history"] > .account-favorites-overview {
+    min-width: 0;
+  }
+
+  .account-demo-page .account-demo-panel[data-account-panel="history"] > .account-favorites-overview {
+    align-self: stretch;
+  }
+}
+
+@media (max-width: 1180px) {
+  .account-demo-page .account-dashboard .account-demo-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .account-demo-page .account-demo-panel[data-account-panel="history"] > .intro-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(220px, .78fr);
+    align-items: start;
+  }
+}
+
+@media (max-width: 760px) {
+  .account-demo-page .account-overview {
+    min-height: 230px;
+  }
+
+  .account-demo-page .tp20-static-privilege {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .account-demo-page .tp20-static-privilege .tp20-loyalty-card,
+  .account-demo-page .tp20-referral-card {
+    min-height: 0;
+    padding: 15px;
+  }
+
+  .account-demo-page .account-demo-panel[data-account-panel="history"] > .intro-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .account-demo-page .account-demo-order {
+    grid-template-columns: 48px minmax(0, 1fr);
+    align-items: start;
+    gap: 8px;
+    padding: 9px;
+  }
+
+  .account-demo-page .account-demo-order .account-order-preview {
+    width: 48px;
+    height: 52px;
+  }
+
+  .account-demo-order-head {
+    gap: 6px;
+  }
+
+  .account-demo-order-title > strong {
+    font-size: .81rem;
+  }
+
+  .account-demo-order-total > strong {
+    font-size: .87rem;
+  }
+
+  .account-demo-page .account-demo-repeat {
+    min-height: 34px;
+    font-size: .62rem;
+  }
+
+  .account-demo-page .account-demo-panel[data-account-panel="history"] .account-favorites-overview {
+    padding: 13px 11px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .account-demo-page .account-demo-order,
+  .account-dashboard .account-dashboard-panel {
+    scroll-behavior: auto;
+    transition: none;
+  }
+}

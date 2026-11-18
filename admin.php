@@ -103,6 +103,26 @@ function admin_record_name(string $table, array $row): string
     return (string)($row['customer_name'] ?? $row['guest_name'] ?? $row['name'] ?? ('Запись №' . $row['id']));
 }
 
+function admin_page_url(string $table, int $page, string $notificationTarget, string $recordFilterTable, string $recordFilterStatus): string
+{
+    $query = [];
+    if ($notificationTarget !== '') {
+        $query['notification'] = $notificationTarget;
+    } elseif ($recordFilterTable === $table && $recordFilterStatus !== '') {
+        $query['filter_table'] = $table;
+        $query['filter_status'] = $recordFilterStatus;
+    }
+    $query['page_' . $table] = max(1, $page);
+    return 'admin.php?' . http_build_query($query) . '#' . rawurlencode($table);
+}
+
+function admin_count(PDO $pdo, string $sql, array $values = []): int
+{
+    $statement = $pdo->prepare($sql);
+    $statement->execute($values);
+    return (int)$statement->fetchColumn();
+}
+
 if (method_exists($pdo, 'createFunction')) {
     $pdo->createFunction('tp_unicode_lower', static fn($value): string => admin_lower((string)($value ?? '')), 1);
 } elseif (method_exists($pdo, 'sqliteCreateFunction')) {
@@ -399,13 +419,36 @@ if (!isset($statusOptions[$recordFilterTable]) || !isset($statusOptions[$recordF
 $orderFilter = admin_search_where(['CAST(o.id AS TEXT)','o.customer_name','o.phone','o.address','o.fulfillment','o.status','CAST(o.total AS TEXT)','oi.item_name'], $search);
 if ($notificationTarget === 'orders') $orderFilter = [' WHERE o.status=?', ['new']];
 elseif ($recordFilterTable === 'orders') $orderFilter = admin_add_filter($orderFilter, 'o.status', $recordFilterStatus);
-$orders = admin_rows($pdo,
-    "SELECT o.*,GROUP_CONCAT(oi.item_name || ' × ' || oi.quantity,' · ') AS items_summary
-     FROM orders o LEFT JOIN order_items oi ON oi.order_id=o.id" . $orderFilter[0] . '
-     GROUP BY o.id ORDER BY o.id DESC LIMIT 100', $orderFilter[1]);
 $bookingFilter = admin_search_where(['CAST(b.id AS TEXT)','b.guest_name','b.guest_email','b.phone','b.booking_date','b.booking_time','b.zone','b.preferred_table','b.format','b.message','b.status'], $search);
 if ($notificationTarget === 'bookings') $bookingFilter = [' WHERE b.status=?', ['new']];
 elseif ($recordFilterTable === 'bookings') $bookingFilter = admin_add_filter($bookingFilter, 'b.status', $recordFilterStatus);
+$reviewFilter = admin_search_where(['CAST(r.id AS TEXT)','r.guest_name','r.theme','r.body','CAST(r.rating AS TEXT)','r.status'], $search);
+if ($notificationTarget === 'reviews') $reviewFilter = [' WHERE r.status=?', ['pending']];
+elseif ($recordFilterTable === 'reviews') $reviewFilter = admin_add_filter($reviewFilter, 'r.status', $recordFilterStatus);
+$messageFilter = admin_search_where(['CAST(m.id AS TEXT)','m.guest_name','m.email','m.subject','m.message','m.status'], $search);
+if ($notificationTarget === 'contact_messages') $messageFilter = [' WHERE m.status=?', ['new']];
+elseif ($recordFilterTable === 'contact_messages') $messageFilter = admin_add_filter($messageFilter, 'm.status', $recordFilterStatus);
+$adminPageSize = 25;
+$recordTotalCounts = [
+    'orders'=>admin_count($pdo, 'SELECT COUNT(DISTINCT o.id) FROM orders o LEFT JOIN order_items oi ON oi.order_id=o.id' . $orderFilter[0], $orderFilter[1]),
+    'bookings'=>admin_count($pdo, 'SELECT COUNT(*) FROM bookings b' . $bookingFilter[0], $bookingFilter[1]),
+    'reviews'=>admin_count($pdo, 'SELECT COUNT(*) FROM reviews r' . $reviewFilter[0], $reviewFilter[1]),
+    'contact_messages'=>admin_count($pdo, 'SELECT COUNT(*) FROM contact_messages m' . $messageFilter[0], $messageFilter[1]),
+];
+$recordPageCounts = [];
+$recordPages = [];
+$recordPageOffsets = [];
+foreach ($recordTotalCounts as $table=>$total) {
+    $pageCount = max(1, (int)ceil($total / $adminPageSize));
+    $requestedPage = filter_var($_GET['page_' . $table] ?? 1, FILTER_VALIDATE_INT);
+    $recordPageCounts[$table] = $pageCount;
+    $recordPages[$table] = min(max(1, $requestedPage === false ? 1 : $requestedPage), $pageCount);
+    $recordPageOffsets[$table] = ($recordPages[$table] - 1) * $adminPageSize;
+}
+$orders = admin_rows($pdo,
+    "SELECT o.*,GROUP_CONCAT(oi.item_name || ' × ' || oi.quantity,' · ') AS items_summary
+     FROM orders o LEFT JOIN order_items oi ON oi.order_id=o.id" . $orderFilter[0] . '
+     GROUP BY o.id ORDER BY o.id DESC LIMIT ' . $adminPageSize . ' OFFSET ' . $recordPageOffsets['orders'], $orderFilter[1]);
 $bookings = admin_rows($pdo, "SELECT b.*,
     (SELECT m.id FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':request:guest' ORDER BY m.id DESC LIMIT 1) AS request_mail_id,
     (SELECT m.status FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':request:guest' ORDER BY m.id DESC LIMIT 1) AS request_mail_status,
@@ -413,15 +456,9 @@ $bookings = admin_rows($pdo, "SELECT b.*,
     (SELECT m.status FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':request:restaurant' ORDER BY m.id DESC LIMIT 1) AS restaurant_mail_status,
     (SELECT m.id FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':confirmed:guest' ORDER BY m.id DESC LIMIT 1) AS confirmation_mail_id,
     (SELECT m.status FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':confirmed:guest' ORDER BY m.id DESC LIMIT 1) AS confirmation_mail_status
-    FROM bookings b" . $bookingFilter[0] . ' ORDER BY b.booking_date DESC,b.booking_time DESC,b.id DESC LIMIT 100', $bookingFilter[1]);
-$reviewFilter = admin_search_where(['CAST(r.id AS TEXT)','r.guest_name','r.theme','r.body','CAST(r.rating AS TEXT)','r.status'], $search);
-if ($notificationTarget === 'reviews') $reviewFilter = [' WHERE r.status=?', ['pending']];
-elseif ($recordFilterTable === 'reviews') $reviewFilter = admin_add_filter($reviewFilter, 'r.status', $recordFilterStatus);
-$reviews = admin_rows($pdo, 'SELECT r.* FROM reviews r' . $reviewFilter[0] . ' ORDER BY r.id DESC LIMIT 100', $reviewFilter[1]);
-$messageFilter = admin_search_where(['CAST(m.id AS TEXT)','m.guest_name','m.email','m.subject','m.message','m.status'], $search);
-if ($notificationTarget === 'contact_messages') $messageFilter = [' WHERE m.status=?', ['new']];
-elseif ($recordFilterTable === 'contact_messages') $messageFilter = admin_add_filter($messageFilter, 'm.status', $recordFilterStatus);
-$contactMessages = admin_rows($pdo, 'SELECT m.* FROM contact_messages m' . $messageFilter[0] . ' ORDER BY m.id DESC LIMIT 100', $messageFilter[1]);
+    FROM bookings b" . $bookingFilter[0] . ' ORDER BY b.booking_date DESC,b.booking_time DESC,b.id DESC LIMIT ' . $adminPageSize . ' OFFSET ' . $recordPageOffsets['bookings'], $bookingFilter[1]);
+$reviews = admin_rows($pdo, 'SELECT r.* FROM reviews r' . $reviewFilter[0] . ' ORDER BY r.id DESC LIMIT ' . $adminPageSize . ' OFFSET ' . $recordPageOffsets['reviews'], $reviewFilter[1]);
+$contactMessages = admin_rows($pdo, 'SELECT m.* FROM contact_messages m' . $messageFilter[0] . ' ORDER BY m.id DESC LIMIT ' . $adminPageSize . ' OFFSET ' . $recordPageOffsets['contact_messages'], $messageFilter[1]);
 $collections = [
     'orders'=>['label'=>'Заказы','rows'=>$orders],
     'bookings'=>['label'=>'Бронирования','rows'=>$bookings],
@@ -490,7 +527,7 @@ $bookingMailReadiness = match ($bookingMailState) {
         <button class="button secondary" type="submit" name="clear_search" value="1">Сбросить</button>
       <?php endif ?>
     </form>
-    <?php if ($search !== ''): ?><p class="admin-search-summary" aria-live="polite">Результаты по запросу «<?=e($search)?>». Показано не более 100 записей в каждом разделе.</p><?php endif ?>
+    <?php if ($search !== ''): ?><p class="admin-search-summary" aria-live="polite">Результаты по запросу «<?=e($search)?>». Поиск охватывает все записи; каждый раздел показывает до 25 результатов на странице.</p><?php endif ?>
   </section>
 
   <section class="admin-card" id="notifications" aria-labelledby="admin-notifications-title">
@@ -620,7 +657,7 @@ $bookingMailReadiness = match ($bookingMailState) {
 
   <?php foreach ($collections as $table=>$collection): ?>
   <section class="admin-card" id="<?=$table?>" aria-labelledby="admin-<?=$table?>-title">
-    <h2 id="admin-<?=$table?>-title"><?=e($collection['label'])?> <span class="admin-result-count"><?=count($collection['rows'])?> <?=($search !== '' || $recordFilterTable === $table) ? 'найдено' : ($notificationTarget === $table ? 'новых записей' : 'последних записей')?></span></h2>
+    <h2 id="admin-<?=$table?>-title"><?=e($collection['label'])?> <span class="admin-result-count"><?=number_format($recordTotalCounts[$table], 0, '.', ' ')?> записей · <?=$recordPages[$table]?> из <?=$recordPageCounts[$table]?> страниц</span></h2>
     <?php $selectedRecordStatus = $recordFilterTable === $table ? $recordFilterStatus : ($notificationTarget === $table ? 'new' : ''); ?>
     <form method="get" action="admin.php#<?=$table?>" class="admin-record-filter" role="search">
       <input type="hidden" name="filter_table" value="<?=$table?>">
@@ -708,6 +745,15 @@ $bookingMailReadiness = match ($bookingMailState) {
       <?php endforeach ?>
       <?php if (!$collection['rows']): ?><p class="admin-empty"><?php if ($notificationTarget === $table): ?>Новых записей сейчас нет.<?php elseif ($recordFilterTable === $table): ?>Записей с выбранным статусом<?= $search !== '' ? ' и поисковым запросом «'.e($search).'»' : '' ?> нет.<?php else: ?>Записей пока нет<?php if ($search !== ''): ?> по запросу «<?=e($search)?>»<?php endif ?>.<?php endif ?></p><?php endif ?>
     </div>
+    <?php if ($recordPageCounts[$table] > 1): ?>
+      <nav class="admin-pagination" aria-label="Страницы раздела «<?=e($collection['label'])?>»">
+        <span>Показано <?=count($collection['rows'])?> из <?=number_format($recordTotalCounts[$table], 0, '.', ' ')?> записей</span>
+        <div class="admin-pagination-links">
+          <?php if ($recordPages[$table] > 1): ?><a class="button secondary" href="<?=e(admin_page_url($table, $recordPages[$table] - 1, $notificationTarget, $recordFilterTable, $recordFilterStatus))?>" rel="prev">← Назад</a><?php endif ?>
+          <?php if ($recordPages[$table] < $recordPageCounts[$table]): ?><a class="button secondary" href="<?=e(admin_page_url($table, $recordPages[$table] + 1, $notificationTarget, $recordFilterTable, $recordFilterStatus))?>" rel="next">Далее →</a><?php endif ?>
+        </div>
+      </nav>
+    <?php endif ?>
   </section>
   <?php endforeach ?>
 

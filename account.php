@@ -285,7 +285,12 @@ $orderStatusLabels = [
 $orderCount = count($orders);
 $bookingCount = count($bookings);
 
+$accountPageStart = '';
+ob_start();
 page_start('Личный кабинет — Tokyo Premium', 'Ваши заказы и бронирования Tokyo Premium.', 'assets/generated/contact-exterior.webp');
+$accountPageStart = (string)ob_get_clean();
+$accountPageStart = str_replace('</head>', '<link rel="stylesheet" href="account-demo.css"></head>', $accountPageStart);
+echo $accountPageStart;
 header_html();
 ?>
 <main class="admin-shell account-shell account-dashboard">
