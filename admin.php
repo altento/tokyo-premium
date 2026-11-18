@@ -636,9 +636,9 @@ $exportTable = (string)($_GET['export'] ?? '');
 if ($exportTable !== '') {
     $exportDefinitions = [
         'orders' => [
-            'headers'=>['№ заказа','Создан','Статус','Гость','Телефон','Получение','Адрес','Состав','Сумма, ₸','Комментарий'],
-            'columns'=>['id','created_at','status','customer_name','phone','fulfillment_label','address','items_summary','total','comment'],
-            'sql'=>"SELECT o.id,o.created_at,o.status,o.customer_name,o.phone,CASE WHEN o.fulfillment='pickup' THEN 'Самовывоз' ELSE 'Доставка' END AS fulfillment_label,o.address,GROUP_CONCAT(oi.item_name || ' × ' || oi.quantity,' · ') AS items_summary,o.total,o.comment FROM orders o LEFT JOIN order_items oi ON oi.order_id=o.id" . $orderFilter[0] . ' GROUP BY o.id ORDER BY o.created_at DESC,o.id DESC',
+            'headers'=>['№ заказа','Создан','Статус','Оплата','Гость','Телефон','Получение','Адрес','Состав','Сумма, ₸','Комментарий'],
+            'columns'=>['id','created_at','status','payment_status','customer_name','phone','fulfillment_label','address','items_summary','total','comment'],
+            'sql'=>"SELECT o.id,o.created_at,o.status,o.payment_status,o.customer_name,o.phone,CASE WHEN o.fulfillment='pickup' THEN 'Самовывоз' ELSE 'Доставка' END AS fulfillment_label,o.address,GROUP_CONCAT(oi.item_name || ' × ' || oi.quantity,' · ') AS items_summary,o.total,o.comment FROM orders o LEFT JOIN order_items oi ON oi.order_id=o.id" . $orderFilter[0] . ' GROUP BY o.id ORDER BY o.created_at DESC,o.id DESC',
             'params'=>$orderFilter[1],
         ],
         'bookings' => [
@@ -907,6 +907,7 @@ if ($exportTable !== '') {
           <?php if ($table === 'orders'): ?>
             <span><?=$row['fulfillment'] === 'pickup' ? 'Самовывоз' : 'Доставка'?><?=$row['address'] !== '' ? ' · ' . e($row['address']) : ''?></span>
             <span>Сумма: <?=number_format((int)$row['total'], 0, '.', ' ')?> ₸</span>
+            <span>Оплата: <?=e(match((string)$row['payment_status']){'paid'=>'Подтверждена','pending'=>'Ожидает FreedomPay','failed'=>'Не завершена',default=>'Не списывалась'})?><?=!empty($row['payment_reference'])?' · '.e($row['payment_reference']):''?></span>
             <?php if (!empty($row['items_summary'])): ?><span>Состав: <?=e($row['items_summary'])?></span><?php endif ?>
             <?php if (!empty($row['comment'])): ?><span>Комментарий: <?=e($row['comment'])?></span><?php endif ?>
           <?php elseif ($table === 'bookings'): ?>

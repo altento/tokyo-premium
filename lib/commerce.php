@@ -411,6 +411,45 @@ function commerce_migrate(PDO $pdo): void
             throw $error;
         }
     }
+
+    // v16 adds optional hosted card payments. Existing orders remain unpaid.
+    if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=16')->fetchColumn()) {
+        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        try {
+            $columns = $pdo->query('PRAGMA table_info(orders)')->fetchAll(PDO::FETCH_COLUMN, 1);
+            foreach ([
+                'payment_status' => "TEXT NOT NULL DEFAULT 'unpaid' CHECK(payment_status IN ('unpaid','pending','paid','failed'))",
+                'payment_provider' => "TEXT NOT NULL DEFAULT ''",
+                'payment_access_hash' => 'TEXT',
+                'payment_reference' => "TEXT NOT NULL DEFAULT ''",
+            ] as $column => $definition) {
+                if (!in_array($column, $columns, true)) $pdo->exec('ALTER TABLE orders ADD COLUMN ' . $column . ' ' . $definition);
+            }
+            $pdo->exec("CREATE TABLE IF NOT EXISTS order_payments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+                attempt_no INTEGER NOT NULL CHECK(attempt_no > 0),
+                provider TEXT NOT NULL CHECK(provider='freedompay'),
+                provider_order_id TEXT NOT NULL UNIQUE,
+                provider_payment_id TEXT UNIQUE,
+                amount INTEGER NOT NULL CHECK(amount > 0),
+                currency TEXT NOT NULL DEFAULT 'KZT' CHECK(currency='KZT'),
+                checkout_url TEXT NOT NULL DEFAULT '',
+                status TEXT NOT NULL DEFAULT 'creating' CHECK(status IN ('creating','pending','paid','failed')),
+                last_error TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                paid_at TEXT,
+                UNIQUE(order_id,attempt_no)
+            )");
+            $pdo->exec('CREATE INDEX IF NOT EXISTS idx_order_payments_status ON order_payments(status,updated_at)');
+            $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(16)');
+            $pdo->commit();
+        } catch (Throwable $error) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $error;
+        }
+    }
 }
 
 function commerce_actor_key(?int $userId, string $sessionId): string

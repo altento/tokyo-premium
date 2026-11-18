@@ -212,7 +212,7 @@ if (!empty($_SESSION['user_id'])) {
             if($offerRow['code']&&!isset($personalOffers[$offerId]['codes'][$offerRow['code']])&&commerce_date_window_is_active($offerRow['code_starts_at']?:null,$offerRow['code_ends_at']?:null,(string)$offerRow['timezone']))$personalOffers[$offerId]['codes'][$offerRow['code']]=$offerRow['code'];
         }
         $personalOffers=array_values(array_filter($personalOffers,static fn(array $offer):bool=>(bool)$offer['codes']));
-        $query = $pdo->prepare('SELECT id,total,status,fulfillment,created_at FROM orders WHERE user_id=? ORDER BY id DESC LIMIT 50');
+        $query = $pdo->prepare('SELECT id,total,status,payment_status,payment_provider,fulfillment,created_at FROM orders WHERE user_id=? ORDER BY id DESC LIMIT 50');
         $query->execute([$_SESSION['user_id']]);
         $orders = $query->fetchAll();
         if ($orders) {
@@ -415,7 +415,8 @@ header_html();
                       <?php if ($previewItem): ?><img class="account-order-preview" src="<?=e($previewItem['image_url'])?>" alt="<?=e($previewItem['item_name'])?>" loading="lazy" decoding="async"><?php endif ?>
                       <div class="account-order-content">
                         <div class="account-order-heading"><span>Заказ №<?= (int)$order['id']?></span><strong><?=number_format((int)$order['total'],0,'.',' ')?> ₸</strong></div>
-                        <p class="account-order-meta"><span class="account-status-label" data-status="<?=e($orderStatus)?>"><?=e($orderStatusLabels[$orderStatus] ?? $orderStatus)?></span><span class="account-order-meta-separator" aria-hidden="true">·</span> <?=$order['fulfillment']==='pickup'?'Самовывоз':'Доставка'?> <span class="account-order-meta-separator" aria-hidden="true">·</span> <?=e($order['created_at'])?></p>
+                        <p class="account-order-meta"><span class="account-status-label" data-status="<?=e($orderStatus)?>"><?=e($orderStatusLabels[$orderStatus] ?? $orderStatus)?></span><span class="account-order-meta-separator" aria-hidden="true">·</span> Оплата: <?=e(match((string)$order['payment_status']){'paid'=>'оплачено','pending'=>'ожидается','failed'=>'не прошла',default=>'не списывалась'})?> <span class="account-order-meta-separator" aria-hidden="true">·</span> <?=$order['fulfillment']==='pickup'?'Самовывоз':'Доставка'?> <span class="account-order-meta-separator" aria-hidden="true">·</span> <?=e($order['created_at'])?></p>
+                        <?php if (freedompay_is_enabled() && $order['payment_provider']==='freedompay' && $order['payment_status']!=='paid'): ?><form class="payment-retry-form" data-payment-retry><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="order_id" value="<?=(int)$order['id']?>"><button class="button secondary" type="submit">Продолжить оплату ↗</button><p class="form-status" role="status" aria-live="polite"></p></form><?php endif ?>
                         <details class="order-item-details">
                           <summary>Состав заказа · <?=count($order['items'])?> <?=count($order['items'])===1?'позиция':'позиций'?></summary>
                           <ul><?php foreach ($order['items'] as $item): ?><li><?=e($item['item_name'])?> · <?= (int)$item['quantity']?> × <?=number_format((int)$item['price'],0,'.',' ')?> ₸ = <?=number_format((int)$item['price']*(int)$item['quantity'],0,'.',' ')?> ₸</li><?php endforeach ?></ul>

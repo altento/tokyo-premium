@@ -17,6 +17,16 @@ if($_SERVER['REQUEST_METHOD']!=='POST') answer(405,['ok'=>false,'message'=>'Ме
 check_csrf();
 $type=(string)($_POST['type']??'');
 $GLOBALS['api_idempotency_type']=$type;
+$paymentMethod='upon_receipt';
+$paymentConfig=null;
+if($type==='order'){
+ $paymentMethod=(string)($_POST['payment_method']??'upon_receipt');
+ if(!in_array($paymentMethod,['upon_receipt','freedompay'],true))answer(422,['ok'=>false,'message'=>'Выберите доступный способ оплаты.']);
+ if($paymentMethod==='freedompay'){
+  try{$paymentConfig=freedompay_config();}catch(Throwable $configError){error_log('FreedomPay configuration is invalid.');answer(503,['ok'=>false,'message'=>'Онлайн-оплата временно недоступна. Выберите оплату при получении.']);}
+  if($paymentConfig===null)answer(503,['ok'=>false,'message'=>'Онлайн-оплата ещё не подключена. Выберите оплату при получении.']);
+ }
+}
 if($type==='secret_unlock'){
  $code=trim((string)($_POST['code']??''));if($code===''||strlen($code)>80)answer(422,['ok'=>false,'message'=>'Код имеет неверный формат.']);
  $userId=isset($_SESSION['user_id'])?(int)$_SESSION['user_id']:null;$adminId=isset($_SESSION['admin_id'])?(int)$_SESSION['admin_id']:null;
@@ -108,6 +118,15 @@ try {
   }
   $input=['name'=>$name,'phone'=>$phone,'address'=>$address,'fulfillment'=>$fulfillment,'comment'=>(string)($_POST['comment']??''),'items'=>$items,'custom_sets'=>$customSets,'promo_code'=>(string)($_POST['promo_code']??''),'secret_code'=>(string)($_POST['secret_code']??$sessionSecretCode) ?: $sessionSecretCode,'is_admin'=>$sessionAdminId>0,'gift_dish_id'=>$giftId===null?null:(int)$giftId,'gift_quantity'=>(int)$giftQuantity,'points_to_redeem'=>(int)$points];
   $response=commerce_persist_order($pdo,$input,$sessionUserId,commerce_actor_key($sessionUserId,session_id()));
+  if($paymentMethod==='freedompay'){
+   if((int)$response['total']<1)throw new DomainException('Для нулевой суммы онлайн-оплата не требуется.');
+   $paymentToken=bin2hex(random_bytes(32));
+   $updatePayment=$pdo->prepare("UPDATE orders SET payment_status='pending',payment_provider='freedompay',payment_access_hash=? WHERE id=?");
+   $updatePayment->execute([hash('sha256',$paymentToken),(int)$response['id']]);
+   $response['payment_method']='freedompay';$response['payment_status']='pending';$response['payment_token']=$paymentToken;
+   $response['payment_test_mode']=(bool)$paymentConfig['test_mode'];$response['demo_only']=(bool)$paymentConfig['test_mode'];
+   $response['message']='Заказ №'.(int)$response['id'].' подготовлен. Открываем защищённую страницу оплаты FreedomPay.'.($paymentConfig['test_mode']?' Используется тестовый режим — деньги не списываются.':'');
+  }else{$response['payment_method']='upon_receipt';$response['payment_status']='unpaid';}
   if($idempotencyToken!==''){$json=json_encode($response,JSON_UNESCAPED_UNICODE);$q=$pdo->prepare('UPDATE api_order_requests SET order_id=?,response_json=?,response_status=201 WHERE token=?');$q->execute([$response['id'],$json,$idempotencyToken]);}
   $pdo->commit();answer(201,$response);
  }

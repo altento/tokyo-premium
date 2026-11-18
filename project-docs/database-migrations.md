@@ -1,6 +1,6 @@
 # SQLite schema and migration notes
 
-Updated 2026-11-18
+Updated 2026-11-19
 
 The app runs `schema.sql` with `CREATE TABLE/INDEX IF NOT EXISTS`, then records explicit upgrades in `app_migrations`. Existing SQLite files are upgraded additively; migrations avoid deleting menu, user, order or booking data.
 
@@ -21,6 +21,7 @@ The app runs `schema.sql` with `CREATE TABLE/INDEX IF NOT EXISTS`, then records 
 | 13 | Assign dedicated generated WebP imagery to unchanged seeded offers without overwriting administrator edits, and add a 30-day demo Chef's Secret Drop linked to the active scallop nigiri item. |
 | 14 | Save the selected custom-set format slug on each order line and backfill older set lines by their saved format name. Existing order snapshots and component rows remain intact, allowing account repeat-order to rebuild only currently available items at current catalogue prices. |
 | 15 | Add atomic administrator login cooldown buckets. SQLite stores keyed hashes only, with a 15-minute IP window and a higher account threshold; bootstrap readiness now requires v15 and the attempt table, so older v13/v14 databases continue through later migrations. |
+| 16 | Add optional order payment status, per-attempt FreedomPay records and a hashed payment capability. Existing orders remain unpaid; card data and credentials are not stored. |
 
 The account notification helpers are `commerce_account_notifications($pdo, $userId, $limit)` and `commerce_mark_account_notification_read($pdo, $userId, $notificationId)`. The mark-read helper only updates rows owned by the supplied user and is safe to retry. The authenticated `account.php` page exposes the `notification-read` POST action and checks CSRF before invoking the helper.
 

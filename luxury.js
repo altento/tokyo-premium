@@ -417,6 +417,20 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch('api.php', { method: 'POST', body: data, headers });
       const result = await response.json();
       if (!response.ok || !result.ok) throw new Error(result.message || 'Не удалось отправить форму.');
+      let paymentRedirect = '';
+      if (type === 'order' && result.payment_method === 'freedompay' && result.payment_token) {
+        const paymentData = new FormData();
+        paymentData.set('csrf', data.get('csrf') || '');
+        paymentData.set('payment_token', result.payment_token);
+        const paymentResponse = await fetch('payment.php?action=start', {
+          method: 'POST', body: paymentData, headers: { 'X-CSRF-Token': data.get('csrf') || '' }
+        });
+        const paymentResult = await paymentResponse.json();
+        if (!paymentResponse.ok || !paymentResult.ok || (!paymentResult.paid && !paymentResult.redirect_url)) {
+          throw new Error(paymentResult.message || 'Не удалось открыть страницу оплаты. Заказ сохранён; повторите попытку.');
+        }
+        paymentRedirect = paymentResult.redirect_url || '';
+      }
       if (type === 'order') {
         cart.clearCheckoutRequestKey();
         cart.clear();
@@ -424,7 +438,8 @@ document.addEventListener('DOMContentLoaded', () => {
         else form.reset();
       } else if (type === 'booking') { form.reset(); delete form.dataset.bookingRequestKey; }
       else if (type === 'review') form.reset();
-      if (status) { status.textContent = result.message; status.className = 'form-status success'; }
+      if (status) { status.textContent = paymentRedirect ? (result.payment_test_mode ? 'Открываем тестовую страницу оплаты. Деньги не списываются.' : 'Открываем защищённую страницу оплаты.') : result.message; status.className = 'form-status success'; }
+      if (paymentRedirect) window.location.assign(paymentRedirect);
     } catch (error) {
       if (status) { status.textContent = error.message; status.className = 'form-status error'; }
     } finally {
@@ -432,6 +447,33 @@ document.addEventListener('DOMContentLoaded', () => {
       form.dataset.submitting = 'false';
       if (button) button.disabled = type === 'order' ? !(cart?.get().length || cart?.getCustomSets().length) : false;
     }
+    });
+  });
+  document.querySelectorAll('form[data-payment-retry]').forEach(form => {
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      const button = form.querySelector('button[type="submit"]');
+      const status = form.querySelector('.form-status');
+      if (!button || button.disabled) return;
+      button.disabled = true;
+      if (status) { status.textContent = 'Подготавливаем платёжную страницу…'; status.className = 'form-status'; }
+      try {
+        const data = new FormData(form);
+        const response = await fetch('payment.php?action=start', { method:'POST', body:data, headers:{'X-CSRF-Token':data.get('csrf') || ''} });
+        const result = await response.json();
+        if (!response.ok || !result.ok) throw new Error(result.message || 'Не удалось продолжить оплату.');
+        if (result.paid) {
+          if (status) { status.textContent = 'Заказ уже оплачен.'; status.className = 'form-status success'; }
+          button.hidden = true;
+          return;
+        }
+        if (!result.redirect_url) throw new Error('Ссылка на оплату не получена.');
+        window.location.assign(result.redirect_url);
+      } catch (error) {
+        if (status) { status.textContent = error.message; status.className = 'form-status error'; }
+      } finally {
+        if (!button.hidden) button.disabled = false;
+      }
     });
   });
 });

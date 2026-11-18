@@ -3,7 +3,25 @@ CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS categories (slug TEXT PRIMARY KEY, name TEXT NOT NULL, sort_order INTEGER NOT NULL DEFAULT 0);
 CREATE TABLE IF NOT EXISTS dishes (id INTEGER PRIMARY KEY AUTOINCREMENT, category TEXT NOT NULL REFERENCES categories(slug), name TEXT NOT NULL, description TEXT NOT NULL DEFAULT '', weight TEXT NOT NULL DEFAULT '', price INTEGER NOT NULL DEFAULT 0 CHECK(price >= 0), image_url TEXT NOT NULL DEFAULT '', featured INTEGER NOT NULL DEFAULT 0, active INTEGER NOT NULL DEFAULT 1, sort_order INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE COLLATE NOCASE, full_name TEXT NOT NULL, password_hash TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
-CREATE TABLE IF NOT EXISTS orders (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER REFERENCES users(id) ON DELETE SET NULL, customer_name TEXT NOT NULL, phone TEXT NOT NULL, address TEXT NOT NULL DEFAULT '', fulfillment TEXT NOT NULL DEFAULT 'delivery' CHECK(fulfillment IN ('delivery','pickup')), comment TEXT NOT NULL DEFAULT '', total INTEGER NOT NULL CHECK(total >= 0), status TEXT NOT NULL DEFAULT 'new' CHECK(status IN ('new','confirmed','preparing','ready','completed','cancelled')), created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE IF NOT EXISTS orders (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER REFERENCES users(id) ON DELETE SET NULL, customer_name TEXT NOT NULL, phone TEXT NOT NULL, address TEXT NOT NULL DEFAULT '', fulfillment TEXT NOT NULL DEFAULT 'delivery' CHECK(fulfillment IN ('delivery','pickup')), comment TEXT NOT NULL DEFAULT '', total INTEGER NOT NULL CHECK(total >= 0), status TEXT NOT NULL DEFAULT 'new' CHECK(status IN ('new','confirmed','preparing','ready','completed','cancelled')), payment_status TEXT NOT NULL DEFAULT 'unpaid' CHECK(payment_status IN ('unpaid','pending','paid','failed')), payment_provider TEXT NOT NULL DEFAULT '', payment_access_hash TEXT, payment_reference TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE IF NOT EXISTS order_payments (
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+ attempt_no INTEGER NOT NULL CHECK(attempt_no > 0),
+ provider TEXT NOT NULL CHECK(provider='freedompay'),
+ provider_order_id TEXT NOT NULL UNIQUE,
+ provider_payment_id TEXT UNIQUE,
+ amount INTEGER NOT NULL CHECK(amount > 0),
+ currency TEXT NOT NULL DEFAULT 'KZT' CHECK(currency='KZT'),
+ checkout_url TEXT NOT NULL DEFAULT '',
+ status TEXT NOT NULL DEFAULT 'creating' CHECK(status IN ('creating','pending','paid','failed')),
+ last_error TEXT NOT NULL DEFAULT '',
+ created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ paid_at TEXT,
+ UNIQUE(order_id,attempt_no)
+);
+CREATE INDEX IF NOT EXISTS idx_order_payments_status ON order_payments(status,updated_at);
 CREATE TABLE IF NOT EXISTS order_items (id INTEGER PRIMARY KEY AUTOINCREMENT, order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE, dish_id INTEGER REFERENCES dishes(id) ON DELETE SET NULL, item_name TEXT NOT NULL, price INTEGER NOT NULL, quantity INTEGER NOT NULL CHECK(quantity > 0), custom_set_variant_slug TEXT);
 CREATE TABLE IF NOT EXISTS bookings (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER REFERENCES users(id) ON DELETE SET NULL, guest_name TEXT NOT NULL, guest_email TEXT NOT NULL DEFAULT '', phone TEXT NOT NULL, guest_count INTEGER NOT NULL CHECK(guest_count BETWEEN 1 AND 12), booking_date TEXT NOT NULL, booking_time TEXT NOT NULL, zone TEXT NOT NULL DEFAULT '', preferred_table TEXT NOT NULL DEFAULT '', format TEXT NOT NULL DEFAULT '', message TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'new' CHECK(status IN ('new','confirmed','completed','cancelled')), created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE IF NOT EXISTS email_outbox (id INTEGER PRIMARY KEY AUTOINCREMENT, event_key TEXT NOT NULL UNIQUE, booking_id INTEGER REFERENCES bookings(id) ON DELETE SET NULL, recipient TEXT NOT NULL, subject TEXT NOT NULL, body TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','sending','sent','failed')), attempts INTEGER NOT NULL DEFAULT 0 CHECK(attempts >= 0), locked_at TEXT, sent_at TEXT, last_error TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);

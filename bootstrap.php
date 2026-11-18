@@ -9,6 +9,7 @@ require_once __DIR__.'/lib/commerce.php';
 require_once __DIR__.'/lib/notifications.php';
 require_once __DIR__.'/lib/booking_mail.php';
 require_once __DIR__.'/lib/admin_auth.php';
+require_once __DIR__.'/lib/freedompay.php';
 header('X-Content-Type-Options: nosniff'); header('Referrer-Policy: strict-origin-when-cross-origin'); header('X-Frame-Options: DENY');
 function db(): PDO
 {
@@ -57,7 +58,7 @@ function db(): PDO
         // are present.
         $ready = false;
         try {
-            $ready = (bool)$connection->query("SELECT 1 FROM app_migrations WHERE version=15")->fetchColumn()
+            $ready = (bool)$connection->query("SELECT 1 FROM app_migrations WHERE version=16")->fetchColumn()
                 && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='api_order_requests'")->fetchColumn()
                 && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='api_booking_requests'")->fetchColumn()
                 && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='booking_email_rate_limits'")->fetchColumn()
@@ -65,7 +66,8 @@ function db(): PDO
                 && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='dish_pairings'")->fetchColumn()
                 && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='user_notifications'")->fetchColumn()
                 && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='booking_status_events'")->fetchColumn()
-                && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='admin_login_attempts'")->fetchColumn();
+                && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='admin_login_attempts'")->fetchColumn()
+                && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='order_payments'")->fetchColumn();
         } catch (Throwable) {
             $ready = false;
         }
