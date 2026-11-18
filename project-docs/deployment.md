@@ -31,9 +31,9 @@ Push to `main` and wait for the Pages workflow to finish. Inspect the workflow s
 
 ## Latest verified publication
 
-- Published code commit: `261ec7e85f5e320cb50c60a733482c48078e3a79`.
-- Workflow: [run 44307539160](https://github.com/altento/tokyo-premium/actions/runs/44307539160) — build and deploy both succeeded. Existing PHP/SQLite checks and static export passed. The full browser/visual suite was skipped by the fast push profile; use `workflow_dispatch` with `full_qa=true` only when a full pass is useful.
-- Cache-busted public home, Offers and Menu returned HTTP 200. Fresh local Pages captures of all 11 reference page types remain paired with their approved PNGs in `project-docs/visual-qa/full-static-2026-11-18/`; the review documents material differences and remaining work. This is not a pixel-perfect comparison or PHP-host verification.
+- Published implementation commit: `42428db0a3f41cf213e271627547a507082db6a4`.
+- Workflow for that release: [run 44344798353](https://github.com/altento/tokyo-premium/actions/runs/44344798353) — build and deploy succeeded. The full browser/visual suite was skipped by the fast push profile.
+- Published `robots.txt` and `sitemap.xml` returned HTTP 200. The sitemap parsed as XML and lists 35 public routes, excluding the browser-local cart/account and restricted Secret Menu dish routes. Fresh local Pages captures of all 11 reference page types remain paired with their approved PNGs in `project-docs/visual-qa/full-static-2026-11-18/`; the review documents material differences and remaining work. This is not a pixel-perfect comparison or PHP-host verification.
 - This verifies the published static demo. PHP-only admin features remain unavailable on Pages; browser storage is not durable/server-synced, and no payment or live table availability is enabled.
 
 The latest verification record is in [testing-report.md](testing-report.md). Full-page static screenshots exist for all 11 page types, with a paired visual review in [the comparison report](visual-qa/full-static-2026-11-18/comparison.md). PHP web hosting, payment, live seating, and outbound restaurant email remain unconfigured.
