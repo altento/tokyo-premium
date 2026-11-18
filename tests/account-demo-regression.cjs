@@ -31,6 +31,14 @@ async function run() {
     await page.reload({ waitUntil: 'domcontentloaded' });
     assert.equal(await page.locator('#demo-orders .demo-order').count(), 3, 'first visit opens with three clearly labeled local demo orders');
     assert.equal(await page.locator('#demo-bookings article').count(), 1, 'first visit includes one labeled demo booking request');
+    assert.equal(await page.locator('#demo-addresses article').count(), 2, 'first visit includes two fictional addresses in the browser-local example');
+    assert.match(await page.locator('#demo-addresses').innerText(), /Учебный пример.*Учебный пример/s, 'example addresses are visibly marked as fictional');
+    assert.equal(await page.locator('#demo-addresses-preview article').count(), 2, 'dashboard overview surfaces the two saved addresses');
+    assert.match(await page.locator('#demo-addresses-preview').innerText(), /Учебный пример.*Учебный пример/s, 'dashboard address preview keeps its fictional-data label');
+    await page.locator('.account-addresses-preview [data-account-quick-target="addresses"]').click();
+    assert.ok(await page.locator('[data-account-tab="addresses"]').evaluate(button => button.classList.contains('active')), 'address overview action opens the existing address manager');
+    await page.locator('[data-account-tab="history"]').click();
+    assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('tokyo-demo-addresses') || '[]').length), 2, 'example addresses are stored only in this browser');
     assert.equal(await page.locator('#demo-notifications .account-notification-card').count(), 4, 'local order and booking events appear in the separate demo notification center');
     assert.match(await page.locator('#demo-notifications').innerText(), /ресторан его не получил, стол не подтверждён/i, 'demo booking notification does not claim a real confirmation');
     assert.equal(await page.locator('[data-account-stat="notifications"]').innerText(), '4', 'unread local demo notifications update the dashboard metric');
@@ -170,6 +178,10 @@ async function run() {
     assert.equal(await page.locator('[data-tp-loyalty-points]').innerText(), '0', 'clearing local orders refreshes the demo loyalty balance');
     assert.equal(await page.locator('[data-account-stat="bookings"]').innerText(), '0', 'clear-data action removes seeded booking');
     assert.equal(await page.locator('[data-account-stat="notifications"]').innerText(), '0', 'clear-data action removes local notification and read state');
+    assert.equal(await page.locator('#demo-addresses article').count(), 0, 'clear-data action removes example addresses');
+    assert.equal(await page.locator('#demo-addresses-preview article').count(), 0, 'clearing browser data removes the dashboard address preview');
+    await page.locator('[data-account-tab="history"]').click();
+    assert.ok(await page.locator('#demo-addresses-preview-empty').isVisible(), 'empty dashboard address preview explains the local state');
     assert.equal(await page.evaluate(() => window.TokyoCart.getFavorites().length), 0, 'clear-data action removes seeded favorites');
     assert.equal(await page.evaluate(() => localStorage.getItem('tokyo-demo-account-seed-dismissed')), '1', 'clear-data action persists the choice to keep the profile empty');
     assert.equal(await page.evaluate(() => localStorage.getItem('tokyo-demo-read-notifications')), null, 'clear-data action also clears notification read state');
@@ -178,6 +190,8 @@ async function run() {
     assert.ok(await page.locator('.account-demo-seed').isVisible(), 'cleared account offers an explicit way to restore the sample');
     await page.locator('[data-account-demo-seed]').click();
     assert.equal(await page.locator('#demo-orders .demo-order').count(), 3, 'user can opt into the sample again after clearing');
+    assert.equal(await page.locator('#demo-addresses article').count(), 2, 'restoring the sample brings back its example addresses');
+    assert.equal(await page.locator('#demo-addresses-preview article').count(), 2, 'restoring the sample repopulates the dashboard address preview');
     assert.equal(await page.evaluate(() => localStorage.getItem('tokyo-demo-account-seed-dismissed')), null, 'explicitly restoring the sample removes the dismissal marker');
 
     const preservedPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
@@ -186,6 +200,7 @@ async function run() {
     await preservedPage.addInitScript(() => {
       localStorage.setItem('tokyo-demo-profile', JSON.stringify({ name: 'Сохранённый гость', phone: '' }));
       localStorage.setItem('tokyo-demo-orders', JSON.stringify([{ orderId: '<img src=x onerror=alert(1)>', date: 'Локальная запись', name: 'Сохранённый гость', count: 1, subtotal: 1200, total: 1200, fulfillment: 'pickup', items: [{ id: 3, qty: 1, unitPrice: 1200, lineTotal: 1200 }] }]));
+      localStorage.setItem('tokyo-demo-addresses', JSON.stringify(['<img src=x onerror=alert(1)>']));
     });
     const preservedResponse = await preservedPage.goto(`${base}/account.html`, { waitUntil: 'domcontentloaded' });
     assert.equal(preservedResponse?.status(), 200, 'account with existing local data loads');
@@ -196,6 +211,9 @@ async function run() {
     assert.equal(await preservedPage.locator('#demo-orders .account-demo-record-badge').count(), 0, 'an existing user order is not relabeled as a system sample');
     assert.equal(await preservedPage.evaluate(() => JSON.parse(localStorage.getItem('tokyo-demo-profile') || '{}').name), 'Сохранённый гость', 'existing local profile data is preserved');
     assert.ok(await preservedPage.locator('.account-demo-seed').isVisible(), 'sample opt-in remains available when user data already exists');
+    await preservedPage.locator('[data-account-demo-seed]').click();
+    assert.deepEqual(await preservedPage.evaluate(() => JSON.parse(localStorage.getItem('tokyo-demo-addresses') || '[]')), ['<img src=x onerror=alert(1)>'], 'restoring examples never overwrites an existing saved address');
+    assert.equal(await preservedPage.locator('#demo-addresses-preview img').count(), 0, 'browser-local address text is escaped in the dashboard preview');
     assert.equal(preservedErrors.length, 0, `no errors with existing data: ${preservedErrors.join('; ')}`);
     await preservedPage.close();
     assert.equal(errors.length, 0, `no browser exceptions: ${errors.join('; ')}`);

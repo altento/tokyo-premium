@@ -54,7 +54,8 @@ document.addEventListener('DOMContentLoaded',()=>{
    if(overviewFavs){const limit=Number(overviewFavs.dataset.accountFavoritesLimit)||3;overviewFavs.innerHTML=cardRows.slice(0,limit).join('');if(overviewEmpty){overviewEmpty.hidden=saved.length>0;if(!saved.length)overviewEmpty.innerHTML=emptyFavorites}}
    const count=$('#account-favorite-count');if(count)count.textContent=String(saved.length);
   }
-  const addresses=$('#demo-addresses');if(addresses){const rows=read('tokyo-demo-addresses');addresses.innerHTML=rows.length?rows.map((v,i)=>'<article><div><strong>Адрес '+(i+1)+'</strong><p>'+esc(v)+'</p></div><button class="text-button" type="button" data-address-remove="'+i+'">Удалить</button></article>').join(''):'<p class="menu-note">Адресов пока нет.</p>'}
+  const addressRows=read('tokyo-demo-addresses'),addressList=$('#demo-addresses');if(addressList){addressList.innerHTML=addressRows.length?addressRows.map((v,i)=>'<article><div><strong>Адрес '+(i+1)+' · только этот браузер</strong><p>'+esc(v)+'</p></div><button class="text-button" type="button" data-address-remove="'+i+'">Удалить</button></article>').join(''):'<p class="menu-note">Адресов пока нет.</p>'}
+  const addressPreview=$('#demo-addresses-preview'),addressPreviewEmpty=$('#demo-addresses-preview-empty');if(addressPreview){addressPreview.innerHTML=addressRows.slice(0,2).map((value,index)=>'<article><span class="account-address-index">0'+(index+1)+'</span><div><strong>Адрес '+(index+1)+' · только этот браузер</strong><p>'+esc(value)+'</p></div></article>').join('');if(addressPreviewEmpty)addressPreviewEmpty.hidden=addressRows.length>0}
   const pform=$('[data-local-form="profile"]'),displayName=$('#demo-display-name');
   if(pform||displayName){const profile=(()=>{try{return JSON.parse(localStorage.getItem('tokyo-demo-profile')||'{}')}catch{return{}}})();if(pform){pform.elements.name.value=profile.name||'';pform.elements.phone.value=profile.phone||''}if(displayName)displayName.textContent=profile.name?('Здравствуйте, '+profile.name+'.'):'История, избранное и привилегии в одном месте.'}
   const statNodes=$$('[data-account-stat]');
@@ -101,6 +102,11 @@ document.addEventListener('DOMContentLoaded',()=>{
     const total=items.reduce((sum,item)=>sum+item.lineTotal,0);
     additions.push({orderId:example.orderId,date:example.date,name:'Демо-гость',count:items.reduce((sum,item)=>sum+item.qty,0),subtotal:total,total,fulfillment:example.fulfillment,items,demo:true});
    }
+   let addressesAdded=0;
+   if(localStorage.getItem('tokyo-demo-addresses')===null){
+    const demoAddresses=['Учебный пример · Астана, квартал Ханами, дом 17','Учебный пример · Астана, улица Камелии, дом 8'];
+    localStorage.setItem('tokyo-demo-addresses',JSON.stringify(demoAddresses));addressesAdded=demoAddresses.length;
+   }
    localStorage.removeItem('tokyo-demo-account-seed-dismissed');
    localStorage.setItem('tokyo-demo-account-seeded','1');
    localStorage.setItem('tokyo-demo-orders',JSON.stringify([...current,...additions]));
@@ -112,7 +118,7 @@ document.addEventListener('DOMContentLoaded',()=>{
    const favorites=window.TokyoCart?.getFavorites?.()||[];
    window.TokyoCart?.setFavorites?.([...new Set([...favorites,3,6,19])]);
    render();document.dispatchEvent(new Event('tokyo-demo-data-updated'));
-   if(status){const changed=[];if(additions.length)changed.push('добавлено учебных заказов: '+additions.length);if(bookingAdded)changed.push('добавлен учебный запрос на бронь');status.textContent=changed.length?'В '+changed.join(', ')+'. Блюда избранного взяты из каталога. Всё сохранено только в этом браузере; очистить можно в настройках.':'Учебный пример уже заполнен. Данные остаются только в этом браузере.'}
+   if(status){const changed=[];if(additions.length)changed.push('добавлено учебных заказов: '+additions.length);if(bookingAdded)changed.push('добавлен учебный запрос на бронь');if(addressesAdded)changed.push('добавлено учебных адресов: '+addressesAdded);status.textContent=changed.length?'В '+changed.join(', ')+'. Блюда избранного взяты из каталога. Всё сохранено только в этом браузере; очистить можно в настройках.':'Учебный пример уже заполнен. Данные остаются только в этом браузере.'}
    const seedPanel=$('.account-demo-seed');if(seedPanel)seedPanel.hidden=true
   }catch{if(status)status.textContent='Не удалось сохранить учебный пример в локальном хранилище браузера.'}
  });

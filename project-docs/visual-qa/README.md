@@ -283,3 +283,11 @@ Compared `design-references/04-omakase.png` with fresh PHP and static captures a
 ## 2026-11-18 — account dashboard follow-up
 
 Current evidence for the account layout update is under `account-dashboard-layout-2026-11-18/`: populated desktop and phone captures plus a comparison against reference 11. This follows the earlier `account-refresh-2026-11-17/` pass; the newer captures should be used for the current static layout. The narrow account regression passed and PHP syntax passed. The screenshots show a browser-local demo, not an authenticated account or live server history.
+
+## 2026-11-18 — full static route comparison
+
+`full-static-2026-11-18/` contains fresh full-page static captures for all 11 reference page types at 1440 px and 390 px, plus two paired contact sheets visually reviewed against `design-references/01-home.png`–`11-account.png`. Page-specific differences and limits are in that folder's `comparison.md`. The page-level static route run passed before capture. Cart screenshots in this set intentionally show an empty first visit; `cart-progressive-checkout-2026-11-17/` contains populated, delivery, pickup and validation states. This does not establish PHP rendering parity, pixel identity, or responsive acceptance at every width.
+
+## 2026-11-18 — account dashboard addresses
+
+`account-addresses-overview-2026-11-18/` contains fresh desktop/mobile account captures with two clearly fictional saved addresses surfaced in the overview. The address button opens the existing editor; the focused browser regression passed clear/restore and escaped-text cases. Marketing & Loyalty now has direct navigation to all nine management sections. Local PHP/SQLite integration was not available because the PHP CLI lacks PDO SQLite.

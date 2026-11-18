@@ -724,6 +724,15 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .account-favorites-overview-grid .add-to-cart{min-height:33px;padding:5px 9px;font-size:.68rem}
 .account-favorites-overview-empty{margin:0;color:var(--muted);font-size:.78rem;line-height:1.55}
 .account-favorites-overview-empty[hidden]{display:none}
+.account-addresses-preview-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.account-addresses-preview-list:empty{display:none}
+.account-addresses-preview-list article{display:flex;align-items:center;gap:13px;min-width:0;padding:13px 15px;border:1px solid rgba(202,165,107,.22);border-radius:7px;background:linear-gradient(110deg,#191410,#11100e)}
+.account-address-index{display:grid;flex:0 0 34px;width:34px;height:34px;place-items:center;border:1px solid rgba(202,165,107,.4);border-radius:50%;color:#e0bd78;font:500 .72rem/1 'Manrope',sans-serif}
+.account-addresses-preview-list article>div{min-width:0}
+.account-addresses-preview-list strong{display:block;color:#f3d9a6;font:500 .78rem/1.3 'Manrope',sans-serif}
+.account-addresses-preview-list p{margin:4px 0 0;color:#c9bba5;font-size:.76rem;line-height:1.45;overflow-wrap:anywhere}
+.account-addresses-preview .account-addresses-preview-list[hidden]{display:none}
+.account-addresses-preview .account-favorites-overview-heading .button{white-space:normal}
 @media(max-width:680px){
   .account-dashboard .account-order-card--purchase{grid-template-columns:58px minmax(0,1fr);gap:9px;padding:11px}
   .account-dashboard .account-order-card--purchase .account-order-preview{width:58px;border-radius:5px}
@@ -731,6 +740,9 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
   .account-demo-order .account-order-preview{width:58px;border-radius:5px}
   .account-demo-page .account-favorites-overview{gap:12px;padding:16px 13px}
   .account-favorites-overview-heading{align-items:flex-start}
+  .account-addresses-preview-list{grid-template-columns:1fr}
+  .account-addresses-preview .account-favorites-overview-heading{align-items:flex-start;flex-direction:column}
+  .account-addresses-preview .account-favorites-overview-heading .button{width:100%}
   .account-favorites-overview-heading h2{font-size:1.38rem}
   .account-favorites-overview-heading .kicker{font-size:.55rem}
   .account-favorites-overview-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}

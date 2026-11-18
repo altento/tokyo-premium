@@ -158,6 +158,14 @@ $accountFavoritesPreview = <<<'HTML'
   <div id="demo-favorites-preview" class="account-favorites-overview-grid" data-account-favorites-list data-account-favorites-limit="3" aria-live="polite"></div>
   <p id="demo-favorites-preview-empty" class="account-favorites-overview-empty" hidden>Пока нет сохранённых блюд. <a class="text-link" href="menu.html">Посмотреть меню ↗</a></p>
 </section>
+<section class="account-favorites-overview account-addresses-preview" aria-labelledby="account-addresses-preview-title">
+  <div class="account-favorites-overview-heading">
+    <div><span class="kicker">АДРЕСА ДОСТАВКИ · В ЭТОМ БРАУЗЕРЕ</span><h2 id="account-addresses-preview-title">Сохранённые адреса</h2></div>
+    <button class="button secondary" type="button" data-account-quick-target="addresses" aria-controls="demo-addresses">Управлять адресами ↗</button>
+  </div>
+  <div id="demo-addresses-preview" class="account-addresses-preview-list" aria-live="polite"></div>
+  <p id="demo-addresses-preview-empty" class="account-favorites-overview-empty" hidden>В этом браузере пока нет адресов. Добавьте учебный адрес в разделе «Адреса».</p>
+</section>
 HTML;
 $accountDashboardStart = '<section class="section account-dashboard"><div class="account-demo-layout">';
 $accountDashboardStartCount = 0;
