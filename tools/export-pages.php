@@ -165,8 +165,12 @@ $accountDashboardStartCount = 0;
 $overview = str_replace($accountDashboardStart, '', $overview, $accountDashboardStartCount);
 if ($accountDashboardStartCount !== 1) throw new RuntimeException('Could not separate the static account summary from its history panels.');
 $accountDemoContent = $privilege . $overview;
+$pageHeroMatch = [];
+if (!preg_match('/<section class="page-hero">.*?<\/section>/s', $account, $pageHeroMatch)) {
+    throw new RuntimeException('Static account page hero was not found.');
+}
 $accountHeroCount = 0;
-$account = preg_replace('/<section class="page-hero">.*?<\/section>/s', $accountHero, $account, 1, $accountHeroCount);
+$account = str_replace($pageHeroMatch[0], $accountHero, $account, $accountHeroCount);
 if ($accountHeroCount !== 1) throw new RuntimeException('Could not place the static account masthead.');
 $account = str_replace('<section class="section"><div class="account-demo-layout">', $accountDashboardStart, $account, $accountLayoutCount);
 if (($accountLayoutCount ?? 0) !== 1) throw new RuntimeException('Could not place the static account dashboard.');
