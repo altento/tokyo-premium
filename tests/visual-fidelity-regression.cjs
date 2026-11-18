@@ -243,6 +243,9 @@ async function visit(browser, base, route, mode, capture = false) {
     assert.equal(await page.locator('form.contact-form').count(), 1, `${mode} contact form is present`);
     assert.equal(await page.locator('.editorial-hero.contact-hero img').evaluate(image => image.naturalWidth > 0), true, `${mode} contact exterior photo loads`);
     assert.ok(await page.locator('.editorial-hero.contact-hero').evaluate(node => node.getBoundingClientRect().height <= 500), `${mode} contact hero stays compact`);
+    assert.equal(await page.locator('.contact-hero .button-row a').count(), 2, `${mode} contacts hero offers two direct actions`);
+    assert.match(await page.locator('.contact-hero .button-row a').nth(0).getAttribute('href'), /^tel:\+?[0-9]{7,15}$/, `${mode} primary contact action calls the configured demo number`);
+    assert.equal(await page.locator('.contact-hero .button-row a').nth(1).getAttribute('href'), '#contact-form', `${mode} secondary contact action moves to the message form`);
     assert.equal(await page.locator('.contact-facts li').count(), 3, `${mode} contact summary has phone, email and address`);
     assert.equal(await page.locator('.contact-hours-panel').count(), 1, `${mode} hours and booking action have a dedicated panel`);
     assert.equal(await page.locator('.contact-interior img').evaluate(image => image.naturalWidth > 0), true, `${mode} contact page loads its separate interior photograph`);

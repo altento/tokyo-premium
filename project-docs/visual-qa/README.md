@@ -107,7 +107,7 @@ The existing original chef photograph is now mirrored only in the Omakase hero, 
 
 ## 2026-11-16 contacts focused layout pass
 
-`contacts-redesign-2026-11-16/contacts-php-desktop.jpg`, `contacts-php-mobile.jpg`, `contacts-static-desktop.jpg` and `contacts-static-mobile.jpg` are fresh full-page captures from a contacts-only Playwright run. The page now has a compact hero, a left contact summary beside an original vector schematic, and a desktop form/hours/interior-photo row that stacks on mobile. PHP and static contacts checks passed with no page/console errors or horizontal overflow. Since the address is fictional, the map is explicitly decorative; the aerial map and route-banner details in `09-contacts.png` are not reproduced as real navigation. See `contacts-comparison-2026-11-16.md` for comparison notes and remaining differences.
+`contacts-current-2026-11-18/contacts-static-desktop.jpg` and `contacts-static-mobile.jpg` are fresh full-page captures against `design-references/09-contacts.png`. The hero now has direct call and message actions: the phone target follows the configured demo number, and the second action focuses the form. The static contacts visual-fidelity route passed at 1440 px and 390 px with required-field, loaded-image, map-disclaimer, mobile-bound, and no-console-error assertions. The map remains an original decorative SVG because the address is fictional; no false real route or social destination is added. This is a focused page comparison, not a pixel match or completion of the all-11 reference review. See `contacts-current-2026-11-18/comparison.md`.
 
 ## 2026-11-16 account and reviews visual follow-up
 
