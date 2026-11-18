@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-18 fast publish profile and admin/account/dish update
+
+Public commit `5af1fc8` passed GitHub Actions run [44271707784](https://github.com/altento/tokyo-premium/actions/runs/44271707784): cart state, PHP/SQLite integrity, loyalty ledger, account profile, gift quantity, personal offers, commerce pricing, Cyrillic admin/account search, set-format administration, PHP syntax, PHP form/admin smoke, static export, and Pages deployment. Chromium installation and the long browser/visual suite were skipped; those checks remain available via manual `workflow_dispatch` with `full_qa=true`. Cache-busted public home, account, and dish routes returned HTTP 200; account and dish markup included their scoped styles. This is not a claim that the full browser suite ran on this release.
+
 ## 2026-11-18 admin login protection and booking map
 
 Commit `59b9258` adds a transactional SQLite login cooldown (five failures per IP per 15 minutes and an account-level distributed-guessing limit), migration v15, and a wider desktop booking floorplan. Local PHP lint and `git diff --check` passed. The local PHP CLI lacks PDO SQLite, so the database/HTTP regression ran once in hosted CI instead of being rerun locally. GitHub Actions run [44263546045](https://github.com/altento/tokyo-premium/actions/runs/44263546045) passed PHP/SQLite integrity, admin regressions, PHP syntax, browser regression/visual QA, static export and deployment. A cache-busted published booking page returned HTTP 200 at 1440 px and 390 px with no browser errors or horizontal overflow. Screenshots and the scoped reference comparison are in `visual-qa/booking-floorplan-2026-11-18/`. This does not complete the broader visual or Tokyo Premium 2.0 acceptance work.
