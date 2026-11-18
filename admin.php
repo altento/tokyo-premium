@@ -574,7 +574,10 @@ $bookingMailReadiness = match ($bookingMailState) {
       <label>Цена, ₸<input name="price" type="number" min="1" max="500000" required></label>
       <label>Вес / объём<input name="weight" maxlength="30"></label>
       <label>Порядок<input name="sort_order" type="number" value="0"></label>
-      <label>Фото: assets/food/*.webp или HTTPS Unsplash<input name="image_url" type="text" required></label>
+      <label class="admin-span-all">Фото · локальный WebP или HTTPS Unsplash
+        <input name="image_url" type="text" required placeholder="assets/food/03-nigiri-salmon.webp" data-admin-image-source>
+        <span class="admin-image-preview" aria-live="polite"><img alt="" data-admin-image-preview hidden><span data-admin-image-hint>Предпросмотр появится после ввода адреса фото.</span></span>
+      </label>
       <label class="admin-span-all">Описание<textarea name="description" maxlength="1000" rows="2"></textarea></label>
       <label class="admin-check"><input type="checkbox" name="active" checked> В меню</label>
       <label class="admin-check"><input type="checkbox" name="featured"> Выбор шефа</label>
@@ -600,7 +603,10 @@ $bookingMailReadiness = match ($bookingMailState) {
               <label>Цена, ₸<input name="price" type="number" min="1" max="500000" value="<?=(int)$dish['price']?>" required></label>
               <label>Вес / объём<input name="weight" value="<?=e($dish['weight'])?>" maxlength="30"></label>
               <label>Порядок<input name="sort_order" type="number" value="<?=(int)$dish['sort_order']?>"></label>
-              <label>Фото<input name="image_url" value="<?=e($dish['image_url'])?>" required></label>
+              <label class="admin-span-all">Фото · локальный WebP или HTTPS Unsplash
+                <input name="image_url" value="<?=e($dish['image_url'])?>" required data-admin-image-source>
+                <span class="admin-image-preview" aria-live="polite"><img src="<?=e($dish['image_url'])?>" alt="" data-admin-image-preview hidden><span data-admin-image-hint>Загружаем предпросмотр…</span></span>
+              </label>
               <label class="admin-span-all">Описание<textarea name="description" maxlength="1000" rows="2"><?=e($dish['description'])?></textarea></label>
               <label class="admin-check"><input type="checkbox" name="active" <?=$dish['active'] ? 'checked' : ''?>> В меню</label>
               <label class="admin-check"><input type="checkbox" name="featured" <?=$dish['featured'] ? 'checked' : ''?>> Выбор шефа</label>

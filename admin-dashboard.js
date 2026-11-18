@@ -1,6 +1,41 @@
 (() => {
   const nav = document.querySelector('.admin-jump-nav');
   const search = document.getElementById('admin-search-q');
+  const imageInputs = document.querySelectorAll('[data-admin-image-source]');
+
+  for (const input of imageInputs) {
+    const form = input.closest('form');
+    const preview = form?.querySelector('[data-admin-image-preview]');
+    const hint = form?.querySelector('[data-admin-image-hint]');
+    if (!preview || !hint) continue;
+
+    const updatePreview = () => {
+      const value = input.value.trim();
+      const localAsset = /^assets\/food\/[A-Za-z0-9][A-Za-z0-9._-]*\.webp$/i.test(value);
+      let safeRemote = '';
+      try {
+        const url = new URL(value);
+        if (url.protocol === 'https:' && ['images.unsplash.com', 'plus.unsplash.com'].includes(url.hostname.toLowerCase())
+          && !url.username && !url.password && !url.hash && (!url.port || url.port === '443')) safeRemote = url.href;
+      } catch {}
+
+      const source = localAsset ? value : safeRemote;
+      preview.hidden = true;
+      preview.removeAttribute('src');
+      hint.textContent = value
+        ? (source ? 'Загружаем предпросмотр…' : 'Разрешены только локальные assets/food/*.webp или HTTPS images.unsplash.com.')
+        : 'Предпросмотр появится после ввода адреса фото.';
+      if (!source) return;
+
+      preview.onload = () => { preview.hidden = false; hint.textContent = 'Так фото будет выглядеть в меню.'; };
+      preview.onerror = () => { preview.hidden = true; hint.textContent = 'Не удалось загрузить фото. Проверьте путь и доступность файла.'; };
+      preview.src = source;
+    };
+
+    input.addEventListener('input', updatePreview);
+    updatePreview();
+  }
+
   if (!nav) return;
 
   const links = [...nav.querySelectorAll('a[href^="#"]')];
