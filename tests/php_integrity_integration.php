@@ -554,7 +554,7 @@ try {
  check($status===200 && str_contains($adminHtml,'Тестовый гость') && str_contains($adminHtml,'Новые брони'), 'admin search finds a booking and shows actionable notification counts');
   $adminCsrf=tokenFrom($adminHtml);[$status,$filteredAdminHtml]=adminPost(['csrf'=>$adminCsrf,'action'=>'admin-search','q'=>'строка-которой-нет-в-записях']);
   preg_match('~<section class="admin-card" id="bookings".*?</section>~s',$filteredAdminHtml,$filteredBookingSection);
-  check($status===200&&isset($filteredBookingSection[0])&&str_contains($filteredBookingSection[0],'0 найдено')&&str_contains($filteredAdminHtml,'href="?notification=bookings#bookings"'),'new-booking notification remains actionable while the saved search hides the booking');
+  check($status===200&&isset($filteredBookingSection[0])&&str_contains($filteredBookingSection[0],'0 записей · 1 из 1 страниц')&&str_contains($filteredAdminHtml,'href="?notification=bookings#bookings"'),'new-booking notification remains actionable while the saved search hides the booking');
   [$status,$notificationHtml]=request('/admin.php?notification=bookings');
   preg_match('~<section class="admin-card" id="bookings".*?</section>~s',$notificationHtml,$notificationBookingSection);
   check($status===200&&isset($notificationBookingSection[0])&&str_contains($notificationBookingSection[0],'Тестовый гость')&&str_contains($notificationHtml,'Показаны только новые заявки на бронь'),'booking notification clears stale search and shows the actionable new-booking filter');
