@@ -338,34 +338,6 @@ header_html();
       <?php if ($err): ?><p class="form-status error" role="alert"><?=e($err)?></p><?php endif ?>
       <?php if ($profileNotice): ?><p class="booking-confirmation-notice" role="status"><?=e($profileNotice)?></p><?php endif ?>
 
-      <section class="account-dashboard-overview" aria-label="Краткая сводка аккаунта">
-        <div class="account-dashboard-metrics">
-          <article><span>История заказов</span><strong><?=number_format($orderCount,0,'.',' ')?></strong><small>серверные записи</small></article>
-          <article><span>Бронирования</span><strong><?=number_format($bookingCount,0,'.',' ')?></strong><small>запросы этого аккаунта</small></article>
-          <article><span>Tokyo Privilege</span><strong><?=number_format($loyaltyBalance,0,'.',' ')?></strong><small>учебных баллов · не деньги</small></article>
-          <article><span>Завершённые заказы</span><strong><?=number_format($loyaltySpent,0,'.',' ')?></strong><small>₸ в учебном журнале</small></article>
-        </div>
-        <div class="account-dashboard-loyalty tp20-loyalty-card" id="account-loyalty">
-          <span class="kicker">TOKYO PRIVILEGE · УЧЕБНАЯ ПРОГРАММА</span>
-          <div class="account-tier-row"><h2><?=e($tier['name']??'Уровень не присвоен')?></h2><strong><?=number_format($loyaltyBalance,0,'.',' ')?> <small>баллов</small></strong></div>
-          <p>Баланс складывается из серверного журнала завершённых заказов и не имеет денежной стоимости.</p>
-          <?php if ($nextTier): ?>
-            <div class="tp20-tier-progress" role="progressbar" aria-label="Прогресс до уровня <?=e($nextTier['name'])?>" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<?=$tierProgress?>"><span style="width:<?=$tierProgress?>%"></span></div>
-            <small><?=$tierProgress?>% до уровня <?=e($nextTier['name'])?> · ещё <?=number_format(max(0,(int)$nextTier['minimum_completed_spend']-$loyaltySpent),0,'.',' ')?> ₸ завершённых заказов</small>
-          <?php else: ?>
-            <small>Прогресс определяется активными правилами учебной программы.</small>
-          <?php endif ?>
-          <a class="account-inline-link" href="offers.php">Условия привилегий ↗</a>
-        </div>
-      </section>
-
-      <div class="account-dashboard-actions" aria-label="Быстрые действия">
-        <a href="menu.php">Открыть меню <span>↗</span></a>
-        <a href="set-builder.php">Собрать сет <span>↗</span></a>
-        <a href="pages.php?page=booking">Выбрать вечер <span>↗</span></a>
-        <a href="offers.php">Смотреть привилегии <span>↗</span></a>
-      </div>
-
       <div class="account-dashboard-layout">
         <nav class="account-dashboard-nav" aria-label="Разделы личного кабинета">
           <a href="#account-notifications"><span class="account-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg></span><span class="account-nav-label">Уведомления</span><small><?=$unreadNotifications?></small></a>
@@ -377,6 +349,34 @@ header_html();
           <a href="#account-settings"><span class="account-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1m0-12.8-2.1 2.1m-8.6 8.6-2.1 2.1"/><circle cx="12" cy="12" r="5"/></svg></span><span class="account-nav-label">Настройки</span></a>
         </nav>
         <div class="account-dashboard-content">
+          <section class="account-dashboard-overview" aria-label="Краткая сводка аккаунта">
+            <div class="account-dashboard-metrics">
+              <article><span>История заказов</span><strong><?=number_format($orderCount,0,'.',' ')?></strong><small>серверные записи</small></article>
+              <article><span>Бронирования</span><strong><?=number_format($bookingCount,0,'.',' ')?></strong><small>запросы этого аккаунта</small></article>
+              <article><span>Tokyo Privilege</span><strong><?=number_format($loyaltyBalance,0,'.',' ')?></strong><small>учебных баллов · не деньги</small></article>
+              <article><span>Завершённые заказы</span><strong><?=number_format($loyaltySpent,0,'.',' ')?></strong><small>₸ в учебном журнале</small></article>
+            </div>
+            <div class="account-dashboard-loyalty tp20-loyalty-card" id="account-loyalty">
+              <span class="kicker">TOKYO PRIVILEGE · УЧЕБНАЯ ПРОГРАММА</span>
+              <div class="account-tier-row"><h2><?=e($tier['name']??'Уровень не присвоен')?></h2><strong><?=number_format($loyaltyBalance,0,'.',' ')?> <small>баллов</small></strong></div>
+              <p>Баланс складывается из серверного журнала завершённых заказов и не имеет денежной стоимости.</p>
+              <?php if ($nextTier): ?>
+                <div class="tp20-tier-progress" role="progressbar" aria-label="Прогресс до уровня <?=e($nextTier['name'])?>" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<?=$tierProgress?>"><span style="width:<?=$tierProgress?>%"></span></div>
+                <small><?=$tierProgress?>% до уровня <?=e($nextTier['name'])?> · ещё <?=number_format(max(0,(int)$nextTier['minimum_completed_spend']-$loyaltySpent),0,'.',' ')?> ₸ завершённых заказов</small>
+              <?php else: ?>
+                <small>Прогресс определяется активными правилами учебной программы.</small>
+              <?php endif ?>
+              <a class="account-inline-link" href="offers.php">Условия привилегий ↗</a>
+            </div>
+          </section>
+
+          <div class="account-dashboard-actions" aria-label="Быстрые действия">
+            <a href="menu.php">Открыть меню <span>↗</span></a>
+            <a href="set-builder.php">Собрать сет <span>↗</span></a>
+            <a href="pages.php?page=booking">Выбрать вечер <span>↗</span></a>
+            <a href="offers.php">Смотреть привилегии <span>↗</span></a>
+          </div>
+
           <div class="account-dashboard-primary">
             <section id="account-notifications" class="account-section account-dashboard-panel" aria-labelledby="account-notifications-title">
               <div class="account-dashboard-section-heading"><div><span class="kicker">СТАТУСЫ · ТОЛЬКО ВАШ АККАУНТ</span><h2 id="account-notifications-title">Уведомления</h2></div><span class="account-section-count"><?=$unreadNotifications?> непрочитано</span></div>
