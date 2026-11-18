@@ -419,7 +419,8 @@ header_html();
   <nav class="tp20-admin-shortcuts" aria-label="Разделы управления"><a href="#marketing-search">Поиск</a><a href="#campaigns">Кампании</a><a href="#codes">Промокоды</a><a href="#personal-offers">Персональные</a><a href="#collections">Коллекции</a><a href="#set-formats">Форматы сетов</a><a href="#tiers">Уровни клуба</a><a href="#secret-rules">Secret Menu и подарки</a><a href="#loyalty-settings">Условия привилегий</a><a href="#loyalty-ledger">Журнал бонусов</a></nav>
   <section class="tp20-admin-search section" id="marketing-search" aria-labelledby="marketing-search-title">
     <div class="editorial-heading"><div class="kicker">БЫСТРЫЙ ДОСТУП</div><h2 id="marketing-search-title">Поиск по управлению</h2><p>Фильтрует уже загруженные кампании, промокоды, назначения, коллекции, наборы и строки текущей страницы бонусного журнала.</p></div>
-    <label for="marketing-admin-search">Название, код, участник или запись<input id="marketing-admin-search" type="search" autocomplete="off" placeholder="Например, Golden Hour или TOKYO10"></label>
+    <label for="marketing-admin-search">Название, код, участник или запись<input id="marketing-admin-search" type="search" autocomplete="off" placeholder="Например, Golden Hour или TOKYO10" aria-describedby="marketing-admin-search-help"></label>
+    <small class="tp20-admin-search-help" id="marketing-admin-search-help">Нажмите <kbd>/</kbd>, чтобы перейти к поиску; <kbd>Esc</kbd> очистит запрос.</small>
     <button class="button secondary" type="button" id="marketing-admin-search-clear">Очистить</button>
     <p class="tp20-admin-search-status" id="marketing-admin-search-status" role="status" aria-live="polite">Введите запрос, чтобы отфильтровать списки.</p>
   </section>

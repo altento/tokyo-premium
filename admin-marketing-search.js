@@ -63,4 +63,23 @@
     filterRecords();
     input.focus();
   });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.isComposing || event.altKey || event.ctrlKey || event.metaKey) return;
+    const target = event.target;
+    const isEditing = target instanceof HTMLElement
+      && (target.isContentEditable || target.closest('input, textarea, select, [contenteditable="true"]'));
+
+    if (event.key === '/' && !isEditing) {
+      event.preventDefault();
+      input.focus({ preventScroll: true });
+      input.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      return;
+    }
+
+    if (event.key === 'Escape' && document.activeElement === input && input.value !== '') {
+      input.value = '';
+      filterRecords();
+    }
+  });
 })();
