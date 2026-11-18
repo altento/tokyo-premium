@@ -227,6 +227,24 @@ async function visit(browser, base, route, mode, capture = false) {
     assert.equal(await page.locator('#full-guest-email').getAttribute('required'), '', `${mode} booking requests an email for status updates`);
     assert.equal(await page.locator('[data-tp-floorplan] svg').count(), 1, `${mode} preference floorplan renders as SVG`);
     assert.equal(await page.locator('[data-tp-floorplan-selection]').count(), 1, `${mode} floorplan clearly labels selection as a preference`);
+    assert.equal(await page.locator('.booking-faq-list details').count(), 4, `${mode} booking FAQ answers four practical questions`);
+    assert.equal(await page.locator('.booking-faq-list details[open]').count(), 1, `${mode} first booking FAQ answer is open for immediate context`);
+    assert.equal(await page.locator('.booking-faq-art img').evaluate(image => image.naturalWidth > 0), true, `${mode} booking FAQ illustration loads`);
+    const emailFaq = page.locator('.booking-faq-list details').nth(1);
+    const emailFaqSummary = emailFaq.locator('summary');
+    await emailFaqSummary.focus();
+    await emailFaqSummary.press('Enter');
+    assert.equal(await emailFaq.evaluate(node => node.open), true, `${mode} booking FAQ opens by keyboard`);
+    await emailFaqSummary.press('Space');
+    assert.equal(await emailFaq.evaluate(node => node.open), false, `${mode} booking FAQ closes by keyboard`);
+    const faqGeometry = await page.locator('.booking-faq-section').evaluate(section => {
+      const bounds = section.getBoundingClientRect();
+      const art = section.querySelector('.booking-faq-art').getBoundingClientRect();
+      const content = section.querySelector('.booking-faq-content').getBoundingClientRect();
+      return { sectionWidth: bounds.width, artRight: art.right, contentLeft: content.left, contentRight: content.right };
+    });
+    assert.ok(faqGeometry.artRight <= faqGeometry.contentLeft + 1, `${mode} booking FAQ image and answers keep a clean two-column reading order`);
+    assert.ok(faqGeometry.contentRight <= faqGeometry.sectionWidth + 1, `${mode} booking FAQ content stays inside the section`);
   } else if (route.key === 'contacts') {
     const contactGeometry = await page.evaluate(() => ({
       hero: document.querySelector('.contact-hero').getBoundingClientRect().height,
@@ -431,6 +449,14 @@ async function visit(browser, base, route, mode, capture = false) {
     assert.equal(mobileBenefits.count, 3, `${mode} mobile booking steps preserve all guidance`);
     assert.ok(mobileBenefits.height <= 350, `${mode} mobile booking steps fit a compact strip (${mobileBenefits.height}px)`);
     assert.equal(mobileBenefits.cardsFit, true, `${mode} mobile booking guidance text is not clipped`);
+    const mobileFaq = await page.locator('.booking-faq-section').evaluate(section => {
+      const art = section.querySelector('.booking-faq-art').getBoundingClientRect();
+      const content = section.querySelector('.booking-faq-content').getBoundingClientRect();
+      const sectionBounds = section.getBoundingClientRect();
+      return { artTop: art.top, artBottom: art.bottom, contentTop: content.top, contentRight: content.right, sectionRight: sectionBounds.right };
+    });
+    assert.ok(mobileFaq.contentTop >= mobileFaq.artBottom - 1, `${mode} mobile booking FAQ stacks its illustration before the answers`);
+    assert.ok(mobileFaq.contentRight <= mobileFaq.sectionRight + 1, `${mode} mobile booking FAQ stays within its section`);
   }
   assert.equal(mobile.omakaseTabsVisible, true, "Omakase keeps all stages visible without horizontal scrolling");
   if (route.key === 'omakase') assert.equal(mobile.omakaseLastStageCentered, true, `${mode} Omakase centers the fifth mobile course preview`);

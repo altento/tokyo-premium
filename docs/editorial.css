@@ -92,3 +92,31 @@
 .zone-booking-link{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;margin-top:12px;padding:8px 0;color:var(--jp-gold);border-top:1px solid var(--jp-line);font-size:.78rem;letter-spacing:.035em;transition:color .2s}.zone-booking-link span{transition:transform .2s}.zone-booking-link:hover,.zone-booking-link:focus-visible{color:var(--jp-cream)}.zone-booking-link:hover span,.zone-booking-link:focus-visible span{transform:translateX(3px)}.zone-booking-link:focus-visible{outline:2px solid var(--jp-gold);outline-offset:3px}
 
 .table-map-wrap>.booking-submit{display:flex;justify-content:center;width:100%;margin-top:14px}
+
+/* Booking FAQ: give the final section the same editorial weight as the approved reference. */
+.editorial-page>.booking-faq-section{display:grid;grid-template-columns:minmax(0,.78fr) minmax(0,1.22fr);align-items:center;gap:clamp(28px,6.2vw,92px);padding-block:clamp(54px,7vw,94px);position:relative;isolation:isolate}
+.booking-faq-art{min-width:0;max-width:510px}
+.booking-faq-art figure{position:relative;aspect-ratio:1.04;min-height:360px;margin:0;overflow:hidden;border:1px solid rgba(196,163,108,.42);background:#15110e}
+.booking-faq-art figure:after{content:"";position:absolute;inset:42% 0 0;background:linear-gradient(0deg,rgba(8,8,7,.88),transparent);pointer-events:none}
+.booking-faq-art img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .8s cubic-bezier(.2,.7,.2,1)}
+.booking-faq-art figure:hover img{transform:scale(1.025)}
+.booking-faq-art figcaption{position:absolute;z-index:1;inset:auto 20px 20px;display:grid;gap:7px;color:var(--jp-cream)}
+.booking-faq-art figcaption span:first-child{color:var(--jp-gold);font:500 clamp(1.7rem,3vw,2.7rem)/1.1 "Playfair Display",Georgia,serif;letter-spacing:.1em}
+.booking-faq-art figcaption span:last-child{font-size:.82rem;letter-spacing:.12em;text-transform:uppercase}
+.booking-faq-art>p{max-width:45ch;margin:14px 2px 0;color:var(--jp-muted);font-size:.78rem;line-height:1.55}
+.booking-faq-content{min-width:0}
+.booking-faq-content .editorial-heading{margin-bottom:24px}
+.booking-faq-content .editorial-heading h2{position:relative;margin:.28em 0 .36em;padding-bottom:14px}
+.booking-faq-content .editorial-heading h2:after{content:"";position:absolute;left:0;bottom:0;width:44px;height:2px;background:var(--jp-red)}
+.booking-faq-list{border-top:1px solid var(--jp-line)}
+.booking-faq-list details{border-bottom:1px solid var(--jp-line);padding:0;background:linear-gradient(100deg,rgba(196,163,108,.025),transparent 62%)}
+.booking-faq-list summary{position:relative;display:flex;align-items:center;min-height:70px;padding:17px 48px 17px 2px;list-style:none;font:500 clamp(1.04rem,1.5vw,1.28rem)/1.35 "Playfair Display",Georgia,serif;color:var(--jp-cream);cursor:pointer}
+.booking-faq-list summary::-webkit-details-marker{display:none}
+.booking-faq-list summary:after{content:"+";position:absolute;right:4px;top:50%;display:grid;place-items:center;width:32px;height:32px;border:1px solid rgba(196,163,108,.48);border-radius:50%;color:var(--jp-gold);font:400 1.2rem/1 "DM Sans",sans-serif;transform:translateY(-50%);transition:background .22s,color .22s,transform .22s}
+.booking-faq-list details[open] summary:after{content:"−";background:var(--jp-red);color:#fff;transform:translateY(-50%) rotate(180deg)}
+.booking-faq-list summary:hover:after,.booking-faq-list summary:focus-visible:after{border-color:var(--jp-gold)}
+.booking-faq-list summary:focus-visible{outline:2px solid var(--jp-gold);outline-offset:3px}
+.booking-faq-list details p{max-width:70ch;margin:0;padding:0 46px 20px 2px;color:var(--jp-muted);font-size:.92rem;line-height:1.7}
+@media(max-width:800px){.editorial-page>.booking-faq-section{grid-template-columns:minmax(0,.75fr) minmax(0,1.25fr);gap:clamp(20px,4vw,38px)}.booking-faq-art figure{min-height:300px}}
+@media(max-width:600px){.editorial-page>.booking-faq-section{grid-template-columns:1fr;gap:28px;padding-block:40px}.booking-faq-art{width:100%;max-width:none}.booking-faq-art figure{aspect-ratio:1.55;min-height:0;max-height:265px}.booking-faq-art figcaption{inset:auto 14px 14px}.booking-faq-art figcaption span:first-child{font-size:1.65rem}.booking-faq-art figcaption span:last-child{font-size:.68rem}.booking-faq-content .editorial-heading{margin-bottom:18px}.booking-faq-list summary{min-height:62px;padding-block:14px;padding-right:44px;font-size:1.02rem}.booking-faq-list details p{padding-right:8px;font-size:.87rem}}
+@media(prefers-reduced-motion:reduce){.booking-faq-art img,.booking-faq-list summary:after{transition:none}}
