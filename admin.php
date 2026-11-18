@@ -451,6 +451,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+$notificationsRequest = (string)($_GET['ajax'] ?? '');
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && $notificationsRequest === 'notifications') {
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: private, no-store, max-age=0');
+    header('X-Content-Type-Options: nosniff');
+    if (empty($_SESSION['admin_id'])) {
+        if (session_status() === PHP_SESSION_ACTIVE) session_write_close();
+        http_response_code(401);
+        echo '{"error":"authentication_required"}';
+        exit;
+    }
+    try {
+        $counts = [
+            'orders'=>(int)$pdo->query("SELECT COUNT(*) FROM orders WHERE status='new'")->fetchColumn(),
+            'bookings'=>(int)$pdo->query("SELECT COUNT(*) FROM bookings WHERE status='new'")->fetchColumn(),
+            'reviews'=>(int)$pdo->query("SELECT COUNT(*) FROM reviews WHERE status='pending'")->fetchColumn(),
+            'contact_messages'=>(int)$pdo->query("SELECT COUNT(*) FROM contact_messages WHERE status='new'")->fetchColumn(),
+            'booking_emails'=>(int)$pdo->query("SELECT COUNT(*) FROM email_outbox WHERE booking_id IS NOT NULL AND status IN('pending','failed')")->fetchColumn(),
+        ];
+        $checkedAt = (new DateTimeImmutable('now', new DateTimeZone('Asia/Qyzylorda')))->format(DateTimeInterface::ATOM);
+        if (session_status() === PHP_SESSION_ACTIVE) session_write_close();
+        echo json_encode(['counts'=>$counts,'checkedAt'=>$checkedAt], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    } catch (Throwable $exception) {
+        error_log('Admin notification refresh: ' . $exception->getMessage());
+        if (session_status() === PHP_SESSION_ACTIVE) session_write_close();
+        http_response_code(500);
+        echo '{"error":"refresh_unavailable"}';
+    }
+    exit;
+}
+
 $notificationTarget = (string)($_GET['notification'] ?? '');
 if (!in_array($notificationTarget, ['orders','bookings','reviews','contact_messages','booking_emails'], true)) {
     $notificationTarget = '';
@@ -657,7 +688,7 @@ if ($exportTable !== '') {
   <nav class="admin-jump-nav" aria-label="Разделы панели">
     <a href="#search">Поиск</a><a href="#notifications">Уведомления</a><a href="#menu">Меню</a><a href="#pairings">Сочетания</a>
     <?php foreach ([['orders','Заказы'],['bookings','Брони'],['reviews','Отзывы'],['contact_messages','Сообщения']] as [$navKey,$navLabel]): $navCount=$notificationCounts[$navKey]??0; ?>
-      <a href="#<?=$navKey?>" aria-label="<?=$navLabel?>, новых: <?=$navCount?>"><?=$navLabel?><span class="admin-jump-count<?=$navCount>0?' has-unread':''?>" aria-hidden="true"><?=$navCount?></span></a>
+      <a href="#<?=$navKey?>" aria-label="<?=$navLabel?>, новых: <?=$navCount?>" data-admin-notification-label="<?=e($navLabel)?>"><?=$navLabel?><span class="admin-jump-count<?=$navCount>0?' has-unread':''?>" data-admin-notification-count="<?=$navKey?>" aria-hidden="true"><?=$navCount?></span></a>
     <?php endforeach ?>
     <a href="#settings">Настройки</a>
   </nav>
@@ -687,7 +718,10 @@ if ($exportTable !== '') {
 
   <section class="admin-card" id="notifications" aria-labelledby="admin-notifications-title">
     <h2 id="admin-notifications-title">Уведомления</h2>
-    <p class="admin-muted">Счётчики показывают новые записи в базе и обновляются при открытии панели. SMS не подключены. Email подтверждается только после ручного решения администратора.</p>
+    <div class="admin-notifications-tools">
+      <p class="admin-muted" data-admin-notification-status role="status" aria-live="polite">Новые записи обновляются автоматически раз в минуту, пока панель открыта. SMS не подключены; email о подтверждении отправляется только после ручного решения администратора.</p>
+      <button class="button secondary admin-notification-refresh" type="button" data-admin-refresh-notifications>Обновить сейчас ↻</button>
+    </div>
     <div class="admin-mail-readiness is-<?=e($bookingMailReadiness['class'])?>" role="status" data-smtp-state="<?=e($bookingMailState)?>">
       <strong><?=e($bookingMailReadiness['title'])?></strong>
       <p><?=e($bookingMailReadiness['text'])?></p>
@@ -695,10 +729,13 @@ if ($exportTable !== '') {
     </div>
     <div class="admin-notification-grid">
       <?php foreach ($notificationCounts as $key=>$count): ?>
-        <a class="admin-notification" href="?notification=<?=e($key)?>#<?=$key?>"<?=$notificationTarget === $key ? ' aria-current="page"' : ''?>>
-          <span><?=e($notificationLabels[$key])?></span><strong class="<?=$count > 0 ? 'has-unread' : ''?>"><?=$count?></strong>
+        <a class="admin-notification" href="?notification=<?=e($key)?>#<?=$key?>" data-admin-notification-label="<?=e($notificationLabels[$key])?>"<?=$notificationTarget === $key ? ' aria-current="page"' : ''?>>
+          <span><?=e($notificationLabels[$key])?></span><strong class="<?=$count > 0 ? 'has-unread' : ''?>" data-admin-notification-count="<?=$key?>"><?=$count?></strong>
         </a>
       <?php endforeach ?>
+      <a class="admin-notification" href="?notification=booking_emails#bookings" data-admin-notification-label="Письма по броням">
+        <span>Письма по броням</span><strong class="<?=((int)$bookingMailQueue['pending_count']+(int)$bookingMailQueue['failed_count'])>0?'has-unread':''?>" data-admin-notification-count="booking_emails"><?=(int)$bookingMailQueue['pending_count']+(int)$bookingMailQueue['failed_count']?></strong>
+      </a>
     </div>
     <?php if ($notificationTarget !== ''): ?>
       <p class="admin-notification-filter" role="status">

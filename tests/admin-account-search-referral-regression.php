@@ -124,6 +124,15 @@ try {
     ]);
     $assert($status === 302, 'admin login succeeds');
     $assert((int)$pdo->query('SELECT COUNT(*) FROM admin_login_attempts')->fetchColumn() === 0, 'successful admin login clears rate-limit buckets');
+    [$status, $notificationJson] = flowRequest('/admin.php?ajax=notifications');
+    $notificationPayload = json_decode($notificationJson, true);
+    $assert($status === 200 && is_array($notificationPayload) && isset($notificationPayload['counts']['orders'], $notificationPayload['counts']['bookings'], $notificationPayload['counts']['booking_emails']) && str_ends_with((string)($notificationPayload['checkedAt'] ?? ''), '+05:00'), 'authenticated notification refresh returns counts and the restaurant-local timestamp');
+    $assert((int)($notificationPayload['counts']['orders'] ?? -1) === 0 && (int)($notificationPayload['counts']['booking_emails'] ?? -1) === 0, 'notification refresh returns current counts without leaking record details');
+    $adminCookie = $cookie;
+    $cookie = '';
+    [$status, $unauthenticatedNotifications] = flowRequest('/admin.php?ajax=notifications');
+    $assert($status === 401 && str_contains($unauthenticatedNotifications, 'authentication_required'), 'notification counts remain inaccessible without an authenticated admin session');
+    $cookie = $adminCookie;
     [$status, $marketingHtml] = flowRequest('/admin-marketing.php?user_search=' . rawurlencode('илья қайрат'));
     $assert($status === 200 && str_contains($marketingHtml, 'Найденные аккаунты') && str_contains($marketingHtml, 'Илья Қайрат'), 'marketing admin finds a mixed-case Cyrillic name');
 

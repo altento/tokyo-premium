@@ -75,4 +75,58 @@
     search.focus({ preventScroll: true });
     search.scrollIntoView({ block: 'center' });
   });
+
+  const refreshButton = document.querySelector('[data-admin-refresh-notifications]');
+  const notificationStatus = document.querySelector('[data-admin-notification-status]');
+  if (refreshButton && notificationStatus) {
+    const countNodes = [...document.querySelectorAll('[data-admin-notification-count]')];
+    const formatTime = (value) => new Intl.DateTimeFormat('ru-RU', {
+      hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Qyzylorda'
+    }).format(new Date(value));
+    let busy = false;
+    let lastSuccess = 0;
+
+    const refreshNotifications = async () => {
+      if (busy || document.visibilityState === 'hidden') return;
+      busy = true;
+      refreshButton.disabled = true;
+      refreshButton.setAttribute('aria-busy', 'true');
+      try {
+        const response = await fetch('admin.php?ajax=notifications', {
+          credentials: 'same-origin',
+          cache: 'no-store',
+          headers: { Accept: 'application/json' }
+        });
+        if (response.status === 401) throw new Error('session');
+        if (!response.ok) throw new Error('unavailable');
+        const payload = await response.json();
+        if (!payload?.counts || !payload?.checkedAt) throw new Error('invalid-response');
+
+        for (const node of countNodes) {
+          const count = Number(payload.counts[node.dataset.adminNotificationCount]);
+          if (!Number.isSafeInteger(count) || count < 0) continue;
+          node.textContent = String(count);
+          node.classList.toggle('has-unread', count > 0);
+          const link = node.closest('a[data-admin-notification-label]');
+          if (link) link.setAttribute('aria-label', `${link.dataset.adminNotificationLabel}, новых: ${count}`);
+        }
+        lastSuccess = Date.now();
+        notificationStatus.textContent = `Обновлено в ${formatTime(payload.checkedAt)} · следующее автообновление через минуту.`;
+      } catch (error) {
+        notificationStatus.textContent = error.message === 'session'
+          ? 'Сессия панели завершилась. Обновите страницу и войдите снова.'
+          : `Не удалось обновить счётчики. Последняя успешная проверка: ${lastSuccess ? new Date(lastSuccess).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : 'нет'}.`;
+      } finally {
+        busy = false;
+        refreshButton.disabled = false;
+        refreshButton.removeAttribute('aria-busy');
+      }
+    };
+
+    refreshButton.addEventListener('click', refreshNotifications);
+    window.setInterval(refreshNotifications, 60_000);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && Date.now() - lastSuccess >= 60_000) refreshNotifications();
+    });
+  }
 })();
