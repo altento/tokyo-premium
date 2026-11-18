@@ -510,3 +510,7 @@ PHP lint, JavaScript syntax, and CSS checks passed. The local export command cou
 ## 2026-11-18 — Operational admin navigation
 
 The operations dashboard now shows live counts of new orders, bookings, reviews, and messages in the sticky section navigation. Each link also exposes its count to assistive technology. This makes pending work visible without first opening the notifications panel. Only focused PHP lint and diff checks were run; the PHP admin is not hosted by GitHub Pages, and the broader browser suite was intentionally skipped in this accelerated pass.
+
+## 2026-11-18 — Marketing campaign performance
+
+The protected Marketing & Loyalty admin now reports per-campaign saved uses, distinct orders excluding cancellations, attached discounts excluding cancellations, status/demo marker, and last-use time in the restaurant timezone. The existing admin search filters the new rows without conflating them with loyalty-ledger rows. A focused assertion in the existing PHP/SQLite admin regression covers a completed redemption and a cancelled redemption. The first hosted run caught only a test-selector collision; a dedicated performance-row class fixed it. Follow-up GitHub Actions run [44302462169](https://github.com/altento/tokyo-premium/actions/runs/44302462169) passed configured PHP/SQLite checks, the admin test, static export and deploy. Browser/visual QA was skipped in the fast profile, and the PHP admin remains unavailable on GitHub Pages. This update does not complete the broader Tokyo Premium 2.0 scope or establish full design-reference parity.

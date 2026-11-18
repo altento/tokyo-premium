@@ -4,7 +4,7 @@ Updated 2026-11-18
 
 ## Current release checkpoint
 
-The latest verified public release is `51a16c3` (GitHub Actions run [44278543876](https://github.com/altento/tokyo-premium/actions/runs/44278543876)). The PHP admin keeps main and Marketing & Loyalty navigation available while scrolling, marks the active section, supports the slash search shortcut, and previews approved dish images during create/edit. Search, pagination, actionable notifications, booking confirmation/email states, and marketing controls remain intact. Fast publishing passed and deployed Pages; cache-busted public home, account, and stylesheet URLs returned HTTP 200. Full browser/visual QA remains opt-in, with documented visual gaps still open.
+The latest verified public release is `354908d` (GitHub Actions run [44302462169](https://github.com/altento/tokyo-premium/actions/runs/44302462169)). The protected Marketing & Loyalty admin now includes per-campaign use/order/discount totals from SQLite; cancelled orders are excluded from order and discount totals. Search filters these rows separately from the bonus ledger. PHP/SQLite regression and deployment passed. The static Pages home and admin marketing data remain separate: Pages does not execute PHP. Full browser/visual QA remains opt-in, with documented visual gaps still open.
 
 ### Admin, account, and dish follow-up — published in `8867502`
 

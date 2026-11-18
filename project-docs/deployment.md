@@ -31,9 +31,9 @@ Push to `main` and wait for the Pages workflow to finish. Inspect the workflow s
 
 ## Latest verified publication
 
-- Published code commit: `8867502eed97f68c399c57f7d27f8551803926cc`.
-- Workflow: [run 44274931548](https://github.com/altento/tokyo-premium/actions/runs/44274931548) — build and deploy both succeeded. Focused PHP/SQLite, account/admin regressions, PHP syntax, form/admin smoke, and static export passed. Browser/visual QA was skipped by the fast push profile; use `workflow_dispatch` with `full_qa=true` for the long run.
-- Cache-busted public home, account, and dish pages returned HTTP 200. The account HTML includes `account-demo.css`; the dish detail includes `dish-detail-refinement.css`. Fresh local Pages captures of all 11 reference page types are paired with their approved PNGs in `project-docs/visual-qa/full-static-2026-11-18/`; the review documents material visual differences and remaining work. This is not a pixel-perfect comparison or PHP-host verification.
+- Published code commit: `354908d249b4cf95e6660470e8860633e622191e`.
+- Workflow: [run 44302462169](https://github.com/altento/tokyo-premium/actions/runs/44302462169) — build and deploy both succeeded. The protected admin campaign-performance regression and configured PHP/SQLite checks passed. The full browser/visual suite was skipped by the fast push profile; use `workflow_dispatch` with `full_qa=true` when a full pass is required.
+- Cache-busted public Offers page returned HTTP 200. Fresh local Pages captures of all 11 reference page types remain paired with their approved PNGs in `project-docs/visual-qa/full-static-2026-11-18/`; the review documents material differences and remaining work. This is not a pixel-perfect comparison or PHP-host verification.
 - This verifies the published static demo. PHP-only admin features remain unavailable on Pages; browser storage is not durable/server-synced, and no payment or live table availability is enabled.
 
 The latest verification record is in [testing-report.md](testing-report.md). Full-page static screenshots exist for all 11 page types, with a paired visual review in [the comparison report](visual-qa/full-static-2026-11-18/comparison.md). PHP web hosting, payment, live seating, and outbound restaurant email remain unconfigured.
