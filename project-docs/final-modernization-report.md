@@ -2,7 +2,7 @@
 
 ## 2026-11-18 · Faster admin navigation
 
-The main admin and Marketing & Loyalty pages now keep their section shortcuts available during long-page work, with horizontal navigation on smaller screens and adjusted anchor offsets below the site header. The main dashboard shortcut strip marks the visible section, includes a direct search link, and supports `/` to focus its search field. The SMTP queue KPI and retry workflow documented below are unchanged. Targeted PHP lint, JavaScript syntax validation and `git diff --check` passed; the full browser suite was intentionally not rerun in this accelerated pass. Publication and focused CI status will be recorded after this change is pushed.
+The main admin and Marketing & Loyalty pages now keep their section shortcuts available during long-page work, with horizontal navigation on smaller screens and adjusted anchor offsets below the site header. The main dashboard shortcut strip marks the visible section, includes a direct search link, and supports `/` to focus its search field. The SMTP queue KPI and retry workflow documented below are unchanged. Targeted PHP lint, JavaScript syntax validation and `git diff --check` passed; the full browser suite was intentionally not rerun in this accelerated pass. Commit `c3a9ada` is published; fast workflow [44277530746](https://github.com/altento/tokyo-premium/actions/runs/44277530746) succeeded, and cache-busted public home, account and updated CSS URLs returned HTTP 200. The admin remains available in the PHP/SQLite version, not on GitHub Pages.
 
 ## 2026-11-18 · Actionable booking email queue
 
