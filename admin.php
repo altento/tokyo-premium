@@ -353,7 +353,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $notificationTarget = (string)($_GET['notification'] ?? '');
-if (!in_array($notificationTarget, ['orders','bookings','reviews','contact_messages'], true)) {
+if (!in_array($notificationTarget, ['orders','bookings','reviews','contact_messages','booking_emails'], true)) {
     $notificationTarget = '';
 }
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_SESSION['admin_id']) && $notificationTarget !== '') {
@@ -421,6 +421,10 @@ if ($notificationTarget === 'orders') $orderFilter = [' WHERE o.status=?', ['new
 elseif ($recordFilterTable === 'orders') $orderFilter = admin_add_filter($orderFilter, 'o.status', $recordFilterStatus);
 $bookingFilter = admin_search_where(['CAST(b.id AS TEXT)','b.guest_name','b.guest_email','b.phone','b.booking_date','b.booking_time','b.zone','b.preferred_table','b.format','b.message','b.status'], $search);
 if ($notificationTarget === 'bookings') $bookingFilter = [' WHERE b.status=?', ['new']];
+elseif ($notificationTarget === 'booking_emails') {
+    $bookingFilter[0] .= $bookingFilter[0] === '' ? ' WHERE ' : ' AND ';
+    $bookingFilter[0] .= "EXISTS (SELECT 1 FROM email_outbox attention_mail WHERE attention_mail.booking_id=b.id AND attention_mail.status IN('pending','failed'))";
+}
 elseif ($recordFilterTable === 'bookings') $bookingFilter = admin_add_filter($bookingFilter, 'b.status', $recordFilterStatus);
 $reviewFilter = admin_search_where(['CAST(r.id AS TEXT)','r.guest_name','r.theme','r.body','CAST(r.rating AS TEXT)','r.status'], $search);
 if ($notificationTarget === 'reviews') $reviewFilter = [' WHERE r.status=?', ['pending']];
@@ -511,7 +515,7 @@ $bookingMailReadiness = match ($bookingMailState) {
   <section class="admin-kpi-grid" aria-label="Оперативная сводка · <?=e($localDayStart->format('d.m.Y'))?>, Asia/Qyzylorda">
     <article class="admin-kpi"><span>Заказы сегодня</span><strong><?= (int)$ordersToday['orders_count']?></strong><p><?=number_format((int)$ordersToday['order_volume'],0,'.',' ')?> ₸ · без отменённых</p><a href="#orders">Открыть заказы ↗</a></article>
     <article class="admin-kpi"><span>Брони сегодня</span><strong><?= (int)$bookingsToday['bookings_count']?></strong><p><?= (int)$bookingsToday['new_count']?> ждут подтверждения</p><a href="#bookings">Открыть брони ↗</a></article>
-    <article class="admin-kpi<?= (int)$bookingMailQueue['failed_count'] > 0 ? ' is-alert' : ''?>"><span>Почта по броням</span><strong><?= (int)$bookingMailQueue['pending_count'] + (int)$bookingMailQueue['failed_count']?></strong><p><?= (int)$bookingMailQueue['pending_count']?> в очереди · <?= (int)$bookingMailQueue['failed_count']?> с ошибкой</p><a href="#notifications">Проверить доставку ↗</a></article>
+    <article class="admin-kpi<?= (int)$bookingMailQueue['failed_count'] > 0 ? ' is-alert' : ''?>"><span>Почта по броням</span><strong><?= (int)$bookingMailQueue['pending_count'] + (int)$bookingMailQueue['failed_count']?></strong><p><?= (int)$bookingMailQueue['pending_count']?> в очереди · <?= (int)$bookingMailQueue['failed_count']?> с ошибкой</p><a href="?notification=booking_emails#bookings">Открыть письма для обработки ↗</a></article>
   </section>
 
   <section class="admin-card" id="search" aria-labelledby="admin-search-title">
@@ -547,8 +551,14 @@ $bookingMailReadiness = match ($bookingMailState) {
     </div>
     <?php if ($notificationTarget !== ''): ?>
       <p class="admin-notification-filter" role="status">
-        Показаны только <?=$notificationTarget === 'reviews' ? 'отзывы на модерации' : ($notificationTarget === 'bookings' ? 'новые заявки на бронь' : ($notificationTarget === 'contact_messages' ? 'новые обращения' : 'новые заказы'))?>.
-        <a href="admin.php#<?=$notificationTarget?>">Показать последние записи</a>
+        Показаны только <?=match ($notificationTarget) {
+          'reviews' => 'отзывы на модерации',
+          'bookings' => 'новые заявки на бронь',
+          'contact_messages' => 'новые обращения',
+          'booking_emails' => 'брони с письмами в очереди или ошибкой отправки',
+          default => 'новые заказы',
+        }?>.
+        <a href="admin.php#<?=$notificationTarget === 'booking_emails' ? 'bookings' : $notificationTarget?>">Показать последние записи</a>
       </p>
     <?php endif ?>
   </section>
