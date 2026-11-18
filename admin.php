@@ -73,6 +73,14 @@ function admin_search_where(array $columns, string $search): array
     return [' WHERE (' . implode(' OR ', $conditions) . ')', $values];
 }
 
+function admin_add_filter(array $filter, string $column, string $value): array
+{
+    $filter[0] .= $filter[0] === '' ? ' WHERE ' : ' AND ';
+    $filter[0] .= $column . '=?';
+    $filter[1][] = $value;
+    return $filter;
+}
+
 function admin_rows(PDO $pdo, string $sql, array $values = []): array
 {
     $statement = $pdo->prepare($sql);
@@ -374,14 +382,28 @@ $pairingRows = admin_rows($pdo,
 $pairingsByDish = [];
 foreach ($pairingRows as $pairingRow) $pairingsByDish[(int)$pairingRow['dish_id']][] = $pairingRow;
 $pairingDishOptions = $pdo->query('SELECT id,name,active FROM dishes ORDER BY active DESC,sort_order,id')->fetchAll(PDO::FETCH_ASSOC);
+$statusOptions = [
+    'orders'=>['new'=>'Новый','confirmed'=>'Подтверждён','preparing'=>'Готовится','ready'=>'Готов','completed'=>'Завершён','cancelled'=>'Отменён'],
+    'bookings'=>['new'=>'Новая заявка','confirmed'=>'Подтверждена','completed'=>'Завершена','cancelled'=>'Отменена'],
+    'reviews'=>['pending'=>'На модерации','published'=>'Опубликован','hidden'=>'Скрыт'],
+    'contact_messages'=>['new'=>'Новое','read'=>'Прочитано','archived'=>'В архиве'],
+];
+$recordFilterTable = (string)($_GET['filter_table'] ?? '');
+$recordFilterStatus = (string)($_GET['filter_status'] ?? '');
+if (!isset($statusOptions[$recordFilterTable]) || !isset($statusOptions[$recordFilterTable][$recordFilterStatus])) {
+    $recordFilterTable = '';
+    $recordFilterStatus = '';
+}
 $orderFilter = admin_search_where(['CAST(o.id AS TEXT)','o.customer_name','o.phone','o.address','o.fulfillment','o.status','CAST(o.total AS TEXT)','oi.item_name'], $search);
 if ($notificationTarget === 'orders') $orderFilter = [' WHERE o.status=?', ['new']];
+elseif ($recordFilterTable === 'orders') $orderFilter = admin_add_filter($orderFilter, 'o.status', $recordFilterStatus);
 $orders = admin_rows($pdo,
     "SELECT o.*,GROUP_CONCAT(oi.item_name || ' × ' || oi.quantity,' · ') AS items_summary
      FROM orders o LEFT JOIN order_items oi ON oi.order_id=o.id" . $orderFilter[0] . '
      GROUP BY o.id ORDER BY o.id DESC LIMIT 100', $orderFilter[1]);
 $bookingFilter = admin_search_where(['CAST(b.id AS TEXT)','b.guest_name','b.guest_email','b.phone','b.booking_date','b.booking_time','b.zone','b.preferred_table','b.format','b.message','b.status'], $search);
 if ($notificationTarget === 'bookings') $bookingFilter = [' WHERE b.status=?', ['new']];
+elseif ($recordFilterTable === 'bookings') $bookingFilter = admin_add_filter($bookingFilter, 'b.status', $recordFilterStatus);
 $bookings = admin_rows($pdo, "SELECT b.*,
     (SELECT m.id FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':request:guest' ORDER BY m.id DESC LIMIT 1) AS request_mail_id,
     (SELECT m.status FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':request:guest' ORDER BY m.id DESC LIMIT 1) AS request_mail_status,
@@ -392,9 +414,11 @@ $bookings = admin_rows($pdo, "SELECT b.*,
     FROM bookings b" . $bookingFilter[0] . ' ORDER BY b.booking_date DESC,b.booking_time DESC,b.id DESC LIMIT 100', $bookingFilter[1]);
 $reviewFilter = admin_search_where(['CAST(r.id AS TEXT)','r.guest_name','r.theme','r.body','CAST(r.rating AS TEXT)','r.status'], $search);
 if ($notificationTarget === 'reviews') $reviewFilter = [' WHERE r.status=?', ['pending']];
+elseif ($recordFilterTable === 'reviews') $reviewFilter = admin_add_filter($reviewFilter, 'r.status', $recordFilterStatus);
 $reviews = admin_rows($pdo, 'SELECT r.* FROM reviews r' . $reviewFilter[0] . ' ORDER BY r.id DESC LIMIT 100', $reviewFilter[1]);
 $messageFilter = admin_search_where(['CAST(m.id AS TEXT)','m.guest_name','m.email','m.subject','m.message','m.status'], $search);
 if ($notificationTarget === 'contact_messages') $messageFilter = [' WHERE m.status=?', ['new']];
+elseif ($recordFilterTable === 'contact_messages') $messageFilter = admin_add_filter($messageFilter, 'm.status', $recordFilterStatus);
 $contactMessages = admin_rows($pdo, 'SELECT m.* FROM contact_messages m' . $messageFilter[0] . ' ORDER BY m.id DESC LIMIT 100', $messageFilter[1]);
 $collections = [
     'orders'=>['label'=>'Заказы','rows'=>$orders],
@@ -402,18 +426,23 @@ $collections = [
     'reviews'=>['label'=>'Отзывы','rows'=>$reviews],
     'contact_messages'=>['label'=>'Сообщения','rows'=>$contactMessages],
 ];
-$statusOptions = [
-    'orders'=>['new'=>'Новая','confirmed'=>'Подтверждён','preparing'=>'Готовится','ready'=>'Готов','completed'=>'Завершён','cancelled'=>'Отменён'],
-    'bookings'=>['new'=>'Новая заявка','confirmed'=>'Подтверждена','completed'=>'Завершена','cancelled'=>'Отменена'],
-    'reviews'=>['pending'=>'На модерации','published'=>'Опубликован','hidden'=>'Скрыт'],
-    'contact_messages'=>['new'=>'Новое','read'=>'Прочитано','archived'=>'В архиве'],
-];
 $notificationCounts = [
     'orders'=>(int)$pdo->query("SELECT COUNT(*) FROM orders WHERE status='new'")->fetchColumn(),
     'bookings'=>(int)$pdo->query("SELECT COUNT(*) FROM bookings WHERE status='new'")->fetchColumn(),
     'reviews'=>(int)$pdo->query("SELECT COUNT(*) FROM reviews WHERE status='pending'")->fetchColumn(),
     'contact_messages'=>(int)$pdo->query("SELECT COUNT(*) FROM contact_messages WHERE status='new'")->fetchColumn(),
 ];
+$restaurantZone = new DateTimeZone('Asia/Qyzylorda');
+$utcZone = new DateTimeZone('UTC');
+$localDayStart = (new DateTimeImmutable('now', $restaurantZone))->setTime(0, 0, 0);
+$localDayEnd = $localDayStart->modify('+1 day');
+$ordersTodayQuery = $pdo->prepare("SELECT COUNT(*) AS orders_count,COALESCE(SUM(CASE WHEN status<>'cancelled' THEN total ELSE 0 END),0) AS order_volume FROM orders WHERE created_at>=? AND created_at<?");
+$ordersTodayQuery->execute([$localDayStart->setTimezone($utcZone)->format('Y-m-d H:i:s'),$localDayEnd->setTimezone($utcZone)->format('Y-m-d H:i:s')]);
+$ordersToday = $ordersTodayQuery->fetch(PDO::FETCH_ASSOC) ?: ['orders_count'=>0,'order_volume'=>0];
+$bookingsTodayQuery = $pdo->prepare("SELECT COUNT(*) AS bookings_count,COALESCE(SUM(CASE WHEN status='new' THEN 1 ELSE 0 END),0) AS new_count FROM bookings WHERE booking_date=?");
+$bookingsTodayQuery->execute([$localDayStart->format('Y-m-d')]);
+$bookingsToday = $bookingsTodayQuery->fetch(PDO::FETCH_ASSOC) ?: ['bookings_count'=>0,'new_count'=>0];
+$bookingMailQueue = $pdo->query("SELECT COALESCE(SUM(CASE WHEN status='pending' THEN 1 ELSE 0 END),0) AS pending_count,COALESCE(SUM(CASE WHEN status='failed' THEN 1 ELSE 0 END),0) AS failed_count FROM email_outbox WHERE booking_id IS NOT NULL")->fetch(PDO::FETCH_ASSOC) ?: ['pending_count'=>0,'failed_count'=>0];
 $notificationLabels = ['orders'=>'Новые заказы','bookings'=>'Новые брони','reviews'=>'Отзывы на проверке','contact_messages'=>'Новые сообщения'];
 $bookingMailState = booking_mail_configuration_state();
 $bookingNotifyConfigured = filter_var(trim((string)booking_mail_env('TOKYO_BOOKING_NOTIFY_EMAIL', '')), FILTER_VALIDATE_EMAIL) !== false;
@@ -439,6 +468,12 @@ $bookingMailReadiness = match ($bookingMailState) {
     <a href="#notifications">Уведомления</a><a href="#menu">Меню</a><a href="#pairings">Сочетания</a><a href="#orders">Заказы</a>
     <a href="#bookings">Брони</a><a href="#reviews">Отзывы</a><a href="#contact_messages">Сообщения</a><a href="#settings">Настройки</a>
   </nav>
+
+  <section class="admin-kpi-grid" aria-label="Оперативная сводка · <?=e($localDayStart->format('d.m.Y'))?>, Asia/Qyzylorda">
+    <article class="admin-kpi"><span>Заказы сегодня</span><strong><?= (int)$ordersToday['orders_count']?></strong><p><?=number_format((int)$ordersToday['order_volume'],0,'.',' ')?> ₸ · без отменённых</p><a href="#orders">Открыть заказы ↗</a></article>
+    <article class="admin-kpi"><span>Брони сегодня</span><strong><?= (int)$bookingsToday['bookings_count']?></strong><p><?= (int)$bookingsToday['new_count']?> ждут подтверждения</p><a href="#bookings">Открыть брони ↗</a></article>
+    <article class="admin-kpi<?= (int)$bookingMailQueue['failed_count'] > 0 ? ' is-alert' : ''?>"><span>Почта по броням</span><strong><?= (int)$bookingMailQueue['pending_count'] + (int)$bookingMailQueue['failed_count']?></strong><p><?= (int)$bookingMailQueue['pending_count']?> в очереди · <?= (int)$bookingMailQueue['failed_count']?> с ошибкой</p><a href="#notifications">Проверить доставку ↗</a></article>
+  </section>
 
   <section class="admin-card" id="search" aria-labelledby="admin-search-title">
     <h2 id="admin-search-title">Поиск по панели</h2>
@@ -583,7 +618,20 @@ $bookingMailReadiness = match ($bookingMailState) {
 
   <?php foreach ($collections as $table=>$collection): ?>
   <section class="admin-card" id="<?=$table?>" aria-labelledby="admin-<?=$table?>-title">
-    <h2 id="admin-<?=$table?>-title"><?=e($collection['label'])?> <span class="admin-result-count"><?=count($collection['rows'])?> <?=$search !== '' ? 'найдено' : ($notificationTarget === $table ? 'новых записей' : 'последних записей')?></span></h2>
+    <h2 id="admin-<?=$table?>-title"><?=e($collection['label'])?> <span class="admin-result-count"><?=count($collection['rows'])?> <?=($search !== '' || $recordFilterTable === $table) ? 'найдено' : ($notificationTarget === $table ? 'новых записей' : 'последних записей')?></span></h2>
+    <?php $selectedRecordStatus = $recordFilterTable === $table ? $recordFilterStatus : ($notificationTarget === $table ? 'new' : ''); ?>
+    <form method="get" action="admin.php#<?=$table?>" class="admin-record-filter" role="search">
+      <input type="hidden" name="filter_table" value="<?=$table?>">
+      <label for="filter-status-<?=$table?>">Фильтр по статусу</label>
+      <select id="filter-status-<?=$table?>" name="filter_status">
+        <option value="">Все статусы</option>
+        <?php foreach ($statusOptions[$table] as $statusValue=>$statusLabel): ?>
+          <option value="<?=e($statusValue)?>" <?=$selectedRecordStatus === $statusValue ? 'selected' : ''?>><?=e($statusLabel)?></option>
+        <?php endforeach ?>
+      </select>
+      <button class="button secondary" type="submit">Показать</button>
+      <?php if ($recordFilterTable === $table): ?><a class="admin-filter-reset" href="admin.php#<?=$table?>">Сбросить фильтр</a><?php endif ?>
+    </form>
     <div class="admin-record-list">
       <?php foreach ($collection['rows'] as $row):
         $confirmedBooking = $table === 'bookings' && $row['status'] === 'confirmed';
@@ -656,7 +704,7 @@ $bookingMailReadiness = match ($bookingMailState) {
         </div>
       </article>
       <?php endforeach ?>
-      <?php if (!$collection['rows']): ?><p class="admin-empty"><?php if ($notificationTarget === $table): ?>Новых записей сейчас нет.<?php else: ?>Записей пока нет<?php if ($search !== ''): ?> по запросу «<?=e($search)?>»<?php endif ?>.<?php endif ?></p><?php endif ?>
+      <?php if (!$collection['rows']): ?><p class="admin-empty"><?php if ($notificationTarget === $table): ?>Новых записей сейчас нет.<?php elseif ($recordFilterTable === $table): ?>Записей с выбранным статусом<?= $search !== '' ? ' и поисковым запросом «'.e($search).'»' : '' ?> нет.<?php else: ?>Записей пока нет<?php if ($search !== ''): ?> по запросу «<?=e($search)?>»<?php endif ?>.<?php endif ?></p><?php endif ?>
     </div>
   </section>
   <?php endforeach ?>
