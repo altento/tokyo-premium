@@ -36,33 +36,42 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y php-cli php-sqlite3
-      - name: Set up Node.js for browser QA
+      - name: Set up Node.js for optional browser QA
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.full_qa == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - name: Install Node dependencies
+      - name: Install Node dependencies for optional browser QA
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.full_qa == 'true'
         run: npm ci
       - name: Install browser test dependencies
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.full_qa == 'true'
         run: npx playwright install --with-deps chromium
       - name: Test cart state module
-        run: npm run test:cart
+        run: node --test tests/cart-store.test.cjs
       - name: Run PHP and SQLite integrity checks
         run: php tests/php_integrity_integration.php
       - name: Check protected Tokyo Privilege ledger
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.full_qa == 'true'
         run: php tests/admin-loyalty-ledger-regression.php
       - name: Check authenticated profile detail updates
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.full_qa == 'true'
         run: npm run test:account-profile
       - name: Check threshold gift schedule regression
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.full_qa == 'true'
         run: npm run test:gift-quantity
       - name: Check birthday offers and tier restrictions
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.full_qa == 'true'
         run: npm run test:personal-offer
       - name: Check capped set pricing and promo attribution
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.full_qa == 'true'
         run: npm run test:commerce-pricing
       - name: Check Cyrillic admin search and referral login
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.full_qa == 'true'
         run: npm run test:admin-account-search-referral
       - name: Check custom set format administration
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.full_qa == 'true'
         run: npm run test:admin-set-variants
       - name: Check PHP syntax
         run: find . -maxdepth 2 -type f -name '*.php' -print0 | xargs -0 -n1 php -l

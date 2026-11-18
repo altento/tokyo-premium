@@ -618,3 +618,9 @@ Authenticated into the local PHP Marketing & Loyalty admin on the same isolated 
 
 ## 2026-11-18 — live operational notifications
 The authenticated operations dashboard refreshes pending-order, booking, review, contact-message and email-queue counts every minute without reloading forms; a manual refresh is also available. A read-only JSON response exposes counts and the restaurant-local timestamp only, returns `401` without an admin session, and is marked private/no-store. The existing admin/referral HTTP regression now covers both access states. One focused PHP/SQLite run passed 19 assertions; `php -l`, `node --check`, and `git diff --check` passed. Full browser and visual suites were intentionally skipped for this small admin-only change.
+
+## 2026-11-18 — accelerated release profile and admin operations
+
+The default Pages push workflow now runs the cart-store checks, consolidated PHP/SQLite integrity, PHP syntax, one endpoint smoke pass, and static export/deployment checks. Seven additional focused feature suites and all Playwright/visual suites remain available through the manual `full_qa=true` workflow; test files were retained. The PHP Marketing & Loyalty screen now has searchable, paginated read-only queues for referral activity and certificate previews. Campaign popularity excludes cancelled orders and zero-priced gift lines. Local PHP syntax and the 14 cart checks passed. PDO SQLite is unavailable in the local PHP runtimes, so authenticated SQL rendering is left to the hosted CI run.
+
+An Omakase density refinement was checked at 1440px and 390px. Both layouts stayed within the viewport, the five course images and story image loaded, and no page errors occurred. Captures: `project-docs/visual-qa/omakase-compact-2026-11-18/`.

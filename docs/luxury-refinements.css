@@ -380,3 +380,49 @@
 .dish-related-section .section-head h2{font-size:clamp(1.55rem,2.4vw,2.15rem);line-height:1.18;margin:8px 0}
 @media(max-width:900px){.dish-chef-story>img{height:clamp(240px,40vw,340px)}}
 @media(max-width:640px){.editorial-page .dish-chef-section{padding-block:26px}.dish-chef-story{gap:14px}.dish-chef-story>img{height:clamp(220px,62vw,280px)}.dish-chef-story .editorial-note{padding:22px}.dish-chef-story .editorial-note blockquote{font-size:clamp(1.35rem,5.3vw,1.65rem)}.editorial-page .dish-composition-section,.editorial-page .dish-related-section{padding-block:clamp(34px,8vw,44px)}.dish-composition-section .editorial-heading h2{font-size:clamp(1.6rem,7.2vw,2rem)}.dish-related-section .section-head{align-items:start;margin-bottom:18px}.dish-related-section .section-head h2{font-size:clamp(1.5rem,7vw,1.9rem)}}
+
+/* Omakase: keep the chapter selector and set choices cinematic without making the page needlessly tall. */
+.editorial-page:has(.omakase-hero) > .omakase-philosophy-strip { gap:clamp(20px,3vw,44px); padding-block:14px; }
+.editorial-page:has(.omakase-hero) .omakase-philosophy-copy > p { max-width:48ch; margin-block:8px; font-size:.82rem; line-height:1.48; }
+.editorial-page:has(.omakase-hero) .omakase-principles article > span { margin-bottom:8px; }
+.editorial-page:has(.omakase-hero) > .tp20-omakase-experience { padding-block:clamp(24px,2.4vw,34px); }
+.editorial-page:has(.omakase-hero) > .tp20-omakase-experience .tp20-course-heading { gap:10px; margin-bottom:12px; }
+.editorial-page:has(.omakase-hero) > .tp20-omakase-experience .tp20-course-heading h2 { margin:4px 0; font-size:clamp(1.75rem,2.7vw,2.4rem); line-height:1.08; }
+.editorial-page:has(.omakase-hero) > .tp20-omakase-experience .tp20-course-heading p { max-width:68ch; margin:6px 0 0; font-size:.84rem; line-height:1.45; }
+.editorial-page:has(.omakase-hero) > .tp20-omakase-experience .tp20-course-tabs { gap:8px; margin-bottom:10px; padding-bottom:6px; }
+.editorial-page:has(.omakase-hero) > .tp20-omakase-experience .tp20-course-tabs button > img { aspect-ratio:2.25; }
+.editorial-page:has(.omakase-hero) > .tp20-omakase-experience .tp20-course-tab-copy { gap:3px; padding:7px 9px 8px; }
+.editorial-page:has(.omakase-hero) > .tp20-omakase-experience .tp20-course-tab-stage { font-size:.7rem; }
+.editorial-page:has(.omakase-hero) > .tp20-omakase-experience .tp20-course-tab-copy strong { font-size:.74rem; }
+.editorial-page:has(.omakase-hero) > .section:has(.experience-tiers) { padding-block:clamp(24px,2.4vw,34px); }
+.editorial-page:has(.omakase-hero) > .section:has(.experience-tiers) .editorial-heading { margin-bottom:16px; }
+.editorial-page:has(.omakase-hero) > .section:has(.experience-tiers) .editorial-heading h2 { margin-block:5px; font-size:clamp(1.8rem,2.6vw,2.35rem); line-height:1.08; }
+.editorial-page:has(.omakase-hero) > .section:has(.experience-tiers) .editorial-heading p { margin:6px 0 0; font-size:.84rem; line-height:1.45; }
+.editorial-page:has(.omakase-hero) .experience-tiers { gap:12px; }
+.editorial-page:has(.omakase-hero) .tier-card { min-height:190px; padding:18px; }
+.editorial-page:has(.omakase-hero) .tier-card h3 { margin:9px 0 5px; font-size:1.35rem; }
+.editorial-page:has(.omakase-hero) .tier-card p { margin:0 0 10px; font-size:.86rem; line-height:1.45; }
+.editorial-page:has(.omakase-hero) .tier-card strong { margin:8px 0 12px; font-size:1.55rem; }
+.editorial-page:has(.omakase-hero) > .omakase-reservation-band { min-height:238px; }
+.editorial-page:has(.omakase-hero) .omakase-reservation-copy { padding-block:16px; }
+.editorial-page:has(.omakase-hero) .omakase-reservation-copy h2 { margin:.3rem 0 .45rem; font-size:clamp(1.8rem,2.5vw,2.35rem); }
+.editorial-page:has(.omakase-hero) .omakase-reservation-copy p { margin:8px 0; font-size:.86rem; line-height:1.45; }
+.editorial-page:has(.omakase-hero) > .image-story { padding-block:clamp(20px,2vw,30px); }
+.editorial-page:has(.omakase-hero) > .image-story > img { height:clamp(230px,20vw,290px); }
+.editorial-page:has(.omakase-hero) > .image-story h2 { margin-block:5px 10px; font-size:clamp(1.8rem,2.6vw,2.35rem); line-height:1.08; }
+.editorial-page:has(.omakase-hero) > .image-story p { font-size:.88rem; line-height:1.48; }
+.editorial-page:has(.omakase-hero) > .omakase-quote { padding-block:clamp(16px,1.8vw,24px); }
+.editorial-page:has(.omakase-hero) > .omakase-quote p { font-size:clamp(1.15rem,1.9vw,1.65rem); line-height:1.32; }
+@media(max-width:700px){
+  .editorial-page:has(.omakase-hero) > .omakase-philosophy-strip { gap:14px; padding-block:18px; }
+  .editorial-page:has(.omakase-hero) > .tp20-omakase-experience { padding-block:24px; }
+  .editorial-page:has(.omakase-hero) > .tp20-omakase-experience .tp20-course-tabs button > img { aspect-ratio:1.9; }
+  .editorial-page:has(.omakase-hero) > .section:has(.experience-tiers) { padding-block:24px; }
+  .editorial-page:has(.omakase-hero) .tier-card { min-height:0; padding:17px; }
+  .editorial-page:has(.omakase-hero) > .omakase-reservation-band { min-height:310px; }
+  .editorial-page:has(.omakase-hero) .omakase-reservation-copy { padding:20px 22px 24px; }
+  .editorial-page:has(.omakase-hero) > .image-story { padding-block:22px; }
+  .editorial-page:has(.omakase-hero) > .image-story > img { height:230px; }
+  .editorial-page:has(.omakase-hero) > .omakase-quote { padding-block:20px; }
+}
+@media(prefers-reduced-motion:reduce){.editorial-page:has(.omakase-hero) .omakase-course-card,.editorial-page:has(.omakase-hero) .omakase-course-card img{transition:none}}
