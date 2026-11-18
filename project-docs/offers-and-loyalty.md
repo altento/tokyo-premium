@@ -18,6 +18,9 @@ The protected Marketing & Loyalty panel supports editing the Secret Menu rule's 
 
 Tokyo Privilege levels and benefit settings are database records. Ledger entries are created from verified completed-order status events with unique event keys; duplicate status events cannot add points twice. Referral association is tied to a registered account and a referral reward is triggered only by the qualifying completed order, not by opening a link. Birthday data is optional and the marketing consent is separate. Gift certificate flows are rate-limited previews; they do not create a payable or redeemable certificate.
 
+### Set builder format management — 2026-11-18
+
+The protected Marketing & Loyalty panel now creates, edits, orders, and deactivates custom-set formats. Slugs stay stable for existing links and campaign targeting. Server validation limits a format to 3–8 distinct dishes and at most 12 portions, and the set builder continues to derive prices from active catalogue records. Pages still exposes only the demo catalogue and browser-side estimate. The focused admin-set-variant-regression.php covers authorization, create/edit, invalid bounds, duplicate slugs, CSRF, transaction rollback, activation, and the public PHP builder view.
 ## GitHub Pages
 
 The export presents local versions of the offers, set builder, recommendation wizard, seasonal collection, certificate preview, promo quote and loyalty summary. Any stored values stay in this browser's `localStorage`. The local price quote is marked as an estimate; `tokyo-secret-demo.js` carries an intentionally public client-only Secret Menu preview payload. This is presentation only and does not provide PHP authorization. Referral codes do not register users or earn a reward. The certificate UI explicitly says it is not payment or stored value. Static actions do not reach PHP, email or restaurant staff.

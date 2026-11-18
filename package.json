@@ -11,6 +11,7 @@
     "test:admin-account-search-referral": "php tests/admin-account-search-referral-regression.php",
     "test:admin-loyalty-ledger": "php tests/admin-loyalty-ledger-regression.php",
     "test:set-draft": "node tests/set-builder-draft-regression.cjs",
+    "test:admin-set-variants": "php tests/admin-set-variant-regression.php",
     "test:personal-offer": "php tests/personal-offer-regression.php",
     "test:offers-evening": "node tests/offers-evening-regression.cjs",
     "test:home-booking": "node tests/home-booking-step.cjs",

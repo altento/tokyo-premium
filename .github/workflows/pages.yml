@@ -53,6 +53,8 @@ jobs:
         run: npm run test:commerce-pricing
       - name: Check Cyrillic admin search and referral login
         run: npm run test:admin-account-search-referral
+      - name: Check custom set format administration
+        run: npm run test:admin-set-variants
       - name: Check PHP syntax
         run: find . -maxdepth 2 -type f -name '*.php' -print0 | xargs -0 -n1 php -l
       - name: Smoke test PHP forms and admin access

@@ -212,6 +212,10 @@
 }
 .editorial-heading h2::after { display:block; width:42px; height:2px; margin:15px 0 0; background:linear-gradient(90deg,#d51b27,#7e0b13); content:""; }
 .tp20-admin-page { min-height:70vh; }
+.tp20-admin-shortcuts{display:flex;flex-wrap:wrap;gap:9px;width:min(1320px,calc(100% - 48px));margin:12px auto 0}
+.tp20-admin-shortcuts a{display:inline-flex;min-height:42px;align-items:center;padding:8px 14px;border:1px solid var(--tp20-line);border-radius:999px;color:#e4c791;background:#100e0c;text-decoration:none;transition:border-color .18s ease,background-color .18s ease}
+.tp20-admin-shortcuts a:hover{border-color:#d5ad68;background:rgba(201,166,108,.09)}
+.tp20-admin-shortcuts a:focus-visible{outline:2px solid #e2bd78;outline-offset:3px}
 .tp20-admin-metrics { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; padding-block:30px; }
 .tp20-admin-metrics article { display:grid; gap:8px; min-width:0; padding:18px; border:1px solid var(--tp20-line); border-radius:10px; background:#12100e; }
 .tp20-admin-metrics span { color:var(--tp20-muted); font-size:.8rem; line-height:1.4; }
@@ -465,7 +469,7 @@
 @media(max-width:520px){.home-hero{padding-bottom:100px}.home-hero-controls{right:18px;bottom:22px}.home-hero-note{display:none}.home-hero-copy>*{max-width:100%}.home-hero h1{overflow-wrap:anywhere}}
 @media(prefers-reduced-motion:reduce){.home-hero-photo,.home-hero-copy,.home-hero-copy>*{animation:none!important;transition:none!important;transform:none!important;will-change:auto}.home-hero.is-crossfading .home-hero-photo--active{opacity:1}.home-hero.is-crossfading .home-hero-photo--next{opacity:0}.home-hero.is-text-changing .home-hero-copy{opacity:1;transform:none}}
 @media(max-width:900px) { .tp20-admin-metrics { grid-template-columns:repeat(3,minmax(0,1fr)); } .tp20-admin-fields { grid-template-columns:repeat(2,minmax(0,1fr)); } .tp20-account-overview { grid-template-columns:1fr; } }
-@media(max-width:600px) { .tp20-admin-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } .tp20-admin-fields, .tp20-account-grid, .tp20-ledger-list { grid-template-columns:1fr; } .tp20-admin-details ul { columns:1; } .tp20-referral-code strong { margin-right:0; } }
+@media(max-width:600px) { .tp20-admin-shortcuts{width:calc(100% - 32px);display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.tp20-admin-shortcuts a{justify-content:center;text-align:center;padding-inline:8px}.tp20-admin-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } .tp20-admin-fields, .tp20-account-grid, .tp20-ledger-list { grid-template-columns:1fr; } .tp20-admin-details ul { columns:1; } .tp20-referral-code strong { margin-right:0; } }
 
 /* Cart rows keep the item total beside the quantity controls and use the actual
 selected dish photography for a custom-set composition. */
