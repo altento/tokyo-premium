@@ -583,3 +583,7 @@ The static account overview now includes up to two saved local addresses alongsi
 ## 2026-11-18 admin status filters and daily dashboard
 
 For commit `687ccc3`, local checks were limited to `php -l admin.php`, `php -l tests/php_integrity_integration.php`, and `git diff --check`. A focused integration assertion for the booking status filter was added to the existing PHP/SQLite suite. GitHub Actions run [44258565830](https://github.com/altento/tokyo-premium/actions/runs/44258565830) passed the complete configured PHP/SQLite integration, admin smoke and browser/visual regression jobs; static export and deployment also succeeded. The public homepage was confirmed with a cache-busted HTTP 200 request. No separate local full-suite rerun was performed.
+
+## 2026-11-18 campaign performance admin
+
+The Marketing & Loyalty dashboard now derives campaign uses, distinct non-cancelled orders, attached discounts, active state and last-use time from SQLite. `tests/admin-loyalty-ledger-regression.php`, already included in the normal hosted workflow, now also covers one completed and one cancelled campaign redemption and asserts the displayed totals. `php -l` passed for the route and test; local SQLite execution is unavailable because the installed PHP CLIs do not load PDO SQLite. The hosted workflow on this commit is the database verification gate. The long browser/visual workflow was not requested for this focused admin change.

@@ -16,6 +16,10 @@ Secret Menu targeting is applied to the shared PHP catalog and every public entr
 
 The protected Marketing & Loyalty panel supports editing the Secret Menu rule's campaign, access kind, value, active state and local start/end dates. Local datetimes are strictly parsed in `Asia/Qyzylorda`; invalid calendar values and missing rule IDs are rejected. The server enforces each rule's own schedule when granting access. Saving a code rule creates its matching active promo-code record in the same campaign transaction, or rejects a code already owned by a different campaign. Re-enabling a code rule also checks that the corresponding promo code remains active. Existing rules can be disabled without deleting their history.
 
+### Campaign performance in admin — 2026-11-18
+
+`/admin-marketing.php#performance` shows per-campaign saved uses, distinct non-cancelled orders, the discounts attached to those orders, status, demo/live marker and last use in `Asia/Qyzylorda`. It intentionally does not label these educational order records as paid revenue. Campaign rows are included in the existing keyboard-accessible management search. The table has a keyboard-focusable horizontal scroll region for small screens. A regression was added to the existing protected ledger admin test: it renders two uses against one completed and one cancelled order and checks that only the completed order and its discount enter the corresponding totals. The local PHP CLI has no `pdo_sqlite`; the existing hosted PHP/SQLite workflow is the authoritative database check.
+
 Tokyo Privilege levels and benefit settings are database records. Ledger entries are created from verified completed-order status events with unique event keys; duplicate status events cannot add points twice. Referral association is tied to a registered account and a referral reward is triggered only by the qualifying completed order, not by opening a link. Birthday data is optional and the marketing consent is separate. Gift certificate flows are rate-limited previews; they do not create a payable or redeemable certificate.
 
 ### Set builder format management — 2026-11-18

@@ -654,6 +654,16 @@ selected dish photography for a custom-set composition. */
 .tp20-admin-ledger-pagination{justify-content:flex-end;margin-top:16px;color:var(--tp20-muted);font-size:.8rem}
 .tp20-admin-ledger-empty{padding:20px;border:1px dashed var(--tp20-line);border-radius:10px}
 .tp20-admin-ledger-scroll-hint{display:none}
+.tp20-admin-performance-wrap{max-width:100%;overflow:auto;overscroll-behavior-x:contain;border:1px solid var(--tp20-line);border-radius:12px;background:#100e0c}
+.tp20-admin-performance-table{width:100%;min-width:820px;border-collapse:collapse;color:var(--tp20-ivory);font-size:.8rem;line-height:1.45}
+.tp20-admin-performance-table caption{padding:14px 16px;text-align:left;color:#e4c791;font:500 1.05rem var(--tp20-serif)}
+.tp20-admin-performance-table th,.tp20-admin-performance-table td{padding:12px 14px;text-align:left;vertical-align:middle;border-top:1px solid rgba(202,165,107,.14)}
+.tp20-admin-performance-table th{background:#181410;color:#ddc28e;font-size:.72rem;font-weight:600;letter-spacing:.03em}
+.tp20-admin-performance-table td:first-child{min-width:190px}
+.tp20-admin-performance-table td:first-child small{display:block;margin-top:4px;color:var(--tp20-muted);font-size:.7rem}
+.tp20-admin-performance-table td:nth-child(n+3){white-space:nowrap;font-variant-numeric:tabular-nums}
+.tp20-admin-performance-table tbody tr:hover{background:rgba(202,165,107,.045)}
+.tp20-admin-performance-wrap:focus-visible{outline:2px solid #d7b66f;outline-offset:3px}
 @media(max-width:900px){.tp20-admin-ledger-filters .tp20-admin-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.tp20-admin-ledger-filters .tp20-admin-fields{grid-template-columns:minmax(0,1fr)}.tp20-admin-ledger-actions{align-items:stretch;flex-direction:column}.tp20-admin-ledger-actions .button{justify-content:center}.tp20-admin-ledger-pagination{justify-content:space-between}.tp20-admin-ledger-table{min-width:900px;font-size:.72rem}.tp20-admin-ledger-table th,.tp20-admin-ledger-table td{padding:10px}.tp20-admin-ledger-scroll-hint{display:block;margin:0 0 10px;padding:10px 12px;border-left:2px solid #b50f1b;background:rgba(202,165,107,.06);font-size:.75rem}}
 .tp20-admin-search-help{display:block;margin:-12px 0 18px;color:var(--tp20-muted,#a99c88);font-size:.78rem;line-height:1.5}

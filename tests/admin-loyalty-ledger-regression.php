@@ -21,6 +21,16 @@ try {
 
     $order=$pdo->prepare("INSERT INTO orders(user_id,customer_name,phone,address,fulfillment,comment,total,status,created_at) VALUES(?,?,?,'','pickup','',1200,'completed','2026-11-17 15:00:00')");
     $order->execute([$alphaId,'Ledger Alpha','+77010000000']);$orderId=(int)$pdo->lastInsertId();
+    $performanceSlug='qa-admin-performance-'.bin2hex(random_bytes(4));
+    $pdo->prepare("INSERT INTO promotion_campaigns(slug,campaign_type,title,reward_type,active,demo_only) VALUES(?,'exclusive','QA campaign performance','none',1,1)")->execute([$performanceSlug]);
+    $performanceCampaignId=(int)$pdo->lastInsertId();
+    $performanceCode='PERF'.$performanceCampaignId;
+    $pdo->prepare('INSERT INTO promo_codes(code,campaign_id,active) VALUES(?,?,1)')->execute([$performanceCode,$performanceCampaignId]);
+    $performanceRedemption=$pdo->prepare('INSERT INTO promo_redemptions(promo_code,campaign_id,user_id,actor_key,order_id,discount_amount,created_at) VALUES(?,?,?,?,?,?,?)');
+    $performanceRedemption->execute([$performanceCode,$performanceCampaignId,$alphaId,'qa:performance:completed',$orderId,250,'2026-11-17 15:05:00']);
+    $cancelledOrder=$pdo->prepare("INSERT INTO orders(user_id,customer_name,phone,address,fulfillment,comment,total,status,created_at) VALUES(?,?,?,'','pickup','',1200,'cancelled','2026-11-17 15:10:00')");
+    $cancelledOrder->execute([$alphaId,'Ledger Alpha','+77010000000']);$cancelledOrderId=(int)$pdo->lastInsertId();
+    $performanceRedemption->execute([$performanceCode,$performanceCampaignId,$alphaId,'qa:performance:cancelled',$cancelledOrderId,800,'2026-11-17 15:15:00']);
     $referral=$pdo->prepare("INSERT INTO referrals(code,inviter_user_id,referred_user_id,status,created_at) VALUES(?,?,?,'rewarded','2026-11-17 14:00:00')");
     $referral->execute(['TP'.strtoupper(bin2hex(random_bytes(5))),$alphaId,$betaId]);$referralId=(int)$pdo->lastInsertId();
 
@@ -63,6 +73,10 @@ try {
     $rowCount=static fn(string $html):int=>substr_count($html,'class="tp20-admin-ledger-row"');
 
     $default=$render();
+    $performanceStart=strpos($default,'data-campaign-performance="'.$performanceCampaignId.'"');
+    $performanceEnd=$performanceStart===false?false:strpos($default,'</tr>',$performanceStart);
+    $performanceRow=$performanceStart!==false&&$performanceEnd!==false?substr($default,$performanceStart,$performanceEnd-$performanceStart):'';
+    $assert(str_contains($default,'id="performance"')&&str_contains($performanceRow,'data-performance-redemptions="2" data-performance-orders="1" data-performance-discount="250"'),'campaign analytics count saved uses, exclude cancelled orders, and total only their discounts');
     $assert(str_contains($default,'Журнал бонусных операций')&&str_contains($default,'name="ledger_search"'),'admin dashboard renders the protected search ledger');
     $assert(str_contains($default,'На телефоне проведите таблицу по горизонтали')&&str_contains($default,'aria-describedby="loyalty-ledger-scroll-hint"'),'mobile table scrolling has an explicit visible and accessible hint');
     $assert($rowCount($default)===25&&str_contains($default,'Найдено операций: <strong>29</strong>')&&str_contains($default,'Страница 1 из 2'),'default view paginates the actual 29 ledger records at 25 rows');
