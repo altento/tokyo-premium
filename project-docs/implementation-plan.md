@@ -4,7 +4,7 @@ Updated 2026-11-18
 
 ## Current release checkpoint
 
-The latest verified public release is `431a0a6` (GitHub Actions run [44221178924](https://github.com/altento/tokyo-premium/actions/runs/44221178924)). The PHP account can rebuild an owned past order from currently eligible catalogue records and saved set components; prices are resolved again at checkout. Static account repeats now use the same atomic cart-store API. Migration v14 records/backfills custom-set format IDs on order lines.
+The latest verified public release is `9efab56` (GitHub Actions run [44234776222](https://github.com/altento/tokyo-premium/actions/runs/44234776222)). The PHP account keeps its order history full-width beside navigation/status cards, while the Pages account export places the updated masthead, loyalty summary and account panels in one responsive dashboard layout. The exporter now preserves the masthead and emits one loyalty summary. PHP and static account regression passed, the full hosted browser/PHP/SQLite workflow passed, 37 static pages were exported, and the public account route returned HTTP 200 with the updated dashboard wrapper.
 
 The full modernization remains open. The remaining acceptance work includes a fresh full-page visual comparison against all 11 approved references, a consolidated security/performance review, and deployment of the PHP/SQLite runtime on an actual PHP host if one is configured. GitHub Pages stays a browser-local demonstration; payment, live seating, and outbound email are not configured. Runway reports that this workspace has no video models or credits, so a hero video cannot be generated here; keep the existing still-image fallback.
 
@@ -45,6 +45,7 @@ The project remains the existing PHP 8+ application with SQLite. Public PHP rout
 - Cinematic hero follow-up: manual three-scene controls, same-origin route mapping for static Pages, keyboard arrows, queued rapid input, no autoplay, reduced-motion behavior, and pointer-limited parallax are implemented and covered by `test:motion` at eight responsive widths in both modes.
 - Screenshot evidence is stored in `project-docs/visual-qa/`. Screenshots were inspected for selected states; this is not a pixel-by-pixel comparison of every section against all 11 reference PNGs.
 - Current published checkpoint `431a0a6`: 14/14 cart-store tests passed; hosted PHP/SQLite integration, browser regression/visual-QA, static export and deployment all passed in run 44221178924. The local Playwright package was absent in this checkout, so the repeat-order browser scenario was verified in hosted CI rather than locally.
+- Current published checkpoint `9efab56`: hosted run 44234776222 passed PHP/SQLite integrity, the 11-route/21-detail browser regression, Tokyo 2.0 interactions, responsive and visual-fidelity checks, account-demo state tests, static export (37 pages), and Pages deployment. The latest public account route returned HTTP 200 and included the dashboard content wrapper. CI screenshot files remain available in the workflow's visual-QA artifact; this is not a pixel-by-pixel manual comparison against all 11 approved PNGs.
 
 ## Boundaries
 

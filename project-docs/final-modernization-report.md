@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-18 · Account dashboard and verified Pages release
+
+Aligned the PHP account history width and reworked the static account export so its approved masthead, Tokyo Privilege overview, summary and history panels share one responsive dashboard. Fixed the exporter to preserve the masthead and avoid duplicating the loyalty section. The focused local account-demo regression, PHP syntax check and diff check passed. Hosted workflow [44234776222](https://github.com/altento/tokyo-premium/actions/runs/44234776222) passed PHP/SQLite checks, the browser suite (11 route types and 21 dish details), Tokyo 2.0 interactions, responsive and visual-fidelity checks, account demo, export of 37 pages and deployment. The public [account page](https://altento.github.io/tokyo-premium/account.html) returned HTTP 200 with the expected dashboard markup. The overall modernization is not complete: the full manual comparison against all 11 approved images, consolidated security/performance review, and any PHP-host/real external service setup remain outstanding.
+
 ## 2026-11-18 · Admin-managed set formats
 
 The protected Marketing & Loyalty admin now manages the composition limits and active state of custom-set formats used by the public PHP builder. Format slugs remain stable, one selectable format must remain active, configured limits stay within the existing server validation bounds, and prices remain derived from the live catalogue. A focused protected-route regression was added to CI for authorization, creation, editing, invalid limits, duplicate slugs, CSRF, rollback, toggles, and builder visibility. Local PHP syntax checks pass; endpoint execution is delegated to the hosted PHP/SQLite workflow because this workstation PHP build has no pdo_sqlite driver. Full 2.0 acceptance remains open.

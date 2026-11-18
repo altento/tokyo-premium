@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-18 account dashboard export and release
+
+The PHP account layout and Pages dashboard export were aligned, and the exporter was corrected to preserve the new masthead and emit the loyalty summary once. Focused local checks passed: `php -l tools/export-pages.php`, `git diff --check`, and `npm run test:account-demo` against the exported static page. Hosted run [44234776222](https://github.com/altento/tokyo-premium/actions/runs/44234776222) passed PHP/SQLite checks, browser regression for 11 routes and 21 details, Tokyo 2.0 interactions, responsive/visual-fidelity checks, account-demo tests, static export (37 pages), and Pages deployment. The public `/account.html` returned HTTP 200 with the expected dashboard wrapper. Runway and payment/email/live-seating configuration remain unavailable; complete manual comparison against all 11 design PNGs remains open.
+
 ## 2026-11-18 Set-format administration
 
 PHP syntax passed for admin-marketing.php and the focused regression. The local test runner explicitly skipped its SQLite assertions because this PHP installation has no pdo_sqlite driver. Hosted GitHub Actions run [44211881185](https://github.com/altento/tokyo-premium/actions/runs/44211881185) installed SQLite and passed the focused regression, PHP/SQLite integrity suite, browser/visual QA and deployment for commit `7d6e9e147683d3e4a7ee16efc5d72983ec59633b`.

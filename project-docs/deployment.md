@@ -1,11 +1,21 @@
 # Deployment notes
-Updated 2026-11-13
+Updated 2026-11-18
 
 ## Public preview
 - Repository: https://github.com/altento/tokyo-premium
 - Public URL: https://altento.github.io/tokyo-premium/
 - GitHub Actions workflow: `.github/workflows/pages.yml`
 - Each push to `main` starts the static export and Pages deployment.
+
+### Local static preview
+
+From the repository root, serve the exported `docs/` folder:
+
+```powershell
+python -m http.server 8937 --bind 127.0.0.1 --directory docs
+```
+
+Open `http://127.0.0.1:8937/`. This is the browser-only Pages build; it does not run PHP or SQLite. Stop the server with Ctrl+C.
 
 The workflow installs PHP CLI + SQLite, starts the existing PHP app, runs `tools/export-pages.php`, uploads `docs/`, and deploys it. The workflow does not package the SQLite database.
 
@@ -21,9 +31,9 @@ Push to `main` and wait for the Pages workflow to finish. Inspect the workflow s
 
 ## Latest verified publication
 
-- Main commit: `431a0a6cb3131627d736f6b447475e4f095ea300`
-- Workflow: [run 44221178924](https://github.com/altento/tokyo-premium/actions/runs/44221178924) — build and deploy both succeeded; PHP/SQLite integration, cart tests, browser regression and visual-QA passed.
-- Cache-busted public checks returned HTTP 200 for the home page, `/account.html`, `/cart-store.js`, and `/luxury.js`. The published cart-store and account demo contain the atomic repeat-order handler.
+- Main commit: `9efab56d5000a62f03c10e6cc55db3328703e42d`
+- Workflow: [run 44234776222](https://github.com/altento/tokyo-premium/actions/runs/44234776222) — build and deploy both succeeded. PHP/SQLite checks, the 11-route/21-detail browser regression, Tokyo 2.0 interactions, responsive/visual-fidelity checks, account demo tests, 37-page static export, and screenshot artifact upload passed.
+- Cache-busted public checks returned HTTP 200 for `/account.html`; the page includes the updated account dashboard wrapper, loyalty summary, and account panels. This confirms the static demo release, not the unfinished full pixel comparison against the 11 references.
 - This verifies the published static demo. PHP-only admin features remain unavailable on Pages; browser storage is not durable/server-synced, and no payment or live table availability is enabled.
 
 The latest verification record is in [testing-report.md](testing-report.md). A new pixel-by-pixel comparison of all 11 source references against current pages remains outstanding; existing screenshots and older gap notes do not constitute that acceptance claim.
