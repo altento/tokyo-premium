@@ -567,3 +567,7 @@ The booking page's plain full-width FAQ now uses an editorial landscape-and-acco
 ## 2026-11-18 focused account and admin finish
 
 The static account overview now includes up to two saved local addresses alongside the dashboard, with a working jump to address management. The focused `npm run test:account-demo` passed. Assertions cover sample seeding, the address-tab action, clear and restore behavior, retention of user data, escaped address text, and seeded desktop/mobile captures in `visual-qa/account-addresses-overview-2026-11-18/`. Marketing & Loyalty navigation exposes all nine management sections directly. Local PHP/SQLite integration was not re-run in this quick pass because this CLI lacks PDO SQLite; the existing hosted run provides the PHP integration result for its checkpoint. This narrow change does not complete the full Tokyo Premium 2.0 acceptance list.
+
+## 2026-11-18 admin status filters and daily dashboard
+
+For commit `687ccc3`, local checks were limited to `php -l admin.php`, `php -l tests/php_integrity_integration.php`, and `git diff --check`. A focused integration assertion for the booking status filter was added to the existing PHP/SQLite suite. GitHub Actions run [44258565830](https://github.com/altento/tokyo-premium/actions/runs/44258565830) passed the complete configured PHP/SQLite integration, admin smoke and browser/visual regression jobs; static export and deployment also succeeded. The public homepage was confirmed with a cache-busted HTTP 200 request. No separate local full-suite rerun was performed.
