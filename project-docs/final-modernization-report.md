@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-18 · Booking map initial state
+
+The booking page preselects “Основной зал”, but the floor-plan status previously remained at “Зона не выбрана” until interaction. Initializing the map now runs the same zone synchronization as a user selection, so the highlighted SVG zone, room photograph, mobile zone control, and accessible status agree while leaving the table preference empty. Added the initial-state assertion to the existing floor-plan regression. JavaScript syntax and whitespace checks passed; a focused local Chromium check against the current script and static booking page passed. The combined PHP/Pages regression could not run locally because the PHP route on the available test port is served as a static fallback; PHP behavior remains for hosted CI to verify. No full browser matrix was run.
+
 ## 2026-11-18 · Faster admin navigation
 
 The main admin and Marketing & Loyalty pages now keep their section shortcuts available during long-page work, with horizontal navigation on smaller screens and adjusted anchor offsets below the site header. The main dashboard shortcut strip marks the visible section, includes a direct search link, and supports `/` to focus its search field. Dish create/edit forms now show a preview only for approved local WebP files or HTTPS Unsplash URLs. The SMTP queue KPI and retry workflow documented below are unchanged. Targeted PHP lint, JavaScript syntax validation and `git diff --check` passed; no full browser suite was run. Commit `51a16c3` and workflow [44278543876](https://github.com/altento/tokyo-premium/actions/runs/44278543876) succeeded; cache-busted public home and updated stylesheet URLs returned HTTP 200. The admin remains available in the PHP/SQLite version, not on GitHub Pages.

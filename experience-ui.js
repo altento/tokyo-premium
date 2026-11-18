@@ -766,7 +766,9 @@
     const requestedZone = new URL(doc.location.href).searchParams.get('zone');
     const hasRequestedZone = requestedZone && many('[data-tp-zone]', root).some(item => !item.hasAttribute('data-tp-table') && item.dataset.tpZone === requestedZone);
     const initialZone = hasRequestedZone ? requestedZone : (zoneInput?.value || zoneInput?.selectedOptions?.[0]?.textContent?.trim());
-    if (initialZone) applyZone(initialZone, false);
+    // The form starts with a selected zone. Keep its map, room image and
+    // accessible status in sync on first render as well as after interaction.
+    if (initialZone) applyZone(initialZone, true);
   }
 
   function appendMobileFloorplanPicker(root, svg) {

@@ -31,6 +31,22 @@ async function run() {
       assert.equal(response?.status(), 200, `${mode.name} booking route loads`);
       await page.waitForSelector('.tp-seat-plan [data-tp-table="42"]', { timeout: 10000 });
 
+      const initialState = await page.evaluate(() => {
+        const zone = document.querySelector('[name="zone"]')?.value;
+        const svg = document.querySelector('.tp-seat-plan');
+        const selectedZone = Array.from(svg?.querySelectorAll('[data-tp-zone]') || [])
+          .find(item => !item.hasAttribute('data-tp-table') && item.classList.contains('is-selected'))?.dataset.tpZone;
+        return {
+          zone,
+          selectedZone,
+          photo: document.querySelector('[data-tp-zone-photo]')?.getAttribute('src'),
+          status: document.querySelector('[data-tp-floorplan-selection]')?.textContent || ''
+        };
+      });
+      assert.equal(initialState.selectedZone, initialState.zone, `${mode.name} highlights the form's default zone on initial render`);
+      assert.match(initialState.photo || '', /room-main-hall\.webp$/, `${mode.name} shows the matching room image on initial render`);
+      assert.match(initialState.status, /выберите предпочтительный стол/i, `${mode.name} explains the initial zone and table preference`);
+
       const layout = await page.locator('.tp-seat-plan').evaluate(svg => {
         const counts = {};
         svg.querySelectorAll('[data-tp-table]').forEach(table => {
