@@ -508,7 +508,7 @@ $bookingMailReadiness = match ($bookingMailState) {
   <?php if ($error !== ''): ?><p class="form-status error admin-notice" role="alert"><?=e($error)?></p><?php endif ?>
 
   <nav class="admin-jump-nav" aria-label="Разделы панели">
-    <a href="#notifications">Уведомления</a><a href="#menu">Меню</a><a href="#pairings">Сочетания</a><a href="#orders">Заказы</a>
+    <a href="#search">Поиск</a><a href="#notifications">Уведомления</a><a href="#menu">Меню</a><a href="#pairings">Сочетания</a><a href="#orders">Заказы</a>
     <a href="#bookings">Брони</a><a href="#reviews">Отзывы</a><a href="#contact_messages">Сообщения</a><a href="#settings">Настройки</a>
   </nav>
 
@@ -525,12 +525,13 @@ $bookingMailReadiness = match ($bookingMailState) {
       <input type="hidden" name="csrf" value="<?=e(csrf())?>">
       <input type="hidden" name="action" value="admin-search">
       <label class="sr-only" for="admin-search-q">Поиск по панели</label>
-      <input id="admin-search-q" name="q" type="search" maxlength="120" value="<?=e($search)?>" placeholder="Например: нигири, имя гостя, телефон…">
+      <input id="admin-search-q" name="q" type="search" maxlength="120" value="<?=e($search)?>" placeholder="Например: нигири, имя гостя, телефон…" aria-describedby="admin-search-hint">
       <button class="button" type="submit">Найти</button>
       <?php if ($search !== ''): ?>
         <button class="button secondary" type="submit" name="clear_search" value="1">Сбросить</button>
       <?php endif ?>
     </form>
+    <p class="admin-search-hint" id="admin-search-hint">Быстрый доступ: нажмите <kbd>/</kbd> вне полей ввода.</p>
     <?php if ($search !== ''): ?><p class="admin-search-summary" aria-live="polite">Результаты по запросу «<?=e($search)?>». Поиск охватывает все записи; каждый раздел показывает до 25 результатов на странице.</p><?php endif ?>
   </section>
 
@@ -790,4 +791,5 @@ $bookingMailReadiness = match ($bookingMailState) {
   <p class="admin-demo-note">Учебная панель PHP + SQLite. Бронь считается подтверждённой только после действия администратора. Email отправляется только при настроенном SMTP; GitHub Pages не отправляет письма. Реальные платежи и SMS не подключены.</p>
 </main>
 <?php endif; ?>
+<?php if (!empty($_SESSION['admin_id'])): ?><script src="admin-dashboard.js" defer></script><?php endif ?>
 <?php footer_html(); ?>

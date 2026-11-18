@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-18 · Faster admin navigation
+
+The main admin and Marketing & Loyalty pages now keep their section shortcuts available during long-page work, with horizontal navigation on smaller screens and adjusted anchor offsets below the site header. The main dashboard shortcut strip marks the visible section, includes a direct search link, and supports `/` to focus its search field. The SMTP queue KPI and retry workflow documented below are unchanged. Targeted PHP lint, JavaScript syntax validation and `git diff --check` passed; the full browser suite was intentionally not rerun in this accelerated pass. Publication and focused CI status will be recorded after this change is pushed.
+
 ## 2026-11-18 · Actionable booking email queue
 
 The main admin's mail KPI now opens bookings with pending or failed email delivery, where each record exposes the existing retry action. This closes the gap between the queue count and the operational list. The visual comparison log also now reflects the existing three distinct photographs on the salmon-nigiri detail route and links to its desktop/mobile evidence. PHP syntax and diff hygiene passed; hosted run [44274931548](https://github.com/altento/tokyo-premium/actions/runs/44274931548) passed the focused fast-publish checks and deployment. The full browser/visual suite was skipped for this run and remains manually available. Overall Tokyo Premium 2.0 acceptance remains open.

@@ -409,9 +409,10 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .admin-topline{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:22px;padding-bottom:24px;border-bottom:1px solid var(--hairline)}
 .admin-topline h1{margin:.35rem 0 0;font:400 clamp(2rem,5vw,3.6rem)/1.08 'Playfair Display',Georgia,serif;color:var(--ivory)}
 .admin-topline form{flex:none}
-.admin-jump-nav{display:flex;gap:9px;flex-wrap:wrap;margin:0 0 22px}
+.admin-jump-nav{position:sticky;top:76px;z-index:45;display:flex;gap:9px;flex-wrap:wrap;margin:0 0 22px;padding:9px 0;background:rgba(10,9,8,.97);border-bottom:1px solid rgba(202,165,107,.14);box-shadow:0 10px 22px rgba(0,0,0,.16)}
 .admin-jump-nav a{padding:8px 12px;border:1px solid var(--hairline);border-radius:999px;color:#e7d4b4;font-size:.82rem;transition:background .2s,border-color .2s}
 .admin-jump-nav a:hover,.admin-jump-nav a:focus-visible{background:#351416;border-color:#a91d26}
+.admin-jump-nav a[aria-current="location"]{border-color:#b3282e;background:linear-gradient(130deg,rgba(133,22,30,.25),#12100e 75%);box-shadow:inset 0 -2px #b3282e}
 .admin-kpi-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 20px}
 .admin-kpi{display:grid;align-content:start;gap:7px;min-width:0;padding:16px 18px;border:1px solid rgba(200,164,99,.27);border-radius:10px;background:radial-gradient(ellipse at 100% 0,rgba(144,29,35,.13),transparent 46%),linear-gradient(145deg,#171411,#100e0c 72%);color:var(--ivory)}
 .admin-kpi>span{color:#c9b894;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase}
@@ -438,6 +439,7 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .admin-search-form input{min-width:0;min-height:48px;padding:10px 14px;border:1px solid var(--hairline);border-radius:7px;background:#0d0c0b;color:var(--ivory)}
 .admin-search-form input::placeholder{color:#958b7b}
 .admin-search-summary{margin:12px 0 0;color:#e8c77e;font-size:.85rem}
+.admin-search-hint{margin:8px 0 0;color:var(--muted);font-size:.76rem}.admin-search-hint kbd{padding:1px 6px;border:1px solid rgba(200,164,99,.3);border-radius:4px;background:#171411;color:#e7d4b4;font:inherit}
 .admin-notification-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .admin-notification{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:68px;padding:12px 14px;border:1px solid var(--hairline);border-radius:9px;background:#12100e;color:var(--ivory)}
 .admin-notification:hover{border-color:#a51d25;transform:translateY(-1px)}
@@ -512,10 +514,13 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .admin-empty{margin:0;padding:16px;border:1px dashed rgba(200,164,99,.28);border-radius:8px;color:var(--muted)}
 .admin-demo-note{margin:22px 4px 40px;font-size:.8rem}
 .admin-dashboard .admin-section-heading h2{margin:0}
-.admin-dashboard .admin-card#notifications{scroll-margin-top:20px}
-.admin-dashboard .admin-card[id]{scroll-margin-top:22px}
+.admin-dashboard .admin-card#notifications{scroll-margin-top:154px}
+.admin-dashboard .admin-card[id]{scroll-margin-top:154px}
 .account-section h2::after{margin-top:.38em}
 @media(max-width:800px){
+  .admin-jump-nav{top:70px;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:thin}
+  .admin-jump-nav a{flex:0 0 auto;white-space:nowrap}
+  .admin-dashboard .admin-card[id]{scroll-margin-top:142px}
   .admin-kpi-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
   .admin-kpi{padding:13px}
   .admin-kpi>span{font-size:.68rem}
@@ -527,6 +532,7 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
   .admin-edit-details{grid-column:3;grid-row:1}
   .admin-edit-details[open]{grid-column:1/-1;grid-row:auto}
 }
+@media(max-width:600px){.admin-jump-nav{top:64px}}
 @media(max-width:560px){
   .admin-dashboard{padding-inline:12px}
   .admin-kpi-grid{grid-template-columns:1fr}
@@ -534,6 +540,7 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
   .admin-topline .button{padding-inline:14px;min-height:42px}
   .admin-jump-nav{gap:7px}
   .admin-jump-nav a{padding:7px 9px;font-size:.74rem}
+  .admin-dashboard .admin-card[id]{scroll-margin-top:136px}
   .admin-search-form{grid-template-columns:1fr 1fr}
   .admin-search-form input{grid-column:1/-1}
   .admin-search-form .button{width:100%;padding-inline:8px}
