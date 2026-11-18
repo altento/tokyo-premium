@@ -21,9 +21,9 @@ Push to `main` and wait for the Pages workflow to finish. Inspect the workflow s
 
 ## Latest verified publication
 
-- Main commit: d1bc5543d67ef04c8353d713eca1b0b3f7eea9e9
-- Workflow: [run 43312293771](https://github.com/altento/tokyo-premium/actions/runs/43312293771) — build and deploy both succeeded.
-- Public browser check: [Tokyo Premium Pages](https://altento.github.io/tokyo-premium/). Fifteen static routes returned HTTP 200; the Offers page assets loaded without console errors or warnings. At 320 px and 390 px, its heading stayed within the viewport with no horizontal overflow.
-- This verifies the published static demo. It does not make local browser storage durable or enable PHP, server authentication, payments, restaurant email, or live table availability.
+- Main commit: `7d6e9e147683d3e4a7ee16efc5d72983ec59633b`
+- Workflow: [run 44211881185](https://github.com/altento/tokyo-premium/actions/runs/44211881185) — build and deploy both succeeded; PHP/SQLite, set-format admin regression, browser and visual-QA steps passed.
+- Public checks: [Tokyo Premium Pages](https://altento.github.io/tokyo-premium/) and `/set-builder.html` returned HTTP 200 after deployment.
+- This verifies the published static demo. PHP-only admin features remain unavailable on Pages; browser storage is not durable/server-synced, and no payment or live table availability is enabled.
 
 The latest verification record is in [testing-report.md](testing-report.md). A new pixel-by-pixel comparison of all 11 source references against current pages remains outstanding; existing screenshots and older gap notes do not constitute that acceptance claim.
