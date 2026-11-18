@@ -6,6 +6,7 @@
     "test:commerce-pricing": "php tests/commerce-pricing-regression.php",
     "test:gift-quantity": "php tests/gift-quantity-regression.php",
     "test:saved-addresses": "php tests/saved-address-regression.php",
+    "test:account-profile": "php tests/account-profile-regression.php",
     "test:saved-address-browser": "node tests/saved-address-browser-regression.cjs",
     "test:admin-order-status": "php tests/admin-order-status-regression.php",
     "test:admin-account-search-referral": "php tests/admin-account-search-referral-regression.php",

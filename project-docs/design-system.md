@@ -13,7 +13,7 @@ Luxury Japanese dining through restrained contrast: lacquer charcoal, warm ivory
 - Shared header/footer, spacing, border, color, and typography tokens live in `luxury.css` and `editorial.css`.
 
 ## Motion and access
-- Use short opacity/transform reveals, hover feedback, filter changes and a dialog lightbox.
+- Use short opacity/transform reveals, hover feedback, filter changes and a dialog lightbox. The shared header logo mark and wordmark have a brief staggered entrance on standard-motion page loads; this is disabled when `prefers-reduced-motion` is requested and does not change layout dimensions.
 - Prefer CSS transforms and opacity; no autoplay video or background audio.
 - Respect `prefers-reduced-motion`. Keep controls semantic, labels visible, focus indicators intact, and modal dismissal available by Escape/clicking close.
 - Avoid animated effects that obscure content or delay the main task.

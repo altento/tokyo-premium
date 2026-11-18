@@ -127,6 +127,12 @@ async function run(options = {}) {
     });
     progress('registration done');
     await page.screenshot({ path: path.join(evidence, '11-account-desktop.jpg'), fullPage: true, type: 'jpeg', quality: 70 });
+    const personalDetails = page.locator('.account-personal-details-form');
+    check(await personalDetails.count() === 1, 'authenticated account exposes a personal details form');
+    await personalDetails.locator('[name="full_name"]').fill('Гость QA Tokyo');
+    await personalDetails.locator('button[type="submit"]').click();
+    await page.waitForFunction(() => document.body.innerText.includes('Имя и контактный email сохранены.'));
+    check(await personalDetails.locator('[name="full_name"]').inputValue() === 'Гость QA Tokyo', 'PHP profile editor persists the updated member name in the browser flow');
 
     // State survives routes and refresh, and header count does not depend on a drawer.
     await page.goto(base + '/');

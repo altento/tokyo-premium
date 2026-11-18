@@ -39,6 +39,8 @@ async function runMode(browser, name, base, route, capture) {
   const response = await page.goto(`${base}${route}`, { waitUntil: 'networkidle' });
   assert.equal(response?.status(), 200, `${name} homepage loads`);
   await page.evaluate(() => document.fonts.ready);
+  assert.equal(await page.locator('.site-header .brand-emblem').evaluate(node => getComputedStyle(node).animationName), 'tp20-logo-mark-reveal', `${name} reveals the logo emblem on first load`);
+  assert.equal(await page.locator('.site-header .brand-type').evaluate(node => getComputedStyle(node).animationName), 'tp20-logo-type-reveal', `${name} reveals the wordmark after the emblem`);
   assert.equal(await page.evaluate(() => Boolean(window.gsap && window.ScrollTrigger)), true, `${name} loads the locally vendored GSAP motion engine`);
   assert.ok(await page.evaluate(() => window.ScrollTrigger.getAll().length > 0), `${name} registers ScrollTrigger for scroll storytelling`);
   assert.equal(await page.evaluate(() => {
@@ -152,6 +154,7 @@ async function runReducedMotion(browser, name, base, route) {
   const page = await context.newPage();
   const hero = page.locator('[data-home-hero]');
   await page.goto(`${base}${route}`, { waitUntil: 'domcontentloaded' });
+  assert.equal(await page.locator('.site-header .brand-emblem').evaluate(node => getComputedStyle(node).animationName), 'none', `${name} skips the logo reveal when reduced motion is requested`);
   await page.waitForFunction(() => !document.querySelector('[data-home-hero-controls]')?.hidden);
   assert.equal(await page.evaluate(() => matchMedia('(prefers-reduced-motion: no-preference)').matches), false, `${name} reduced-motion mode disables the page-transition opt-in media query`);
   assert.equal(await page.evaluate(() => window.ScrollTrigger?.getAll().length || 0), 0, `${name} creates no scroll animations when reduced motion is requested`);

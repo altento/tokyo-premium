@@ -45,6 +45,8 @@ jobs:
         run: php tests/php_integrity_integration.php
       - name: Check protected Tokyo Privilege ledger
         run: php tests/admin-loyalty-ledger-regression.php
+      - name: Check authenticated profile detail updates
+        run: npm run test:account-profile
       - name: Check threshold gift schedule regression
         run: npm run test:gift-quantity
       - name: Check birthday offers and tier restrictions

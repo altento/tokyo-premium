@@ -16,6 +16,12 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .brand-type{font:500 13px/1.08 'Playfair Display',Georgia,serif;letter-spacing:.14em}
 .brand-type i{font-style:normal;display:block;letter-spacing:.19em;color:var(--ivory)}
 .brand-type small{display:block;margin-top:5px;font:500 6px/1.2 Manrope,sans-serif;letter-spacing:.17em;color:var(--muted)}
+@media (prefers-reduced-motion: no-preference) {
+  .site-header .brand-emblem { animation: tp20-logo-mark-reveal 680ms cubic-bezier(.2,.7,.2,1) both; transform-origin:center; }
+  .site-header .brand-type { animation: tp20-logo-type-reveal 720ms cubic-bezier(.2,.7,.2,1) 120ms both; }
+  @keyframes tp20-logo-mark-reveal { from { opacity:.2; transform:scale(.84) rotate(-9deg); } to { opacity:1; transform:scale(1) rotate(0); } }
+  @keyframes tp20-logo-type-reveal { from { opacity:.25; transform:translateX(-8px); } to { opacity:1; transform:translateX(0); } }
+}
 .main-nav{display:flex;align-items:center;justify-content:center;gap:clamp(13px,1.7vw,26px);flex:1;color:#e3d7c2;font-size:11px;letter-spacing:.04em;white-space:nowrap}
 .main-nav a{position:relative;padding:10px 0;transition:color .2s ease}
 .main-nav a:after{content:"";position:absolute;left:0;right:100%;bottom:2px;height:2px;background:var(--crimson-bright);transition:right .25s ease}

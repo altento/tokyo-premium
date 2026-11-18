@@ -3,6 +3,7 @@ require __DIR__ . '/bootstrap.php';
 $pdo = db();
 $err = '';
 $profileNotice = '';
+$accountDetailsDraft = null;
 $incomingReferralCode = strtoupper(trim((string)($_POST['referral_code'] ?? $_GET['ref'] ?? '')));
 if (!preg_match('/^TP[A-F0-9]{10}$/',$incomingReferralCode)) $incomingReferralCode = '';
 
@@ -46,6 +47,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
         $err = 'Неверный email или пароль.';
+    } elseif ($action === 'account-details-save' && !empty($_SESSION['user_id'])) {
+        $rawName = $_POST['full_name'] ?? '';
+        $rawEmail = $_POST['email'] ?? '';
+        $name = is_string($rawName) ? trim($rawName) : '';
+        $email = is_string($rawEmail) ? trim($rawEmail) : '';
+        $accountDetailsDraft = ['full_name'=>$name, 'email'=>$email];
+        $nameLength = preg_match_all('/./us', $name);
+        $validName = $nameLength !== false && $nameLength >= 2 && $nameLength <= 80
+            && preg_match('/\\p{L}/u', $name) === 1
+            && preg_match('/[\\p{Cc}\\p{Cf}]/u', $name) !== 1;
+        $validEmail = strlen($email) <= 254 && filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
+        if (!$validName) {
+            $err = 'Введите имя длиной от 2 до 80 символов без управляющих знаков.';
+        } elseif (!$validEmail) {
+            $err = 'Введите корректный email длиной не более 254 символов.';
+        } else {
+            $userId = (int)$_SESSION['user_id'];
+            $query = $pdo->prepare('SELECT email,password_hash FROM users WHERE id=?');
+            $query->execute([$userId]);
+            $currentAccount = $query->fetch();
+            if (!$currentAccount) {
+                $err = 'Аккаунт не найден. Обновите страницу и войдите снова.';
+            } else {
+                $emailChanged = strcasecmp($email, (string)$currentAccount['email']) !== 0;
+                $rawCurrentPassword = $_POST['current_password'] ?? '';
+                $currentPassword = is_string($rawCurrentPassword) ? $rawCurrentPassword : '';
+                if ($emailChanged && !password_verify($currentPassword, (string)$currentAccount['password_hash'])) {
+                    $err = 'Введите текущий пароль, чтобы изменить email.';
+                } else {
+                    // The users.email UNIQUE COLLATE NOCASE index is the final
+                    // authority, including when two profile updates race.
+                    $duplicate = $pdo->prepare('SELECT 1 FROM users WHERE email COLLATE NOCASE=? COLLATE NOCASE AND id<>? LIMIT 1');
+                    $duplicate->execute([$email, $userId]);
+                    if ($duplicate->fetchColumn()) {
+                        $err = 'Этот email уже используется другим аккаунтом.';
+                    } else {
+                        try {
+                            $update = $pdo->prepare('UPDATE users SET full_name=?,email=? WHERE id=?');
+                            $update->execute([$name, $email, $userId]);
+                            $profileNotice = 'Имя и контактный email сохранены.';
+                        } catch (PDOException $exception) {
+                            if (str_contains($exception->getMessage(), 'UNIQUE constraint failed: users.email')) {
+                                $err = 'Этот email уже используется другим аккаунтом.';
+                            } else {
+                                throw $exception;
+                            }
+                        }
+                    }
+                }
+            }
+        }
     } elseif ($action === 'profile-save' && !empty($_SESSION['user_id'])) {
         $birthDate = trim((string)($_POST['birth_date'] ?? ''));
         $consent = isset($_POST['birthday_offer_consent']) ? 1 : 0;
@@ -131,7 +183,7 @@ if (!empty($_SESSION['user_id'])) {
         $query = $pdo->prepare('SELECT birth_date,birthday_offer_consent,birthday_consent_at FROM user_profiles WHERE user_id=?');
         $query->execute([$userId]); $profile = $query->fetch() ?: ['birth_date'=>'','birthday_offer_consent'=>0,'birthday_consent_at'=>null];
         $birthdayPointsAwarded=commerce_award_birthday_points($pdo,$userId);
-        if ($birthdayPointsAwarded>0) $profileNotice='С днём рождения — начислено '.number_format($birthdayPointsAwarded,0,'.',' ').' учебных бонусов Tokyo Privilege.';
+        if ($birthdayPointsAwarded>0 && $profileNotice==='') $profileNotice='С днём рождения — начислено '.number_format($birthdayPointsAwarded,0,'.',' ').' учебных бонусов Tokyo Privilege.';
         $tier = commerce_user_tier($pdo, $userId);
         $loyaltyBalance = commerce_get_loyalty_balance($pdo, $userId);
         $query = $pdo->prepare("SELECT COALESCE(SUM(total),0) FROM orders WHERE user_id=? AND status='completed'");
@@ -401,6 +453,15 @@ header_html();
 
             <section id="account-settings" class="account-section account-dashboard-panel" aria-labelledby="tp20-profile-settings">
               <div class="account-dashboard-section-heading"><div><span class="kicker">PRIVACY & SETTINGS</span><h2 id="tp20-profile-settings">Настройки профиля</h2></div></div>
+              <p class="account-section-copy">Личные данные используются для вашего аккаунта и оформления заказов.</p>
+              <form method="post" class="tp20-account-form account-personal-details-form">
+                <input type="hidden" name="csrf" value="<?=e(csrf())?>">
+                <input type="hidden" name="action" value="account-details-save">
+                <label>Имя<input name="full_name" value="<?=e($accountDetailsDraft['full_name'] ?? $user['full_name'])?>" minlength="2" maxlength="320" autocomplete="name" required></label>
+                <label>Email<input type="email" name="email" value="<?=e($accountDetailsDraft['email'] ?? $user['email'])?>" maxlength="254" autocomplete="email" required></label>
+                <label>Текущий пароль <small>(нужен только при изменении email)</small><input type="password" name="current_password" autocomplete="current-password" maxlength="200"></label>
+                <button class="button secondary" type="submit">Сохранить личные данные ↗</button>
+              </form>
               <p class="account-section-copy">Дата рождения необязательна. Согласие на персональные предложения можно отозвать, сняв отметку.</p>
               <form method="post" class="tp20-account-form"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="profile-save"><label>Дата рождения<input type="date" name="birth_date" value="<?=e((string)$profile['birth_date'])?>" max="<?=e(date('Y-m-d'))?>"></label><label class="tp20-account-consent"><input type="checkbox" name="birthday_offer_consent" value="1" <?=!empty($profile['birthday_offer_consent'])?'checked':''?>> Даю отдельное согласие на предложения ко дню рождения в учебной системе</label><button class="button secondary" type="submit">Сохранить настройки ↗</button></form>
             </section>
