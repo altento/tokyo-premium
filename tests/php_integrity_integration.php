@@ -136,11 +136,7 @@ function request(string $path, array $fields = [], array $headers = []): array {
  foreach ($responseHeaders as $line) if (stripos($line, 'Set-Cookie: tokyo_session=') === 0) $cookie = explode(';', substr($line, 12))[0];
  preg_match('/\s(\d{3})\s/', $responseHeaders[0] ?? '', $m);
  $status = (int)($m[1] ?? 0);
- if ($fields && $path === '/admin-marketing.php' && $status === 303) {
-  $location = '';
-  foreach ($responseHeaders as $line) if (stripos($line, 'Location:') === 0) $location = trim(substr($line, 9));
-  if ($location !== '') return request($location);
- }
+ if ($fields && str_contains($path, 'admin-marketing.php') && $status === 303) return request('/admin-marketing.php');
  return [$status, (string)$body, $responseHeaders];
 }
 function adminPost(array $fields): array {
