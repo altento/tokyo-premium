@@ -8,3 +8,7 @@ Compared the current static booking page against [the approved reservation refer
 - Captures: [desktop](booking-desktop.png) and [mobile](booking-mobile.png).
 
 This is a focused check of the booking composition, not a complete pixel-by-pixel acceptance comparison of all 11 references.
+
+## SVG furnishing follow-up
+
+Added subtle wood-plank details to the main hall, a central garden-water feature along the aisle, a sushi-bar service detail, tatami lines and shoji framing for the private room, and stone paving with planter accents on the terrace. The additions are decorative behind the existing table and zone controls; they do not expose availability. Both SVG copies parse as XML, keep 42 unique table IDs and four zone hit areas, and are byte-identical. No fresh browser screenshot was captured for this follow-up; the screenshots above show the prior SVG rendering and need refresh before visual acceptance.

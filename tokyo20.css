@@ -230,6 +230,7 @@
 .tp20-admin-form h3 { margin:0; font:500 1.4rem var(--tp20-serif); }
 .tp20-admin-fields { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
 .tp20-admin-fields label, .tp20-admin-form > label { display:grid; align-content:start; gap:7px; min-width:0; color:#dfc58f; font-size:.85rem; }
+.tp20-admin-reward-hint { color:var(--tp20-muted); font-size:.72rem; line-height:1.45; }
 .tp20-admin-fields input:not([type=checkbox]), .tp20-admin-fields select, .tp20-admin-fields textarea, .tp20-admin-form > label input { width:100%; min-width:0; min-height:44px; padding:9px 11px; border:1px solid var(--tp20-line); border-radius:6px; background:#0b0a09; color:var(--tp20-ivory); }
 .tp20-admin-fields textarea { min-height:86px; resize:vertical; }
 .tp20-admin-fields select option { color:#171411; }

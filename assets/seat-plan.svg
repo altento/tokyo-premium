@@ -4,7 +4,10 @@
   <defs>
     <linearGradient id="floor" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#191611"/><stop offset="1" stop-color="#0d0d0c"/></linearGradient>
     <pattern id="wood" width="16" height="16" patternUnits="userSpaceOnUse"><path d="M0 4h16M0 12h16" stroke="#b9935c" stroke-opacity=".07"/><path d="M4 0v16" stroke="#e6c27e" stroke-opacity=".025"/></pattern>
+    <pattern id="tatami" width="30" height="22" patternUnits="userSpaceOnUse"><rect width="30" height="22" fill="#263025" fill-opacity=".26"/><path d="M0 1h30M0 21h30M1 1v20M29 1v20" fill="none" stroke="#b7a478" stroke-opacity=".16" stroke-width="1"/><path d="M6 5h18" stroke="#e4d0a2" stroke-opacity=".045"/></pattern>
+    <pattern id="stone" width="34" height="28" patternUnits="userSpaceOnUse"><path d="M0 7h15m4 0h15M8 21h18" stroke="#d0ba8f" stroke-opacity=".1" stroke-width="2" stroke-linecap="round"/><circle cx="4" cy="20" r="1.4" fill="#c7a36b" fill-opacity=".22"/></pattern>
     <radialGradient id="garden"><stop stop-color="#425039" stop-opacity=".5"/><stop offset="1" stop-color="#111810" stop-opacity=".9"/></radialGradient>
+    <radialGradient id="pond"><stop stop-color="#53634c" stop-opacity=".82"/><stop offset=".62" stop-color="#27352c" stop-opacity=".92"/><stop offset="1" stop-color="#171b16"/></radialGradient>
   </defs>
   <rect width="960" height="560" rx="24" fill="url(#floor)"/>
   <rect x="12" y="12" width="936" height="536" rx="20" fill="url(#wood)" stroke="#b9935c" stroke-opacity=".3"/>
@@ -12,6 +15,16 @@
 
   <g data-tp-zone="Основной зал" data-tp-photo="assets/generated/room-main-hall.webp" aria-label="Основной зал">
     <rect class="tp-zone-fill" data-tp-zone-hit="" x="38" y="38" width="440" height="484" rx="18"/>
+    <rect x="47" y="47" width="422" height="466" rx="14" fill="url(#wood)" opacity=".62" pointer-events="none"/>
+    <path d="M50 284h416M52 295h414" stroke="#dfc58f" stroke-opacity=".11" stroke-width="2" stroke-dasharray="8 8" pointer-events="none"/>
+    <g pointer-events="none" aria-hidden="true">
+      <ellipse cx="268" cy="289" rx="44" ry="22" fill="url(#pond)" stroke="#b99a64" stroke-opacity=".48" stroke-width="1.5"/>
+      <path d="M237 289c12-9 25-9 38 0 11 8 20 8 28 0M244 297c13-6 26-6 38 0" fill="none" stroke="#a9b287" stroke-opacity=".38" stroke-width="1.4"/>
+      <ellipse cx="255" cy="282" rx="5" ry="2.4" fill="#d8c894" fill-opacity=".5"/><ellipse cx="281" cy="295" rx="4" ry="2" fill="#c4ad7c" fill-opacity=".42"/>
+      <path d="M221 272c-7-8-6-17 3-24m83 23c8-8 8-17 0-25" fill="none" stroke="#637453" stroke-opacity=".58" stroke-width="2"/>
+      <g fill="#8e2930" fill-opacity=".62"><circle cx="63" cy="62" r="2"/><circle cx="68" cy="67" r="2"/><circle cx="455" cy="63" r="2"/><circle cx="449" cy="68" r="2"/></g>
+      <path d="M50 50h12v14H50m418 0h-12V50h12M50 510h12v-14H50m418 0h-12v14h12" fill="none" stroke="#d5b476" stroke-opacity=".48" stroke-width="2"/>
+    </g>
     <text class="tp-floor-label" x="61" y="70">Основной зал</text>
     <text class="tp-floor-note" x="61" y="91">20 вариантов · учебный план</text>
     <path d="M65 118h384M65 273h384M66 310h384M66 492h384" stroke="#d0ad73" stroke-opacity=".12" stroke-width="1"/>
@@ -21,14 +34,32 @@
 
   <g data-tp-zone="Суши-бар" data-tp-photo="assets/generated/room-sushi-counter.webp" aria-label="Суши-бар">
     <rect class="tp-zone-fill" data-tp-zone-hit="" x="510" y="38" width="412" height="202" rx="18"/>
+    <rect x="520" y="48" width="392" height="182" rx="14" fill="url(#wood)" opacity=".52" pointer-events="none"/>
+    <g pointer-events="none" aria-hidden="true">
+      <path d="M533 81h366M533 86h366" stroke="#d7bd8d" stroke-opacity=".17" stroke-width="2"/>
+      <path d="M541 91h352" stroke="#ac8955" stroke-opacity=".34" stroke-width="1" stroke-dasharray="3 7"/>
+      <path d="M548 167h336" stroke="#c8a568" stroke-opacity=".22" stroke-width="2"/>
+      <g fill="#53634c" fill-opacity=".38"><circle cx="526" cy="61" r="8"/><circle cx="906" cy="61" r="8"/></g>
+    </g>
     <text class="tp-floor-label" x="535" y="69">Суши-бар</text>
     <rect x="550" y="103" width="332" height="54" rx="13" fill="#31271a" stroke="#b9935c" stroke-opacity=".65"/>
     <path d="M569 117h294M569 143h294" stroke="#e0c187" stroke-opacity=".24"/>
+    <g pointer-events="none" aria-hidden="true">
+      <ellipse cx="857" cy="129" rx="16" ry="10" fill="#c6a269" fill-opacity=".42" stroke="#ead4a6" stroke-opacity=".56"/>
+      <ellipse cx="857" cy="129" rx="9" ry="5" fill="#294235" stroke="#e6d3a6" stroke-opacity=".48"/>
+      <path d="M853 128c3-5 8-5 10 0-4 3-7 3-10 0Z" fill="#87a369" fill-opacity=".76"/>
+    </g>
     <text class="tp-floor-note" x="568" y="134">8 мест у стойки · доступность не проверяется</text>
   </g>
 
   <g data-tp-zone="Приватная комната" data-tp-photo="assets/generated/room-private-dining.webp" aria-label="Приватная комната">
     <rect class="tp-zone-fill" data-tp-zone-hit="" x="510" y="270" width="412" height="132" rx="18"/>
+    <rect x="519" y="279" width="394" height="114" rx="13" fill="url(#tatami)" opacity=".72" pointer-events="none"/>
+    <g pointer-events="none" aria-hidden="true" fill="none" stroke="#d0b577" stroke-opacity=".32">
+      <path d="M523 283v104m386-104v104M536 282h77m18 0h77m18 0h77m18 0h77" stroke-width="2"/>
+      <path d="M531 320h370m-370 72h370" stroke-opacity=".16" stroke-dasharray="7 6"/>
+      <path d="M520 319h11m-11 74h11m382-74h11m-11 74h11" stroke-width="4"/>
+    </g>
     <text class="tp-floor-label" x="535" y="301">Приватная комната</text>
     <path d="M528 322h376" stroke="#e0c187" stroke-opacity=".1"/><text class="tp-floor-note" x="535" y="317">4 варианта · предпочтительная зона</text>
     <rect x="826" y="280" width="62" height="9" rx="4" fill="#8e2530" fill-opacity=".7"/>
@@ -36,6 +67,14 @@
 
   <g data-tp-zone="Летняя терраса" data-tp-photo="assets/generated/room-garden-terrace.webp" aria-label="Летняя терраса">
     <rect class="tp-zone-fill" data-tp-zone-hit="" x="510" y="432" width="412" height="90" rx="18"/>
+    <rect x="519" y="441" width="394" height="72" rx="13" fill="url(#stone)" opacity=".8" pointer-events="none"/>
+    <g pointer-events="none" aria-hidden="true">
+      <path d="M532 451h360M532 458h360" stroke="#d1b681" stroke-opacity=".2" stroke-width="2"/>
+      <path d="M528 476h376" stroke="#e0c187" stroke-opacity=".12" stroke-width="1" stroke-dasharray="5 7"/>
+      <g fill="url(#garden)" stroke="#7d885e" stroke-opacity=".6"><ellipse cx="535" cy="474" rx="11" ry="6"/><ellipse cx="897" cy="474" rx="11" ry="6"/><ellipse cx="915" cy="488" rx="8" ry="5"/></g>
+      <g fill="#d8a554" fill-opacity=".38"><circle cx="535" cy="474" r="2"/><circle cx="897" cy="474" r="2"/><circle cx="915" cy="488" r="2"/></g>
+      <path d="M545 494c30-8 53-8 80 0m238 0c20-7 35-7 57 0" fill="none" stroke="#85916b" stroke-opacity=".28" stroke-width="2"/>
+    </g>
     <text class="tp-floor-label" x="535" y="464">Летняя терраса</text>
     <text class="tp-floor-note" x="535" y="487">10 вариантов · предпочтение без проверки наличия</text>
     <path d="M840 454c17 7 27 20 28 42m-40-44c9 13 12 27 10 44" fill="none" stroke="#c6a269" stroke-opacity=".4" stroke-width="2"/>
