@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS email_outbox (id INTEGER PRIMARY KEY AUTOINCREMENT, e
 CREATE INDEX IF NOT EXISTS idx_email_outbox_status_id ON email_outbox(status,id);
 CREATE INDEX IF NOT EXISTS idx_email_outbox_booking_id ON email_outbox(booking_id,id);
 CREATE TABLE IF NOT EXISTS admins (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE COLLATE NOCASE, password_hash TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE IF NOT EXISTS admin_login_attempts (bucket_hash TEXT PRIMARY KEY CHECK(length(bucket_hash)=64), window_started_at INTEGER NOT NULL, attempts INTEGER NOT NULL CHECK(attempts >= 0), locked_until INTEGER NOT NULL DEFAULT 0, updated_at INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS idx_admin_login_attempts_updated ON admin_login_attempts(updated_at);
 CREATE TABLE IF NOT EXISTS reviews (id INTEGER PRIMARY KEY AUTOINCREMENT, guest_name TEXT NOT NULL, rating INTEGER NOT NULL CHECK(rating BETWEEN 1 AND 5), body TEXT NOT NULL, theme TEXT NOT NULL DEFAULT 'Кухня', status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','published','hidden')), created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE IF NOT EXISTS app_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE IF NOT EXISTS contact_messages (id INTEGER PRIMARY KEY AUTOINCREMENT, guest_name TEXT NOT NULL, email TEXT NOT NULL, subject TEXT NOT NULL, message TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'new' CHECK(status IN ('new','read','archived')), created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);

@@ -337,6 +337,21 @@
 .editorial-page .booking-layout { gap: clamp(18px, 3vw, 36px); }
 .editorial-page .table-map-wrap { padding: clamp(14px, 2vw, 22px); }
 
+@media (min-width: 901px) {
+  .editorial-page > #booking-form .booking-layout {
+    grid-template-columns: minmax(0, .88fr) minmax(0, 1.12fr);
+  }
+  .editorial-page .tp20-floorplan-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+  .editorial-page [data-tp-zone-photo] {
+    height: clamp(140px, 12vw, 190px);
+    min-height: 0;
+    max-height: none;
+  }
+}
+
 @media (max-width: 700px) {
   .editorial-page > .booking-benefits-section { padding-block: 12px; }
   .editorial-page .booking-benefits { grid-template-columns: 1fr; gap: 7px; }

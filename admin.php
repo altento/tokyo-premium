@@ -115,13 +115,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = (string)($_POST['action'] ?? '');
 
     if ($action === 'login') {
-        $email = filter_var(trim((string)($_POST['email'] ?? '')), FILTER_VALIDATE_EMAIL);
-        $query = $pdo->prepare('SELECT id,password_hash FROM admins WHERE email=?');
-        $query->execute([$email ?: '']);
-        $admin = $query->fetch(PDO::FETCH_ASSOC);
-        if ($admin && password_verify((string)($_POST['password'] ?? ''), $admin['password_hash'])) {
+        $adminId = admin_authenticate(
+            $pdo,
+            (string)($_POST['email'] ?? ''),
+            (string)($_POST['password'] ?? ''),
+            (string)($_SERVER['REMOTE_ADDR'] ?? '')
+        );
+        if ($adminId !== null) {
             session_regenerate_id(true);
-            $_SESSION['admin_id'] = (int)$admin['id'];
+            $_SESSION['admin_id'] = $adminId;
             header('Location: admin.php');
             exit;
         }

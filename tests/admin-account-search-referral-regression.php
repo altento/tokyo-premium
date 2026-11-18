@@ -106,10 +106,24 @@ try {
 
     [$status, $adminLogin] = flowRequest('/admin.php');
     $assert($status === 200 && str_contains($adminLogin, 'Вход в панель'), 'admin login page opens for the focused search test');
+    $adminCsrf = flowCsrf($adminLogin);
+    for ($attempt = 1; $attempt <= 5; $attempt++) {
+        [$status, $failedLogin] = flowRequest('/admin.php', [
+            'csrf'=>$adminCsrf, 'action'=>'login', 'email'=>$adminEmail, 'password'=>'wrong-password-' . $attempt,
+        ]);
+        $assert($status === 200 && str_contains($failedLogin, 'Неверный email или пароль.'), 'admin login failure stays generic (' . $attempt . '/5)');
+    }
+    $assert((int)$pdo->query('SELECT COUNT(*) FROM admin_login_attempts WHERE length(bucket_hash)=64') ->fetchColumn() === 2, 'rate-limit records use opaque IP/account hashes without storing raw identifiers');
+    [$status, $lockedLogin] = flowRequest('/admin.php', [
+        'csrf'=>$adminCsrf, 'action'=>'login', 'email'=>$adminEmail, 'password'=>$adminPassword,
+    ]);
+    $assert($status === 200 && str_contains($lockedLogin, 'Неверный email или пароль.'), 'correct credentials stay blocked during the IP cooldown');
+    $pdo->exec('UPDATE admin_login_attempts SET locked_until=' . (time() - 1));
     [$status] = flowRequest('/admin.php', [
-        'csrf'=>flowCsrf($adminLogin), 'action'=>'login', 'email'=>$adminEmail, 'password'=>$adminPassword,
+        'csrf'=>$adminCsrf, 'action'=>'login', 'email'=>$adminEmail, 'password'=>$adminPassword,
     ]);
     $assert($status === 302, 'admin login succeeds');
+    $assert((int)$pdo->query('SELECT COUNT(*) FROM admin_login_attempts')->fetchColumn() === 0, 'successful admin login clears rate-limit buckets');
     [$status, $marketingHtml] = flowRequest('/admin-marketing.php?user_search=' . rawurlencode('илья қайрат'));
     $assert($status === 200 && str_contains($marketingHtml, 'Найденные аккаунты') && str_contains($marketingHtml, 'Илья Қайрат'), 'marketing admin finds a mixed-case Cyrillic name');
 
@@ -145,7 +159,9 @@ try {
         proc_close($server);
     }
     $pdo = null;
-    foreach ([$dbPath, $dbPath . '-wal', $dbPath . '-shm', $serverLog] as $file) if (is_file($file)) @unlink($file);
+    $rateLimitKey = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR
+        . 'tokyo-admin-rate-' . hash('sha256', $dbPath) . '.key';
+    foreach ([$dbPath, $dbPath . '-wal', $dbPath . '-shm', $serverLog, $rateLimitKey] as $file) if (is_file($file)) @unlink($file);
     if ($oldRestaurantDb === false) putenv('RESTAURANT_DB'); else putenv('RESTAURANT_DB=' . $oldRestaurantDb);
 }
 if ($exitCode !== 0) exit($exitCode);

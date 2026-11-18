@@ -391,6 +391,26 @@ function commerce_migrate(PDO $pdo): void
             throw $error;
         }
     }
+
+    // v15 adds privacy-preserving attempt buckets for administrative login.
+    if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=15')->fetchColumn()) {
+        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        try {
+            $pdo->exec('CREATE TABLE IF NOT EXISTS admin_login_attempts (
+                bucket_hash TEXT PRIMARY KEY CHECK(length(bucket_hash)=64),
+                window_started_at INTEGER NOT NULL,
+                attempts INTEGER NOT NULL CHECK(attempts >= 0),
+                locked_until INTEGER NOT NULL DEFAULT 0,
+                updated_at INTEGER NOT NULL
+            )');
+            $pdo->exec('CREATE INDEX IF NOT EXISTS idx_admin_login_attempts_updated ON admin_login_attempts(updated_at)');
+            $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(15)');
+            $pdo->commit();
+        } catch (Throwable $error) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $error;
+        }
+    }
 }
 
 function commerce_actor_key(?int $userId, string $sessionId): string
