@@ -375,7 +375,13 @@ page_start('Marketing & Loyalty — Tokyo Premium', 'Управление уче
 header_html();
 ?>
 <main class="tp20-page tp20-admin-page"><section class="tp20-page-intro"><span class="kicker">ADMINISTRATOR · MARKETING &amp; LOYALTY</span><h1>Кампании<br>и привилегии</h1><p>Здесь управляются демонстрационные предложения. Все новые кампании и начисления сохраняются с учебной маркировкой; реальные списания и платежи не выполняются.</p><a class="text-link" href="admin.php">← Вернуться в основную админ-панель</a></section>
-  <nav class="tp20-admin-shortcuts" aria-label="Разделы управления"><a href="#campaigns">Кампании</a><a href="#codes">Промокоды</a><a href="#personal-offers">Персональные</a><a href="#collections">Коллекции</a><a href="#set-formats">Форматы сетов</a><a href="#tiers">Уровни клуба</a><a href="#secret-rules">Secret Menu и подарки</a><a href="#loyalty-settings">Условия привилегий</a><a href="#loyalty-ledger">Журнал бонусов</a></nav>
+  <nav class="tp20-admin-shortcuts" aria-label="Разделы управления"><a href="#marketing-search">Поиск</a><a href="#campaigns">Кампании</a><a href="#codes">Промокоды</a><a href="#personal-offers">Персональные</a><a href="#collections">Коллекции</a><a href="#set-formats">Форматы сетов</a><a href="#tiers">Уровни клуба</a><a href="#secret-rules">Secret Menu и подарки</a><a href="#loyalty-settings">Условия привилегий</a><a href="#loyalty-ledger">Журнал бонусов</a></nav>
+  <section class="tp20-admin-search section" id="marketing-search" aria-labelledby="marketing-search-title">
+    <div class="editorial-heading"><div class="kicker">БЫСТРЫЙ ДОСТУП</div><h2 id="marketing-search-title">Поиск по управлению</h2><p>Фильтрует уже загруженные кампании, промокоды, назначения, коллекции, наборы и строки текущей страницы бонусного журнала.</p></div>
+    <label for="marketing-admin-search">Название, код, участник или запись<input id="marketing-admin-search" type="search" autocomplete="off" placeholder="Например, Golden Hour или TOKYO10"></label>
+    <button class="button secondary" type="button" id="marketing-admin-search-clear">Очистить</button>
+    <p class="tp20-admin-search-status" id="marketing-admin-search-status" role="status" aria-live="polite">Введите запрос, чтобы отфильтровать списки.</p>
+  </section>
   <section class="section tp20-admin-metrics" aria-label="Показатели из базы данных"><article><span>Заказы</span><strong><?= (int)$metrics['orders_count']?></strong></article><article><span>Сумма заказов · не отменённые</span><strong><?=number_format((int)$metrics['order_volume'],0,'.',' ')?> ₸</strong></article><article><span>Активные кампании</span><strong><?= (int)$metrics['active_campaigns']?></strong></article><article><span>Промокоды в заказах</span><strong><?= (int)$metrics['redemptions']?></strong></article><article><span>Записано положительных бонусов</span><strong><?= (int)$metrics['issued_points']?></strong></article></section>
   <?php if ($notice): ?><p class="booking-confirmation-notice" role="status"><?=e($notice)?></p><?php endif ?><?php if ($error): ?><p class="form-status error" role="alert"><?=e($error)?></p><?php endif ?>
   <section class="section tp20-admin-section" id="campaigns"><div class="editorial-heading"><div class="kicker">01 · TOKYO EXCLUSIVE / GOLDEN HOUR</div><h2>Кампании</h2><p>Даты и расписание считаются в Asia/Qyzylorda. Созданные здесь кампании по умолчанию помечены как учебные.</p></div>
@@ -519,4 +525,5 @@ header_html();
     <?php endif ?>
   </section>
 </main>
+<script src="admin-marketing-search.js" defer></script>
 <?php footer_html(); ?>
