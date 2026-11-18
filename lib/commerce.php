@@ -365,6 +365,32 @@ function commerce_migrate(PDO $pdo): void
             throw $error;
         }
     }
+
+    // v14 preserves the selected custom-set format with order snapshots so
+    // authenticated guests can rebuild prior orders using current catalogue prices.
+    if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=14')->fetchColumn()) {
+        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        try {
+            $columns = $pdo->query('PRAGMA table_info(order_items)')->fetchAll(PDO::FETCH_COLUMN, 1);
+            if (!in_array('custom_set_variant_slug', $columns, true)) {
+                $pdo->exec('ALTER TABLE order_items ADD COLUMN custom_set_variant_slug TEXT');
+            }
+            $pdo->exec("UPDATE order_items
+                SET custom_set_variant_slug=(
+                    SELECT variant.slug FROM custom_set_variants variant
+                    WHERE order_items.item_name=variant.name || ' · сет на заказ'
+                    ORDER BY variant.active DESC,variant.sort_order,variant.slug LIMIT 1
+                )
+                WHERE order_items.dish_id IS NULL
+                  AND order_items.custom_set_variant_slug IS NULL
+                  AND order_items.item_name LIKE '% · сет на заказ'");
+            $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(14)');
+            $pdo->commit();
+        } catch (Throwable $error) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $error;
+        }
+    }
 }
 
 function commerce_actor_key(?int $userId, string $sessionId): string
@@ -981,7 +1007,8 @@ function commerce_persist_order(PDO $pdo, array $input, ?int $userId, string $ac
     foreach ($quote['custom_sets'] as $set) {
         $setDiscount=(int)($set['discount']??0);
         $setPrice=max(0,(int)$set['subtotal']-$setDiscount);
-        $insert->execute([$orderId,null,$set['name'].' · сет на заказ',$setPrice,1]);
+        $insertSet=$pdo->prepare('INSERT INTO order_items(order_id,dish_id,item_name,price,quantity,custom_set_variant_slug) VALUES(?,NULL,?,?,?,?)');
+        $insertSet->execute([$orderId,$set['name'].' · сет на заказ',$setPrice,1,$set['variant']]);
         $setItemId=(int)$pdo->lastInsertId();
         $component=$pdo->prepare('INSERT INTO order_custom_set_components(order_item_id,dish_id,item_name,price,quantity) VALUES(?,?,?,?,?)');
         foreach ($set['items'] as $line) $component->execute([$setItemId,$line['dish']['id'],$line['dish']['name'],$line['dish']['price'],$line['qty']]);

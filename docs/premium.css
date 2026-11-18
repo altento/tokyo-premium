@@ -624,6 +624,12 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .account-dashboard .order-item-details{margin-top:9px;color:#e7ddce}
 .account-dashboard .order-item-details summary{color:#d7b978;font-size:.74rem;cursor:pointer}
 .account-dashboard .order-item-details ul{margin:8px 0 0;font-size:.72rem;line-height:1.6}
+.account-order-repeat-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:10px}
+.account-order-repeat-actions .button{min-height:38px;padding:8px 13px;font-size:.72rem}
+.account-order-repeat-actions small,.account-order-repeat-note{color:var(--muted);font-size:.68rem;line-height:1.5}
+.account-order-repeat-note{display:block;margin-top:6px}
+.account-order-repeat-status{margin:8px 0 0;font-size:.73rem;line-height:1.5}
+.account-order-repeat-status[hidden]{display:none}
 .account-empty-state{display:grid;justify-items:start;gap:12px;padding:8px 0 2px}
 .account-empty-state p,.account-empty-copy,.account-section-copy{margin:0;color:var(--muted);font-size:.78rem;line-height:1.6}
 .account-empty-state .button{min-height:40px;font-size:.73rem}

@@ -67,6 +67,28 @@ test('add and quantity controls reject fractions and clamp at twenty', () => {
   assert.deepEqual(JSON.parse(JSON.stringify(api.snapshot())), [{ id: 1, name: 'Nigiri', qty: 19, unitPrice: 1200, lineTotal: 22800 }]);
 });
 
+test('repeat-order merge is atomic, preserves saved sets and uses catalogue-backed lines', () => {
+  const { api, values } = createStore();
+  const existingSet = { setType: 'signature', name: 'Текущий сет', items: [{ id: 1, qty: 1 }, { id: 2, qty: 1 }, { id: 3, qty: 1 }] };
+  assert.equal(api.add(8, 1), true);
+  assert.equal(api.addCustomSet(existingSet), true);
+  const previous = JSON.stringify(api.set({ items: api.get(), customSets: api.getCustomSets() }));
+  assert.equal(api.addOrder({
+    items: [{ id: 5, qty: 2 }],
+    customSets: [{ variant: 'signature', name: 'Восстановленный сет', qty: 1, items: [{ id: 4, qty: 1 }, { id: 6, qty: 1 }, { id: 7, qty: 1 }] }]
+  }), true);
+  assert.deepEqual(JSON.parse(JSON.stringify(api.get())), [{ id: 8, qty: 1 }, { id: 5, qty: 2 }]);
+  assert.equal(api.getCustomSets().length, 2);
+  assert.equal(api.getCustomSets()[1].name, 'Восстановленный сет');
+  assert.equal(api.getCustomSets()[1].qty, 1);
+  const beforeRejected = JSON.stringify(values.get('tokyo-cart-v1'));
+  assert.equal(api.addOrder({ items: [{ id: 999, qty: 1 }], customSets: [] }), false);
+  assert.equal(api.addOrder({ items: [{ id: 5, qty: 19 }], customSets: [] }), false);
+  assert.equal(api.addOrder({ items: [], customSets: [{ variant: 'signature', qty: 1, items: [{ id: 1, qty: 1 }, { id: 2, qty: 1 }, { id: 999, qty: 1 }] }] }), false, 'a custom set with an unavailable component is rejected as a whole');
+  assert.equal(JSON.stringify(values.get('tokyo-cart-v1')), beforeRejected);
+  assert.notEqual(previous, beforeRejected);
+});
+
 test('addMany applies a recommended group plan atomically in one cart update', () => {
   const { api, values, cartUpdates } = createStore({ 'tokyo-cart-v1': JSON.stringify({ items: [{ id: 1, qty: 2 }], customSets: [] }) });
   assert.equal(api.addMany([{ id: 2, qty: 3 }, { id: 999, qty: 1 }]), false, 'an unknown product rejects the whole group plan');

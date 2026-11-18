@@ -106,6 +106,19 @@ async function run() {
     assert.equal(await page.locator('[data-account-stat="orders"]').innerText(), '3', 'dashboard metrics update');
     assert.equal(await page.locator('[data-account-stat="bookings"]').innerText(), '1', 'booking metric updates');
 
+    await page.locator('[data-account-tab="history"]').click();
+    await page.locator('#demo-orders [data-repeat-order]').first().click();
+    assert.match(await page.locator('#demo-repeat-status').innerText(), /состав добавлен в корзину/i, 'demo order restores its saved composition through the shared cart store');
+    assert.ok(await page.evaluate(() => window.TokyoCart.get().length > 0), 'repeated demo order adds catalogue-backed products');
+    const cartBeforeInvalidRepeat = await page.evaluate(() => JSON.stringify(window.TokyoCart.snapshotAll()));
+    const atomicRepeatRejected = await page.evaluate(before => {
+      const firstId = window.DISHES?.[0]?.id;
+      return !window.TokyoCart.addOrder({ items: [{ id: firstId, qty: 1 }, { id: 999999, qty: 1 }], customSets: [] })
+        && JSON.stringify(window.TokyoCart.snapshotAll()) === before;
+    }, cartBeforeInvalidRepeat);
+    assert.ok(atomicRepeatRejected, 'invalid demo order is rejected without partially changing the existing cart');
+    await page.evaluate(() => window.TokyoCart.clear());
+
     await page.reload({ waitUntil: 'domcontentloaded' });
     assert.equal(await page.locator('#demo-orders .demo-order').count(), 3, 'reload preserves first-visit sample orders without duplicating them');
     assert.equal(await page.locator('#demo-bookings article').count(), 1, 'reload preserves a single sample booking');

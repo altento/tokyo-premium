@@ -255,6 +255,12 @@ async function run(options = {}) {
     await page.locator('.dish-card [data-favorite]').first().click();
     await page.goto(base + '/account.php');
     check(await page.locator('#account-orders .account-order-card').count() > 0, 'authenticated account dashboard shows its saved order');
+    const serverRepeatButton = page.locator('#account-orders [data-repeat-server-order]').first();
+    check(await serverRepeatButton.count() > 0, 'PHP account history offers repeat-order for currently available saved lines');
+    await serverRepeatButton.click();
+    await page.waitForFunction(() => document.querySelector('[data-order-repeat-status]')?.textContent.includes('Состав добавлен'));
+    check(await page.evaluate(() => window.TokyoCart.get().length > 0), 'PHP repeat-order restores owned order lines through the shared cart store');
+    await page.evaluate(() => window.TokyoCart.clear());
     const primaryLayout = await page.locator('.account-dashboard-primary').evaluate(element => ({
       columns: getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/).length,
       historyWidth: Math.round(element.querySelector('#account-orders').getBoundingClientRect().width),

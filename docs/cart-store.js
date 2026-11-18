@@ -221,6 +221,64 @@
     }));
   }
 
+  function addOrder(payload) {
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return false;
+    const requestedItems = payload.items;
+    const requestedSets = payload.customSets ?? payload.custom_sets;
+    if (!Array.isArray(requestedItems) || !Array.isArray(requestedSets)
+      || requestedItems.length + requestedSets.length > MAX_LINES
+      || requestedSets.length > MAX_CUSTOM_SETS) return false;
+
+    const incomingQuantities = new Map();
+    const known = catalog();
+    for (const row of requestedItems) {
+      if (!row || typeof row !== 'object') return false;
+      const id = positiveId(row.id);
+      if (!id || !Number.isSafeInteger(row.qty) || row.qty < 1 || row.qty > MAX_QTY || (known.size && !known.has(id))) return false;
+      const quantity = (incomingQuantities.get(id) || 0) + row.qty;
+      if (quantity > MAX_QTY) return false;
+      incomingQuantities.set(id, quantity);
+    }
+    const incomingItems = Array.from(incomingQuantities, ([id, qty]) => ({ id, qty }));
+
+    const incomingSets = [];
+    for (const row of requestedSets) {
+      if (!row || typeof row !== 'object' || Array.isArray(row) || !Array.isArray(row.items)
+        || row.items.length < 3 || row.items.length > 8) return false;
+      const sourceIds = new Set();
+      for (const component of row.items) {
+        if (!component || typeof component !== 'object' || Array.isArray(component)) return false;
+        const id = positiveId(component.id);
+        if (!id || sourceIds.has(id) || !Number.isSafeInteger(component.qty) || component.qty < 1 || component.qty > 4
+          || (known.size && !known.has(id))) return false;
+        sourceIds.add(id);
+      }
+      const normalized = normalizeCustomSets([row]);
+      const expectedQty = row.qty === undefined ? 1 : row.qty;
+      if (normalized.length !== 1 || !Number.isSafeInteger(expectedQty) || expectedQty < 1 || expectedQty > MAX_CUSTOM_SETS
+        || normalized[0].qty !== expectedQty || normalized[0].items.length !== row.items.length) return false;
+      incomingSets.push(...normalized);
+    }
+
+    const state = getState();
+    const expectedItems = new Map(state.items.map(row => [row.id, row.qty]));
+    for (const row of incomingItems) {
+      const quantity = (expectedItems.get(row.id) || 0) + row.qty;
+      if (quantity > MAX_QTY) return false;
+      expectedItems.set(row.id, quantity);
+    }
+    if (expectedItems.size > MAX_LINES) return false;
+    const nextItems = Array.from(expectedItems, ([id, qty]) => ({ id, qty }));
+    const nextSets = normalizeCustomSets([...state.customSets, ...incomingSets]);
+    const expectedSetSlots = state.customSets.reduce((sum, row) => sum + row.qty, 0)
+      + incomingSets.reduce((sum, row) => sum + row.qty, 0);
+    if (nextSets.reduce((sum, row) => sum + row.qty, 0) !== expectedSetSlots
+      || nextItems.length + nextSets.length > MAX_LINES) return false;
+
+    writeState({ items: nextItems, customSets: nextSets });
+    return true;
+  }
+
   function adjust(idValue, delta) {
     if (!Number.isSafeInteger(delta) || Math.abs(delta) !== 1) return false;
     const id = positiveId(idValue);
@@ -415,7 +473,7 @@
   }
 
   global.TokyoCart = Object.freeze({
-    key: CART_KEY, maxQty: MAX_QTY, maxCustomSets: MAX_CUSTOM_SETS, get: getCart, set: writeCart, add, addMany, setQty, adjust, remove: id => setQty(id, 0),
+    key: CART_KEY, maxQty: MAX_QTY, maxCustomSets: MAX_CUSTOM_SETS, get: getCart, set: writeCart, add, addMany, addOrder, setQty, adjust, remove: id => setQty(id, 0),
     getCustomSets, addCustomSet, setCustomSetQty, adjustCustomSet: (key, delta) => { const row = getCustomSets().find(item => item.key === key); return row && Number.isSafeInteger(delta) && Math.abs(delta) === 1 ? setCustomSetQty(key, Math.max(0, row.qty + delta)) : false; }, removeCustomSet, customSetSnapshot, orderPayload,
     clear, count, total, snapshot, snapshotAll, getFavorites, setFavorites, toggleFavorite, beginCheckout, finishCheckout, checkoutRequestKey, clearCheckoutRequestKey,
     catalog: () => Array.from(catalog().values())

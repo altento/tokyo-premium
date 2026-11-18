@@ -218,11 +218,47 @@ if (!empty($_SESSION['user_id'])) {
         if ($orders) {
             $ids = array_column($orders, 'id');
             $placeholders = implode(',', array_fill(0, count($ids), '?'));
-            $itemsQuery = $pdo->prepare("SELECT oi.order_id,oi.dish_id,oi.item_name,oi.price,oi.quantity,COALESCE(d.image_url,'') AS image_url FROM order_items oi LEFT JOIN dishes d ON d.id=oi.dish_id WHERE oi.order_id IN ($placeholders) ORDER BY oi.id");
+            $itemsQuery = $pdo->prepare("SELECT oi.id AS order_item_id,oi.order_id,oi.dish_id,oi.item_name,oi.price,oi.quantity,oi.custom_set_variant_slug,COALESCE(d.image_url,'') AS image_url,COALESCE(d.active,0) AS dish_active FROM order_items oi LEFT JOIN dishes d ON d.id=oi.dish_id WHERE oi.order_id IN ($placeholders) ORDER BY oi.id");
             $itemsQuery->execute($ids);
             $itemsByOrder = [];
             foreach ($itemsQuery->fetchAll() as $item) $itemsByOrder[$item['order_id']][] = $item;
-            foreach ($orders as &$order) $order['items'] = $itemsByOrder[$order['id']] ?? [];
+            $componentQuery = $pdo->prepare("SELECT component.order_item_id,component.dish_id,component.quantity,COALESCE(d.active,0) AS dish_active FROM order_custom_set_components component LEFT JOIN dishes d ON d.id=component.dish_id JOIN order_items oi ON oi.id=component.order_item_id WHERE oi.order_id IN ($placeholders) ORDER BY component.id");
+            $componentQuery->execute($ids);
+            $componentsByOrderItem = [];
+            foreach ($componentQuery->fetchAll() as $component) $componentsByOrderItem[$component['order_item_id']][] = $component;
+            $userId = (int)$_SESSION['user_id'];
+            foreach ($orders as &$order) {
+                $order['items'] = $itemsByOrder[$order['id']] ?? [];
+                $repeatItems = [];
+                $repeatSets = [];
+                $repeatUnavailable = 0;
+                foreach ($order['items'] as $orderItem) {
+                    if (str_starts_with((string)$orderItem['item_name'], 'Подарок ·')) continue;
+                    if ($orderItem['dish_id'] !== null) {
+                        if (!(int)$orderItem['dish_active']) { $repeatUnavailable++; continue; }
+                        try {
+                            commerce_catalog_items($pdo, [['id'=>(int)$orderItem['dish_id'],'qty'=>(int)$orderItem['quantity']]], $userId);
+                            $repeatItems[] = ['id'=>(int)$orderItem['dish_id'],'qty'=>(int)$orderItem['quantity']];
+                        } catch (DomainException $exception) { $repeatUnavailable++; }
+                        continue;
+                    }
+
+                    $components = $componentsByOrderItem[$orderItem['order_item_id']] ?? [];
+                    if (!$components || array_filter($components, static fn(array $component): bool => !(int)$component['dish_active'])) {
+                        $repeatUnavailable++;
+                        continue;
+                    }
+                    $variant = trim((string)($orderItem['custom_set_variant_slug'] ?? '')) ?: 'signature';
+                    $setItems = array_map(static fn(array $component): array => ['id'=>(int)$component['dish_id'],'qty'=>(int)$component['quantity']], $components);
+                    try {
+                        $validatedSet = commerce_validate_custom_set($pdo, ['variant'=>$variant,'items'=>$setItems], $userId);
+                        $repeatSets[] = ['variant'=>$validatedSet['variant'],'name'=>$validatedSet['name'],'qty'=>(int)$orderItem['quantity'],'items'=>$setItems];
+                    } catch (DomainException $exception) { $repeatUnavailable++; }
+                }
+                $order['repeat_payload'] = ['items'=>$repeatItems,'customSets'=>$repeatSets];
+                $order['repeat_available_count'] = count($repeatItems) + count($repeatSets);
+                $order['repeat_unavailable_count'] = $repeatUnavailable;
+            }
             unset($order);
         }
 
@@ -375,6 +411,14 @@ header_html();
                           <summary>Состав заказа · <?=count($order['items'])?> <?=count($order['items'])===1?'позиция':'позиций'?></summary>
                           <ul><?php foreach ($order['items'] as $item): ?><li><?=e($item['item_name'])?> · <?= (int)$item['quantity']?> × <?=number_format((int)$item['price'],0,'.',' ')?> ₸ = <?=number_format((int)$item['price']*(int)$item['quantity'],0,'.',' ')?> ₸</li><?php endforeach ?></ul>
                         </details>
+                        <?php if ($order['repeat_available_count'] > 0): ?>
+                          <div class="account-order-repeat-actions">
+                            <button class="button secondary" type="button" data-repeat-server-order="<?=e((string)json_encode($order['repeat_payload'], JSON_UNESCAPED_UNICODE|JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP))?>">Добавить состав в корзину ↗</button>
+                            <?php if ($order['repeat_unavailable_count'] > 0): ?><small><?= (int)$order['repeat_unavailable_count']?> недоступных позиций пропущено.</small><?php endif ?>
+                          </div>
+                          <p class="form-status account-order-repeat-status" data-order-repeat-status role="status" aria-live="polite" hidden></p>
+                          <small class="account-order-repeat-note">Цены и доступность будут пересчитаны по актуальному меню при оформлении.</small>
+                        <?php endif ?>
                       </div>
                     </article>
                   <?php endforeach ?>

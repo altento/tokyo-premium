@@ -167,6 +167,28 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.addEventListener('click', event => {
+    const repeatOrderButton = event.target.closest('[data-repeat-server-order]');
+    if (repeatOrderButton) {
+      const status = repeatOrderButton.closest('.account-order-content')?.querySelector('[data-order-repeat-status]');
+      if (!status || !cart) return;
+      let payload;
+      try { payload = JSON.parse(repeatOrderButton.dataset.repeatServerOrder || ''); } catch (_) { payload = null; }
+      status.replaceChildren();
+      if (!payload || !cart.addOrder(payload)) {
+        status.textContent = 'Не удалось восстановить состав. Проверьте корзину и доступность блюд.';
+        status.className = 'form-status error account-order-repeat-status';
+      } else {
+        status.append(document.createTextNode('Состав добавлен. Проверьте текущие цены и корзину перед оформлением. '));
+        const link = document.createElement('a');
+        link.className = 'account-inline-link';
+        link.href = 'pages.php?page=cart';
+        link.textContent = 'Открыть корзину ↗';
+        status.append(link);
+        status.className = 'form-status success account-order-repeat-status';
+      }
+      status.hidden = false;
+      return;
+    }
     const addButton = event.target.closest('.add-to-cart');
     if (addButton) {
       if (!cart) return;

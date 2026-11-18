@@ -122,10 +122,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   let saved;try{saved=JSON.parse(button.dataset.repeatOrder||'[]')}catch{}
   const payload=Array.isArray(saved)?{items:saved,customSets:[]}:(saved&&typeof saved==='object'?saved:null);
   if(!payload||!Array.isArray(payload.items)||!Array.isArray(payload.customSets)){status.textContent='Не удалось прочитать состав заказа.';status.className='form-status error';return}
-  const cart=window.TokyoCart;let added=0;
-  for(const item of payload.items){if(!item||typeof item!=='object'||!Number.isSafeInteger(Number(item.id))||!Number.isSafeInteger(Number(item.qty))||Number(item.qty)<1)continue;if(cart?.add(Number(item.id),Number(item.qty)))added++}
-  for(const set of payload.customSets){if(!set||typeof set!=='object'||!Array.isArray(set.items)||!set.items.length)continue;if(cart?.addCustomSet({setType:set.variant||set.setType||'signature',name:set.name||'Авторский сет',items:set.items,qty:set.qty}))added++}
-  status.replaceChildren();if(!added){status.textContent='Позиции из этого заказа больше недоступны или превышен лимит сетов.';status.className='form-status error';return}
+  const cart=window.TokyoCart;
+  status.replaceChildren();if(!cart?.addOrder?.(payload)){status.textContent='Не удалось восстановить заказ целиком: проверьте доступность блюд и лимиты корзины.';status.className='form-status error';return}
   status.append(document.createTextNode('Состав добавлен в корзину. Проверьте его перед оформлением. '));const link=document.createElement('a');link.href='cart.html';link.textContent='Открыть корзину ↗';status.append(link);status.className='form-status success'
  });
  document.addEventListener('submit',event=>{const form=event.target;if(!form.matches('[data-local-form]'))return;event.preventDefault();const values=Object.fromEntries(new FormData(form).entries());if(form.dataset.localForm==='profile'){localStorage.setItem('tokyo-demo-profile',JSON.stringify(values));writeStatus(form,'Профиль сохранён только в этом браузере.')}else if(form.dataset.localForm==='address'){const list=read('tokyo-demo-addresses');list.unshift(values.address.trim());localStorage.setItem('tokyo-demo-addresses',JSON.stringify(list.slice(0,10)));form.reset();writeStatus(form,'Адрес сохранён только в этом браузере.');render()}});
