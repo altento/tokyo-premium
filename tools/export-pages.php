@@ -163,7 +163,7 @@ $accountDashboardStart = '<section class="section account-dashboard"><div class=
 $accountDashboardStartCount = 0;
 $overview = str_replace($accountDashboardStart, '', $overview, $accountDashboardStartCount);
 if ($accountDashboardStartCount !== 1) throw new RuntimeException('Could not separate the static account summary from its history panels.');
-$accountDemoContent = $privilege . $overview;
+$accountDemoContent = $overview;
 $pageHeroMatch = [];
 if (!preg_match('/<section class="page-hero">.*?<\/section>/s', $account, $pageHeroMatch)) {
     throw new RuntimeException('Static account page hero was not found.');
