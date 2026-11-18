@@ -323,14 +323,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $notificationTarget = (string)($_GET['notification'] ?? '');
-if ($_SERVER['REQUEST_METHOD'] === 'GET'
-    && !empty($_SESSION['admin_id'])
-    && in_array($notificationTarget, ['orders','bookings','reviews','contact_messages'], true)) {
-    // Counts are global, while the admin search is intentionally session-wide.
-    // Clear that filter before jumping so a positive count cannot lead to an empty list.
+if (!in_array($notificationTarget, ['orders','bookings','reviews','contact_messages'], true)) {
+    $notificationTarget = '';
+}
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_SESSION['admin_id']) && $notificationTarget !== '') {
+    // Notifications are global, while search is session-wide. Drop the old query
+    // and use the selected notification as a real status filter below.
     unset($_SESSION['admin_search']);
-    header('Location: admin.php#' . $notificationTarget);
-    exit;
 }
 
 $logged = !empty($_SESSION['admin_id']);
@@ -376,11 +375,13 @@ $pairingsByDish = [];
 foreach ($pairingRows as $pairingRow) $pairingsByDish[(int)$pairingRow['dish_id']][] = $pairingRow;
 $pairingDishOptions = $pdo->query('SELECT id,name,active FROM dishes ORDER BY active DESC,sort_order,id')->fetchAll(PDO::FETCH_ASSOC);
 $orderFilter = admin_search_where(['CAST(o.id AS TEXT)','o.customer_name','o.phone','o.address','o.fulfillment','o.status','CAST(o.total AS TEXT)','oi.item_name'], $search);
+if ($notificationTarget === 'orders') $orderFilter = [' WHERE o.status=?', ['new']];
 $orders = admin_rows($pdo,
     "SELECT o.*,GROUP_CONCAT(oi.item_name || ' × ' || oi.quantity,' · ') AS items_summary
      FROM orders o LEFT JOIN order_items oi ON oi.order_id=o.id" . $orderFilter[0] . '
      GROUP BY o.id ORDER BY o.id DESC LIMIT 100', $orderFilter[1]);
 $bookingFilter = admin_search_where(['CAST(b.id AS TEXT)','b.guest_name','b.guest_email','b.phone','b.booking_date','b.booking_time','b.zone','b.preferred_table','b.format','b.message','b.status'], $search);
+if ($notificationTarget === 'bookings') $bookingFilter = [' WHERE b.status=?', ['new']];
 $bookings = admin_rows($pdo, "SELECT b.*,
     (SELECT m.id FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':request:guest' ORDER BY m.id DESC LIMIT 1) AS request_mail_id,
     (SELECT m.status FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':request:guest' ORDER BY m.id DESC LIMIT 1) AS request_mail_status,
@@ -390,8 +391,10 @@ $bookings = admin_rows($pdo, "SELECT b.*,
     (SELECT m.status FROM email_outbox m WHERE m.booking_id=b.id AND m.event_key='booking:'||b.id||':confirmed:guest' ORDER BY m.id DESC LIMIT 1) AS confirmation_mail_status
     FROM bookings b" . $bookingFilter[0] . ' ORDER BY b.booking_date DESC,b.booking_time DESC,b.id DESC LIMIT 100', $bookingFilter[1]);
 $reviewFilter = admin_search_where(['CAST(r.id AS TEXT)','r.guest_name','r.theme','r.body','CAST(r.rating AS TEXT)','r.status'], $search);
+if ($notificationTarget === 'reviews') $reviewFilter = [' WHERE r.status=?', ['pending']];
 $reviews = admin_rows($pdo, 'SELECT r.* FROM reviews r' . $reviewFilter[0] . ' ORDER BY r.id DESC LIMIT 100', $reviewFilter[1]);
 $messageFilter = admin_search_where(['CAST(m.id AS TEXT)','m.guest_name','m.email','m.subject','m.message','m.status'], $search);
+if ($notificationTarget === 'contact_messages') $messageFilter = [' WHERE m.status=?', ['new']];
 $contactMessages = admin_rows($pdo, 'SELECT m.* FROM contact_messages m' . $messageFilter[0] . ' ORDER BY m.id DESC LIMIT 100', $messageFilter[1]);
 $collections = [
     'orders'=>['label'=>'Заказы','rows'=>$orders],
@@ -463,11 +466,17 @@ $bookingMailReadiness = match ($bookingMailState) {
     </div>
     <div class="admin-notification-grid">
       <?php foreach ($notificationCounts as $key=>$count): ?>
-        <a class="admin-notification" href="?notification=<?=e($key)?>#<?=$key?>">
+        <a class="admin-notification" href="?notification=<?=e($key)?>#<?=$key?>"<?=$notificationTarget === $key ? ' aria-current="page"' : ''?>>
           <span><?=e($notificationLabels[$key])?></span><strong class="<?=$count > 0 ? 'has-unread' : ''?>"><?=$count?></strong>
         </a>
       <?php endforeach ?>
     </div>
+    <?php if ($notificationTarget !== ''): ?>
+      <p class="admin-notification-filter" role="status">
+        Показаны только <?=$notificationTarget === 'reviews' ? 'отзывы на модерации' : ($notificationTarget === 'bookings' ? 'новые заявки на бронь' : ($notificationTarget === 'contact_messages' ? 'новые обращения' : 'новые заказы'))?>.
+        <a href="admin.php#<?=$notificationTarget?>">Показать последние записи</a>
+      </p>
+    <?php endif ?>
   </section>
 
   <section class="admin-card" id="menu" aria-labelledby="admin-menu-title">
@@ -574,7 +583,7 @@ $bookingMailReadiness = match ($bookingMailState) {
 
   <?php foreach ($collections as $table=>$collection): ?>
   <section class="admin-card" id="<?=$table?>" aria-labelledby="admin-<?=$table?>-title">
-    <h2 id="admin-<?=$table?>-title"><?=e($collection['label'])?> <span class="admin-result-count"><?=count($collection['rows'])?> <?=$search !== '' ? 'найдено' : 'последних записей'?></span></h2>
+    <h2 id="admin-<?=$table?>-title"><?=e($collection['label'])?> <span class="admin-result-count"><?=count($collection['rows'])?> <?=$search !== '' ? 'найдено' : ($notificationTarget === $table ? 'новых записей' : 'последних записей')?></span></h2>
     <div class="admin-record-list">
       <?php foreach ($collection['rows'] as $row):
         $confirmedBooking = $table === 'bookings' && $row['status'] === 'confirmed';
@@ -647,7 +656,7 @@ $bookingMailReadiness = match ($bookingMailState) {
         </div>
       </article>
       <?php endforeach ?>
-      <?php if (!$collection['rows']): ?><p class="admin-empty">Записей пока нет<?php if ($search !== ''): ?> по запросу «<?=e($search)?>»<?php endif ?>.</p><?php endif ?>
+      <?php if (!$collection['rows']): ?><p class="admin-empty"><?php if ($notificationTarget === $table): ?>Новых записей сейчас нет.<?php else: ?>Записей пока нет<?php if ($search !== ''): ?> по запросу «<?=e($search)?>»<?php endif ?>.<?php endif ?></p><?php endif ?>
     </div>
   </section>
   <?php endforeach ?>

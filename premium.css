@@ -433,8 +433,11 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .admin-notification-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .admin-notification{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:68px;padding:12px 14px;border:1px solid var(--hairline);border-radius:9px;background:#12100e;color:var(--ivory)}
 .admin-notification:hover{border-color:#a51d25;transform:translateY(-1px)}
+.admin-notification[aria-current="page"]{border-color:#b3282e;background:linear-gradient(130deg,rgba(133,22,30,.22),#12100e 70%);box-shadow:inset 3px 0 #b3282e}
 .admin-notification strong{display:grid;place-items:center;min-width:32px;height:32px;padding:0 8px;border-radius:50%;background:#28221a;color:#d5c39e;font-size:.9rem}
 .admin-notification strong.has-unread{background:#a91720;color:white;box-shadow:0 0 18px #a917204d}
+.admin-notification-filter{margin:14px 0 0;color:#cfc1a9;font-size:.84rem}
+.admin-notification-filter a{margin-left:8px;color:#e7c579;text-decoration:underline;text-underline-offset:3px}
 .admin-form.admin-create-form,.admin-form.admin-edit-form,.admin-settings-form{grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin:16px 0 24px}
 .admin-dashboard .admin-form>label{display:grid;align-content:start;gap:6px;min-width:0;color:#d4c9b6;font-size:.8rem}
 .admin-dashboard .admin-form input:not([type=checkbox]),.admin-dashboard .admin-form select,.admin-dashboard .admin-form textarea,.admin-status-form select{
