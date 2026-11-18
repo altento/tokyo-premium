@@ -31,8 +31,8 @@ Push to `main` and wait for the Pages workflow to finish. Inspect the workflow s
 
 ## Latest verified publication
 
-- Published code commit: `5af1fc8cdd6f6bb539c0c3d259e2ee87e1c4bc8d`.
-- Workflow: [run 44271707784](https://github.com/altento/tokyo-premium/actions/runs/44271707784) — build and deploy both succeeded. Focused PHP/SQLite, account/admin regressions, PHP syntax, form/admin smoke, and static export passed. Browser/visual QA was skipped by the fast push profile; use `workflow_dispatch` with `full_qa=true` for the long run.
+- Published code commit: `8867502eed97f68c399c57f7d27f8551803926cc`.
+- Workflow: [run 44274931548](https://github.com/altento/tokyo-premium/actions/runs/44274931548) — build and deploy both succeeded. Focused PHP/SQLite, account/admin regressions, PHP syntax, form/admin smoke, and static export passed. Browser/visual QA was skipped by the fast push profile; use `workflow_dispatch` with `full_qa=true` for the long run.
 - Cache-busted public home, account, and dish pages returned HTTP 200. The account HTML includes `account-demo.css`; the dish detail includes `dish-detail-refinement.css`. Fresh local Pages captures of all 11 reference page types are paired with their approved PNGs in `project-docs/visual-qa/full-static-2026-11-18/`; the review documents material visual differences and remaining work. This is not a pixel-perfect comparison or PHP-host verification.
 - This verifies the published static demo. PHP-only admin features remain unavailable on Pages; browser storage is not durable/server-synced, and no payment or live table availability is enabled.
 

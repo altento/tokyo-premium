@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-18 booking email triage in admin
+
+Commit `8867502` adds an actionable `booking_emails` filter from the dashboard mail KPI. It lists bookings with pending or failed outbox mail and leaves the existing retry controls available. `php -l admin.php` and `git diff --check` passed. Hosted run [44274931548](https://github.com/altento/tokyo-premium/actions/runs/44274931548) passed targeted PHP/SQLite and admin/account regressions, syntax, smoke checks, static export, and Pages deployment; the long browser suite was skipped by the fast publish profile. Cache-busted public home, account, and dish routes returned HTTP 200. The PHP-only admin itself is not hosted on GitHub Pages.
+
 ## 2026-11-18 fast publish profile and admin/account/dish update
 
 Public commit `5af1fc8` passed GitHub Actions run [44271707784](https://github.com/altento/tokyo-premium/actions/runs/44271707784): cart state, PHP/SQLite integrity, loyalty ledger, account profile, gift quantity, personal offers, commerce pricing, Cyrillic admin/account search, set-format administration, PHP syntax, PHP form/admin smoke, static export, and Pages deployment. Chromium installation and the long browser/visual suite were skipped; those checks remain available via manual `workflow_dispatch` with `full_qa=true`. Cache-busted public home, account, and dish routes returned HTTP 200; account and dish markup included their scoped styles. This is not a claim that the full browser suite ran on this release.

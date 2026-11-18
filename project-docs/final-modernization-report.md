@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-18 · Actionable booking email queue
+
+The main admin's mail KPI now opens bookings with pending or failed email delivery, where each record exposes the existing retry action. This closes the gap between the queue count and the operational list. The visual comparison log also now reflects the existing three distinct photographs on the salmon-nigiri detail route and links to its desktop/mobile evidence. PHP syntax and diff hygiene passed; hosted run [44274931548](https://github.com/altento/tokyo-premium/actions/runs/44274931548) passed the focused fast-publish checks and deployment. The full browser/visual suite was skipped for this run and remains manually available. Overall Tokyo Premium 2.0 acceptance remains open.
+
 ## 2026-11-18 · Marketing admin quick search
 
 Added an accessible live filter to the protected Marketing & Loyalty page. It searches currently loaded campaigns, promo codes, assigned offers, collections, set formats, membership tiers, Secret Menu rules, gift stock and the visible loyalty-ledger page; the separate server-side user and ledger filters remain in place. The filter announces result counts, supports a one-click clear, and has a narrow-screen layout. Its focused JavaScript behavior check (match, hide non-matches, clear and restore focus), PHP syntax, source/static CSS parity and whitespace checks passed. Hosted workflow [44254402681](https://github.com/altento/tokyo-premium/actions/runs/44254402681) passed PHP/SQLite integration, admin checks, browser regression/visual QA, static export and Pages deployment; the published homepage returned HTTP 200. The Marketing & Loyalty controls remain in the PHP/SQLite edition and are not hosted by GitHub Pages.
