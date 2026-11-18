@@ -169,16 +169,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$code,(int)$campaignId,isset($_POST['active'])?1:0,$start?:null,$end?:null,$maxUses===''?null:(int)$maxUses,$maxPerUser===''?null:(int)$maxPerUser,isset($_POST['first_order_only'])?1:0]);
             $notice='Промокод сохранён. Ограничения проверяются сервером при оформлении заказа.';
         } elseif ($action === 'collection-save') {
-            $id=filter_var($_POST['id']??0,FILTER_VALIDATE_INT)?:0; $slug=strtolower(trim((string)($_POST['slug']??''))); $name=trim((string)($_POST['name']??'')); $description=trim((string)($_POST['description']??'')); $image=(string)($_POST['image_url']??'assets/generated/room-garden-terrace.webp'); $theme=(string)($_POST['theme_key']??'sakura');
-            if (!preg_match('/^[a-z0-9][a-z0-9-]{1,50}$/',$slug)||$name===''||strlen($name)>100||strlen($description)>1200||!isset($imageOptions[$image])||!preg_match('/^[a-z0-9-]{2,24}$/',$theme)) throw new DomainException('Проверьте slug, название, тему и изображение коллекции.');
-            $collectionStart=$localDateTime($_POST['starts_at']??''); $collectionEnd=$localDateTime($_POST['ends_at']??''); if($collectionStart&&$collectionEnd&&$collectionEnd<=$collectionStart)throw new DomainException('Дата завершения должна быть позже начала.');
-            $rawIds=trim((string)($_POST['dish_ids']??'')); $dishIds=$rawIds===''?[]:array_values(array_unique(array_filter(array_map('intval',preg_split('/\s*,\s*/',$rawIds)?:[]),static fn(int $v):bool=>$v>0)));
-            if (count($dishIds)>20) throw new DomainException('Коллекция может содержать не более 20 блюд.');
-            if ($dishIds) { $in=implode(',',array_fill(0,count($dishIds),'?')); $check=$pdo->prepare("SELECT COUNT(*) FROM dishes WHERE active=1 AND id IN ($in)"); $check->execute($dishIds); if ((int)$check->fetchColumn()!==count($dishIds)) throw new DomainException('В коллекцию можно добавлять только активные блюда.'); }
+            $rawId = trim((string)($_POST['id'] ?? ''));
+            $id = 0;
+            if ($rawId !== '') {
+                $validatedId = filter_var($rawId, FILTER_VALIDATE_INT);
+                if ($validatedId === false || $validatedId < 1) throw new DomainException('Не найдена коллекция для редактирования.');
+                $id = (int)$validatedId;
+            }
+            $slug = strtolower(trim((string)($_POST['slug'] ?? '')));
+            $name = trim((string)($_POST['name'] ?? ''));
+            $description = trim((string)($_POST['description'] ?? ''));
+            $image = (string)($_POST['image_url'] ?? 'assets/generated/room-garden-terrace.webp');
+            $theme = (string)($_POST['theme_key'] ?? 'sakura');
+            $sortOrder = filter_var($_POST['sort_order'] ?? 50, FILTER_VALIDATE_INT);
+            if (!preg_match('/^[a-z0-9][a-z0-9-]{1,50}$/', $slug) || $name === '' || strlen($name) > 100 || strlen($description) > 1200 || !isset($imageOptions[$image]) || !preg_match('/^[a-z0-9-]{2,24}$/', $theme) || $sortOrder === false || $sortOrder < 0 || $sortOrder > 10000) {
+                throw new DomainException('Проверьте slug, название, тему, изображение и порядок показа коллекции.');
+            }
+            $collectionStart = $localDateTime($_POST['starts_at'] ?? '');
+            $collectionEnd = $localDateTime($_POST['ends_at'] ?? '');
+            if ($collectionStart && $collectionEnd && $collectionEnd <= $collectionStart) throw new DomainException('Дата завершения должна быть позже начала.');
+            $rawIds = trim((string)($_POST['dish_ids'] ?? ''));
+            if ($rawIds !== '' && !preg_match('/^\d+(?:\s*,\s*\d+)*$/', $rawIds)) throw new DomainException('Укажите ID блюд через запятую, используя только числа.');
+            $dishIds = $rawIds === '' ? [] : array_values(array_unique(array_filter(array_map('intval', preg_split('/\s*,\s*/', $rawIds) ?: []), static fn(int $value): bool => $value > 0)));
+            if (count($dishIds) > 20) throw new DomainException('Коллекция может содержать не более 20 блюд.');
+            if ($dishIds) {
+                $in = implode(',', array_fill(0, count($dishIds), '?'));
+                $check = $pdo->prepare("SELECT COUNT(*) FROM dishes WHERE active=1 AND id IN ($in)");
+                $check->execute($dishIds);
+                if ((int)$check->fetchColumn() !== count($dishIds)) throw new DomainException('В коллекцию можно добавлять только активные блюда.');
+            }
             $pdo->beginTransaction();
-            if ($id) { $stmt=$pdo->prepare('UPDATE seasonal_collections SET slug=?,name=?,description=?,image_url=?,theme_key=?,starts_at=?,ends_at=?,active=?,demo_only=1,sort_order=? WHERE id=?'); $stmt->execute([$slug,$name,$description,$image,$theme,$collectionStart?:null,$collectionEnd?:null,isset($_POST['active'])?1:0,(int)($_POST['sort_order']??50),$id]); $collectionId=$id; }
-            else { $stmt=$pdo->prepare('INSERT INTO seasonal_collections(slug,name,description,image_url,theme_key,starts_at,ends_at,active,demo_only,sort_order) VALUES(?,?,?,?,?,?,?,?,1,?)'); $stmt->execute([$slug,$name,$description,$image,$theme,$collectionStart?:null,$collectionEnd?:null,isset($_POST['active'])?1:0,(int)($_POST['sort_order']??50)]); $collectionId=(int)$pdo->lastInsertId(); }
-            $pdo->prepare('DELETE FROM seasonal_collection_items WHERE collection_id=?')->execute([$collectionId]); $insert=$pdo->prepare('INSERT INTO seasonal_collection_items(collection_id,dish_id,sort_order) VALUES(?,?,?)'); foreach($dishIds as $position=>$dishId)$insert->execute([$collectionId,$dishId,$position*10]); $pdo->commit(); $notice='Сезонная коллекция и состав сохранены.';
+            try {
+                if ($id) {
+                    $exists = $pdo->prepare('SELECT 1 FROM seasonal_collections WHERE id=?');
+                    $exists->execute([$id]);
+                    if (!$exists->fetchColumn()) throw new DomainException('Сезонная коллекция больше не существует. Обновите страницу.');
+                    $stmt = $pdo->prepare('UPDATE seasonal_collections SET slug=?,name=?,description=?,image_url=?,theme_key=?,starts_at=?,ends_at=?,active=?,demo_only=1,sort_order=? WHERE id=?');
+                    $stmt->execute([$slug, $name, $description, $image, $theme, $collectionStart, $collectionEnd, isset($_POST['active']) ? 1 : 0, $sortOrder, $id]);
+                    $collectionId = $id;
+                } else {
+                    $stmt = $pdo->prepare('INSERT INTO seasonal_collections(slug,name,description,image_url,theme_key,starts_at,ends_at,active,demo_only,sort_order) VALUES(?,?,?,?,?,?,?,?,1,?)');
+                    $stmt->execute([$slug, $name, $description, $image, $theme, $collectionStart, $collectionEnd, isset($_POST['active']) ? 1 : 0, $sortOrder]);
+                    $collectionId = (int)$pdo->lastInsertId();
+                }
+                $pdo->prepare('DELETE FROM seasonal_collection_items WHERE collection_id=?')->execute([$collectionId]);
+                $insert = $pdo->prepare('INSERT INTO seasonal_collection_items(collection_id,dish_id,sort_order) VALUES(?,?,?)');
+                foreach ($dishIds as $position => $dishId) $insert->execute([$collectionId, $dishId, $position * 10]);
+                $pdo->commit();
+            } catch (Throwable $collectionError) {
+                if ($pdo->inTransaction()) $pdo->rollBack();
+                throw $collectionError;
+            }
+            $notice = 'Сезонная коллекция и состав сохранены.';
         } elseif ($action === 'collection-toggle') {
             $id=filter_var($_POST['id']??null,FILTER_VALIDATE_INT); if(!$id)throw new DomainException('Не найдена коллекция.'); $pdo->prepare('UPDATE seasonal_collections SET active=CASE active WHEN 1 THEN 0 ELSE 1 END WHERE id=?')->execute([$id]); $notice='Статус коллекции изменён.';
         } elseif ($action === 'set-variant-save') {
@@ -533,7 +575,76 @@ header_html();
     <?php if(!$personalOffers): ?><p class="tp20-note">Назначений пока нет.</p><?php else: ?><div class="tp20-admin-list"><?php foreach($personalOffers as $offer): ?><article class="tp20-admin-row"><div><span class="kicker"><?=!empty($offer['used_order_id'])?'ИСПОЛЬЗОВАНО · ЗАКАЗ №'.(int)$offer['used_order_id']:(!empty($offer['expires_at'])?'ДО '.e($offer['expires_at']):'БЕЗ СРОКА')?></span><h3><?=e($offer['title'])?></h3><p>#<?= (int)$offer['id']?> · <?=e($offer['full_name'])?> · <?=e($offer['email'])?> · назначено <?=e($offer['assigned_at'])?></p></div><?php if(empty($offer['used_order_id'])): ?><form method="post"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="personal-offer-revoke"><input type="hidden" name="offer_id" value="<?= (int)$offer['id']?>"><button class="button secondary" type="submit">Отозвать</button></form><?php endif ?></article><?php endforeach ?></div><?php endif ?>
   </section>
   <section class="section tp20-admin-section" id="codes"><div class="editorial-heading"><div class="kicker">02 · PROMO CODES</div><h2>Промокоды</h2><p>Финальную скидку рассчитывает сервер с учётом срока, кампании и лимита применений.</p></div><p class="sr-only" id="promo-copy-status" role="status" aria-live="polite"></p><form method="post" class="tp20-admin-form"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="promo-save"><h3>Создать промокод</h3><div class="tp20-admin-fields"><label>Код<input name="code" required maxlength="31" pattern="[A-Za-z0-9][A-Za-z0-9_-]{2,30}" placeholder="TOKYO10"></label><label>Кампания<select name="campaign_id" required><?php foreach($campaigns as $campaign): ?><option value="<?= (int)$campaign['id']?>"><?=e($campaign['title'])?></option><?php endforeach ?></select></label><label>С даты<input type="datetime-local" name="starts_at"></label><label>До даты<input type="datetime-local" name="ends_at"></label><label>Общий лимит<input type="number" name="maximum_uses" min="1" placeholder="Без лимита"></label><label>Лимит на пользователя<input type="number" name="maximum_uses_per_user" min="1" placeholder="Без лимита"></label><label class="tp20-admin-check"><input type="checkbox" name="first_order_only"> Только первый заказ</label><label class="tp20-admin-check"><input type="checkbox" name="active" checked> Активен</label></div><button class="button" type="submit">Сохранить промокод ↗</button></form><div class="tp20-admin-list"><?php if(!$promoCodes): ?><p class="tp20-note">Промокодов пока нет.</p><?php else: foreach($promoCodes as $code): ?><article class="tp20-admin-row tp20-promo-code-row" data-promo-code="<?=e($code['code'])?>"><div class="tp20-promo-code-summary"><div><span class="kicker"><?=!empty($code['active'])?'АКТИВЕН':'ОТКЛЮЧЁН'?></span><h3><?=e($code['code'])?></h3><div class="tp20-promo-code-actions"><button class="button secondary tp20-copy-code" type="button" data-copy-code="<?=e($code['code'])?>" aria-label="Скопировать промокод <?=e($code['code'])?>">Скопировать</button></div><p><?=e($code['title'])?></p><ul class="tp20-promo-code-facts"><li>Использован <strong><?= (int)$code['uses_count']?></strong> из <strong><?= $code['maximum_uses']===null?'без общего лимита':(int)$code['maximum_uses']?></strong></li><li>На пользователя: <strong><?= $code['maximum_uses_per_user']===null?'без лимита':(int)$code['maximum_uses_per_user']?></strong></li><li>Срок: <strong><?php if($code['starts_at']||$code['ends_at']): ?><?=e($code['starts_at']?substr((string)$code['starts_at'],0,16):'сразу')?> — <?=e($code['ends_at']?substr((string)$code['ends_at'],0,16):'без даты окончания')?> · Asia/Qyzylorda<?php else: ?>без ограничения по сроку<?php endif ?></strong></li><?php if(!empty($code['first_order_only'])): ?><li><strong>Только для первого заказа</strong></li><?php endif ?></ul></div><details class="tp20-admin-details tp20-promo-code-edit"><summary>Изменить условия</summary><form method="post" action="admin-marketing.php#codes" class="tp20-admin-form"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="promo-save"><h4>Настройки <?=e($code['code'])?></h4><div class="tp20-admin-fields"><label>Код<input name="code" value="<?=e($code['code'])?>" readonly></label><label>Кампания<select name="campaign_id" required><?php foreach($campaigns as $campaign): ?><option value="<?= (int)$campaign['id']?>" <?=(int)$campaign['id']===(int)$code['campaign_id']?'selected':''?>><?=e($campaign['title'])?></option><?php endforeach ?></select></label><label>С даты<input type="datetime-local" name="starts_at" value="<?=e($code['starts_at']?str_replace(' ','T',substr((string)$code['starts_at'],0,16)):'')?>"></label><label>До даты<input type="datetime-local" name="ends_at" value="<?=e($code['ends_at']?str_replace(' ','T',substr((string)$code['ends_at'],0,16)):'')?>"></label><label>Общий лимит<input type="number" name="maximum_uses" min="1" value="<?=e($code['maximum_uses']===null?'':(string)$code['maximum_uses'])?>" placeholder="Без лимита"></label><label>Лимит на пользователя<input type="number" name="maximum_uses_per_user" min="1" value="<?=e($code['maximum_uses_per_user']===null?'':(string)$code['maximum_uses_per_user'])?>" placeholder="Без лимита"></label><label class="tp20-admin-check"><input type="checkbox" name="first_order_only" <?=!empty($code['first_order_only'])?'checked':''?>> Только первый заказ</label><label class="tp20-admin-check"><input type="checkbox" name="active" <?=!empty($code['active'])?'checked':''?>> Активен</label></div><button class="button" type="submit">Сохранить условия ↗</button></form></details></div></article><?php endforeach; endif ?></div></section>
-  <section class="section tp20-admin-section" id="collections"><div class="editorial-heading"><div class="kicker">03 · SEASONAL STORIES</div><h2>Сезонные коллекции</h2><p>Укажите список активных dish ID через запятую, чтобы привязать реальные позиции каталога.</p></div><details class="tp20-admin-details"><summary>Открыть список активных блюд</summary><ul><?php foreach($dishes as $dish): ?><li>#<?= (int)$dish['id']?> — <?=e($dish['name'])?></li><?php endforeach ?></ul></details><form method="post" class="tp20-admin-form"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="collection-save"><h3>Добавить или обновить коллекцию</h3><div class="tp20-admin-fields"><label>Slug<input name="slug" required pattern="[a-z0-9][a-z0-9-]{1,50}" placeholder="autumn-in-kyoto"></label><label>Название<input name="name" required maxlength="100"></label><label>Ключ темы<input name="theme_key" required value="autumn"></label><label>Изображение<select name="image_url"><?php foreach($imageOptions as $url=>$label): ?><option value="<?=e($url)?>"><?=e($label)?></option><?php endforeach ?></select></label><label>С даты<input type="datetime-local" name="starts_at"></label><label>До даты<input type="datetime-local" name="ends_at"></label><label>Порядок показа<input type="number" name="sort_order" value="50"></label><label>Блюда · ID через запятую<input name="dish_ids" inputmode="numeric" placeholder="1, 3, 17"></label><label>Описание<textarea name="description" rows="3" maxlength="1200"></textarea></label><label class="tp20-admin-check"><input type="checkbox" name="active" checked> Активна</label></div><button class="button" type="submit">Сохранить коллекцию ↗</button></form><div class="tp20-admin-list"><?php foreach($collections as $collection): ?><article class="tp20-admin-row"><div><span class="kicker"><?=!empty($collection['active'])?'АКТИВНА':'СКРЫТА'?> · <?= (int)$collection['dish_count']?> блюд</span><h3><?=e($collection['name'])?></h3><p><?=e($collection['slug'])?> · <?=e((string)$collection['dish_ids'])?></p></div><form method="post"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="collection-toggle"><input type="hidden" name="id" value="<?= (int)$collection['id']?>"><button class="button secondary" type="submit"><?=!empty($collection['active'])?'Отключить':'Активировать'?></button></form></article><?php endforeach ?></div></section>
+  <section class="section tp20-admin-section" id="collections">
+    <div class="editorial-heading">
+      <div class="kicker">03 · SEASONAL STORIES</div>
+      <h2>Сезонные коллекции</h2>
+      <p>Создавайте коллекции, редактируйте состав и период показа. Укажите активные dish ID через запятую, чтобы привязать реальные позиции каталога.</p>
+    </div>
+    <details class="tp20-admin-details">
+      <summary>Список активных блюд для коллекций</summary>
+      <ul><?php foreach($dishes as $dish): ?><li>#<?= (int)$dish['id']?> — <?=e($dish['name'])?></li><?php endforeach ?></ul>
+    </details>
+    <form method="post" action="admin-marketing.php#collections" class="tp20-admin-form">
+      <input type="hidden" name="csrf" value="<?=e(csrf())?>">
+      <input type="hidden" name="action" value="collection-save">
+      <h3>Новая коллекция</h3>
+      <div class="tp20-admin-fields">
+        <label>Slug<input name="slug" required pattern="[a-z0-9][a-z0-9-]{1,50}" maxlength="51" placeholder="autumn-in-kyoto"></label>
+        <label>Название<input name="name" required maxlength="100"></label>
+        <label>Ключ темы<input name="theme_key" required value="autumn" pattern="[a-z0-9-]{2,24}"></label>
+        <label>Изображение<select name="image_url"><?php foreach($imageOptions as $url=>$label): ?><option value="<?=e($url)?>"><?=e($label)?></option><?php endforeach ?></select></label>
+        <label>С даты<input type="datetime-local" name="starts_at"></label>
+        <label>До даты<input type="datetime-local" name="ends_at"></label>
+        <label>Порядок показа<input type="number" name="sort_order" min="0" max="10000" value="50"></label>
+        <label>Блюда · ID через запятую<input name="dish_ids" inputmode="numeric" placeholder="1, 3, 17"></label>
+        <label>Описание<textarea name="description" rows="3" maxlength="1200"></textarea></label>
+        <label class="tp20-admin-check"><input type="checkbox" name="active" checked> Активна</label>
+      </div>
+      <p class="tp20-note">Коллекции помечаются как учебные. Их публикация не означает реальное наличие блюд или коммерческих условий.</p>
+      <button class="button" type="submit">Создать коллекцию ↗</button>
+    </form>
+    <div class="tp20-admin-list">
+      <?php if(!$collections): ?><p class="tp20-note">Коллекций пока нет.</p><?php else: foreach($collections as $collection): ?>
+        <article class="tp20-admin-row" data-seasonal-collection="<?=e($collection['slug'])?>">
+          <div>
+            <span class="kicker"><?=!empty($collection['active'])?'АКТИВНА':'СКРЫТА'?> · <?= (int)$collection['dish_count']?> блюд</span>
+            <h3><?=e($collection['name'])?></h3>
+            <p><?=e($collection['slug'])?> · тема <?=e($collection['theme_key'])?> · порядок <?= (int)$collection['sort_order']?></p>
+          </div>
+          <details class="tp20-admin-details">
+            <summary>Редактировать коллекцию</summary>
+            <form method="post" action="admin-marketing.php#collections" class="tp20-admin-form">
+              <input type="hidden" name="csrf" value="<?=e(csrf())?>">
+              <input type="hidden" name="action" value="collection-save">
+              <input type="hidden" name="id" value="<?= (int)$collection['id']?>">
+              <h4>Настройки «<?=e($collection['name'])?>»</h4>
+              <div class="tp20-admin-fields">
+                <label>Slug<input name="slug" value="<?=e($collection['slug'])?>" required pattern="[a-z0-9][a-z0-9-]{1,50}" maxlength="51"></label>
+                <label>Название<input name="name" value="<?=e($collection['name'])?>" required maxlength="100"></label>
+                <label>Ключ темы<input name="theme_key" value="<?=e($collection['theme_key'])?>" required pattern="[a-z0-9-]{2,24}"></label>
+                <label>Изображение<select name="image_url"><?php foreach($imageOptions as $url=>$label): ?><option value="<?=e($url)?>" <?=$collection['image_url']===$url?'selected':''?>><?=e($label)?></option><?php endforeach ?></select></label>
+                <label>С даты<input type="datetime-local" name="starts_at" value="<?=e($collection['starts_at']?str_replace(' ','T',substr((string)$collection['starts_at'],0,16)):'')?>"></label>
+                <label>До даты<input type="datetime-local" name="ends_at" value="<?=e($collection['ends_at']?str_replace(' ','T',substr((string)$collection['ends_at'],0,16)):'')?>"></label>
+                <label>Порядок показа<input type="number" name="sort_order" min="0" max="10000" value="<?= (int)$collection['sort_order']?>"></label>
+                <label>Блюда · ID через запятую<input name="dish_ids" value="<?=e((string)$collection['dish_ids'])?>" inputmode="numeric" placeholder="1, 3, 17"></label>
+                <label>Описание<textarea name="description" rows="3" maxlength="1200"><?=e($collection['description'])?></textarea></label>
+                <label class="tp20-admin-check"><input type="checkbox" name="active" <?=!empty($collection['active'])?'checked':''?>> Активна</label>
+              </div>
+              <p class="tp20-note">Изменение slug обновит адрес коллекции. Даты применяются в Asia/Qyzylorda.</p>
+              <button class="button secondary" type="submit">Сохранить изменения ↗</button>
+            </form>
+          </details>
+          <form method="post" action="admin-marketing.php#collections">
+            <input type="hidden" name="csrf" value="<?=e(csrf())?>">
+            <input type="hidden" name="action" value="collection-toggle">
+            <input type="hidden" name="id" value="<?= (int)$collection['id']?>">
+            <button class="button secondary" type="submit"><?=!empty($collection['active'])?'Отключить':'Активировать'?></button>
+          </form>
+        </article>
+      <?php endforeach; endif ?>
+    </div>
+  </section>
   <section class="section tp20-admin-section" id="set-formats"><div class="editorial-heading"><div class="kicker">BUILD YOUR TOKYO SET</div><h2>Форматы конструктора сетов</h2><p>Здесь задаётся только допустимый состав. Стоимость всегда складывается из текущих цен блюд в каталоге и повторно проверяется сервером при оформлении.</p></div>
     <form method="post" action="admin-marketing.php#set-formats" class="tp20-admin-form"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="set-variant-save"><h3>Добавить формат</h3><div class="tp20-admin-fields"><label>Slug<input name="slug" required maxlength="51" pattern="[a-z0-9][a-z0-9-]{1,50}" placeholder="chef-selection"></label><label>Название<input name="name" required maxlength="120" placeholder="Chef’s Selection"></label><label>Минимум разных блюд<input type="number" name="minimum_distinct_items" min="3" max="8" required value="3"></label><label>Максимум разных блюд<input type="number" name="maximum_distinct_items" min="3" max="8" required value="5"></label><label>Порций всего · максимум 12<input type="number" name="maximum_total_quantity" min="3" max="12" required value="8"></label><label>Порядок показа<input type="number" name="sort_order" min="0" max="10000" value="50"></label><label class="tp20-admin-check"><input type="checkbox" name="active" checked> Доступен в конструкторе</label></div><button class="button" type="submit">Создать формат ↗</button></form>
     <?php if(!$setVariants): ?><p class="tp20-note">Форматов пока нет.</p><?php else: ?><div class="tp20-admin-list"><?php foreach($setVariants as $variant): ?><article class="tp20-admin-row" data-set-variant="<?=e($variant['slug'])?>"><div><span class="kicker"><?=!empty($variant['active'])?'ДОСТУПЕН':'ОТКЛЮЧЁН'?> · <?=e($variant['slug'])?></span><h3><?=e($variant['name'])?></h3><p><?= (int)$variant['minimum_distinct_items']?>–<?= (int)$variant['maximum_distinct_items']?> разных блюд · до <?= (int)$variant['maximum_total_quantity']?> порций · порядок <?= (int)$variant['sort_order']?></p></div><details class="tp20-admin-details"><summary>Изменить формат</summary><form method="post" action="admin-marketing.php#set-formats" class="tp20-admin-form"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="set-variant-save"><input type="hidden" name="id" value="<?=e($variant['slug'])?>"><div class="tp20-admin-fields"><label>Slug · постоянный<input name="slug" value="<?=e($variant['slug'])?>" readonly></label><label>Название<input name="name" value="<?=e($variant['name'])?>" required maxlength="120"></label><label>Минимум разных блюд<input type="number" name="minimum_distinct_items" min="3" max="8" value="<?= (int)$variant['minimum_distinct_items']?>" required></label><label>Максимум разных блюд<input type="number" name="maximum_distinct_items" min="3" max="8" value="<?= (int)$variant['maximum_distinct_items']?>" required></label><label>Порций всего · максимум 12<input type="number" name="maximum_total_quantity" min="3" max="12" value="<?= (int)$variant['maximum_total_quantity']?>" required></label><label>Порядок показа<input type="number" name="sort_order" min="0" max="10000" value="<?= (int)$variant['sort_order']?>"></label><label class="tp20-admin-check"><input type="checkbox" name="active" <?=!empty($variant['active'])?'checked':''?>> Доступен в конструкторе</label></div><button class="button secondary" type="submit">Сохранить формат ↗</button></form></details><form method="post" action="admin-marketing.php#set-formats"><input type="hidden" name="csrf" value="<?=e(csrf())?>"><input type="hidden" name="action" value="set-variant-toggle"><input type="hidden" name="slug" value="<?=e($variant['slug'])?>"><button class="button secondary" type="submit"><?=!empty($variant['active'])?'Отключить':'Активировать'?></button></form></article><?php endforeach ?></div><?php endif ?>
