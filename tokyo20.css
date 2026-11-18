@@ -247,6 +247,8 @@
 .tp20-admin-details ul { columns:2; color:var(--tp20-muted); }
 .tp20-promo-code-row { display:block; }
 .tp20-promo-code-summary { display:grid; grid-template-columns:minmax(0,1fr) minmax(210px,.42fr); align-items:start; gap:16px; }
+.tp20-promo-code-actions{display:flex;align-items:center;gap:8px;margin:8px 0 10px}
+.tp20-copy-code{min-height:38px;padding:8px 13px}
 .tp20-promo-code-facts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px 18px; margin:12px 0 0; padding:0; list-style:none; color:var(--tp20-muted); font-size:.8rem; line-height:1.5; }
 .tp20-promo-code-facts strong { color:var(--tp20-ivory); font-weight:500; }
 .tp20-promo-code-edit { align-self:start; margin:0; }

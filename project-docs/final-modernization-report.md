@@ -517,4 +517,8 @@ The protected Marketing & Loyalty admin now reports per-campaign saved uses, dis
 
 ## 2026-11-18 — Operational CSV export
 
-Orders, bookings, reviews and guest messages can now be downloaded by an authenticated administrator as CSV. Downloads preserve each section's active search and status/notification filter, include every matching row, and neutralize spreadsheet formula-like text. The response is marked private and non-cacheable. Local PHP syntax and diff checks passed; the authenticated SQLite route still requires hosted verification. This focused admin improvement does not complete Tokyo Premium 2.0.
+Orders, bookings, reviews and guest messages can now be downloaded by an authenticated administrator as CSV. Downloads preserve each section's active search and status/notification filter, include every matching row, and neutralize spreadsheet formula-like text. The response is marked private and non-cacheable. PHP lint and diff checks passed; run [44306169527](https://github.com/altento/tokyo-premium/actions/runs/44306169527) passed CI build and deploy, though its smoke test does not authenticate and exercise the export endpoint. Public Pages returned HTTP 200 for home, offers and menu; the PHP admin is not hosted there. This focused admin improvement does not complete Tokyo Premium 2.0.
+
+## 2026-11-18 — promo code quick copy
+
+Promo code records now have a one-click copy action, accessible success/failure announcement, and a fallback for browsers without Clipboard API support. PHP and JavaScript syntax checks and `git diff --check` passed. Browser interaction was not tested; the PHP admin is unavailable on Pages. This is a focused workflow improvement, not a claim of complete admin acceptance.

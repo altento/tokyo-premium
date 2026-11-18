@@ -592,4 +592,8 @@ The first hosted attempt, [44301886978](https://github.com/altento/tokyo-premium
 
 ## 2026-11-18 — protected admin CSV export
 
-Added filtered CSV downloads for the four operational record lists. `php -l admin.php` and `git diff --check` passed locally. This workstation's PHP CLI does not provide PDO SQLite, so authenticated route output and filtering are not locally exercised; the pushed GitHub Actions run is the PHP/SQLite deployment gate. No full browser matrix was run for this server-side addition.
+Added filtered CSV downloads for the four operational record lists. `php -l admin.php` and `git diff --check` passed locally. GitHub Actions run [44306169527](https://github.com/altento/tokyo-premium/actions/runs/44306169527) passed build and deployment. It ran existing SQLite integrity/admin smoke checks, but did not exercise this authenticated export route; the workstation lacks PDO SQLite. Public home, offers and menu returned HTTP 200. No full browser matrix was run.
+
+## 2026-11-18 — promo code quick copy
+
+Added Clipboard API copy with a legacy selection fallback and screen-reader status text. `php -l admin-marketing.php`, `node --check admin-marketing-search.js` and `git diff --check` passed. No browser interaction or PHP login session was available for this quick pass.

@@ -35,6 +35,55 @@
   const input = document.getElementById('marketing-admin-search');
   const clearButton = document.getElementById('marketing-admin-search-clear');
   const status = document.getElementById('marketing-admin-search-status');
+  const copyStatus = document.getElementById('promo-copy-status');
+  if (copyStatus) {
+    document.addEventListener('click', async (event) => {
+      const target = event.target;
+      const button = target instanceof Element ? target.closest('[data-copy-code]') : null;
+      if (!(button instanceof HTMLButtonElement) || button.disabled) return;
+      const code = button.dataset.copyCode || '';
+      if (!code) return;
+
+      button.disabled = true;
+      button.setAttribute('aria-busy', 'true');
+      let copied = false;
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(code);
+          copied = true;
+        }
+      } catch {}
+
+      if (!copied) {
+        const fallback = document.createElement('textarea');
+        fallback.value = code;
+        fallback.readOnly = true;
+        fallback.tabIndex = -1;
+        fallback.setAttribute('aria-hidden', 'true');
+        fallback.style.position = 'fixed';
+        fallback.style.left = '-9999px';
+        fallback.style.top = '0';
+        document.body.append(fallback);
+        fallback.select();
+        try { copied = document.execCommand('copy'); } catch {}
+        fallback.remove();
+        button.focus({ preventScroll: true });
+      }
+
+      if (copied) {
+        button.textContent = 'Скопировано';
+        copyStatus.textContent = `Промокод ${code} скопирован.`;
+      } else {
+        button.textContent = 'Скопировать';
+        copyStatus.textContent = `Не удалось скопировать автоматически. Скопируйте код вручную: ${code}.`;
+      }
+      window.setTimeout(() => {
+        button.textContent = 'Скопировать';
+        button.disabled = false;
+        button.removeAttribute('aria-busy');
+      }, copied ? 1600 : 0);
+    });
+  }
   if (!input || !clearButton || !status) return;
 
   const records = Array.from(document.querySelectorAll('.tp20-admin-list > article, .tp20-admin-list > details, .tp20-admin-performance-row, .tp20-admin-ledger-row'));
