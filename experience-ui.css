@@ -372,13 +372,8 @@
 
 /* Keep the account sidebar beside the member summary from the first dashboard row. */
 @media (min-width: 1101px) {
-  .account-dashboard .account-dashboard-content { grid-template-columns: minmax(0, 1.22fr) minmax(300px, .78fr); gap: 12px; }
-  .account-dashboard .account-dashboard-overview,
-  .account-dashboard .account-dashboard-actions { grid-column: 1 / -1; }
   .account-dashboard .account-dashboard-overview { margin: 0 0 2px; }
   .account-dashboard .account-dashboard-actions { margin-bottom: 2px; }
-  .account-dashboard .account-dashboard-primary { grid-column: 1; }
-  .account-dashboard .account-dashboard-aside { grid-column: 2; grid-template-columns: minmax(0, 1fr); }
   .account-dashboard .account-order-card--purchase { grid-template-columns: 82px minmax(0, 1fr); align-items: center; }
   .account-dashboard .account-order-card--purchase .account-order-preview { width: 82px; height: 76px; }
   .account-dashboard .account-order-content { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 12px; }
@@ -416,22 +411,12 @@
   .account-demo-page .account-demo-content { display: grid; gap: 12px; }
   .account-demo-page .tp20-static-privilege,
   .account-demo-page .account-demo-summary { width: 100%; margin: 0; }
-  .account-dashboard .account-dashboard-content { grid-template-columns: minmax(0, 1fr); }
-  .account-dashboard .account-dashboard-overview,
-  .account-dashboard .account-dashboard-actions,
-  .account-dashboard .account-dashboard-primary,
-  .account-dashboard .account-dashboard-aside { grid-column: 1; }
 }
 
 @media (max-width: 680px) {
   .account-demo-page .account-demo-content { display: grid; gap: 9px; }
   .account-demo-page .tp20-static-privilege,
   .account-demo-page .account-demo-summary { width: 100%; margin: 0; }
-  .account-dashboard .account-dashboard-content { grid-template-columns: minmax(0, 1fr); }
-  .account-dashboard .account-dashboard-overview,
-  .account-dashboard .account-dashboard-actions,
-  .account-dashboard .account-dashboard-primary,
-  .account-dashboard .account-dashboard-aside { grid-column: 1; }
   .account-demo-page .account-demo-order .demo-order-content { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; }
   .account-demo-page .account-demo-order .account-demo-record-badge,
   .account-demo-page .account-demo-order .demo-order-content > small,
