@@ -59,6 +59,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_SESSION['admin_marketing_not
     $notice = (string)$_SESSION['admin_marketing_notice'];
     unset($_SESSION['admin_marketing_notice']);
 }
+$reopenCampaignId = $_SERVER['REQUEST_METHOD'] === 'GET'
+    ? (int)($_SESSION['admin_marketing_reopen_campaign_id'] ?? 0)
+    : 0;
+if ($_SERVER['REQUEST_METHOD'] === 'GET') unset($_SESSION['admin_marketing_reopen_campaign_id']);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     check_csrf();
@@ -333,6 +337,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'personal-offer-revoke'=>'personal-offers',
         ];
         $_SESSION['admin_marketing_notice'] = $notice;
+        unset($_SESSION['admin_marketing_reopen_campaign_id']);
+        if ($action === 'campaign-save') {
+            $_SESSION['admin_marketing_reopen_campaign_id'] = filter_var($_POST['id'] ?? 0, FILTER_VALIDATE_INT) ?: 0;
+        }
         header('Location: admin-marketing.php#' . ($anchors[$action] ?? 'marketing-search'), true, 303);
         exit;
     }
@@ -426,7 +434,7 @@ header_html();
         $campaignGiftDishId=(int)($campaign['gift_dish_id']??0);
         $campaignGiftQuantity=$campaignGiftInventory[$campaignId.':'.$campaignGiftDishId]??0;
         $campaignGiftMaxPerOrder=$campaignGiftLimits[$campaignId.':'.$campaignGiftDishId]??1;
-        $campaignEditOpen=($_SERVER['REQUEST_METHOD']==='POST'&&($_POST['action']??'')==='campaign-save'&&(int)($_POST['id']??0)===$campaignId);
+        $campaignEditOpen=$reopenCampaignId===$campaignId || ($_SERVER['REQUEST_METHOD']==='POST'&&($_POST['action']??'')==='campaign-save'&&(int)($_POST['id']??0)===$campaignId);
       ?>
         <article class="tp20-admin-row">
           <div>
