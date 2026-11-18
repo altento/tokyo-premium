@@ -571,6 +571,7 @@
       if (booking instanceof HTMLAnchorElement) {
         const url = new URL(initialBookingHref || booking.href, doc.baseURI);
         url.searchParams.set('zone', zone);
+        url.searchParams.set('guests', String(guestCount));
         if (chosen?.setVariant) {
           const format = chosen.setVariant.slug === 'omakase' ? 'Премиальный' : chosen.setVariant.slug === 'seasonal' ? 'Сезонный' : 'Начало';
           url.searchParams.set('format', format);
@@ -1054,6 +1055,9 @@
     const format = params.get('format') || '';
     const formatField = form.elements.namedItem('format');
     if (formatField && Array.from(formatField.options || []).some(option => option.value === format)) formatField.value = format;
+    const guests = params.get('guests') || '';
+    const guestsField = form.elements.namedItem('guests');
+    if (/^(?:[1-9]|1[0-2])$/.test(guests) && guestsField && Array.from(guestsField.options || []).some(option => option.value === guests)) guestsField.value = guests;
     const experience = (params.get('experience') || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 180);
     const noteField = form.elements.namedItem('message');
     if (experience && noteField && !noteField.value.trim()) noteField.value = `Подбор меню: ${experience}`;

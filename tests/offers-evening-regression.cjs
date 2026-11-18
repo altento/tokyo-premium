@@ -92,6 +92,7 @@ async function main() {
     assert.equal(await page.locator('[data-tp-evening-add-plan]').isDisabled(), true, 'the batch-add button prevents accidental repeated submission');
     const bookingHref = await page.locator('[data-tp-evening-booking]').getAttribute('href');
     assert.equal(new URL(bookingHref, staticBase).searchParams.get('zone'), 'Основной зал', 'booking action keeps the selected zone');
+    assert.equal(new URL(bookingHref, staticBase).searchParams.get('guests'), '3', 'booking action carries the selected guest count');
     assert.match(bookingHref, /experience=/, 'booking action carries a concise menu summary');
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
     await page.waitForTimeout(80);
@@ -131,7 +132,14 @@ async function main() {
     assert.match(new URL(page.url()).pathname, /booking\.html$/, 'booking opens after transferring an evening recommendation');
     await page.waitForFunction(() => document.querySelector('#booking-format')?.value);
     assert.ok(await page.locator('#booking-format').inputValue(), 'static booking form receives the selected Omakase format');
+    assert.equal(await page.locator('#full-booking-form [name="guests"]').inputValue(), '2', 'static booking form receives the guest count from the recommendation');
     assert.match(await page.locator('#booking-note').inputValue(), /Подбор меню:/, 'static booking form receives the selected catalogue items as an editable note');
+    await page.locator('#booking-form').scrollIntoViewIfNeeded();
+    await page.waitForTimeout(900);
+    await page.screenshot({ path: path.join(evidenceDir, 'ideal-evening-booking-prefilled-2026-11-18.png'), type: 'png' });
+
+    await page.goto(`${staticBase}/booking.html?guests=99`, { waitUntil: 'domcontentloaded' });
+    assert.equal(await page.locator('#full-booking-form [name="guests"]').inputValue(), '2', 'invalid guest counts are ignored by the booking prefill');
 
     assert.deepEqual(pageErrors, [], 'static routes produce no browser runtime errors');
     console.log('Focused Offers + Ideal Evening regression passed (static browser, per-guest budget and warning leakage).');

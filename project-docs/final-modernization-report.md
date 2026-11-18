@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-18 · Ideal Evening booking handoff
+
+The selected party size from the rules-based evening recommendation now travels into the booking URL and preselects the guest count in the shared PHP and Pages booking script. The prefill accepts only values from 1 to 12; malformed or out-of-range values are ignored. The focused static-browser `offers-evening-regression.cjs` passed against the current `docs/` export, including party-size handoff, booking prefill and invalid-value handling. A separate Playwright smoke check against PHP 8.4 with an isolated SQLite database confirmed valid and out-of-range values behave the same way. The public Pages build has not yet been updated for this change. Screenshot: `visual-qa/ideal-evening-booking-prefilled-2026-11-18.png`.
+
 ## 2026-11-17 account notifications — local verification
 
 Added in-app notifications for actual order and booking status changes in the PHP/SQLite account. Notifications are owner-scoped, written transactionally with each status transition, and can be marked read with a CSRF-protected account action. The static Pages profile shows only local demo notifications and keeps the non-confirmation disclosure visible. The PHP/SQLite integration suite passed 214 assertions. Focused local browser checks passed for the account notification state, the 11-route/21-detail browser suite, and the PHP account visual-fidelity route with seven navigation links. Hosted run `44127863335` completed successfully and deployed the Pages artifact. A public Chromium smoke check confirmed the 390 px account notification panel, four local demo notices, no horizontal overflow, and no browser errors. Evidence is in `project-docs/visual-qa/11-account-notifications-public-mobile.jpg`, `11-account-notifications-unread-desktop.jpg`, and `11-account-notifications-mobile.jpg`. Broader 2.0 acceptance remains open.
