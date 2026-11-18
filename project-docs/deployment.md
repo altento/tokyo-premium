@@ -31,8 +31,8 @@ Push to `main` and wait for the Pages workflow to finish. Inspect the workflow s
 
 ## Latest verified publication
 
-- Published code commit: `f05dae1864083ec43276e9586a022fe566822026`.
-- Workflow: [run 44306169527](https://github.com/altento/tokyo-premium/actions/runs/44306169527) — build and deploy both succeeded. Existing PHP/SQLite checks and static export passed. The full browser/visual suite was skipped by the fast push profile; use `workflow_dispatch` with `full_qa=true` only when a full pass is useful.
+- Published code commit: `261ec7e85f5e320cb50c60a733482c48078e3a79`.
+- Workflow: [run 44307539160](https://github.com/altento/tokyo-premium/actions/runs/44307539160) — build and deploy both succeeded. Existing PHP/SQLite checks and static export passed. The full browser/visual suite was skipped by the fast push profile; use `workflow_dispatch` with `full_qa=true` only when a full pass is useful.
 - Cache-busted public home, Offers and Menu returned HTTP 200. Fresh local Pages captures of all 11 reference page types remain paired with their approved PNGs in `project-docs/visual-qa/full-static-2026-11-18/`; the review documents material differences and remaining work. This is not a pixel-perfect comparison or PHP-host verification.
 - This verifies the published static demo. PHP-only admin features remain unavailable on Pages; browser storage is not durable/server-synced, and no payment or live table availability is enabled.
 

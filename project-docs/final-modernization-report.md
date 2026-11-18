@@ -522,3 +522,5 @@ Orders, bookings, reviews and guest messages can now be downloaded by an authent
 ## 2026-11-18 — promo code quick copy
 
 Promo code records now have a one-click copy action, accessible success/failure announcement, and a fallback for browsers without Clipboard API support. PHP and JavaScript syntax checks and `git diff --check` passed. Browser interaction was not tested; the PHP admin is unavailable on Pages. This is a focused workflow improvement, not a claim of complete admin acceptance.
+
+Commit `261ec7e` is published; GitHub Actions run [44307539160](https://github.com/altento/tokyo-premium/actions/runs/44307539160) passed, and the public home, Offers and Menu routes returned HTTP 200. No browser interaction was run for the PHP-only admin controls.

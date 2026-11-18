@@ -4,7 +4,7 @@ Updated 2026-11-18
 
 ## Current release checkpoint
 
-The latest verified public release is `f05dae1` (GitHub Actions run [44306169527](https://github.com/altento/tokyo-premium/actions/runs/44306169527)). Recent admin work adds formula-safe CSV downloads that respect each operational section's filters and quick-copy buttons for promo codes. CI build and deployment passed; public home, offers and menu returned HTTP 200. The PHP admin itself is not available on Pages, and the new authenticated download/copy controls were not exercised in a browser. Full browser/visual QA remains opt-in, with documented visual gaps still open.
+The latest verified public release is `261ec7e` (GitHub Actions run [44307539160](https://github.com/altento/tokyo-premium/actions/runs/44307539160)). Recent admin work adds formula-safe CSV downloads that respect each operational section's filters and quick-copy buttons for promo codes. CI build and deployment passed; public home, offers and menu returned HTTP 200. The PHP admin itself is not available on Pages, and the new authenticated download/copy controls were not exercised in a browser. Full browser/visual QA remains opt-in, with documented visual gaps still open.
 
 ### Admin, account, and dish follow-up — published in `8867502`
 
