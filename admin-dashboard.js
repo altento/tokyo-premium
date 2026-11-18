@@ -11,12 +11,15 @@
 
     const updatePreview = () => {
       const value = input.value.trim();
-      const localAsset = /^assets\/food\/[A-Za-z0-9][A-Za-z0-9._-]*\.webp$/i.test(value);
+      const localAsset = /^assets\/food\/[A-Za-z0-9][A-Za-z0-9._-]*\.webp$/.test(value);
       let safeRemote = '';
       try {
         const url = new URL(value);
+        const decodedPath = decodeURIComponent(url.pathname);
+        const safePath = decodedPath !== '' && !decodedPath.includes('\\') && !/%2f|%5c/i.test(url.pathname)
+          && !decodedPath.split('/').some((part) => part === '.' || part === '..');
         if (url.protocol === 'https:' && ['images.unsplash.com', 'plus.unsplash.com'].includes(url.hostname.toLowerCase())
-          && !url.username && !url.password && !url.hash && (!url.port || url.port === '443')) safeRemote = url.href;
+          && safePath && !url.username && !url.password && !url.hash && (!url.port || url.port === '443')) safeRemote = url.href;
       } catch {}
 
       const source = localAsset ? value : safeRemote;
