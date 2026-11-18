@@ -56,6 +56,10 @@ The project remains the existing PHP 8+ application with SQLite. Public PHP rout
 - Current published checkpoint `51a16c3`: workflow 44278543876 succeeded. The admin image-preview release passed hosted focused checks and Pages deployment. Cache-busted public home and updated premium.css returned HTTP 200, with the new admin image-preview styles present. No browser screenshot or full visual suite was run for the PHP-only admin interface.
 - Post-release admin preview hardening: local preview paths now match PHP’s case-sensitive WebP rule, while HTTPS Unsplash previews reject encoded separators and dot segments. `node --check admin-dashboard.js` and `git diff --check` passed. This is PHP-admin-only source code; CI and browser checks were not rerun, and the published Pages artifact is unchanged.
 
+## 2026-11-18 — admin workflow export
+
+The protected operations dashboard now has CSV exports for orders, bookings, reviews and contact messages. Each export uses the same session search, status filter, or notification scope as its section, streams all matching rows rather than only the visible page, includes a UTF-8 BOM, and prefixes spreadsheet formula-like text values. Downloads are private and non-cacheable. PHP lint and `git diff --check` passed; authenticated PHP/SQLite download behavior is awaiting the hosted workflow. The feature does not expose the PHP admin through GitHub Pages.
+
 ## Boundaries
 
 The restaurant, prices, campaign defaults, guest examples and address are fictional school-project data. Only a completed server order event changes the PHP loyalty ledger. Pages stores supported demo data in the current browser's `localStorage`; it is not encrypted or synced with PHP. No external mail provider or payment gateway is configured, and a booking request is not a confirmed reservation.

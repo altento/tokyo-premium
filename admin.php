@@ -116,6 +116,53 @@ function admin_page_url(string $table, int $page, string $notificationTarget, st
     return 'admin.php?' . http_build_query($query) . '#' . rawurlencode($table);
 }
 
+function admin_export_url(string $table, string $notificationTarget, string $recordFilterTable, string $recordFilterStatus): string
+{
+    $query = ['export' => $table];
+    if ($notificationTarget === $table || ($table === 'bookings' && $notificationTarget === 'booking_emails')) {
+        $query['notification'] = $notificationTarget;
+    } elseif ($recordFilterTable === $table && $recordFilterStatus !== '') {
+        $query['filter_table'] = $table;
+        $query['filter_status'] = $recordFilterStatus;
+    }
+    return 'admin.php?' . http_build_query($query);
+}
+
+function admin_csv_text(mixed $value): string
+{
+    if (!is_scalar($value) && $value !== null) return '';
+    $text = (string)($value ?? '');
+    // Prefix spreadsheet formulas and leading control/space characters with a
+    // literal apostrophe. Numeric columns are emitted as integers by the query.
+    return preg_match('/^[\x00-\x20\x7f]*[=+\-@]/', $text) ? "'" . $text : $text;
+}
+
+function admin_download_csv(string $filename, array $headers, array $columns, PDOStatement $statement): void
+{
+    if (headers_sent()) {
+        http_response_code(500);
+        exit;
+    }
+    header('Content-Type: text/csv; charset=UTF-8');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    header('Cache-Control: no-store, private');
+    header('X-Content-Type-Options: nosniff');
+    $stream = fopen('php://output', 'wb');
+    if (!is_resource($stream)) {
+        http_response_code(500);
+        exit;
+    }
+    fwrite($stream, "\xEF\xBB\xBF");
+    fputcsv($stream, array_map('admin_csv_text', $headers));
+    while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
+        $values = [];
+        foreach ($columns as $column) $values[] = admin_csv_text($row[$column] ?? '');
+        fputcsv($stream, $values);
+    }
+    fclose($stream);
+    exit;
+}
+
 function admin_count(PDO $pdo, string $sql, array $values = []): int
 {
     $statement = $pdo->prepare($sql);
@@ -494,6 +541,44 @@ $bookingMailReadiness = match ($bookingMailState) {
     'invalid' => ['class'=>'invalid', 'title'=>'Настройки SMTP неполные или некорректны', 'text'=>'Заявки сохраняются, но письмо не будет отправлено, пока настройки сервера не исправлены.'],
     default => ['class'=>'missing', 'title'=>'SMTP не настроен', 'text'=>'Заявки сохраняются, но письма останутся в очереди. Инструкция по настройке находится в документации.'],
 };
+
+$exportTable = (string)($_GET['export'] ?? '');
+if ($exportTable !== '') {
+    $exportDefinitions = [
+        'orders' => [
+            'headers'=>['№ заказа','Создан','Статус','Гость','Телефон','Получение','Адрес','Состав','Сумма, ₸','Комментарий'],
+            'columns'=>['id','created_at','status','customer_name','phone','fulfillment_label','address','items_summary','total','comment'],
+            'sql'=>"SELECT o.id,o.created_at,o.status,o.customer_name,o.phone,CASE WHEN o.fulfillment='pickup' THEN 'Самовывоз' ELSE 'Доставка' END AS fulfillment_label,o.address,GROUP_CONCAT(oi.item_name || ' × ' || oi.quantity,' · ') AS items_summary,o.total,o.comment FROM orders o LEFT JOIN order_items oi ON oi.order_id=o.id" . $orderFilter[0] . ' GROUP BY o.id ORDER BY o.created_at DESC,o.id DESC',
+            'params'=>$orderFilter[1],
+        ],
+        'bookings' => [
+            'headers'=>['№ брони','Создана','Статус','Гость','Email','Телефон','Дата','Время','Гостей','Зона','Стол предпочтения','Формат','Комментарий'],
+            'columns'=>['id','created_at','status','guest_name','guest_email','phone','booking_date','booking_time','guest_count','zone','preferred_table','format','message'],
+            'sql'=>'SELECT b.id,b.created_at,b.status,b.guest_name,b.guest_email,b.phone,b.booking_date,b.booking_time,b.guest_count,b.zone,b.preferred_table,b.format,b.message FROM bookings b' . $bookingFilter[0] . ' ORDER BY b.booking_date DESC,b.booking_time DESC,b.id DESC',
+            'params'=>$bookingFilter[1],
+        ],
+        'reviews' => [
+            'headers'=>['№ отзыва','Создан','Статус','Гость','Оценка','Тема','Текст'],
+            'columns'=>['id','created_at','status','guest_name','rating','theme','body'],
+            'sql'=>'SELECT r.id,r.created_at,r.status,r.guest_name,r.rating,r.theme,r.body FROM reviews r' . $reviewFilter[0] . ' ORDER BY r.id DESC',
+            'params'=>$reviewFilter[1],
+        ],
+        'contact_messages' => [
+            'headers'=>['№ обращения','Создано','Статус','Гость','Email','Тема','Сообщение'],
+            'columns'=>['id','created_at','status','guest_name','email','subject','message'],
+            'sql'=>'SELECT m.id,m.created_at,m.status,m.guest_name,m.email,m.subject,m.message FROM contact_messages m' . $messageFilter[0] . ' ORDER BY m.id DESC',
+            'params'=>$messageFilter[1],
+        ],
+    ];
+    if (!isset($exportDefinitions[$exportTable])) {
+        http_response_code(400);
+        exit('Неизвестный формат экспорта.');
+    }
+    $export = $exportDefinitions[$exportTable];
+    $exportQuery = $pdo->prepare($export['sql']);
+    $exportQuery->execute($export['params']);
+    admin_download_csv('tokyo-' . $exportTable . '-' . $localDayStart->format('Ymd') . '.csv', $export['headers'], $export['columns'], $exportQuery);
+}
 ?>
 <main class="admin-shell admin-dashboard">
   <div class="admin-topline">
@@ -691,6 +776,7 @@ $bookingMailReadiness = match ($bookingMailState) {
       <button class="button secondary" type="submit">Показать</button>
       <?php if ($recordFilterTable === $table): ?><a class="admin-filter-reset" href="admin.php#<?=$table?>">Сбросить фильтр</a><?php endif ?>
     </form>
+    <p class="admin-export-action"><a class="button secondary" href="<?=e(admin_export_url($table,$notificationTarget,$recordFilterTable,$recordFilterStatus))?>" aria-label="Скачать все найденные записи раздела «<?=e($collection['label'])?>» в CSV">Скачать CSV · все <?=number_format($recordTotalCounts[$table],0,'.',' ')?> записей</a></p>
     <div class="admin-record-list">
       <?php foreach ($collection['rows'] as $row):
         $confirmedBooking = $table === 'bookings' && $row['status'] === 'confirmed';

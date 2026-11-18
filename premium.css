@@ -502,6 +502,8 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .admin-record-filter select{min-width:190px;min-height:40px;padding:7px 10px;border:1px solid rgba(200,164,99,.35);border-radius:6px;background:#0f0e0c;color:#f2eadc}
 .admin-record-filter select:focus-visible{outline:2px solid #d5aa5c;outline-offset:2px}
 .admin-record-filter .button{min-height:40px;padding-inline:14px}
+.admin-export-action{margin:-6px 0 16px}
+.admin-export-action .button{min-height:40px}
 .admin-filter-reset{color:#e7c579;font-size:.78rem;text-decoration:underline;text-underline-offset:3px}
 .admin-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1px solid rgba(200,164,99,.16);color:#b9ad98;font-size:.8rem}
 .admin-pagination-links{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -567,6 +569,7 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
   .admin-record-filter{align-items:stretch}
   .admin-record-filter label{width:100%}
   .admin-record-filter select,.admin-record-filter .button{width:100%}
+  .admin-export-action .button{width:100%;justify-content:center}
   .admin-pairing-row{grid-template-columns:minmax(0,1fr) auto;gap:8px}
   .admin-pairing-row .admin-edit-form{grid-column:1/-1;grid-template-columns:1fr 1fr;align-items:end;margin:0}
   .admin-pairing-row .admin-edit-form .button{grid-column:1/-1;width:100%}
