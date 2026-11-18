@@ -1,0 +1,15 @@
+{
+  "firstBookings": [
+    "QA Бронь сегодня подтверждена",
+    "QA Бронь завтра ожидает",
+    "QA Бронь сегодня отменена",
+    "QA Бронь вчера отменена"
+  ],
+  "todayKpi": "БРОНИ СЕГОДНЯ\n1\n\n0 ждут подтверждения\n\nОткрыть брони ↗",
+  "phone": "tel:+77005550102",
+  "email": "mailto:guest@example.test",
+  "confirmedBadge": true,
+  "recordTimestamp": "2026-11-18T19:18:01+05:00",
+  "mobileScrollWidth": 390,
+  "pageErrors": []
+}
