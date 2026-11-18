@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-18 · Marketing admin quick search
+
+Added an accessible live filter to the protected Marketing & Loyalty page. It searches currently loaded campaigns, promo codes, assigned offers, collections, set formats, membership tiers, Secret Menu rules, gift stock and the visible loyalty-ledger page; the separate server-side user and ledger filters remain in place. The filter announces result counts, supports a one-click clear, and has a narrow-screen layout. Its focused JavaScript behavior check (match, hide non-matches, clear and restore focus), PHP syntax, source/static CSS parity and whitespace checks passed. Hosted workflow [44254402681](https://github.com/altento/tokyo-premium/actions/runs/44254402681) passed PHP/SQLite integration, admin checks, browser regression/visual QA, static export and Pages deployment; the published homepage returned HTTP 200. The Marketing & Loyalty controls remain in the PHP/SQLite edition and are not hosted by GitHub Pages.
+
 ## 2026-11-18 · Actionable admin notifications
 
 The main admin notification cards previously cleared the saved search and jumped to a section, but still showed the generic latest-record list. They now apply a parameterized status filter for new orders, booking requests, and contact messages, or reviews pending moderation. The active filter is announced and visually marked, and administrators can return to the recent list. Updated the existing PHP/SQLite integration assertion to check the new behavior. Local PHP lint and `git diff --check` passed. Hosted workflow [44252480463](https://github.com/altento/tokyo-premium/actions/runs/44252480463) passed PHP/SQLite integrity, admin workflow checks, browser regression/visual QA, static export and Pages deployment. The deployed public homepage returned HTTP 200. The admin itself remains part of the PHP/SQLite edition and is not hosted by GitHub Pages.
