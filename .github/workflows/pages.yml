@@ -52,6 +52,8 @@ jobs:
         run: node --test tests/cart-store.test.cjs
       - name: Run PHP and SQLite integrity checks
         run: php tests/php_integrity_integration.php
+      - name: Verify FreedomPay signatures and amounts
+        run: php tests/freedompay-signature-test.php
       - name: Check protected Tokyo Privilege ledger
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.full_qa == 'true'
         run: php tests/admin-loyalty-ledger-regression.php
