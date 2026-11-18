@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-18 admin login protection and booking map
+
+Commit `59b9258` adds a transactional SQLite login cooldown (five failures per IP per 15 minutes and an account-level distributed-guessing limit), migration v15, and a wider desktop booking floorplan. Local PHP lint and `git diff --check` passed. The local PHP CLI lacks PDO SQLite, so the database/HTTP regression ran once in hosted CI instead of being rerun locally. GitHub Actions run [44263546045](https://github.com/altento/tokyo-premium/actions/runs/44263546045) passed PHP/SQLite integrity, admin regressions, PHP syntax, browser regression/visual QA, static export and deployment. A cache-busted published booking page returned HTTP 200 at 1440 px and 390 px with no browser errors or horizontal overflow. Screenshots and the scoped reference comparison are in `visual-qa/booking-floorplan-2026-11-18/`. This does not complete the broader visual or Tokyo Premium 2.0 acceptance work.
+
 ## 2026-11-18 account dashboard export and release
 
 The PHP account layout and Pages dashboard export were aligned, and the exporter was corrected to preserve the new masthead and emit the loyalty summary once. Focused local checks passed: `php -l tools/export-pages.php`, `git diff --check`, and `npm run test:account-demo` against the exported static page. Hosted run [44234776222](https://github.com/altento/tokyo-premium/actions/runs/44234776222) passed PHP/SQLite checks, browser regression for 11 routes and 21 details, Tokyo 2.0 interactions, responsive/visual-fidelity checks, account-demo tests, static export (37 pages), and Pages deployment. The public `/account.html` returned HTTP 200 with the expected dashboard wrapper. Runway and payment/email/live-seating configuration remain unavailable; complete manual comparison against all 11 design PNGs remains open.
