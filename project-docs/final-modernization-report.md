@@ -528,3 +528,5 @@ Commit `261ec7e` is published; GitHub Actions run [44307539160](https://github.c
 ## 2026-11-18 — admin action context
 
 Successful operational, menu, pairing, and settings updates now redirect back to their validated section. Operational list actions retain the relevant status/notification filter and page number, while a one-time confirmation appears inside the section just changed. PHP syntax and whitespace checks passed. The authenticated PHP dashboard is not part of GitHub Pages, and this focused update was not browser-tested; Tokyo Premium 2.0 and full admin visual acceptance remain in progress.
+
+The mobile operations cards now keep the status selector and update button on the same row, and give booking confirmation/email-retry controls a 44 px minimum target. Existing red section dividers are preserved. Only whitespace validation was run for this CSS change; no mobile screenshot was captured.

@@ -602,4 +602,6 @@ GitHub Actions run [44307539160](https://github.com/altento/tokyo-premium/action
 
 ## 2026-11-18 — admin action context
 
-`php -l admin.php` and `git diff --check` passed. The change routes successful admin saves back to their section, preserves validated list filters/page state, and places the one-time success notice beside that section. No long browser suite was run for this small PHP-only update; hosted CI/deploy result is recorded after publication.
+`php -l admin.php` and `git diff --check` passed. The change routes successful admin saves back to their section, preserves validated list filters/page state, and places the one-time success notice beside that section. GitHub Actions run [44310591339](https://github.com/altento/tokyo-premium/actions/runs/44310591339) passed the configured checks and deployment for commit `8d63abf`; the authenticated admin route was not browser-tested.
+
+Mobile admin action controls received a focused `git diff --check`. No broad or screenshot-based test was run for this small CSS adjustment.

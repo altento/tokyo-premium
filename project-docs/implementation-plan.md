@@ -66,6 +66,8 @@ Promo code rows now include a copy-to-clipboard action with an accessible result
 
 Successful admin updates now return to the affected section instead of resetting to the dashboard top. List actions retain only validated status/notification filters and the current page, and the one-time confirmation appears inside the section the administrator just changed. This focused change passed PHP syntax and whitespace checks; browser interaction is not available for the PHP admin in the Pages runtime.
 
+Operational controls now fit narrow admin cards better: status selection and update stay on one row, while confirmation and email-retry actions keep a 44 px minimum target. Red section dividers remain unchanged.
+
 ## Boundaries
 
 The restaurant, prices, campaign defaults, guest examples and address are fictional school-project data. Only a completed server order event changes the PHP loyalty ledger. Pages stores supported demo data in the current browser's `localStorage`; it is not encrypted or synced with PHP. No external mail provider or payment gateway is configured, and a booking request is not a confirmed reservation.
