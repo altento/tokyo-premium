@@ -500,3 +500,9 @@ The Marketing & Loyalty admin search now matches the main admin shortcut: `/` fo
 ## 2026-11-18 — Admin unsaved-form guard
 
 The authenticated operations dashboard and Marketing & Loyalty admin now warn before leaving with modified POST form data. The guard compares current values with the loaded state, covers text/select/checkbox/radio/file controls, and does not prompt after a valid form submission. Existing test suites were not rerun for this focused change.
+
+## 2026-11-18 — Account overview density
+
+The PHP and Pages account overviews now show profile/contact information and shortcuts; the static dashboard also has a settings/privacy preview. Existing order, favorite, booking, address, and privacy data behavior remains browser-local where applicable. Desktop summary panels use a denser grid; the phone layout remains stacked. The avatar is a neutral silhouette, not a user portrait.
+
+PHP lint, JavaScript syntax, and CSS checks passed. The local export command could not be run because this PHP environment lacks PDO SQLite; the checked-in static account page and copied CSS/JS were updated to match the export template. No browser screenshot or full visual comparison was performed in this pass, so responsive appearance still needs an interactive review.

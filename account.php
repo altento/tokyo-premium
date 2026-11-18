@@ -328,10 +328,14 @@ header_html();
           <h1 id="account-dashboard-title">Личный кабинет</h1>
           <p class="account-dashboard-hero-lead">Ваше пространство в Tokyo Premium</p>
           <p class="account-dashboard-hero-copy">Управляйте заказами, бронированиями, бонусами и личными данными в одном месте.</p>
-          <div class="account-dashboard-member">
-            <strong>Здравствуйте, <?=e($user['full_name'])?></strong>
-            <span class="account-dashboard-member-email" title="<?=e($user['email'])?>"><?=e($user['email'])?></span>
-            <small>Участник с <?=e(substr((string)$user['created_at'], 0, 10))?> · данные видны только после входа в этот аккаунт.</small>
+          <div class="account-dashboard-member" aria-label="Контактные данные аккаунта">
+            <span class="account-profile-avatar" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="11" r="5"/><path d="M6 27c.7-5.1 4.3-8 10-8s9.3 2.9 10 8"/></svg></span>
+            <div class="account-dashboard-member-copy">
+              <strong><?=e($user['full_name'])?></strong>
+              <span class="account-dashboard-member-email" title="<?=e($user['email'])?>"><span>Контактный email</span><?=e($user['email'])?></span>
+              <small>Участник с <?=e(substr((string)$user['created_at'], 0, 10))?> · личные данные доступны только после входа в этот аккаунт.</small>
+            </div>
+            <a class="account-dashboard-contact-link" href="#account-settings">Данные профиля <span aria-hidden="true">↗</span></a>
           </div>
         </div>
         <form method="post" class="account-logout-form">
