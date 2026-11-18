@@ -21,3 +21,10 @@ This is one focused browser check of the PHP admin, not the full Tokyo Premium r
 - `admin-browser-check.json` — measured assertions.
 
 This check does not exercise email delivery, every admin mutation, the production database, or all responsive widths. The temporary database and login are not included in this folder or repository.
+## Marketing & Loyalty admin follow-up
+
+A second authenticated browser visit checked the protected marketing dashboard using the same isolated throwaway database. Search for `TOKYOHOUR` returned one matching record; `/` focused search; `Esc` cleared it; the copy action announced success and the clipboard contained `DEMO10`. No page-level JavaScript errors were reported.
+
+- `marketing-admin-desktop.jpg` — promo-code management view.
+- `marketing-admin-mobile-390.jpg` — campaign cards at 390 px.
+- `marketing-admin-check.json` — measured results.
