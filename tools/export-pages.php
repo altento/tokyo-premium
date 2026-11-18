@@ -102,6 +102,9 @@ foreach ($routes as $route => $filename) {
     }, $html) ?? $html;
     $html = str_replace('<script src="luxury.js" defer></script><script src="pages-extra.js" defer></script>', '<script src="luxury.js" defer></script><script src="pages-extra.js" defer></script><script src="pages-demo.js" defer></script>', $html);
     $html = str_replace('</body>', '<script>window.TOKYO_STATIC_DEMO=true;</script></body>', $html);
+    if ($filename === 'cart.html') {
+        $html = preg_replace('/<head\b[^>]*>/i', '$0<meta name="robots" content="noindex,follow">', $html, 1) ?? $html;
+    }
     if (file_put_contents($docs . '/' . $filename, $html) === false) throw new RuntimeException('Cannot write ' . $filename);
 }
 $secretIds=commerce_secret_menu_restricted_dish_ids(db());
@@ -222,6 +225,7 @@ $sharedFooter = str_replace(['href="offers.php"','href="perfect-evening.php"','h
 $sharedFooter = preg_replace('/<a href="admin\.php">Администрирование<\/a>/', '', $sharedFooter) ?? $sharedFooter;
 $sharedFooter = str_replace('</body>', '<script>window.TOKYO_STATIC_DEMO=true;</script><script src="account-demo.js" defer></script></body>', $sharedFooter);
 $account .= $sharedFooter;
+$account = preg_replace('/<head\b[^>]*>/i', '$0<meta name="robots" content="noindex,follow">', $account, 1) ?? $account;
 file_put_contents($docs . '/account.html', $account);
 $expected = array_values($routes);
 $expected[] = 'account.html';
@@ -232,4 +236,32 @@ foreach (array_unique($expected) as $filename) {
     preg_match_all('/<script\b[^>]*\bsrc="([^"]+)"[^>]*><\/script>/i', $output, $scripts);
     if (count($scripts[1]) !== count(array_unique($scripts[1]))) throw new RuntimeException('Duplicate external script in static page: ' . $filename);
 }
+$publicBaseOverride = trim((string)(getenv('TOKYO_PUBLIC_BASE_URL') ?: ''));
+if ($publicBaseOverride !== '') {
+    $publicBase = $publicBaseOverride;
+} else {
+    $repository = trim((string)(getenv('GITHUB_REPOSITORY') ?: 'altento/tokyo-premium'));
+    if (!preg_match('/^([A-Za-z0-9-]+)\/([A-Za-z0-9._-]+)$/', $repository, $repositoryMatch)) {
+        throw new RuntimeException('Invalid GITHUB_REPOSITORY for static sitemap.');
+    }
+    $owner = strtolower($repositoryMatch[1]);
+    $repositoryName = strtolower($repositoryMatch[2]);
+    $projectPath = strcasecmp($repositoryName, $owner . '.github.io') === 0 ? '' : '/' . $repositoryName;
+    $publicBase = 'https://' . $owner . '.github.io' . $projectPath;
+}
+$publicBase = rtrim($publicBase, '/') . '/';
+$publicBaseParts = parse_url($publicBase);
+if (!is_array($publicBaseParts) || strtolower((string)($publicBaseParts['scheme'] ?? '')) !== 'https' || empty($publicBaseParts['host']) || isset($publicBaseParts['query']) || isset($publicBaseParts['fragment'])) {
+    throw new RuntimeException('TOKYO_PUBLIC_BASE_URL must be a public HTTPS base URL without a query or fragment.');
+}
+$sitemapFiles = array_values(array_unique(array_filter(array_values($routes), static fn(string $filename): bool => !in_array($filename, ['cart.html', 'account.html'], true))));
+$sitemap = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n";
+foreach ($sitemapFiles as $filename) {
+    $location = $publicBase . ($filename === 'index.html' ? '' : rawurlencode($filename));
+    $sitemap .= '  <url><loc>' . htmlspecialchars($location, ENT_XML1 | ENT_QUOTES, 'UTF-8') . "</loc></url>\n";
+}
+$sitemap .= "</urlset>\n";
+if (file_put_contents($docs . '/sitemap.xml', $sitemap, LOCK_EX) === false) throw new RuntimeException('Cannot write static sitemap.');
+$robots = "User-agent: *\nAllow: /\nSitemap: " . $publicBase . "sitemap.xml\n";
+if (file_put_contents($docs . '/robots.txt', $robots, LOCK_EX) === false) throw new RuntimeException('Cannot write robots.txt.');
 echo "Exported " . count(array_unique($expected)) . " static pages to $docs\n";

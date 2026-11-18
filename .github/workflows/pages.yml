@@ -111,6 +111,12 @@ jobs:
           test -s docs/pages-demo.js
           test -s docs/account.html
           test -s docs/assets/food/03-nigiri-salmon.webp
+          test -s docs/sitemap.xml
+          test -s docs/robots.txt
+          grep -q '<urlset' docs/sitemap.xml
+          ! grep -Eq '<loc>[^<]+/(cart|account)\.html</loc>' docs/sitemap.xml
+          grep -q 'noindex,follow' docs/cart.html
+          grep -q 'noindex,follow' docs/account.html
           grep -q 'не зашифровано' docs/account.html
           grep -q 'href="luxury-refinements.css"' docs/account.html
           grep -q 'data-account-demo-seed' docs/account.html

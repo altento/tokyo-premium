@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-18 · Static SEO discovery
+
+The Pages exporter now generates `sitemap.xml` from its public route list and a matching `robots.txt`, deriving the project URL from `GITHUB_REPOSITORY` with an HTTPS override for other hosts. It excludes the browser-local cart/account, marks both `noindex,follow`, and cannot list locked dish routes because they are omitted from the exporter route table. The tracked `docs/` preview now includes the same sitemap and robots files. The export PHP file passed syntax validation; the generated sitemap parsed as XML and contained 35 current public routes with no cart, account, or restricted dish URL. The full PHP export awaits the hosted workflow because this local PHP runtime has no PDO SQLite extension; no broad test suite was run.
+
 ## 2026-11-18 · Booking map initial state
 
 The booking page preselects “Основной зал”, but the floor-plan status previously remained at “Зона не выбрана” until interaction. Initializing the map now runs the same zone synchronization as a user selection, so the highlighted SVG zone, room photograph, mobile zone control, and accessible status agree while leaving the table preference empty. Added the initial-state assertion to the existing floor-plan regression. JavaScript syntax and whitespace checks passed; a focused local Chromium check against the current script and static booking page passed. The combined PHP/Pages regression could not run locally because the PHP route on the available test port is served as a static fallback; PHP behavior remains for hosted CI to verify. No full browser matrix was run.
