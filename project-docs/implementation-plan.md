@@ -4,7 +4,7 @@ Updated 2026-11-18
 
 ## Current release checkpoint
 
-The latest verified public release is `94f8580` (GitHub Actions run [44318833246](https://github.com/altento/tokyo-premium/actions/runs/44318833246); build and deploy succeeded). The homepage desktop rhythm was tightened in `1ac83e3`; the public Pages URL returned HTTP 200 and served the new CSS. The admin queue fix in `94f8580` puts the next booking first, excludes cancellations from today's booking KPI, and adds tap-to-call/email. Local checks covered PHP syntax, the isolated SQLite ordering/count rule, homepage viewport geometry at 1440/1024/390 px, and a visual capture. The authenticated PHP admin was not browser-tested; full browser/visual QA remains opt-in and known visual gaps remain open.
+The latest verified public release is `0d79659` (GitHub Actions run [44320322720](https://github.com/altento/tokyo-premium/actions/runs/44320322720); build and deploy succeeded). A cache-busted public Pages request and premium.css both returned HTTP 200; the homepage refinement rule is present. Recent changes compact the desktop home, prioritize upcoming admin bookings, exclude cancellations from the daily booking KPI, add actionable phone/email links, and show admin record timestamps in Asia/Qyzylorda. Local focused checks passed, including PHP syntax and an isolated SQLite ordering/count rule. The authenticated PHP admin was not browser-tested; full browser/visual QA remains opt-in and known visual gaps remain open.
 
 ### Admin, account, and dish follow-up — published in `8867502`
 
