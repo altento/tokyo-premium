@@ -722,6 +722,11 @@ if ($exportTable !== '') {
       <p class="admin-muted" data-admin-notification-status role="status" aria-live="polite">Новые записи обновляются автоматически раз в минуту, пока панель открыта. SMS не подключены; email о подтверждении отправляется только после ручного решения администратора.</p>
       <button class="button secondary admin-notification-refresh" type="button" data-admin-refresh-notifications>Обновить сейчас ↻</button>
     </div>
+    <div class="admin-live-notice" data-admin-live-notice hidden>
+      <p data-admin-live-message role="status" aria-live="polite"></p>
+      <a data-admin-live-link href="?notification=bookings#bookings">Открыть новые записи ↗</a>
+      <button class="admin-live-dismiss" type="button" data-admin-live-dismiss aria-label="Скрыть уведомление">Скрыть</button>
+    </div>
     <div class="admin-mail-readiness is-<?=e($bookingMailReadiness['class'])?>" role="status" data-smtp-state="<?=e($bookingMailState)?>">
       <strong><?=e($bookingMailReadiness['title'])?></strong>
       <p><?=e($bookingMailReadiness['text'])?></p>

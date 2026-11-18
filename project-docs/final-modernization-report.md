@@ -554,3 +554,7 @@ Pending order, booking, review, contact-message, and booking-email counts now up
 ## 2026-11-18 — admin workspace focus and Kazakh search
 
 The PHP operations and Marketing & Loyalty screens now suppress the public site navigation in their shared masthead, leaving the brand/home link and the task-specific sticky admin navigation. The operations search now folds uppercase Kazakh Cyrillic characters as well as Russian, and the existing PHP integration regression includes a Kazakh-name case. `php -l` passed for the changed PHP files, `node --check admin-dashboard.js` and `git diff --check` passed, and a focused Chromium check confirmed the admin masthead at 1440 px and 390 px. PHP SQLite integration could not run because the available PHP 8.4 CLI has PDO but no SQLite driver. Full admin mutation flows, full-site visual acceptance, and Tokyo Premium 2.0 remain open.
+
+## 2026-11-18 — new-record admin alert
+
+When the open operations dashboard detects an increase in new orders, bookings, reviews, contact messages, or booking-email queue items, it now shows a dismissible in-page alert with a direct link to that filtered queue. Existing records do not trigger a false “new” alert on first load. The notice uses a polite live region and requires no browser notification permission, sound, or reload. PHP lint, JavaScript syntax, and whitespace checks passed; a focused Chromium smoke verified that a new booking appears, links to the booking queue, and can be dismissed. This does not claim full admin acceptance; the PHP admin remains unavailable on GitHub Pages.

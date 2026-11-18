@@ -80,11 +80,37 @@
   const notificationStatus = document.querySelector('[data-admin-notification-status]');
   if (refreshButton && notificationStatus) {
     const countNodes = [...document.querySelectorAll('[data-admin-notification-count]')];
+    const previousCounts = new Map(countNodes.map((node) => [
+      node.dataset.adminNotificationCount,
+      Math.max(0, Number.parseInt(node.textContent || '0', 10) || 0)
+    ]));
+    const liveNotice = document.querySelector('[data-admin-live-notice]');
+    const liveMessage = liveNotice?.querySelector('[data-admin-live-message]');
+    const liveLink = liveNotice?.querySelector('[data-admin-live-link]');
+    const liveDismiss = liveNotice?.querySelector('[data-admin-live-dismiss]');
+    const notificationLabels = {
+      bookings: 'новая бронь',
+      orders: 'новый заказ',
+      reviews: 'новый отзыв',
+      contact_messages: 'новое обращение',
+      booking_emails: 'письмо по брони в очереди'
+    };
+    const notificationUrls = {
+      bookings: '?notification=bookings#bookings',
+      orders: '?notification=orders#orders',
+      reviews: '?notification=reviews#reviews',
+      contact_messages: '?notification=contact_messages#contact_messages',
+      booking_emails: '?notification=booking_emails#bookings'
+    };
     const formatTime = (value) => new Intl.DateTimeFormat('ru-RU', {
       hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Qyzylorda'
     }).format(new Date(value));
     let busy = false;
     let lastSuccess = 0;
+
+    liveDismiss?.addEventListener('click', () => {
+      if (liveNotice) liveNotice.hidden = true;
+    });
 
     const refreshNotifications = async () => {
       if (busy || document.visibilityState === 'hidden') return;
@@ -102,13 +128,28 @@
         const payload = await response.json();
         if (!payload?.counts || !payload?.checkedAt) throw new Error('invalid-response');
 
+        const increases = [];
         for (const node of countNodes) {
-          const count = Number(payload.counts[node.dataset.adminNotificationCount]);
+          const key = node.dataset.adminNotificationCount;
+          const count = Number(payload.counts[key]);
           if (!Number.isSafeInteger(count) || count < 0) continue;
+          const previous = previousCounts.get(key) ?? count;
+          if (count > previous && notificationLabels[key]) {
+            increases.push({ key, delta: count - previous });
+          }
+          previousCounts.set(key, count);
           node.textContent = String(count);
           node.classList.toggle('has-unread', count > 0);
           const link = node.closest('a[data-admin-notification-label]');
           if (link) link.setAttribute('aria-label', `${link.dataset.adminNotificationLabel}, новых: ${count}`);
+        }
+        if (increases.length && liveNotice && liveMessage && liveLink) {
+          const ordered = ['bookings', 'orders', 'reviews', 'contact_messages', 'booking_emails'];
+          increases.sort((a, b) => ordered.indexOf(a.key) - ordered.indexOf(b.key));
+          liveMessage.textContent = `Появились новые записи: ${increases.map(({ key, delta }) => `${notificationLabels[key]}${delta > 1 ? ` · +${delta}` : ''}`).join(' · ')}.`;
+          liveLink.href = notificationUrls[increases[0].key];
+          liveLink.textContent = increases[0].key === 'booking_emails' ? 'Открыть очередь писем ↗' : `Открыть раздел «${notificationLabels[increases[0].key]}» ↗`;
+          liveNotice.hidden = false;
         }
         lastSuccess = Date.now();
         notificationStatus.textContent = `Обновлено в ${formatTime(payload.checkedAt)} · следующее автообновление через минуту.`;
