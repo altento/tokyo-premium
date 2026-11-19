@@ -27,3 +27,7 @@ There is no approved Ideal Evening PNG among the eleven originals. The route kee
 - Export: 37 pages. PHP/JavaScript syntax and whitespace checks passed. The new focused test is in optional full-QA CI; default fast publication is unchanged.
 
 PHP remains authoritative for final prices and order validation. The helper stores no guest identity; Pages cart/booking scenarios remain browser-local. Real SMTP, merchant setup and live seating availability are not activated by this change.
+
+## Publication
+
+Implementation `73c56d8` was pushed to main. [Actions 44477846956](https://github.com/altento/tokyo-premium/actions/runs/44477846956) passed build and deployment using the fast profile; optional full browser CI was skipped. Fresh public Chromium passed plant empty state, edit preservation, cart transfer and booking prefill at 390/1440 px without page errors. No booking/order was submitted. [Public record](public-verification.json).

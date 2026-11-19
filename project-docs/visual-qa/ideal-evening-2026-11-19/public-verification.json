@@ -1,0 +1,22 @@
+{
+  "release": "73c56d8",
+  "base": "https://altento.github.io/tokyo-premium/",
+  "widths": [
+    {
+      "width": 390,
+      "plantEmptyState": "passed",
+      "editPreservesAnswers": "passed",
+      "cartTransfer": "passed",
+      "bookingPrefill": "passed"
+    },
+    {
+      "width": 1440,
+      "plantEmptyState": "passed",
+      "editPreservesAnswers": "passed",
+      "cartTransfer": "passed",
+      "bookingPrefill": "passed"
+    }
+  ],
+  "errors": [],
+  "result": "passed"
+}
