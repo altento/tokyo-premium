@@ -28,6 +28,7 @@ Opened both originals, `design-references/08-reviews.png` and `09-contacts.png`,
 - [Reviews desktop](reviews-desktop.jpg) and [mobile](reviews-mobile.jpg).
 - [Empty-topic state](reviews-empty-topic-desktop.jpg).
 - [Contacts desktop](contacts-desktop.jpg) and [mobile](contacts-mobile.jpg).
+- [Corrected desktop form disclosure](review-form-desktop.jpg).
 
 Reviews retains the dark/gold/red palette, illustrated hero, score band, topic controls and three-column desktop cards. Local records are visually separated; mobile uses one readable column. The reference has more compact guest cards with avatars/media/engagement controls, whereas this educational implementation uses food illustrations and a photo interlude. It has no guest video files; fake video/like counts were not added. The current page remains taller and is not a pixel match.
 
@@ -37,4 +38,6 @@ Capture-only normalization makes the sticky header relative and eagerly decodes 
 
 ## Publication
 
-Pending the current commit and Pages workflow; public verification will be recorded after deployment.
+Implementation commits `d7b5326` and `378b8e5` were pushed to main. [Actions 44492876066](https://github.com/altento/tokyo-premium/actions/runs/44492876066) passed build and Pages deployment. The fast profile ran its configured cart/PHP/SQLite/payment/syntax/smoke/export checks; the optional full browser CI was not requested. Focused browser checks above ran locally.
+
+Fresh Chromium verified the deployed review copy and status controls, local save/clear/persistence and safe text, unchanged published score, rejection of a short contact message, successful local contact storage/reset, and both routes at 390 px. [Public result](public-verification.json) records the deployed implementation SHA and no page errors or failed resources. Image requests cancelled by quick page transitions were classified as `net::ERR_ABORTED`; their URLs were explicitly refetched and returned HTTP 200. The public check is static only and does not claim a public PHP form/SMTP deployment.
