@@ -19,4 +19,6 @@
 
 Screenshots temporarily normalize sticky header/navigation positioning only during capture. The actual UI was checked before normalization. These are focused marketing-admin states, not proof of every administrative function or public PHP hosting. Production merchant/SMTP configuration and full visual parity remain outside this repair.
 
-Publication and public static verification will be recorded after the current release.
+Implementation `a0cba4e` was pushed to main. [Actions 44508111996](https://github.com/altento/tokyo-premium/actions/runs/44508111996) passed the configured build checks (including the new marketing integrity suite) and Pages deployment. Optional full browser CI was skipped; authenticated browser checks ran locally.
+
+[Fresh public Chromium verification](public-verification.json) confirmed the deployed editor CSS, review text/photo order, functional topic filtering, local-review save/link/reload and 390 px bounds, with zero page errors. Public `admin-marketing.php` correctly returns 404: this release does not deploy PHP administration to Pages. SMTP/merchant credentials and a public PHP host remain unconfigured.

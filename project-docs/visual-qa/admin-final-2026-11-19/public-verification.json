@@ -1,0 +1,17 @@
+{
+  "implementation": "a0cba4e",
+  "checkedAt": "2026-11-19T10:43:57.568Z",
+  "status": "passed",
+  "routes": {
+    "reviews": 200,
+    "adminMarketing": 404
+  },
+  "checks": [
+    "current expanded-editor CSS deployed",
+    "guest text before photo",
+    "topic filter hides other cards",
+    "local review link and reload persistence",
+    "390px document bounds"
+  ],
+  "pageErrors": []
+}
