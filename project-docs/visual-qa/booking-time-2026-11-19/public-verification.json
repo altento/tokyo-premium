@@ -1,0 +1,30 @@
+{
+  "status": "passed",
+  "implementation": "50196e9",
+  "applicationCommit": "3f53f54",
+  "checkedAt": "2026-11-19T13:48:47.883Z",
+  "origin": "https://altento.github.io/tokyo-premium/",
+  "routes": [
+    {
+      "route": "index.html",
+      "status": 200,
+      "correctedDate": true,
+      "pastSlotBlocked": true,
+      "submitRechecked": true,
+      "successRetained": true,
+      "table": null,
+      "mobileWidth": 390
+    },
+    {
+      "route": "booking.html",
+      "status": 200,
+      "correctedDate": true,
+      "pastSlotBlocked": true,
+      "submitRechecked": true,
+      "successRetained": true,
+      "table": "42",
+      "mobileWidth": 390
+    }
+  ],
+  "pageErrors": []
+}
