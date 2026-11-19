@@ -24,3 +24,9 @@ This new route has no approved PNG among the original eleven. It uses the existi
 - Export: 37 pages. PHP/JavaScript syntax and diff hygiene passed. The focused test was added to optional full-QA CI; default fast deployment stays unchanged.
 
 PHP continues to verify the set format, contents and current prices when quoting/saving orders. Browser drafts and Pages totals are estimates, not a paid order or guaranteed restaurant availability. No database migration, email or payment setup was performed in this update.
+
+## Publication
+
+Implementation `ffd6c59` was pushed to main. [Actions 44475808433](https://github.com/altento/tokyo-premium/actions/runs/44475808433) passed build and Pages deployment using the fast profile. The optional full browser CI suite was skipped; local browser checks above used both modes.
+
+Fresh public Chromium verified the selected three-dish/four-portion draft and its 12,700 ₸ total, progress, reload restoration, cart transfer and clearing a new draft while retaining the accepted cart set at 390/1440 px. Mobile navigation also hid and restored the fixed summary link correctly. No page errors occurred and no order was submitted. [Public verification](public-verification.json).
