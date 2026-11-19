@@ -1,0 +1,18 @@
+{
+  "release": "4a2c43b",
+  "base": "https://altento.github.io/tokyo-premium/",
+  "widths": [
+    {
+      "width": 390,
+      "sequentialNavigation": "passed",
+      "bookingFormatAndReload": "passed"
+    },
+    {
+      "width": 1440,
+      "sequentialNavigation": "passed",
+      "bookingFormatAndReload": "passed"
+    }
+  ],
+  "errors": [],
+  "result": "passed"
+}

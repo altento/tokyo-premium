@@ -19,3 +19,9 @@ Baseline `4258d14`, restoration branch `backup/omakase-20261119`. Opened and ins
 ## Remaining visual differences
 
 The page preserves the approved hero/philosophy/five-course/three-tier/reservation/backstage/parchment structure. It remains taller because of the interactive course-detail panel and uses different first-party photos, ornaments and footer. Prices and course counts are the existing fictional KZT catalog values, not the PNG's ruble values. No video or live restaurant availability is implied. This is not a claim of complete pixel parity or full Tokyo Premium 2.0 acceptance.
+
+## Publication
+
+Implementation `4a2c43b` was pushed to main. [Actions run 44469632236](https://github.com/altento/tokyo-premium/actions/runs/44469632236) completed build and Pages deployment successfully using the fast profile. The optional full browser CI suite was not run; focused and Tokyo 2.0 browser checks above ran locally against the current artifacts.
+
+After deployment, fresh Chromium verified cache-busted public Omakase at 390/1440 px: next/previous across all five stages, disabled endpoints, seasonal-format transition to booking and preservation on refresh all passed, with no page errors. No booking was submitted. [Public record](public-verification.json).
