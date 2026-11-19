@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-19 · Global catalog sorting and honest add feedback
+
+Fixed a real pagination/sort mismatch: filtered page membership used the original card array after the DOM was sorted. Pagination now follows current sorted order, and favorite refresh preserves the current page. Search trims outer spaces; category/favorite states expose ARIA selection; paging retains keyboard focus, disables boundary arrows and respects reduced motion. Add buttons reject over-cap requests atomically rather than silently adding fewer units. Quick-view results are inside the native modal's live status, with old feedback cleared on reopen. The central store's legacy clamp API remains intact. [Reproduction, browser checks and inspected captures](visual-qa/menu-pagination-2026-11-19/comparison.md).
+
 ## 2026-11-19 · Booking clock and table identity
 
 Repaired a stale date-validation error after midnight, same-day elapsed-time acceptance in UI/API and the home-form success/reset race. The shared browser clock updates limits, disabled time options and messages on input, reset, page return and submission; PHP independently validates the complete future visit timestamp. No new lead-time policy was invented. The server's obsolete 1–13 table range now uses all 42 IDs and their actual zones from trusted SVG metadata. If the map cannot load, the UI offers zone-only preferences rather than an invented legacy table layout or mismatched room photo. [Reproductions, actual tests and screenshots](visual-qa/booking-time-2026-11-19/comparison.md). These are requests/preferences, not live availability or restaurant confirmation.

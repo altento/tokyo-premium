@@ -629,3 +629,4 @@
 .tp-floorplan-fallback>.tp-floorplan-note{grid-column:1/-1;margin:0}
 .tp-floorplan-fallback fieldset{min-width:0}
 .tp-floorplan-fallback .tp-seat-button{width:100%;min-height:44px;height:auto;padding:10px 12px;line-height:1.4;border-radius:8px}
+.menu-results-status{margin:0 0 16px;color:var(--tp-muted);font-size:.84rem;line-height:1.5}

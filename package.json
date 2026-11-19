@@ -41,6 +41,7 @@
     "test:account-resilience": "node tests/account-resilience.cjs",
     "test:booking-time-integrity": "php tests/booking-time-integrity.php",
     "test:booking-time-browser": "node tests/booking-time-browser.cjs",
+    "test:menu-state": "node tests/menu-state-regression.cjs",
     "test:menu-visual": "node tests/menu-visual-smoke.cjs",
     "test:philosophy-visual": "node tests/philosophy-visual.cjs",
     "test:dish-detail-focused": "node tests/dish-detail-focused.cjs"

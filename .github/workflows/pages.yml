@@ -164,6 +164,7 @@ jobs:
           TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:reviews
           TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:review-contact-forms
           TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:booking-time-browser
+          TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:menu-state
           TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:cart-visual
           TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:responsive
           TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:visual-states

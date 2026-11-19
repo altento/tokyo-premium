@@ -1025,7 +1025,8 @@
     const actions = doc.createElement('div'); actions.className = 'tp-quick-view-actions';
     const add = doc.createElement('button'); add.type = 'button'; add.className = 'button add-to-cart'; add.dataset.tpQuickViewAdd = ''; add.textContent = 'Добавить в корзину +';
     const detail = doc.createElement('a'); detail.className = 'button secondary'; detail.dataset.tpQuickViewDetail = ''; detail.textContent = 'Подробнее ↗';
-    actions.append(add, detail); copy.append(category, title, description, price, actions); dialog.append(close, image, copy); doc.body.append(dialog);
+    const status = doc.createElement('p'); status.dataset.cartActionStatus = ''; status.className = 'form-status'; status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
+    actions.append(add, detail); copy.append(category, title, description, price, actions, status); dialog.append(close, image, copy); doc.body.append(dialog);
     close.addEventListener('click', () => dialog.close());
     dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
     return dialog;
@@ -1041,6 +1042,7 @@
       if (!dish) return;
       event.preventDefault();
       const dialog = buildQuickView();
+      const status = one('[data-cart-action-status]', dialog); status.textContent = ''; status.className = 'form-status';
       const image = one('.tp-quick-view-image', dialog);
       image.src = dish.image_url || ''; image.alt = dish.name || '';
       safeText(one('[data-tp-quick-view-category]', dialog), `${dish.category_name || dish.category || 'Tokyo Premium'} · ${dish.weight || ''}`);
@@ -1050,8 +1052,8 @@
       const add = one('[data-tp-quick-view-add]', dialog); add.dataset.id = String(dish.id); add.setAttribute('aria-label', `Добавить ${dish.name} в корзину`);
       const detail = one('[data-tp-quick-view-detail]', dialog);
       const cardLink = trigger.closest('article')?.querySelector('a[href]');
+      detail.hidden = !cardLink;
       if (cardLink) detail.href = cardLink.href;
-      else detail.hidden = true;
       if (dialog.showModal) dialog.showModal(); else dialog.setAttribute('open', '');
     });
   }

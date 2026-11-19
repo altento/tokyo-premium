@@ -1,5 +1,7 @@
 ## Visual QA evidence
 
+Catalog ordering and add feedback: [2026-11-19 evidence](menu-pagination-2026-11-19/comparison.md), reproduced wrong cheapest-page membership, silent partial quantity acceptance and inaccessible modal feedback; corrected desktop/mobile catalog and modal states.
+
 Booking clock/table parity: [2026-11-19 evidence](booking-time-2026-11-19/comparison.md), reproduced elapsed-time acceptance, sticky date error and table42 rejection; corrected clock states and honest map-failure fallback in desktop/mobile captures.
 
 Account resilience: [2026-11-19 evidence](account-resilience-2026-11-19/comparison.md), lost-draft/null-profile/blank-address/hidden-history reproduction, native two-tab and storage-failure states, transactional admin settings and inspected desktop/mobile screenshots.

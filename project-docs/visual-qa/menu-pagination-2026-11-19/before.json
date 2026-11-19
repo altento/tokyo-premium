@@ -1,0 +1,70 @@
+{
+  "actual": [
+    {
+      "id": 3,
+      "price": 1200
+    },
+    {
+      "id": 4,
+      "price": 2500
+    },
+    {
+      "id": 8,
+      "price": 2800
+    },
+    {
+      "id": 1,
+      "price": 4500
+    },
+    {
+      "id": 7,
+      "price": 4800
+    },
+    {
+      "id": 12,
+      "price": 4900
+    }
+  ],
+  "expected": [
+    {
+      "id": 3,
+      "price": 1200
+    },
+    {
+      "id": 6,
+      "price": 1500
+    },
+    {
+      "id": 10,
+      "price": 1800
+    },
+    {
+      "id": 21,
+      "price": 2200
+    },
+    {
+      "id": 20,
+      "price": 2300
+    },
+    {
+      "id": 14,
+      "price": 2400
+    }
+  ],
+  "quantity": {
+    "afterPartial": {
+      "qty": 20,
+      "status": "Добавлено в заказ"
+    },
+    "afterFull": {
+      "qty": 20,
+      "status": "Добавлено в заказ"
+    }
+  },
+  "quickView": {
+    "dialogStatusCount": 0,
+    "toastIgnored": true
+  },
+  "pageAfterFavorite": "1",
+  "paddedSearchCount": 0
+}

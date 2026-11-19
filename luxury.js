@@ -193,8 +193,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (addButton) {
       if (!cart) return;
       const quantity = addButton.dataset.qty === undefined ? 1 : Number(addButton.dataset.qty);
-      const added = cart.add(Number(addButton.dataset.id), quantity);
-      notify(added ? 'Добавлено в заказ' : 'Не удалось добавить блюдо. Проверьте количество.');
+      const id = Number(addButton.dataset.id);
+      const feedback = (message, error = false) => {
+        const status = addButton.closest('dialog')?.querySelector('[data-cart-action-status]');
+        if (status) { status.textContent = message; status.className = 'form-status ' + (error ? 'error' : 'success'); }
+        else notify(message);
+      };
+      const existing = cart.get().find(item => item.id === id)?.qty || 0;
+      const remaining = Math.max(0, cart.maxQty - existing);
+      if (Number.isSafeInteger(quantity) && quantity > remaining) {
+        feedback(remaining ? `Можно добавить ещё ${remaining} шт. этого блюда. Лимит в корзине — ${cart.maxQty}.` : `В корзине уже ${cart.maxQty} шт. этого блюда. Измените количество в корзине.`, true);
+        return;
+      }
+      const added = cart.addMany([{ id, qty: quantity }]);
+      feedback(added ? `Добавлено в заказ: ${quantity} шт.` : 'Не удалось добавить блюдо. Проверьте количество и доступность.', !added);
       return;
     }
     const favoriteButton = event.target.closest('[data-favorite]');
@@ -279,16 +291,16 @@ document.addEventListener('DOMContentLoaded', () => {
       button.textContent = active ? '♥' : '♡';
       button.setAttribute('aria-pressed', String(active));
     });
-    filterMenu();
+    filterMenu(false);
   }
   function filterMenu(resetPage = true) {
     if (resetPage) menuPage = 1;
     const matches = [];
     const category = $('.filter-btn.active[data-category]')?.dataset.category || 'all';
     const ingredient = $('.menu-subfilter[aria-pressed="true"]')?.dataset.menuIngredient || 'all';
-    const query = (search?.value || '').toLocaleLowerCase('ru');
+    const query = (search?.value || '').trim().toLocaleLowerCase('ru');
     const favoriteIds = new Set(cart?.getFavorites() || []);
-    const cards = menuCards;
+    const cards = menuGrid ? $$('.dish-card[data-category]', menuGrid) : menuCards;
     cards.forEach(card => {
       const id = Number(card.querySelector('[data-favorite]')?.dataset.favorite || card.querySelector('.add-to-cart')?.dataset.id);
       const text = (card.dataset.search || card.textContent).toLocaleLowerCase('ru');
@@ -310,23 +322,29 @@ document.addEventListener('DOMContentLoaded', () => {
       menuPagination.replaceChildren();
       menuPagination.hidden = pages < 2;
       if (pages > 1) {
-        const addPage = (label, page, aria, active = false) => {
+        const addPage = (label, page, aria, active = false, disabled = false) => {
           const button = document.createElement('button');
           button.type = 'button'; button.className = 'menu-page-button' + (active ? ' active' : '');
           button.dataset.pageGo = String(page); button.textContent = label; button.setAttribute('aria-label', aria);
           if (active) button.setAttribute('aria-current', 'page');
+          button.disabled = disabled;
           menuPagination.append(button);
         };
-        addPage('‹', Math.max(1, menuPage - 1), 'Предыдущая страница');
+        addPage('‹', Math.max(1, menuPage - 1), 'Предыдущая страница', false, menuPage === 1);
         for (let page = 1; page <= pages; page++) addPage(String(page), page, 'Страница ' + page, page === menuPage);
-        addPage('›', Math.min(pages, menuPage + 1), 'Следующая страница');
+        addPage('›', Math.min(pages, menuPage + 1), 'Следующая страница', false, menuPage === pages);
       }
     }
-    const empty = $('.empty-state');
+    const empty = $('.menu-page .empty-state');
     if (empty && (categoryButtons.length || search || favoriteOnly)) empty.hidden = visible > 0;
+    if (menuGrid) {
+      let status = $('.menu-results-status');
+      if (!status) { status = document.createElement('p'); status.className = 'menu-results-status'; status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite'); menuGrid.before(status); }
+      status.textContent = `Найдено блюд: ${visible}${visible ? ` · Страница ${menuPage} из ${pages}` : ''}.`;
+    }
   }
   categoryButtons.forEach(button => button.addEventListener('click', () => {
-    categoryButtons.forEach(item => item.classList.toggle('active', item === button));
+    categoryButtons.forEach(item => { item.classList.toggle('active', item === button); item.setAttribute('aria-pressed', String(item === button)); });
     filterMenu();
   }));
   menuIngredientButtons.forEach(button => button.addEventListener('click', () => {
@@ -338,7 +356,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!button) return;
     menuPage = Number(button.dataset.pageGo) || 1;
     filterMenu(false);
-    $('#menu-catalog')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    menuPagination.querySelector('[aria-current="page"]')?.focus({ preventScroll: true });
+    $('#menu-catalog')?.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
   });
   $$('[data-category-link]').forEach(link => link.addEventListener('click', () => {
     const button = categoryButtons.find(item => item.dataset.category === link.dataset.categoryLink);
@@ -350,7 +369,9 @@ document.addEventListener('DOMContentLoaded', () => {
     menuGrid.dataset.view = button.dataset.menuView;
     menuViewButtons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
   }));
-  favoriteOnly?.addEventListener('click', () => { favoriteOnly.classList.toggle('active'); filterMenu(); });
+  categoryButtons.forEach(button => button.setAttribute('aria-pressed', String(button.classList.contains('active'))));
+  favoriteOnly?.setAttribute('aria-pressed', String(favoriteOnly.classList.contains('active')));
+  favoriteOnly?.addEventListener('click', () => { favoriteOnly.classList.toggle('active'); favoriteOnly.setAttribute('aria-pressed', String(favoriteOnly.classList.contains('active'))); filterMenu(); });
   sort?.addEventListener('change', () => {
     const grid = $('.dish-grid');
     if (!grid) return;
