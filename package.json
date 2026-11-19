@@ -21,6 +21,7 @@
     "test:gallery-caption": "node tests/gallery-caption-regression.cjs",
     "test:tokyo20": "node tests/tokyo20-regression.cjs",
     "test:reviews": "node tests/reviews-regression.cjs",
+    "test:review-contact-forms": "node tests/review-contact-forms.cjs",
     "test:cart-visual": "node tests/cart-visual-regression.cjs",
     "test:responsive": "node tests/responsive-regression.cjs",
     "test:visual-states": "node tests/visual-state-regression.cjs",

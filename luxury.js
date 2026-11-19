@@ -401,6 +401,8 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const data = new FormData(form);
       data.set('type', type);
+      const submittedValues = (type === 'review' || type === 'contact') ? JSON.stringify([...data].filter(([name]) => name !== 'type')) : '';
+      let preservedDraft = false;
       if (type === 'order' && cart) {
         const payload = cart.orderPayload();
         data.set('items', JSON.stringify(payload.items));
@@ -437,8 +439,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.TokyoCheckout) window.TokyoCheckout.reset(form);
         else form.reset();
       } else if (type === 'booking') { form.reset(); delete form.dataset.bookingRequestKey; }
-      else if (type === 'review') form.reset();
-      if (status) { status.textContent = paymentRedirect ? (result.payment_test_mode ? 'Открываем тестовую страницу оплаты. Деньги не списываются.' : 'Открываем защищённую страницу оплаты.') : result.message; status.className = 'form-status success'; }
+      else if (type === 'review' || type === 'contact') {
+        preservedDraft = JSON.stringify([...new FormData(form)]) !== submittedValues;
+        if (!preservedDraft) form.reset();
+      }
+      if (status) { status.textContent = paymentRedirect ? (result.payment_test_mode ? 'Открываем тестовую страницу оплаты. Деньги не списываются.' : 'Открываем защищённую страницу оплаты.') : result.message + (preservedDraft ? ' Новые изменения сохранены в форме и пока не отправлены.' : ''); status.className = 'form-status success'; }
       if (paymentRedirect) window.location.assign(paymentRedirect);
     } catch (error) {
       if (status) { status.textContent = error.message; status.className = 'form-status error'; }

@@ -618,3 +618,8 @@
 @media(max-width:600px){.tp20-evening-page .tp-evening-dishes{grid-template-columns:1fr}}
 .tp20-evening-page .tp20-evening-note p{color:#574532;line-height:1.65}
 .tp20-evening-page .tp20-evening-note>span{color:#8b642e}
+.review-results-status{margin:18px 0;color:var(--tp-muted);line-height:1.6}
+.review-results-status.is-empty{padding:20px;border:1px solid var(--tp-line);border-radius:8px;color:var(--tp-ivory)}
+#local-reviews{scroll-margin-top:100px}
+.form-status [data-local-review-link]{display:inline-flex;align-items:center;min-height:44px;color:var(--tp-gold);text-decoration:underline;text-underline-offset:4px}
+.review-form>.school-note{grid-column:1/-1;margin:0}

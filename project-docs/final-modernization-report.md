@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-19 · Reviews and contact-form integrity
+
+Reproduced and fixed loss of a new review draft while an earlier PHP request finishes. Contact/review forms now clear only unchanged submitted values and retain edited drafts with an explicit unsent notice; errors retain input. Static contact messages enforce the same trimmed length range, while PHP counts Unicode code points instead of UTF-8 bytes. Added local-review navigation, selected-filter ARIA, an explained empty-topic state and a full-width review-form disclosure. [Actual checks, desktop/mobile captures and reference comparison](visual-qa/reviews-contacts-2026-11-19/comparison.md). Local messages/reviews remain browser-only; no production email or public PHP host was configured.
+
 ## 2026-11-19 · Admin confirmations and moderation filter
 
 Unsent obsolete booking confirmations now have a terminal cancelled state, with status-transaction cleanup and a delivery-time eligibility check. Migration v17 preserves queue rows, IDs, indexes/triggers and sequence history. Explicit reconfirmation can reactivate an unsent event; manual retry cannot. Fixed the pending-review notification dropdown to match its actual query. Existing Cyrillic search and guest confirmation/notification flows were exercised in an authenticated browser. [Checks and screenshots](visual-qa/admin-mail-2026-11-19/comparison.md). No live SMTP host or PHP deployment was configured; GitHub Pages cannot execute the admin.

@@ -1,5 +1,7 @@
 ## Visual QA evidence
 
+Reviews and contacts: [2026-11-19 evidence](reviews-contacts-2026-11-19/comparison.md), reproduced draft loss/short-message acceptance, full desktop/mobile captures, local review and empty-topic states, six-width bounds and PHP/static form checks.
+
 PHP admin/mail follow-up: [2026-11-19 evidence](admin-mail-2026-11-19/comparison.md), stale-email reproduction, pending-review filter, confirmed guest badge and cancelled admin/mobile state.
 
 Notification persistence: [2026-11-19 evidence](notifications-2026-11-19/comparison.md), reproduced loss of read receipts and desktop/mobile account notification states after migration.

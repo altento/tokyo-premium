@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-19 · Review/contact lifecycle and validation
+
+`test:review-contact-forms` passed delayed real PHP response/edit scenarios for both forms, unedited reset, error preservation, Cyrillic min/max boundaries (review 19/20/1000/1001 and contact 4/5/1000/1001), static short/whitespace rejection, browser-local saving, safe review display/navigation, persistence, clearing, sorting and a simulated empty moderated topic. Both routes passed document, heading-text-fragment/ancestor-clipping and form-control bounds at 320/390/768/1024/1440/1920 px. Existing `test:reviews` passed; consolidated PHP/SQLite integration passed 229 assertions. Static export produced 37 pages; changed PHP/JS syntax and diff hygiene passed. Full-site motion/commerce suites were not repeated for this review/contact-only change. [Screenshots and scope](visual-qa/reviews-contacts-2026-11-19/comparison.md).
+
 ## 2026-11-19 · Admin booking/email integrity
 
 Reproduced a cancelled booking's old confirmation consuming an SMTP attempt on retry, using only loopback port 1. Added v17 outbox state/migration and booking-state checks. Passed 21 focused migration/cancellation assertions, 229 isolated PHP/SQLite integration assertions (including local fake SMTP/leases), authenticated admin/guest browser flow, Cyrillic search, pending-review dropdown, confirmation/cancellation badges and two durable notifications. PHP-mode Tokyo 2.0 regression passed 21 detail routes and interactive/cart flows; static export produced 37 pages. The first full PHP invocation exposed child-process extension configuration on Windows; rerunning with a temporary PHPRC loaded SQLite for all workers. [Evidence and boundaries](visual-qa/admin-mail-2026-11-19/comparison.md).
