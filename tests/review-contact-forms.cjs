@@ -109,6 +109,8 @@ async function preserveWhilePending(page, type) {
     await capture(page, 'contacts-desktop.jpg');
 
     await page.goto(`${staticBase}/reviews.html`);
+    assert.match(await page.locator('.review-submit-copy').innerText(), /только в этом браузере/);
+    assert.doesNotMatch(await page.locator('main').innerText(), /сохраняется в (?:учебной )?базе/);
     const publicAverage = await page.locator('.review-score-band strong').innerText();
     form = await fill(page, 'review', 'Учебный отзыв: <img src=x onerror=window.reviewXss=1> Это только локальная запись.');
     await form.locator('button[type="submit"]').click();

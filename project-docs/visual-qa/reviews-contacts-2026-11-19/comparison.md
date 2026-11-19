@@ -7,6 +7,7 @@
 - PHP contact/review requests snapshot submitted values. Success resets an unchanged form; later edits remain with an explicit unsent notice. Error responses keep inputs and re-enable submission. Booking/order reset and idempotency logic were retained.
 - Contact messages require 5–1000 trimmed code points in both modes; reviews require 20–1000. PHP no longer treats Cyrillic UTF-8 bytes as individual characters. Native HTML limits remain UTF-16 based, so these are not claims of grapheme-cluster equivalence for every emoji sequence.
 - A saved local review links directly to its separate browser-only region. Filter buttons expose selection with `aria-pressed`; results announce counts or explain an empty topic. Local records still use text-only rendering and never affect the published aggregate.
+- The static exporter replaces the review hero/form's database/moderation wording with explicit browser-only storage, including before submission. The PHP copy still accurately describes its database mode.
 - The review form's privacy note spans both grid columns, so the name field no longer starts beside a note occupying the first field cell. Existing red heading rules remain.
 
 ## Actual verification
