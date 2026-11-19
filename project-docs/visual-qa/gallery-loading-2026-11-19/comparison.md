@@ -22,3 +22,8 @@ Opened approved `design-references/06-gallery.png` and inspected the full deskto
 Compared with the reference, current photography, larger section typography, room descriptions and footer differ. There is no invented 360° tour: the approved concept's tour strip is intentionally absent because no panoramic source exists. This pass repairs the viewer and verifies existing page composition; it does not claim pixel parity with the reference or completion of all Tokyo 2.0 requirements.
 
 Publication is pending at the time of this implementation commit. The follow-up release section records actual CI and public verification.
+
+
+## Release verification
+
+Implementation `88aef6c` was pushed and [workflow 44542921835](https://github.com/altento/tokyo-premium/actions/runs/44542921835) completed successfully: server integrity, marketing/settings/booking guards, cart, syntax, export and Pages deploy. The fast workflow intentionally skipped optional full-browser suites; those were run locally as listed above. After deployment, the focused gallery-loading suite passed against the actual public Pages site in a fresh Chromium session, including failure/retry, stale-response protection, six widths, fallback and room-to-booking selection. [Public result](public-verification.json). Public failure/delay cases were intercepted inside the test browser and did not change hosted files or create bookings. Full regression artifacts and additional public screenshots remain local under `regression/` and `public/`; only the focused implementation screenshots and result JSON are committed.

@@ -709,3 +709,6 @@ Added an optional PHP/SQLite FreedomPay KZ hosted-payment flow with server-calcu
 ## 2026-11-19 — gallery image loading
 
 PHP and separate static export passed the new gallery-loading regression (network failure/retry, stale responses, close during loading, six viewport widths, room-to-booking links and script fallback). Existing gallery-caption, Tokyo 2.0 PHP/static and 14 cart checks passed. Evidence: `visual-qa/gallery-loading-2026-11-19/comparison.md`. No local server integrity rerun was required for this frontend-only change; the default deployment workflow retains it. Publication results follow after deployment.
+
+
+Gallery release `88aef6c`: [workflow 44542921835](https://github.com/altento/tokyo-premium/actions/runs/44542921835) passed the fast server/export/deploy checks. The focused loading/retry/navigation/fallback and six-width browser suite then passed on the public Pages site. Evidence: `visual-qa/gallery-loading-2026-11-19/public-verification.json`. Optional full-browser CI remained skipped; local PHP/static browser results are recorded above.

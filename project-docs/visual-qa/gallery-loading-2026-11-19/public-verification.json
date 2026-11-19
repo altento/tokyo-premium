@@ -1,0 +1,30 @@
+{
+  "site": "https://altento.github.io/tokyo-premium/gallery.html",
+  "implementation_commit": "88aef6c816630df11be486b383f3c2fb60010893",
+  "workflow": "https://github.com/altento/tokyo-premium/actions/runs/44542921835",
+  "workflow_result": "success",
+  "public_browser": [
+    {
+      "mode": "static",
+      "passed": true,
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440,
+        1920
+      ],
+      "scenarios": [
+        "single request",
+        "failure and keyboard retry",
+        "hidden stale photograph",
+        "late navigation response",
+        "close during load",
+        "controls and text bounds",
+        "room booking zone",
+        "full-page captures"
+      ]
+    }
+  ]
+}

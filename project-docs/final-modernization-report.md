@@ -643,3 +643,6 @@ Added a disabled-by-default FreedomPay KZ hosted-checkout adapter for the PHP/SQ
 ## 2026-11-19 — gallery recovery follow-up
 
 Reproduced the blank failed-photo viewer and removed duplicate image ownership. Added modal loading/error feedback, keyboard retry, stale-response protection and content-sized layout. Both PHP and static passed focused gallery loading/caption tests, Tokyo 2.0 regression and 14 cart checks; 37-page export passed. [Evidence and honest reference comparison](visual-qa/gallery-loading-2026-11-19/comparison.md). This closes this viewer defect only; it does not assert final project acceptance or configure merchant payments, SMTP delivery or public PHP hosting.
+
+
+Gallery release `88aef6c`: [workflow 44542921835](https://github.com/altento/tokyo-premium/actions/runs/44542921835) passed the fast server/export/deploy checks. The focused loading/retry/navigation/fallback and six-width browser suite then passed on the public Pages site. Evidence: `visual-qa/gallery-loading-2026-11-19/public-verification.json`. Optional full-browser CI remained skipped; local PHP/static browser results are recorded above.
