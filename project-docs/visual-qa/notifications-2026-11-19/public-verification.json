@@ -1,0 +1,14 @@
+{
+  "realSubmissions": false,
+  "pageErrors": [],
+  "checks": [
+    "legacy-read-migration",
+    "prepend-reorder-reload",
+    "malformed-storage",
+    "new-local-booking-ID-and-date",
+    "desktop-mobile-layout"
+  ],
+  "base": "https://altento.github.io/tokyo-premium",
+  "release": "b23de6a",
+  "result": "passed"
+}

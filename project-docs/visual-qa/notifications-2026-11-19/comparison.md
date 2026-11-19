@@ -16,3 +16,9 @@ Read storage and history readers accept arrays only; malformed JSON shapes no lo
 - Inspected [desktop notifications](notifications-1440.jpg) and [mobile notifications](notifications-390.jpg). This is a state-persistence repair using the existing account design, not a new full visual-parity pass. Full-page capture temporarily puts the header in document flow.
 
 The cards explicitly state that a local booking was not received or confirmed by a restaurant. PHP's existing confirmed-booking badge and server notification protections remain separate. No real email, push delivery or payment is activated.
+
+## Publication
+
+Implementation `b23de6a` was pushed to main. [Actions 44487482961](https://github.com/altento/tokyo-premium/actions/runs/44487482961) passed build and Pages deployment using the fast profile. The optional full browser CI suite was skipped; local results above cover the changed behavior.
+
+The complete focused notification regression then passed against public Pages: legacy migration, prepend/reorder/reload, malformed storage, a new browser-local booking with creation metadata, and desktop/mobile account checks. No page errors occurred; no restaurant booking/email was sent. [Public verification](public-verification.json).
