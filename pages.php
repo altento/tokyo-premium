@@ -237,7 +237,7 @@ ep_hero('連絡先','TOKYO PREMIUM · УЧЕБНАЯ КОНЦЕПЦИЯ','Кон
       </div></details>
       <p class="menu-note"><?php if($freedompayReady): ?>Онлайн-оплата проходит на защищённой странице FreedomPay. <?= $freedompayTestMode?'Включён тестовый режим: деньги не списываются.':'Оплата включена только для настроенного PHP-сервера; проверьте реальные сведения ресторана перед публикацией.' ?><?php else: ?>Здесь доступны только учебные заказы: платёжный шлюз не настроен, реальные списания и передача заказа ресторану отключены.<?php endif ?></p>
     </aside>
-    <div class="editorial-heading cart-recommendation-heading"><div class="kicker">Для полного вечера</div><h3>Добавьте к заказу</h3></div><div class="dish-grid cart-recommendations"><?php foreach($all as $d) ep_card($d); ?></div>
+    <div class="editorial-heading cart-recommendation-heading"><div class="kicker">Для полного вечера</div><h3>Добавьте к заказу</h3></div><div class="dish-grid cart-recommendations" tabindex="0" aria-label="Рекомендуемые блюда — прокручиваемая подборка"><?php foreach($all as $d) ep_card($d); ?></div>
   </div>
 </section>
 <?php else: ?>

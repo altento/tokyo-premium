@@ -576,3 +576,40 @@
     transition: none;
   }
 }
+/* Match current nested order markup; legacy direct-child grids squeezed totals. */
+.account-demo-page .account-demo-order .account-demo-order-head{grid-column:1 / -1;min-width:0;gap:12px}
+.account-demo-page .account-demo-order .account-demo-order-title{min-width:0}
+.account-demo-page .account-demo-order .account-demo-record-badge{white-space:normal;width:fit-content;line-height:1.4}
+.account-demo-page .account-demo-local-badge{display:flex;width:fit-content;max-width:100%;padding:4px 8px;border:1px solid rgba(199,167,102,.45);border-radius:99px;color:#e6c78d;font-size:.62rem;line-height:1.4}
+.account-demo-page .account-demo-order .account-demo-order-total{min-width:76px}
+.account-demo-page .account-demo-order .demo-order-content>.account-demo-order-meta{grid-column:1 / -1;grid-row:auto}
+.account-demo-page .account-demo-panel h2{font-size:clamp(25px,2.2vw,34px);line-height:1.18}
+.account-demo-page .account-favorites-overview-heading{align-items:center;gap:16px}
+.account-demo-page .account-favorites-overview-heading .button{flex-shrink:0;min-height:44px}
+.account-demo-page .account-favorites-overview-grid .dish-card{min-width:0;min-height:0}
+.account-demo-page .account-favorites-overview-grid .dish-meta{min-width:0;padding:12px}
+.account-demo-page .account-favorites-overview-grid h3{font-size:clamp(17px,1.5vw,22px);line-height:1.2}
+.account-demo-page .account-favorites-overview-grid .dish-bottom{flex-wrap:wrap;gap:8px}
+.account-demo-page .account-favorites-overview-grid .add-to-cart{min-height:44px;padding:8px 12px}
+@media(min-width:901px){
+ .account-demo-page .account-demo-content>.tp20-static-privilege{margin:0}
+ .account-demo-page .account-dashboard .account-demo-nav{align-self:start}
+ .account-demo-page .account-overview-body{padding-block:18px}
+ .account-demo-page .account-overview-body h1{font-size:clamp(34px,3.5vw,50px);margin-block:10px}
+ .account-demo-page .account-overview-body .account-overview-greeting{padding:0;margin-block:8px;border:0;background:none}
+ .account-demo-page .account-overview-body .account-overview-greeting:before{display:none}
+ .account-demo-page .account-demo-contact-strip{margin-block:8px;padding:8px 10px}
+ .account-demo-page .account-demo-panel[data-account-panel="history"]>.intro-grid{grid-template-columns:minmax(0,1fr);gap:22px}
+ .account-demo-page .account-demo-panel[data-account-panel="history"]>.account-favorites-overview:not(.account-addresses-preview):not(.account-settings-preview){grid-column:1 / -1}
+ .account-demo-page .account-demo-panel[data-account-panel="history"]>.account-settings-preview{grid-column:auto;grid-template-columns:minmax(0,1fr);align-self:start;gap:12px}
+ .account-demo-page .account-demo-panel[data-account-panel="history"]>.account-settings-preview .account-favorites-overview-heading{grid-row:auto;flex-wrap:wrap}
+ .account-demo-page .account-addresses-preview{align-self:start}
+ .account-demo-page .account-addresses-preview-list{grid-template-columns:minmax(0,1fr)}
+ .account-demo-page .account-demo-order .demo-order-details{grid-row:3;grid-column:1}
+ .account-demo-page .account-demo-order .demo-order-content>.account-demo-repeat{grid-row:3;grid-column:2;min-height:44px;margin:0}
+}
+@media(max-width:760px){
+ .account-demo-page .account-demo-order .account-demo-order-head{grid-template-columns:minmax(0,1fr);gap:6px}
+ .account-demo-page .account-demo-order .account-demo-order-total{justify-items:start;text-align:left;display:flex;align-items:baseline;gap:8px}
+ .account-demo-page .account-favorites-overview-heading{flex-wrap:wrap}
+}

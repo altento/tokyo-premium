@@ -19,7 +19,7 @@ $copyAssets = function (string $sourceDir, string $targetDir) use (&$copyAssets)
         $sourcePath = $sourceDir . DIRECTORY_SEPARATOR . $entry;
         $targetPath = $targetDir . DIRECTORY_SEPARATOR . $entry;
         if (is_dir($sourcePath)) { $copyAssets($sourcePath, $targetPath); continue; }
-        if (!preg_match('/\.(webp|jpe?g|svg|woff2?)$/i', $entry)) continue;
+        if (!preg_match('/\.(webp|jpe?g|svg|woff2?|css)$/i', $entry)) continue;
         if (!copy($sourcePath, $targetPath)) throw new RuntimeException('Cannot copy ' . $sourcePath);
     }
 };
@@ -235,6 +235,14 @@ foreach (array_unique($expected) as $filename) {
     if (preg_match('/(?:href|src)="[^"]+\\.php(?:[?#"]|&amp;)/', $output)) throw new RuntimeException('PHP-only link left in static page: ' . $filename);
     preg_match_all('/<script\b[^>]*\bsrc="([^"]+)"[^>]*><\/script>/i', $output, $scripts);
     if (count($scripts[1]) !== count(array_unique($scripts[1]))) throw new RuntimeException('Duplicate external script in static page: ' . $filename);
+    preg_match_all('/<link\b[^>]*>/i', $output, $links);
+    foreach ($links[0] as $link) {
+        if (!preg_match('/\brel="stylesheet"/i', $link) || !preg_match('/\bhref="([^"]+)"/i', $link, $hrefMatch)) continue;
+        $href = html_entity_decode($hrefMatch[1], ENT_QUOTES, 'UTF-8');
+        if (preg_match('~^(?:https?:)?//~i', $href)) continue;
+        $assetPath = rawurldecode((string)(parse_url($href, PHP_URL_PATH) ?? ''));
+        if ($assetPath === '' || !is_file($docs . '/' . $assetPath)) throw new RuntimeException('Missing local stylesheet in ' . $filename . ': ' . $href);
+    }
 }
 $publicBaseOverride = trim((string)(getenv('TOKYO_PUBLIC_BASE_URL') ?: ''));
 if ($publicBaseOverride !== '') {

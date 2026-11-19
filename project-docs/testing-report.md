@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-19 · Account and cart follow-up
+
+Focused account and eight-state cart browser regressions passed after fixing overlapping order headers, dashboard alignment, a too-tall masthead and recommendation tap targets/flow. Screenshots and paired approved-reference comparisons were inspected: [evidence](visual-qa/account-cart-2026-11-19/comparison.md). The broader Tokyo 2.0 run exposed missing exported dish CSS; the exporter now copies asset stylesheets and checks local stylesheet references. The corrected PHP/static Tokyo 2.0 regression passed, including 21 PHP/19 static dish routes and add-to-cart actions. Export produced 37 pages; changed PHP/JS syntax and whitespace checks passed.
+
 ## 2026-11-19 · Philosophy visual follow-up
 
 PHP and exported Pages layouts passed focused checks at six widths (320–1920 px), including heading text bounds, loaded photographs, overflow and page errors. Export produced 37 pages. The approved reference, complete desktop/mobile captures and paired comparison were inspected; the page remains taller and less decorative than the approved PNG. Evidence: [philosophy comparison](visual-qa/philosophy-2026-11-19/comparison.md). No broad site-wide suite was repeated for this scoped copy/CSS update.

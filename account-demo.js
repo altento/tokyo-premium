@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     const repeatSets=customSets.map(set=>({variant:set.variant||set.setType||'signature',setType:set.variant||set.setType||'signature',name:set.name||'Авторский сет',qty:Number(set.qty||1),items:Array.isArray(set.items)?set.items.map(item=>({id:Number(item.id),qty:Number(item.qty)})):[]}));
     const repeatData=JSON.stringify({items,customSets:repeatSets});
     const lineCount=items.length+customSets.length;
-    const demoBadge=row.demo===true?'<span class="account-demo-record-badge">Учебный пример · локально</span>':'<span class="account-demo-record-badge">Только этот браузер</span>';
+    const demoBadge=row.demo===true?'<span class="account-demo-record-badge">Учебный пример · локально</span>':'<span class="account-demo-local-badge">Только этот браузер</span>';
     const firstDishId=Number(items.find(item=>Number.isSafeInteger(Number(item.id))&&Number(item.id)>0)?.id||customSets.flatMap(set=>Array.isArray(set.items)?set.items:[]).find(item=>Number.isSafeInteger(Number(item.id))&&Number(item.id)>0)?.id);
     const previewDish=dishes.find(dish=>Number(dish.id)===firstDishId&&typeof dish.image_url==='string'&&dish.image_url.length>0);
     const preview=previewDish?'<img class="account-order-preview" src="'+esc(previewDish.image_url)+'" alt="'+esc(previewDish.name)+'" loading="lazy" decoding="async">':'';

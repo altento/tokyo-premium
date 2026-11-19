@@ -482,3 +482,35 @@
  .about-page .principle-grid article{min-height:0;padding:20px 12px}
  .about-page .about-quote{padding:36px 22px}
 }
+/* Cart: compact photographs and generous controls without changing order state. */
+.editorial-page .cart-hero .editorial-kanji{left:24px;font-size:30px;opacity:.65}
+.editorial-page .cart-page{padding-top:28px;padding-bottom:40px}
+.cart-page .cart-page-head{margin-bottom:20px;padding-bottom:14px}
+.cart-page .cart-layout{gap:20px 22px}
+.cart-page .cart-page-item{border-radius:10px}
+.cart-page .cart-page-controls{gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.cart-page .cart-page-controls button{min-width:44px;min-height:44px}
+.cart-page .cart-page-controls [data-cart-remove]{min-width:68px;min-height:44px}
+.cart-page .cart-recommendation-heading{margin:8px 0 0;padding:20px 0 0}
+.cart-page .cart-recommendation-heading h3{font-size:clamp(25px,2.4vw,34px);line-height:1.2;margin:8px 0 0}
+.cart-page .cart-recommendations{align-items:stretch;gap:14px}
+.cart-page .cart-recommendations .dish-card{position:relative;display:flex;flex-direction:column;min-height:0;border-radius:10px;overflow:hidden}
+.cart-page .cart-recommendations .editorial-product-image{aspect-ratio:1.65;flex-shrink:0}
+.cart-page .cart-recommendations .editorial-product-image img{height:100%;width:100%;object-fit:cover}
+.cart-page .cart-recommendations .dish-meta{position:static;display:flex;flex-direction:column;flex:1;min-height:0;padding:14px}
+.cart-page .cart-recommendations .favorite-btn{position:absolute;top:12px;right:12px;width:40px;height:40px;min-height:40px;background:rgba(12,10,8,.85);border-radius:50%}
+.cart-page .cart-recommendations:focus-visible{outline:2px solid var(--gold);outline-offset:4px}
+.cart-page .cart-recommendations .dish-meta h3{font-size:clamp(18px,1.5vw,22px);line-height:1.25;margin:12px 0 8px}
+.cart-page .cart-recommendations .dish-meta p{font-size:12px;line-height:1.6;margin:0 0 14px}
+.cart-page .cart-recommendations .dish-bottom{margin-top:auto;gap:8px;flex-wrap:wrap}
+.cart-page .cart-recommendations .add-to-cart{min-height:44px;padding:8px 12px}
+@media(max-width:760px){
+ .cart-page .cart-page-item{grid-template-columns:82px minmax(0,1fr);gap:12px;padding:12px}
+ .cart-page .cart-page-item>img{width:82px;height:82px;border-radius:6px}
+ .cart-page .cart-page-side{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;gap:12px}
+ .cart-page .cart-page-controls{margin-top:0;justify-content:flex-start}
+ .cart-page .cart-checkout{padding:18px}
+ .cart-page .cart-recommendations .dish-meta{padding:12px}
+ .cart-page .cart-recommendations{grid-template-columns:repeat(4,minmax(240px,78vw));max-width:100%;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;padding-bottom:10px}
+ .cart-page .cart-recommendations .dish-card{scroll-snap-align:start}
+}

@@ -51,6 +51,14 @@ async function run() {
     assert.equal(await page.locator('.account-overview-art img').getAttribute('src'), 'assets/generated/contact-exterior.webp', 'account uses an entrance photograph rather than a room photo');
     assert.ok(await page.locator('.account-overview-art img').evaluate(image => image.complete && image.naturalWidth > 0), 'account entrance photograph is decoded');
     assert.ok(await page.locator('.account-overview').evaluate(hero => hero.getBoundingClientRect().height <= 330), 'desktop account masthead stays compact beside the approved account reference');
+    const orderGeometry = await page.locator('#demo-orders .account-demo-order').first().evaluate(row => {
+      const title = row.querySelector('.account-demo-order-title').getBoundingClientRect();
+      const total = row.querySelector('.account-demo-order-total').getBoundingClientRect();
+      const panel = row.closest('[data-account-panel]').getBoundingClientRect();
+      return { titleRight: title.right, totalLeft: total.left, rowWidth: row.getBoundingClientRect().width, panelWidth: panel.width };
+    });
+    assert.ok(orderGeometry.titleRight <= orderGeometry.totalLeft, 'order title and amount never overlap');
+    assert.ok(orderGeometry.rowWidth >= orderGeometry.panelWidth * .85, 'order history uses the dashboard width instead of a narrow half column');
     assert.equal(await page.locator('.account-quick-actions').evaluate(node => getComputedStyle(node).gridTemplateColumns.split(' ').length), 4, 'desktop quick actions form a compact row within the dashboard column');
     const desktopAccountColumns = await page.locator('.account-demo-layout').evaluate(node => {
       const nav = node.querySelector('.account-demo-nav').getBoundingClientRect();

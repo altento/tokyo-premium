@@ -77,6 +77,13 @@ async function run(options = {}) {
     assert.equal(await page.locator('.cart-recommendations .dish-card img').evaluateAll(images => images.length === 4 && images.every(image => image.complete && image.naturalWidth > 0)), true, 'each recommendation has a loaded food photograph');
     assert.equal(await page.locator('.cart-recommendations .dish-card').first().isVisible(), true, 'recommendations are visible in populated screenshot');
     await page.setViewportSize({ width: 390, height: 844 });
+    const mobileRecommendations = await page.locator('.cart-recommendations').evaluate(grid => ({
+      viewport: grid.clientWidth, content: grid.scrollWidth,
+      focusable: grid.tabIndex === 0,
+      controls: [...grid.querySelectorAll('.add-to-cart')].every(button => button.getBoundingClientRect().height >= 44)
+    }));
+    assert.ok(mobileRecommendations.content > mobileRecommendations.viewport && mobileRecommendations.focusable, 'mobile recommendation rail supports horizontal scrolling and keyboard focus');
+    assert.ok(mobileRecommendations.controls, 'recommended add buttons retain 44px tap targets');
     const mobileHeroHeight = await page.locator('.cart-hero').evaluate(hero => hero.getBoundingClientRect().height);
     assert.ok(mobileHeroHeight <= 270, `mobile cart hero stays compact without clipping (height ${mobileHeroHeight}px)`);
     const mobileFlow = await page.evaluate(() => ({ checkoutTop: document.querySelector('.cart-checkout').getBoundingClientRect().top, recommendationsTop: document.querySelector('.cart-recommendation-heading').getBoundingClientRect().top }));

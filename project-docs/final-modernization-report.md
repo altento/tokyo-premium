@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-19 · Account, cart and export correction
+
+Corrected the browser-local dashboard's order-header overlap, masthead size, sidebar alignment and cramped favorites. Cart has larger controls and a focusable horizontal recommendation rail on phones. Existing saved records are now distinguished from preloaded sample records while staying labeled local. Fixed missing dish detail CSS in the Pages artifact and added a missing-stylesheet export guard. [Visual evidence and remaining differences](visual-qa/account-cart-2026-11-19/comparison.md).
+
 ## 2026-11-19 · Philosophy composition
 
 Compacted the chef, ingredient, principles, quote and closing booking chapters; replaced repetitive implementation-oriented copy with restaurant storytelling while retaining educational disclosures. Full desktop/mobile captures were inspected with reference 05. PHP and static checks passed at six widths; static export produced 37 pages. [Evidence and remaining differences](visual-qa/philosophy-2026-11-19/comparison.md). Remote access remains unconfigured: neither Tailscale nor cloudflared is installed/authenticated on this machine.
