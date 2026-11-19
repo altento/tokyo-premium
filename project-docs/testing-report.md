@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-19 · Menu and product detail
+
+Focused menu coverage includes seven widths, original-order restore, combined search/category/favorites/sort, quick-view add and mobile navigation in PHP and static modes. Product checks passed for 19 public detail routes in each mode, real photo switching, quantity/add and six widths; no page errors or missing assets. Export produced 37 pages. Full-page images and reference comparisons: [menu/dish evidence](visual-qa/menu-dish-2026-11-19/comparison.md). Restricted Secret Menu routes and live payment were outside this scoped check.
+
 ## 2026-11-19 · Account and cart follow-up
 
 Focused account and eight-state cart browser regressions passed after fixing overlapping order headers, dashboard alignment, a too-tall masthead and recommendation tap targets/flow. Screenshots and paired approved-reference comparisons were inspected: [evidence](visual-qa/account-cart-2026-11-19/comparison.md). The broader Tokyo 2.0 run exposed missing exported dish CSS; the exporter now copies asset stylesheets and checks local stylesheet references. The corrected PHP/static Tokyo 2.0 regression passed, including 21 PHP/19 static dish routes and add-to-cart actions. Export produced 37 pages; changed PHP/JS syntax and whitespace checks passed.

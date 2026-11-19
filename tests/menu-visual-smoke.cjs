@@ -16,12 +16,40 @@ const routes = [
 const selectedMode = process.env.TOKYO_MENU_MODE;
 if (selectedMode && !routes.some(route => route.mode === selectedMode)) throw new Error(`Unknown TOKYO_MENU_MODE: ${selectedMode}`);
 const selectedRoutes = selectedMode ? routes.filter(route => route.mode === selectedMode) : routes;
+async function verifyMenuInteractions(page) {
+  const ids = () => page.locator('.dish-card[data-category]').evaluateAll(cards => cards.map(card => card.querySelector('.add-to-cart').dataset.id));
+  const original = await ids();
+  await page.locator('#sort-menu').selectOption('price-desc');
+  await page.locator('#sort-menu').selectOption('default');
+  assert.deepEqual(await ids(), original, 'default sorting restores the original catalogue order');
+  await page.locator('.favorite-btn[data-favorite="3"]').click();
+  await page.locator('#favorites-only').click();
+  await page.locator('.menu-search').fill('лосос');
+  const category = await page.evaluate(() => window.DISHES.find(dish => Number(dish.id) === 3).category);
+  await page.locator(`button.filter-btn[data-category="${category}"]`).click();
+  await page.locator('#sort-menu').selectOption('price-asc');
+  const matches = await page.locator('.dish-card[data-category]').evaluateAll(cards => cards.filter(card => !card.hidden && getComputedStyle(card).display !== 'none').map(card => Number(card.querySelector('.add-to-cart').dataset.id)));
+  assert.deepEqual(matches, [3], 'search, category, favorites and sorting compose correctly');
+  await page.locator('.menu-search').fill('');
+  await page.locator('#favorites-only').click();
+  await page.locator('button.filter-btn[data-category="all"]').click();
+  await page.locator('#sort-menu').selectOption('default');
+  await page.locator('.favorite-btn[data-favorite="3"]').click();
+  await page.locator('.dish-card:not([hidden]) [data-tp-quick-view]').first().click();
+  await page.locator('#tp-quick-view-dialog').waitFor({state:'visible'});
+  await page.locator('#tp-quick-view-dialog [data-tp-quick-view-add]').click();
+  assert.ok(await page.evaluate(() => window.TokyoCart.get().length > 0), 'quick view adds a catalogue item to the shared cart');
+  await page.keyboard.press('Escape');
+  await page.evaluate(() => window.TokyoCart.clear());
+}
 const viewports = [
   { name: 'desktop', width: 1440, height: 1000 },
   { name: 'tablet-landscape', width: 1024, height: 900 },
   { name: 'tablet-boundary', width: 1023, height: 900 },
   { name: 'tablet-portrait', width: 900, height: 900 },
-  { name: 'mobile', width: 390, height: 844 }
+  { name: 'mobile', width: 390, height: 844 },
+  { name: 'small-mobile', width: 320, height: 844 },
+  { name: 'wide-desktop', width: 1920, height: 1080 }
 ];
 
 (async () => {
@@ -47,6 +75,7 @@ const viewports = [
           assert.match(await page.locator('h1').innerText(), /Нигири с морским гребешком/u, `${route.mode} detail page shows the scallop nigiri`);
           assert.ok(await page.locator('#dish-main-image').evaluate(image => image.naturalWidth > 0), `${route.mode} scallop product photograph loads`);
           await page.goto(`${base}${route.path}`, { waitUntil: 'networkidle' });
+          await verifyMenuInteractions(page);
         }
         await page.evaluate(async () => {
           for (const image of document.images) image.loading = 'eager';
@@ -154,7 +183,7 @@ const viewports = [
         assert.ok(metrics.heroHeight > 0 && metrics.heroHeight <= (viewport.width > 700 ? 350 : 370), `${route.mode} ${viewport.name} keeps the compact responsive menu hero`);
         assert.equal(metrics.heroImageLoaded, true, `${route.mode} ${viewport.name} hero image loads`);
         assert.equal(metrics.breadcrumb, 'Меню', `${route.mode} ${viewport.name} shows the current breadcrumb`);
-        assert.equal(metrics.menuGridColumns, viewport.width > 900 ? 3 : 2, `${route.mode} ${viewport.name} keeps the catalog at its intended responsive column count`);
+        assert.equal(metrics.menuGridColumns, viewport.width > 900 ? 3 : (viewport.width <= 360 ? 1 : 2), `${route.mode} ${viewport.name} keeps the catalog at its intended responsive column count`);
         assert.ok(metrics.catalogHeadingDivider && metrics.catalogHeadingDivider.content !== 'none' && metrics.catalogHeadingDivider.width >= 40 && metrics.catalogHeadingDivider.height === 2, `${route.mode} ${viewport.name} preserves the Japanese-red rule under the catalog section title`);
         assert.equal(metrics.firstPageCards, 6, `${route.mode} ${viewport.name} renders the first six catalog cards`);
         assert.equal(metrics.emptyCategoryButtons, 0, `${route.mode} ${viewport.name} does not present an empty catalog filter`);
@@ -200,17 +229,22 @@ const viewports = [
         const builderResponse = await page.request.get(new URL(metrics.setBuilderLink, page.url()).href);
         assert.equal(builderResponse.status(), 200, `${route.mode} ${viewport.name} set-builder route loads`);
 
+        await page.waitForFunction(() => !document.querySelector('.toast.show'));
+        const captureStyle = await page.addStyleTag({ content: '.site-header{position:relative!important;top:auto!important}' });
+        await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
         await page.screenshot({
           path: path.join(evidenceDir, `02-menu-current-${route.mode}-${viewport.name}.jpg`),
           type: 'jpeg',
           quality: viewport.name === 'desktop' ? 74 : 72,
           fullPage: true
         });
+        await captureStyle.evaluate(node => node.remove());
         if (viewport.name === 'mobile') {
           const toggle = page.locator('.site-header .mobile-menu');
           await toggle.click();
           assert.equal(await toggle.getAttribute('aria-expanded'), 'true', `${route.mode} mobile menu opens`);
-          assert.equal(await page.locator('#site-navigation .mobile-nav-utilities a[href="booking.html"]').isVisible(), true, `${route.mode} mobile menu exposes booking`);
+          const bookingHref = route.mode === 'php' ? 'pages.php?page=booking' : 'booking.html';
+          assert.equal(await page.locator(`#site-navigation .mobile-nav-utilities a[href="${bookingHref}"]`).isVisible(), true, `${route.mode} mobile menu exposes booking`);
           await page.keyboard.press('Escape');
           assert.equal(await toggle.getAttribute('aria-expanded'), 'false', `${route.mode} Escape closes the mobile menu`);
           assert.equal(await toggle.evaluate(element => document.activeElement === element), true, `${route.mode} closing the mobile menu restores focus`);

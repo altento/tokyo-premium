@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-19 · Menu and dish presentation
+
+Refined catalogue touch targets, card proportions and small-screen hero; corrected the default-sort label to match its original-order behavior. Product pages now emphasize the red purchase button and use more compact chef/composition/related chapters. Catalogue content, shared cart and distinct salmon photographs were preserved. [Checks, captures and remaining reference differences](visual-qa/menu-dish-2026-11-19/comparison.md).
+
 ## 2026-11-19 · Account, cart and export correction
 
 Corrected the browser-local dashboard's order-header overlap, masthead size, sidebar alignment and cramped favorites. Cart has larger controls and a focusable horizontal recommendation rail on phones. Existing saved records are now distinguished from preloaded sample records while staying labeled local. Fixed missing dish detail CSS in the Pages artifact and added a missing-stylesheet export guard. [Visual evidence and remaining differences](visual-qa/account-cart-2026-11-19/comparison.md).

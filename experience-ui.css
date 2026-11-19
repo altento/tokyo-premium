@@ -514,3 +514,20 @@
  .cart-page .cart-recommendations{grid-template-columns:repeat(4,minmax(240px,78vw));max-width:100%;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;padding-bottom:10px}
  .cart-page .cart-recommendations .dish-card{scroll-snap-align:start}
 }
+/* Menu-only density and touch targets; the alternate list view keeps its own grid. */
+.menu-page .menu-catalog .dish-card{border-radius:10px;overflow:hidden}
+.menu-page .menu-catalog .dish-card .dish-meta h3{font-size:clamp(19px,1.55vw,23px);line-height:1.22}
+.menu-page .menu-catalog .menu-card-links{display:flex;flex-wrap:wrap;align-items:center;gap:2px 12px}
+.menu-page .menu-catalog .menu-card-links>*{display:inline-flex;align-items:center;min-height:44px;padding-block:6px;font-size:11px}
+.menu-page .menu-catalog .dish-bottom{gap:8px}
+.menu-page .menu-catalog .favorite-btn{min-width:44px;min-height:44px}
+.menu-page .menu-catalog .dish-grid:not([data-view="list"]) .dish-image-wrap{aspect-ratio:1.65}
+.menu-page .menu-catalog .dish-grid:not([data-view="list"]) .dish-image-wrap img{height:100%;object-fit:cover}
+.menu-page .menu-subfilter{min-height:40px;border-radius:7px}
+.menu-page .menu-view-toggle button{min-width:44px;min-height:44px}
+.menu-page .menu-pagination button,.menu-page .menu-pagination a{min-width:44px;min-height:44px}
+@media(max-width:700px){
+ .menu-page .menu-hero{padding:32px 22px;min-height:320px}
+ .menu-page .menu-hero-copy{width:min(430px,100%)}
+ .menu-page .menu-hero-kanji{opacity:.35;pointer-events:none}
+}
