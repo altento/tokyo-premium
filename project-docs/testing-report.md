@@ -704,3 +704,8 @@ An Omakase density refinement was checked at 1440px and 390px. Both layouts stay
 ## 2026-11-19 — FreedomPay hosted checkout adapter
 
 Added an optional PHP/SQLite FreedomPay KZ hosted-payment flow with server-calculated order totals, a hashed checkout capability, signed request/response and callback checks, KZT/amount matching, repeat-notification handling, and a serialized payment-session creation guard. Local checks passed: PHP syntax for changed endpoints/helpers, `node --check luxury.js`, `git diff --check`, and five provider-signature/amount assertions. Hosted run [44423394180](https://github.com/altento/tokyo-premium/actions/runs/44423394180) passed the configured PHP/SQLite integrity and migration checks, PHP syntax, endpoint smoke, static export, and Pages deploy; browser/visual QA was skipped by the fast workflow profile. No merchant credentials or public PHP host are configured; no real payment or browser-to-provider transaction was tested. GitHub Pages remains a static demo and offers no online payment.
+
+
+## 2026-11-19 — gallery image loading
+
+PHP and separate static export passed the new gallery-loading regression (network failure/retry, stale responses, close during loading, six viewport widths, room-to-booking links and script fallback). Existing gallery-caption, Tokyo 2.0 PHP/static and 14 cart checks passed. Evidence: `visual-qa/gallery-loading-2026-11-19/comparison.md`. No local server integrity rerun was required for this frontend-only change; the default deployment workflow retains it. Publication results follow after deployment.

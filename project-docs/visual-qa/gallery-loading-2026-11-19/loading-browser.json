@@ -1,0 +1,46 @@
+[
+  {
+    "mode": "php",
+    "passed": true,
+    "widths": [
+      320,
+      390,
+      768,
+      1024,
+      1440,
+      1920
+    ],
+    "scenarios": [
+      "single request",
+      "failure and keyboard retry",
+      "hidden stale photograph",
+      "late navigation response",
+      "close during load",
+      "controls and text bounds",
+      "room booking zone",
+      "full-page captures"
+    ]
+  },
+  {
+    "mode": "static",
+    "passed": true,
+    "widths": [
+      320,
+      390,
+      768,
+      1024,
+      1440,
+      1920
+    ],
+    "scenarios": [
+      "single request",
+      "failure and keyboard retry",
+      "hidden stale photograph",
+      "late navigation response",
+      "close during load",
+      "controls and text bounds",
+      "room booking zone",
+      "full-page captures"
+    ]
+  }
+]

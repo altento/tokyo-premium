@@ -157,6 +157,7 @@ jobs:
           done
           TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:browser
           TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:gallery-caption
+          TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:gallery-loading
           TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:account-demo
           TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:account-resilience
           TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:tokyo20

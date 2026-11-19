@@ -960,11 +960,46 @@
     if (!dialog) return;
     const image = one('img', dialog);
     if (!image) return;
+    dialog.dataset.tpGalleryReady = 'true';
+    const stage = doc.createElement('div'); stage.className = 'tp-gallery-stage';
+    image.before(stage); stage.append(image);
+    const feedback = doc.createElement('div'); feedback.className = 'tp-gallery-feedback';
+    const status = doc.createElement('p'); status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
+    const retry = doc.createElement('button'); retry.type = 'button'; retry.className = 'button secondary'; retry.dataset.tpGalleryRetry = ''; safeText(retry, 'Повторить загрузку'); retry.hidden = true;
+    feedback.append(status, retry); stage.append(feedback);
     const scope = root.closest('main') || root;
     let album = root;
     const items = () => many('[data-lightbox]', album).filter(button => !button.hidden && button.offsetParent !== null);
     let active = 0;
     let touchStart = null;
+    let loadVersion = 0;
+    const load = (src, alt) => {
+      const version = ++loadVersion;
+      dialog.dataset.tpGalleryState = 'loading';
+      stage.setAttribute('aria-busy', 'true');
+      // Move focus before hiding the retry control; otherwise it falls out of the dialog.
+      if (doc.activeElement === retry) one('.lightbox-close', dialog)?.focus({ preventScroll: true });
+      image.hidden = true; feedback.hidden = false; retry.hidden = true;
+      safeText(status, 'Загружаем фотографию…');
+      const pending = new Image();
+      const failed = () => {
+        if (version !== loadVersion) return;
+        dialog.dataset.tpGalleryState = 'error'; stage.setAttribute('aria-busy', 'false');
+        safeText(status, 'Не удалось загрузить фотографию. Повторите попытку или выберите следующий кадр.');
+        retry.hidden = false;
+      };
+      pending.onerror = failed;
+      pending.onload = async () => {
+        if (version !== loadVersion) return;
+        image.src = src; image.alt = alt;
+        try { await image.decode(); } catch (_) { failed(); return; }
+        if (version !== loadVersion) return;
+        image.hidden = false; feedback.hidden = true;
+        stage.setAttribute('aria-busy', 'false'); dialog.dataset.tpGalleryState = 'ready';
+        safeText(status, '');
+      };
+      pending.src = src;
+    };
     const show = index => {
       const list = items();
       if (!list.length) return;
@@ -972,8 +1007,7 @@
       const trigger = list[active];
       const src = trigger.dataset.lightbox;
       const thumb = one('img', trigger);
-      image.src = src;
-      image.alt = thumb?.alt || trigger.getAttribute('aria-label') || 'Иллюстративная фотография учебной концепции';
+      load(src, thumb?.alt || trigger.getAttribute('aria-label') || 'Иллюстративная фотография учебной концепции');
       const caption = one('[data-tp-gallery-caption]', dialog);
       const tileCaption = trigger.matches('.gallery-tile') ? trigger.querySelector(':scope > span')?.textContent?.trim() : '';
       const zoneCaption = trigger.closest('.zone-card')?.querySelector('h3')?.textContent?.trim();
@@ -989,8 +1023,15 @@
       album = trigger.closest('.zone-grid, #gallery-grid') || root;
       const list = items();
       const index = list.indexOf(trigger);
-      if (index >= 0) show(index);
+      if (index >= 0) {
+        show(index);
+        if (!dialog.open) {
+          if (dialog.showModal) dialog.showModal(); else dialog.setAttribute('open', '');
+        }
+      }
     });
+    retry.addEventListener('click', () => show(active));
+    dialog.addEventListener('close', () => { ++loadVersion; touchStart = null; stage.setAttribute('aria-busy', 'false'); });
     previous.addEventListener('click', () => show(active - 1));
     next.addEventListener('click', () => show(active + 1));
     dialog.addEventListener('keydown', event => {

@@ -115,3 +115,8 @@ TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090
 ```
 
 Браузерный прогон проверяет 11 типов страниц, все 21 карточку блюда, пользовательские сценарии и целевые ширины от 320 до 1920 px. Отдельный набор корзины фиксирует desktop при ширине 1440 CSS px и mobile при 390 px, проверяет уникальность блюд, загруженные фото, фактическую сумму и выбранный способ получения перед созданием полноразмерных скриншотов. При съёмке фиксируется шапка в обычном потоке документа, чтобы full-page кадры не получали повторную липкую шапку. Скриншоты и состояния хранятся в `project-docs/visual-qa/`; CI сохраняет их как Actions artifact `tokyo-premium-visual-qa`.
+
+
+## 2026-11-19 — reliable gallery viewer
+
+The PHP and static gallery now provide photo loading/error states, keyboard retry and stale-response protection during rapid navigation or closing. The basic viewer still works if the enhancement script is unavailable. Run `npm run test:gallery-loading` with `TOKYO_BASE_URL` and `TOKYO_STATIC_BASE_URL`; the optional full browser workflow includes it. Results and comparison: [gallery recovery evidence](project-docs/visual-qa/gallery-loading-2026-11-19/comparison.md).

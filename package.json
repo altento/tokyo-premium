@@ -19,6 +19,7 @@
     "test:browser": "node tests/browser-regression.cjs",
     "test:account-demo": "node tests/account-demo-regression.cjs",
     "test:gallery-caption": "node tests/gallery-caption-regression.cjs",
+    "test:gallery-loading": "node tests/gallery-loading-regression.cjs",
     "test:tokyo20": "node tests/tokyo20-regression.cjs",
     "test:reviews": "node tests/reviews-regression.cjs",
     "test:review-contact-forms": "node tests/review-contact-forms.cjs",

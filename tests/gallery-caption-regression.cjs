@@ -32,6 +32,7 @@ async function main() {
       await dialog.locator('[data-tp-gallery-prev]').click();
       assert.equal((await caption.innerText()).trim(), 'Интерьер у садового окна', `${target.label} updates the caption with the previous image`);
       if (target.screenshot) {
+        await page.waitForFunction(() => document.querySelector('.image-lightbox').dataset.tpGalleryState === 'ready');
         const evidence = process.env.TOKYO_EVIDENCE_DIR || path.join(root, 'project-docs', 'visual-qa', 'gallery-caption-followup-2026-11-16');
         fs.mkdirSync(evidence, { recursive: true });
         await page.screenshot({ path: path.join(evidence, 'gallery-caption-desktop.png') });

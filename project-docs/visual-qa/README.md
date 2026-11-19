@@ -317,3 +317,8 @@ Current evidence for the account layout update is under `account-dashboard-layou
 ## 2026-11-18 — account dashboard addresses
 
 `account-addresses-overview-2026-11-18/` contains fresh desktop/mobile account captures with two clearly fictional saved addresses surfaced in the overview. The address button opens the existing editor; the focused browser regression passed clear/restore and escaped-text cases. Marketing & Loyalty now has direct navigation to all nine management sections. Local PHP/SQLite integration was not available because the PHP CLI lacks PDO SQLite.
+
+
+## 2026-11-19 — gallery recovery
+
+[Gallery loading and visual comparison](gallery-loading-2026-11-19/comparison.md) contains PHP/static full-page desktop/mobile captures and photo/loading/error states. The approved gallery PNG and actual captures were opened; exact reference parity remains unclaimed. Focused browser JSON records failure/retry, stale-response handling, keyboard focus, six widths and zone-preserving booking links.

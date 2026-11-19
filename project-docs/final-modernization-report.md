@@ -638,3 +638,8 @@ This is a partial completion checkpoint, not final Tokyo Premium 2.0 acceptance.
 ## 2026-11-19 — optional online payment adapter
 
 Added a disabled-by-default FreedomPay KZ hosted-checkout adapter for the PHP/SQLite version. It keeps card entry on the provider, validates signed callbacks before marking an order paid, compares callback amount/currency with the server order, and serializes creation of concurrent payment sessions. GitHub Pages remains local-only and cannot accept online payments. The adapter is not live: there is no merchant account/secret or publicly reachable PHP host, and the available local PHP runtime has no PDO SQLite driver. Focused PHP/JavaScript syntax and five signature/amount checks passed; hosted run [44423394180](https://github.com/altento/tokyo-premium/actions/runs/44423394180) passed the configured PHP/SQLite integrity/migration checks, syntax, endpoint smoke, export, and deploy. Provider test-mode transactions, browser/visual QA, and live payments remain unverified. Earlier statements in this report that no adapter existed describe the state at the time they were written.
+
+
+## 2026-11-19 — gallery recovery follow-up
+
+Reproduced the blank failed-photo viewer and removed duplicate image ownership. Added modal loading/error feedback, keyboard retry, stale-response protection and content-sized layout. Both PHP and static passed focused gallery loading/caption tests, Tokyo 2.0 regression and 14 cart checks; 37-page export passed. [Evidence and honest reference comparison](visual-qa/gallery-loading-2026-11-19/comparison.md). This closes this viewer defect only; it does not assert final project acceptance or configure merchant payments, SMTP delivery or public PHP hosting.

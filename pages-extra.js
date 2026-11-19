@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   })});
   const dialog=$('.image-lightbox'), lightboxImage=$('img',dialog||document);
   $$('[data-lightbox]').forEach(button=>button.addEventListener('click',()=>{
-    if(!dialog||!lightboxImage)return;
+    if(!dialog||!lightboxImage||dialog.dataset.tpGalleryReady==='true')return;
     lightboxImage.src=button.dataset.lightbox;lightboxImage.alt=button.getAttribute('aria-label')||'Иллюстративная фотография';
     if(dialog.showModal)dialog.showModal();else dialog.setAttribute('open','');
   }));
