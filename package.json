@@ -37,6 +37,8 @@
     "test:admin-booking-browser": "node tests/admin-booking-browser.cjs",
     "test:admin-marketing-browser": "node tests/admin-marketing-browser.cjs",
     "test:admin-marketing-integrity": "php tests/admin-marketing-integrity.php",
+    "test:admin-settings-integrity": "php tests/admin-settings-integrity.php",
+    "test:account-resilience": "node tests/account-resilience.cjs",
     "test:menu-visual": "node tests/menu-visual-smoke.cjs",
     "test:philosophy-visual": "node tests/philosophy-visual.cjs",
     "test:dish-detail-focused": "node tests/dish-detail-focused.cjs"

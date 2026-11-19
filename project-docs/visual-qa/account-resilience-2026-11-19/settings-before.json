@@ -1,0 +1,48 @@
+{
+    "suite": "admin-settings-integrity",
+    "transport": "HTTP /admin.php",
+    "database": "isolated temporary SQLite",
+    "checks": [
+        {
+            "check": "isolated admin HTTP route is available",
+            "passed": true
+        },
+        {
+            "check": "anonymous settings POST cannot mutate data",
+            "passed": true
+        },
+        {
+            "check": "real admin login succeeds",
+            "passed": true
+        },
+        {
+            "check": "invalid CSRF prevents settings writes",
+            "passed": true
+        },
+        {
+            "check": "delivery-only submission preserves every omitted setting",
+            "passed": false
+        }
+    ],
+    "partial_submission": {
+        "submitted_keys": [
+            "delivery_fee"
+        ],
+        "changed_keys": [
+            "address",
+            "delivery_fee",
+            "hero_eyebrow",
+            "hero_text",
+            "hero_title",
+            "hours",
+            "instagram",
+            "meta_description",
+            "meta_title",
+            "phone",
+            "site_name"
+        ],
+        "status": 302
+    },
+    "failure": "FAIL: delivery-only submission preserves every omitted setting",
+    "passed": false
+}

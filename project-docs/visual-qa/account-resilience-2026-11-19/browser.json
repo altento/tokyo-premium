@@ -1,0 +1,22 @@
+{
+  "status": "passed",
+  "checks": [
+    "dirty profile survives favorite refresh",
+    "real cross-tab profile sync/conflict warning",
+    "quota failure preserves input",
+    "empty and duplicate addresses rejected",
+    "capacity preserves oldest address",
+    "stale address row removes intended value",
+    "malformed profile does not crash",
+    "failed clear disclosed; successful clear resets draft"
+  ],
+  "widths": [
+    320,
+    390,
+    768,
+    1024,
+    1440,
+    1920
+  ],
+  "pageErrors": []
+}

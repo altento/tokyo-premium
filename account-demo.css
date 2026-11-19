@@ -613,3 +613,4 @@
  .account-demo-page .account-demo-order .account-demo-order-total{justify-items:start;text-align:left;display:flex;align-items:baseline;gap:8px}
  .account-demo-page .account-favorites-overview-heading{flex-wrap:wrap}
 }
+.account-demo-page [data-account-panel][hidden]{display:none!important}

@@ -1,0 +1,121 @@
+{
+    "suite": "admin-settings-integrity",
+    "transport": "HTTP /admin.php",
+    "database": "isolated temporary SQLite",
+    "checks": [
+        {
+            "check": "isolated admin HTTP route is available",
+            "passed": true
+        },
+        {
+            "check": "anonymous settings POST cannot mutate data",
+            "passed": true
+        },
+        {
+            "check": "real admin login succeeds",
+            "passed": true
+        },
+        {
+            "check": "invalid CSRF prevents settings writes",
+            "passed": true
+        },
+        {
+            "check": "delivery-only submission preserves every omitted setting",
+            "passed": true
+        },
+        {
+            "check": "text array rejects the entire combined update",
+            "passed": true
+        },
+        {
+            "check": "fee array rejects the entire combined update",
+            "passed": true
+        },
+        {
+            "check": "negative fee rejects the entire combined update",
+            "passed": true
+        },
+        {
+            "check": "fee above maximum rejects the entire combined update",
+            "passed": true
+        },
+        {
+            "check": "fractional fee rejects the entire combined update",
+            "passed": true
+        },
+        {
+            "check": "text above 500 characters rejects the entire combined update",
+            "passed": true
+        },
+        {
+            "check": "invalid UTF-8 rejects the entire combined update",
+            "passed": true
+        },
+        {
+            "check": "browser settings form exposes site_name",
+            "passed": true
+        },
+        {
+            "check": "browser settings form exposes meta_title",
+            "passed": true
+        },
+        {
+            "check": "browser settings form exposes meta_description",
+            "passed": true
+        },
+        {
+            "check": "browser settings form exposes hero_eyebrow",
+            "passed": true
+        },
+        {
+            "check": "browser settings form exposes hero_title",
+            "passed": true
+        },
+        {
+            "check": "browser settings form exposes hero_text",
+            "passed": true
+        },
+        {
+            "check": "browser settings form exposes address",
+            "passed": true
+        },
+        {
+            "check": "browser settings form exposes phone",
+            "passed": true
+        },
+        {
+            "check": "browser settings form exposes hours",
+            "passed": true
+        },
+        {
+            "check": "browser settings form exposes instagram",
+            "passed": true
+        },
+        {
+            "check": "complete browser submission accepts 500 Unicode characters, explicit clearing and fee maximum",
+            "passed": true
+        },
+        {
+            "check": "successful browser update exposes its redirect confirmation",
+            "passed": true
+        },
+        {
+            "check": "zero delivery fee is valid and preserves text settings",
+            "passed": true
+        },
+        {
+            "check": "database failure rolls back earlier settings in the same update",
+            "passed": true
+        }
+    ],
+    "partial_submission": {
+        "submitted_keys": [
+            "delivery_fee"
+        ],
+        "changed_keys": [
+            "delivery_fee"
+        ],
+        "status": 302
+    },
+    "passed": true
+}

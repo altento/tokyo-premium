@@ -1,5 +1,7 @@
 ## Visual QA evidence
 
+Account resilience: [2026-11-19 evidence](account-resilience-2026-11-19/comparison.md), lost-draft/null-profile/blank-address/hidden-history reproduction, native two-tab and storage-failure states, transactional admin settings and inspected desktop/mobile screenshots.
+
 Marketing integrity: [2026-11-19 evidence](admin-final-2026-11-19/comparison.md), eight reproduced failure conditions, 18 passing HTTP checks, authenticated promo/collection/inventory flows and expanded desktop/mobile promo forms.
 
 Review composition: [2026-11-19 evidence](reviews-density-2026-11-19/comparison.md), measured before/after density and complete PHP/static desktop/mobile screenshots compared with the approved review concept.

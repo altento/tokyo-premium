@@ -54,6 +54,8 @@ jobs:
         run: php tests/php_integrity_integration.php
       - name: Verify marketing mutations preserve stock and promo identity
         run: php tests/admin-marketing-integrity.php
+      - name: Verify settings updates preserve omitted content and roll back
+        run: php tests/admin-settings-integrity.php
       - name: Verify obsolete booking confirmations and outbox migration
         run: php tests/booking-mail-cancellation.php
       - name: Verify FreedomPay signatures and amounts
@@ -154,6 +156,7 @@ jobs:
           TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:browser
           TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:gallery-caption
           TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:account-demo
+          TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:account-resilience
           TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:tokyo20
           TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:offers-evening
           TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:reviews

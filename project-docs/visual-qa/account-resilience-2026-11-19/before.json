@@ -1,0 +1,11 @@
+{
+  "draftAfterFavorite": "",
+  "blankStored": "",
+  "errors": [
+    "Cannot read properties of null (reading 'name')"
+  ],
+  "historyWhileProfileSelected": {
+    "hidden": true,
+    "display": "grid"
+  }
+}

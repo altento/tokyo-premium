@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-19 · Account data preservation and admin settings
+
+Fixed confirmed local profile draft loss during favorite refresh, a null-profile crash, blank addresses and silent eviction at address capacity. Browser tabs synchronize saved data while preserving dirty profile input and warning about a conflict. Storage write/read-receipt/delete/clear failures receive honest feedback. Address deletion uses its saved value rather than a stale list index. The history panel now respects `hidden` when another tab is selected, removing unrelated content and excess scrolling. PHP settings preserve omitted values, validate all submitted values first and commit atomically. [Reproduction, tests and inspected screenshots](visual-qa/account-resilience-2026-11-19/comparison.md). Local drafts are not persisted until explicitly saved, and these changes do not enable production email or payments.
+
 ## 2026-11-19 · Marketing integrity and compact review composition
 
 Campaign metadata saves no longer reactivate disabled gifts or replace stock consumed since the editor was opened. Existing stock is managed explicitly; changing away from a gift reward stops threshold gifts. Promo create/edit identities are separate, preserving existing codes and usage history; invalid zero/overflow collection IDs cannot clear links or partially update metadata. Expanded promo editors now use the available width. [Admin reproduction, checks and screenshots](visual-qa/admin-final-2026-11-19/comparison.md).

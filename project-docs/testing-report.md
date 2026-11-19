@@ -1,5 +1,11 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-19 · Account resilience and transactional settings
+
+New account browser regression passed dirty-draft preservation, native two-tab sync/conflict notice, corrupted profile shapes, failed storage writes/read receipts/clear, address whitespace/duplicates/capacity, stale-index deletion and six-width bounds. It checks that exactly one account panel is visible. Existing account-demo and notification-identity suites passed. New admin-settings HTTP regression passed 26 assertions (auth/CSRF, omitted keys, full payload, types/UTF-8/length/fee bounds and injected database rollback). Consolidated PHP/SQLite integration passed 229 assertions; syntax and diff hygiene passed. Static export produced 37 pages. [Evidence](visual-qa/account-resilience-2026-11-19/comparison.md).
+
+Tokyo 2.0 passed in the combined PHP + static run, including 21 PHP and 19 static detail-route/add-to-cart checks and the existing ordering, profile and interactive flows. The normal fast deployment workflow now includes the focused settings regression; the account browser regression is in optional full QA.
+
 ## 2026-11-19 · Marketing mutations and review density
 
 New isolated HTTP/SQLite marketing regression: 18 assertions passed, following a recorded pre-fix run with eight failures. Authenticated Chromium passed stock preservation with an intervening consumption update, promo create/duplicate/edit/disable, collection create/edit/membership, keyboard details controls and six widths. Existing gift quantity (19), pricing (6), loyalty-tier admin (8) and consolidated PHP integration (229) assertions passed. The old tier harness was updated to follow the existing successful POST/redirect/GET flow instead of expecting the HTML in the POST response. Reviews/form regression and four-seed review regression passed, including text clipping, local state, red rules and preserved filtering after the card layout change. Export produced 37 pages. [Admin evidence](visual-qa/admin-final-2026-11-19/comparison.md), [visual measurements](visual-qa/reviews-density-2026-11-19/comparison.md).

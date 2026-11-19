@@ -421,23 +421,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     default => 'Не удалось найти письмо для повтора.',
                 };
             } elseif ($action === 'settings') {
-                $deliveryFee = null;
-                if (array_key_exists('delivery_fee', $_POST)) {
-                    $deliveryFee = filter_var($_POST['delivery_fee'], FILTER_VALIDATE_INT);
-                    if ($deliveryFee === false || $deliveryFee < 0 || $deliveryFee > 100000) {
-                        throw new RuntimeException('Стоимость доставки должна быть целым числом от 0 до 100 000 ₸.');
+                $keys = ['site_name','meta_title','meta_description','hero_eyebrow','hero_title','hero_text','address','phone','hours','instagram','delivery_fee'];
+                $updates = [];
+                // Validate the whole submission before writing; absent fields
+                // preserve their current values, while explicit empty text clears them.
+                foreach ($keys as $key) {
+                    if (!array_key_exists($key, $_POST)) continue;
+                    if (!is_string($_POST[$key])) {
+                        throw new RuntimeException('Настройки должны содержать текстовые значения.');
+                    }
+                    if ($key === 'delivery_fee') {
+                        $deliveryFee = filter_var($_POST[$key], FILTER_VALIDATE_INT);
+                        if ($deliveryFee === false || $deliveryFee < 0 || $deliveryFee > 100000) {
+                            throw new RuntimeException('Стоимость доставки должна быть целым числом от 0 до 100 000 ₸.');
+                        }
+                        $updates[$key] = (string)$deliveryFee;
+                    } else {
+                        $value = trim($_POST[$key]);
+                        if (preg_match('//u', $value) !== 1 || admin_unicode_length($value) > 500) {
+                            throw new RuntimeException('Текст настройки должен содержать не более 500 корректных символов.');
+                        }
+                        $updates[$key] = $value;
                     }
                 }
-                $keys = ['site_name','meta_title','meta_description','hero_eyebrow','hero_title','hero_text','address','phone','hours','instagram','delivery_fee'];
-                foreach ($keys as $key) {
-                    if ($key === 'delivery_fee') {
-                        if ($deliveryFee === null) continue;
-                        $value = (string)$deliveryFee;
-                    } else {
-                        $value = trim((string)($_POST[$key] ?? ''));
-                    }
-                    $pdo->prepare('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value')
-                        ->execute([$key, admin_unicode_slice($value, 500)]);
+                if ($updates === []) throw new RuntimeException('Выберите настройки для сохранения.');
+                $pdo->beginTransaction();
+                try {
+                    $saveSetting = $pdo->prepare('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value');
+                    foreach ($updates as $key=>$value) $saveSetting->execute([$key, $value]);
+                    $pdo->commit();
+                } catch (Throwable $exception) {
+                    if ($pdo->inTransaction()) $pdo->rollBack();
+                    throw $exception;
                 }
                 $_SESSION['admin_flash'] = 'Настройки сайта сохранены.';
             }
