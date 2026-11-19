@@ -1,5 +1,9 @@
 # Offers, Tokyo Privilege and static-demo limits
 
+## 2026-11-19 · Quote lifecycle
+
+Offer-code cards link directly to checkout with an explicit promo query in both modes. Removing a code clears its form default and URL, preventing restoration on reset or refresh. Quote state is invalidated by cart, promo, fulfillment, points and gift changes; a revision token and request cancellation prevent delayed answers from restoring stale estimates. Gift-only changes preserve available choices until recalculation. These are UI estimates, and PHP remains authoritative when saving an order. [Focused verification](visual-qa/offers-checkout-2026-11-19/comparison.md).
+
 Updated 2026-11-18
 
 ## Eligibility consistency follow-up — 2026-11-16

@@ -62,6 +62,7 @@ foreach ($routes as $route => $filename) {
     }, $html) ?? $html;
     $html = str_replace('href="pages.php?page=booking&amp;zone=', 'href="booking.html?zone=', $html);
     $html = preg_replace('/href="pages\.php\?page=booking&amp;format=([^"]*)"/', 'href="booking.html?format=$1"', $html) ?? $html;
+    $html = preg_replace('/href="pages\.php\?page=cart&amp;promo=([^"]*)"/', 'href="cart.html?promo=$1"', $html) ?? $html;
     $html = preg_replace_callback('/href="pages\.php\?page=dish&amp;id=(\d+)"/', fn($m) => 'href="dish-'.$m[1].'.html"', $html) ?? $html;
     $html = preg_replace('/<a href="admin(?:-marketing)?\.php">(?:Управление сайтом|Администрирование|Marketing &amp; Loyalty)<\/a>/', '', $html) ?? $html;
     $html = str_replace(

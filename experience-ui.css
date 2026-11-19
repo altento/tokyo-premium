@@ -575,3 +575,13 @@
  .tp20-course-navigation button{padding:10px;font-size:.75rem}
  .tp20-course-navigation p{font-size:.75rem;max-width:45%}
 }
+/* Offer codes have a direct checkout path; removing one invalidates its estimate. */
+.tp20-code-list .tp20-code-actions{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:8px}
+.tp20-code-list .tp20-code-actions .button{min-height:44px;font-size:.72rem;padding:10px 12px}
+.tp20-promo-clear{min-height:44px;margin-top:8px;padding:8px 0;border:0;background:none;color:var(--tp-gold);text-decoration:underline;text-underline-offset:4px;cursor:pointer}
+.tp20-promo-clear[hidden]{display:none}
+.tp20-promo-clear:focus-visible{outline:2px solid var(--tp-gold);outline-offset:4px}
+.tp20-offers-page .tp20-code-vault h2::after,.tp20-offers-page .tp20-feature-copy h2::after,
+.tp20-offers-page .tp20-secret-intro h2::after,.tp20-offers-page .tp20-privilege-cta h2::after{
+ content:"";display:block;width:44px;height:2px;margin-top:14px;background:var(--tp-crimson)
+}

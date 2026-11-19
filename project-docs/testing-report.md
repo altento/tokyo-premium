@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-19 · Offer quote consistency
+
+Reproduced an old discount remaining visible after promo editing and a delayed PHP quote restoring the old total after a cart edit. The focused PHP/static regression now passes code-to-cart navigation, invalid-code edits, fulfillment changes, removal, native reset, refresh and six widths; its PHP route test releases an old server response after a cart edit and checks valid gift options remain usable after selection/quantity changes. Gift-option rendering in that last test uses explicit mock API responses; it is not an inventory integration claim. Tokyo 2.0 regression passed against PHP and current Pages export (21 PHP/19 static product routes and cart/interactive flows); the final removed-code reset edge was then checked by the focused suite. Export produced 37 pages, with the new promo query mapped to a static route. [Reproduction and screenshots](visual-qa/offers-checkout-2026-11-19/comparison.md).
+
 ## 2026-11-19 · Omakase sequential browsing
 
 Released as `4a2c43b`; [Actions 44469632236](https://github.com/altento/tokyo-premium/actions/runs/44469632236) passed build and deployment. Public Chromium checks passed all five sequential stages and seasonal booking/refresh at 390/1440 px without page errors or public submissions.

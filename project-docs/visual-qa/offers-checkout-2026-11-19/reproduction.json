@@ -1,0 +1,13 @@
+{
+  "changedPromo": {
+    "hidden": false,
+    "text": "Подытог 2 400 ₸ · скидка 240 ₸ · получение 0 ₸ · итог 2 160 ₸ · серверный расчёт"
+  },
+  "delayedResponse": {
+    "hiddenAfterCartEdit": true,
+    "after": {
+      "hidden": false,
+      "text": "Подытог 2 400 ₸ · скидка 240 ₸ · получение 0 ₸ · итог 2 160 ₸ · серверный расчёт"
+    }
+  }
+}

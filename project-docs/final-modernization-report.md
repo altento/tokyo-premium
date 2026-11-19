@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-19 · Offers and checkout state
+
+Checkout estimates now invalidate when their inputs or basket change, cancel pending requests and reject stale responses. Gift selection/quantity invalidates the price without discarding valid options. Added explicit promo removal that survives reset/refresh and a direct offer-code-to-cart link in PHP and Pages. The exporter maps the promo query while retaining its PHP-link guard. Offers subheadings retain the red rule. Server pricing, promotion eligibility and order persistence are unchanged. [Actual checks, captures and remaining limits](visual-qa/offers-checkout-2026-11-19/comparison.md).
+
 ## 2026-11-19 · Omakase navigation and presentation
 
 Added sequential course browsing with a visible current-course marker, accessible progress text, endpoint handling and keyboard-compatible mobile thumbnail scrolling. The hero now leads to format comparison; existing query-based booking choices and real catalog images/prices remain intact. Restored red section rules, emphasized the seasonal-format action and replaced implementation-oriented backstage copy with editorial text. Removed an unused session-storage selection path; no stored choice overrides a booking URL. [Actual checks, captures and reference differences](visual-qa/omakase-2026-11-19/comparison.md).
