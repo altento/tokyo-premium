@@ -19,3 +19,9 @@ Tokyo 2.0 passed the combined PHP + static run, including both detail-route matr
 Opened the approved `design-references/11-account.png` and inspected [desktop unsaved/conflict state](profile-unsaved-desktop.jpg) and [mobile address-capacity state](addresses-mobile.jpg). The selected profile panel now follows the shared dashboard cards directly; History is no longer displayed above it. Mobile addresses remain single-column and the error explains the ten-address limit. These captures use fictional data; temporary relative-header normalization is capture-only. The two views are functional states, not a new claim of full pixel parity with the overview reference. The ten-address view is intentionally long.
 
 Browser-local profile/address records remain an educational demonstration, not server authentication or encrypted storage. PHP saved-address ownership logic and live payment/mail configuration were not changed. Publication status will be appended after deployment.
+
+## Publication
+
+Implementation `d5d8ed6` was pushed to main. [Actions 44509845484](https://github.com/altento/tokyo-premium/actions/runs/44509845484) passed the configured build (including settings preservation/rollback) and Pages deployment; optional full browser CI was skipped because browser checks ran locally.
+
+The same account resilience test then passed against the actual public Pages origin in a fresh Chromium context, including native two-tab synchronization, dirty draft/error preservation, actual selected-panel visibility, invalid/capacity/stale-row address cases, corrupted profile data, local clear behavior and six viewport widths. [Public verification](public-verification.json) records the origin, implementation and UTC check time, with no page errors. No live personal data was used. This verifies the static account; the PHP administrator still requires a PHP host, and real SMTP/payment credentials remain unconfigured.
