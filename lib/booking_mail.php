@@ -91,13 +91,27 @@ function booking_mail_queue_request(PDO $pdo, int $bookingId): array
 
 function booking_mail_queue_confirmation(PDO $pdo, int $bookingId): ?int
 {
-    $query = $pdo->prepare('SELECT guest_name,guest_email,phone,guest_count,booking_date,booking_time,zone,preferred_table,format FROM bookings WHERE id=?');
+    $query = $pdo->prepare('SELECT guest_name,guest_email,phone,guest_count,booking_date,booking_time,zone,preferred_table,format,status FROM bookings WHERE id=?');
     $query->execute([$bookingId]);
     $booking = $query->fetch();
-    if (!$booking || trim((string)$booking['guest_email']) === '') return null;
+    if (!$booking || $booking['status'] !== 'confirmed' || trim((string)$booking['guest_email']) === '') return null;
     $name = booking_mail_text_value((string)$booking['guest_name']);
     $body = "Здравствуйте, {$name}!\n\nАдминистратор подтвердил вашу бронь Tokyo Premium.\n\nДата: {$booking['booking_date']}\nВремя: {$booking['booking_time']} (Asia/Qyzylorda)\nГостей: {$booking['guest_count']}\nЗона: " . (booking_mail_text_value((string)$booking['zone']) ?: 'не указана') . "\nСтол-пожелание: " . (booking_mail_text_value((string)$booking['preferred_table']) ?: 'не выбран') . "\nФормат: " . (booking_mail_text_value((string)$booking['format']) ?: 'обычный ужин') . "\n\nЭто подтверждение учебной концепции Tokyo Premium. Условия и контакты проекта вымышлены.\n";
-    return booking_mail_queue($pdo,$bookingId,"booking:{$bookingId}:confirmed:guest",(string)$booking['guest_email'],"Бронь подтверждена · Tokyo Premium №{$bookingId}",$body);
+    $subject = "Бронь подтверждена · Tokyo Premium №{$bookingId}";
+    $id = booking_mail_queue($pdo,$bookingId,"booking:{$bookingId}:confirmed:guest",(string)$booking['guest_email'],$subject,$body);
+    // Only a new administrative confirmation can reactivate an unsent obsolete email.
+    $pdo->prepare("UPDATE email_outbox SET status='pending',attempts=0,locked_at=NULL,last_error='',recipient=?,subject=?,body=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND status='cancelled'")
+        ->execute([strtolower((string)$booking['guest_email']),$subject,$body,$id]);
+    return $id;
+}
+
+function booking_mail_cancel_obsolete_confirmation(PDO $pdo, int $bookingId): void
+{
+    $pdo->prepare("UPDATE email_outbox SET status='cancelled',locked_at=NULL,last_error='Confirmation no longer matches booking status',updated_at=CURRENT_TIMESTAMP
+        WHERE (booking_id=? OR booking_id IS NULL) AND event_key=?
+        AND (status IN('pending','failed') OR (status='sending' AND (locked_at IS NULL OR datetime(locked_at)<datetime('now','-10 minutes'))))
+        AND NOT EXISTS(SELECT 1 FROM bookings WHERE id=? AND status='confirmed')")
+        ->execute([$bookingId,"booking:{$bookingId}:confirmed:guest",$bookingId]);
 }
 
 function booking_mail_read_response($socket): array
@@ -171,15 +185,28 @@ function booking_mail_smtp_send(array $config, string $recipient, string $subjec
 
 function booking_mail_deliver(PDO $pdo, int $outboxId): string
 {
-    $query = $pdo->prepare('SELECT status,attempts FROM email_outbox WHERE id=?');
+    $query = $pdo->prepare('SELECT status,attempts,booking_id,event_key,locked_at FROM email_outbox WHERE id=?');
     $query->execute([$outboxId]);
     $state = $query->fetch();
     if (!$state) return 'missing';
     if ($state['status'] === 'sent') return 'sent';
+    if (preg_match('/^booking:(\d+):confirmed:guest$/',(string)$state['event_key'],$confirmation)) {
+        booking_mail_cancel_obsolete_confirmation($pdo,(int)$confirmation[1]);
+        $query->execute([$outboxId]); $state = $query->fetch();
+    }
+    if ($state['status'] === 'cancelled') return 'cancelled';
+    if ($state['status'] === 'sending' && $state['locked_at'] !== null) {
+        $lease = $pdo->prepare("SELECT datetime(?) > datetime('now','-10 minutes')");
+        $lease->execute([(string)$state['locked_at']]);
+        if ((int)$lease->fetchColumn() === 1) return 'sending';
+    }
     try { $config = booking_mail_smtp_config(); }
     catch (Throwable) {
-        $pdo->prepare("UPDATE email_outbox SET status='failed',last_error='SMTP configuration is invalid',updated_at=CURRENT_TIMESTAMP WHERE id=? AND status<>'sent'")->execute([$outboxId]);
-        return 'failed';
+        $update = $pdo->prepare("UPDATE email_outbox SET status='failed',last_error='SMTP configuration is invalid',updated_at=CURRENT_TIMESTAMP WHERE id=? AND status IN('pending','failed')");
+        $update->execute([$outboxId]);
+        if ($update->rowCount() > 0) return 'failed';
+        $query->execute([$outboxId]);
+        return (string)($query->fetchColumn() ?: 'missing');
     }
     if ($config === null) return (string)$state['status'];
 
@@ -197,6 +224,15 @@ function booking_mail_deliver(PDO $pdo, int $outboxId): string
             $lease->execute([(string)$message['locked_at']]);
             if ((int)$lease->fetchColumn() === 1) { $pdo->commit(); return 'sending'; }
         }
+        if (preg_match('/^booking:(\d+):confirmed:guest$/',(string)$message['event_key'],$confirmation)) {
+            $bookingState = $pdo->prepare('SELECT status FROM bookings WHERE id=?');
+            $bookingState->execute([(int)$confirmation[1]]);
+            if ($bookingState->fetchColumn() !== 'confirmed') {
+                $pdo->prepare("UPDATE email_outbox SET status='cancelled',locked_at=NULL,last_error='Confirmation no longer matches booking status',updated_at=CURRENT_TIMESTAMP WHERE id=? AND status<>'sent'")->execute([$outboxId]);
+                $pdo->commit(); return 'cancelled';
+            }
+        }
+        if ($message['status'] === 'cancelled') { $pdo->commit(); return 'cancelled'; }
         if ((int)$message['attempts'] >= 8) { $pdo->commit(); return 'failed'; }
         $claim = $pdo->prepare("UPDATE email_outbox SET status='sending',attempts=attempts+1,locked_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=? AND status IN('pending','failed','sending')");
         $claim->execute([$outboxId]);
@@ -253,7 +289,7 @@ function booking_mail_status_label(?string $status): string
 {
     return match ($status) {
         'sent' => 'Отправлено', 'pending' => 'В очереди', 'sending' => 'Отправляется',
-        'failed' => 'Не отправлено', 'missing' => 'Запись не найдена', default => 'Нет письма',
+        'failed' => 'Не отправлено', 'cancelled' => 'Отменено: бронь не подтверждена', 'missing' => 'Запись не найдена', default => 'Нет письма',
     };
 }
 

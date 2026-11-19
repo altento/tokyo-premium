@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-19 · Admin confirmations and moderation filter
+
+Unsent obsolete booking confirmations now have a terminal cancelled state, with status-transaction cleanup and a delivery-time eligibility check. Migration v17 preserves queue rows, IDs, indexes/triggers and sequence history. Explicit reconfirmation can reactivate an unsent event; manual retry cannot. Fixed the pending-review notification dropdown to match its actual query. Existing Cyrillic search and guest confirmation/notification flows were exercised in an authenticated browser. [Checks and screenshots](visual-qa/admin-mail-2026-11-19/comparison.md). No live SMTP host or PHP deployment was configured; GitHub Pages cannot execute the admin.
+
 ## 2026-11-19 · Persistent local notifications
 
 Local booking read receipts now follow durable record IDs rather than array positions. New browser-only bookings receive an ID and creation timestamp; older records are upgraded while retaining identifiable legacy read receipts. Malformed array storage no longer breaks local history/read controls. Notifications sort by known creation time rather than random IDs. [Checks and captures](visual-qa/notifications-2026-11-19/comparison.md). PHP confirmation, authorization and server notification logic are unchanged; local records do not imply restaurant confirmation.

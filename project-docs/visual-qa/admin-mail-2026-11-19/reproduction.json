@@ -1,0 +1,8 @@
+{
+    "booking_status": "cancelled",
+    "retry_result": "failed",
+    "mail": {
+        "status": "failed",
+        "attempts": 1
+    }
+}

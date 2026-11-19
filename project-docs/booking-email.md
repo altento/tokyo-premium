@@ -1,5 +1,9 @@
 # Booking email notifications
 
+## 2026-11-19 · Cancellation and stale queues
+
+Changing a booking away from confirmed cancels its pending/failed confirmation email in the same status transaction. Delivery also rechecks the current booking before claiming SMTP work, including deleted bookings and expired send leases. Manual retry does not revive cancelled messages. Explicit administrative reconfirmation can reactivate the same unsent event with updated content; sent history is never recalled or duplicated. Fresh in-flight SMTP leases are preserved: an email whose transmission has already started cannot be reliably recalled. The admin displays the cancelled state and removes its retry action, and the CLI reports cancelled outcomes. Migration v17 retains existing queue data. SMTP configuration is still optional and was not activated by this update.
+
 ## Behavior
 
 - PHP booking requests require a valid guest email and are saved as unconfirmed requests. The receipt says the request arrived and that the table is not reserved until an administrator confirms it.

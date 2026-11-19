@@ -450,6 +450,39 @@ function commerce_migrate(PDO $pdo): void
             throw $error;
         }
     }
+
+    // v17 adds a terminal state for obsolete confirmation emails, preserving rows and IDs.
+    if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=17')->fetchColumn()) {
+        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        try {
+            $definition = (string)$pdo->query("SELECT sql FROM sqlite_master WHERE type='table' AND name='email_outbox'")->fetchColumn();
+            if (!str_contains($definition, "'cancelled'")) {
+                $expanded = str_replace("'pending','sending','sent','failed'", "'pending','sending','sent','failed','cancelled'", $definition);
+                if ($expanded === $definition) throw new RuntimeException('Unrecognized email outbox constraint.');
+                $create = preg_replace('/^CREATE TABLE(?: IF NOT EXISTS)?\s+email_outbox\b/i', 'CREATE TABLE email_outbox_v17', $expanded);
+                if (!$create || $create === $expanded) throw new RuntimeException('Unrecognized email outbox definition.');
+                $objects = $pdo->query("SELECT sql FROM sqlite_master WHERE tbl_name='email_outbox' AND type IN('index','trigger') AND sql IS NOT NULL")->fetchAll(PDO::FETCH_COLUMN);
+                $sequence = (int)$pdo->query("SELECT seq FROM sqlite_sequence WHERE name='email_outbox'")->fetchColumn();
+                $columns = $pdo->query('PRAGMA table_info(email_outbox)')->fetchAll(PDO::FETCH_COLUMN, 1);
+                $columnList = implode(',', array_map(static fn(string $column): string => '"' . str_replace('"', '""', $column) . '"', $columns));
+                $pdo->exec($create);
+                $pdo->exec('INSERT INTO email_outbox_v17 (' . $columnList . ') SELECT ' . $columnList . ' FROM email_outbox');
+                $pdo->exec('DROP TABLE email_outbox');
+                $pdo->exec('ALTER TABLE email_outbox_v17 RENAME TO email_outbox');
+                foreach ($objects as $sql) $pdo->exec((string)$sql);
+                $pdo->prepare("UPDATE sqlite_sequence SET seq=MAX(seq,?) WHERE name='email_outbox'")->execute([$sequence]);
+            }
+            $pdo->exec("UPDATE email_outbox SET status='cancelled',locked_at=NULL,last_error='Confirmation no longer matches booking status',updated_at=CURRENT_TIMESTAMP
+                WHERE status IN('pending','failed') AND event_key GLOB 'booking:[0-9]*:confirmed:guest'
+                AND NOT EXISTS(SELECT 1 FROM bookings b WHERE b.id=email_outbox.booking_id AND b.status='confirmed')");
+            $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(17)');
+            $pdo->commit();
+        } catch (Throwable $error) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $error;
+        }
+    }
+
 }
 
 function commerce_actor_key(?int $userId, string $sessionId): string

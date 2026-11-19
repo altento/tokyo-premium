@@ -369,6 +369,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // confirmation can safely retry the same outbox event without a
                         // second account notification or a duplicate message.
                         if ($status === 'confirmed') $confirmationMailId = booking_mail_queue_confirmation($pdo,(int)$recordId);
+                        else booking_mail_cancel_obsolete_confirmation($pdo,(int)$recordId);
                         $pdo->commit();
                     } catch (Throwable $error) {
                         if ($pdo->inTransaction()) $pdo->rollBack();
@@ -416,6 +417,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'pending' => 'Письмо осталось в очереди. Проверьте настройки SMTP.',
                     'failed' => 'Повтор не удался. Письмо оставлено в очереди ошибок.',
                     'sending' => 'Письмо уже отправляется.',
+                    'cancelled' => 'Письмо отменено: текущий статус брони не подтверждён.',
                     default => 'Не удалось найти письмо для повтора.',
                 };
             } elseif ($action === 'settings') {
@@ -870,7 +872,7 @@ if ($exportTable !== '') {
   <section class="admin-card" id="<?=$table?>" aria-labelledby="admin-<?=$table?>-title">
     <?php if ($notice !== '' && $noticeSection === $table): ?><p class="form-status success admin-notice" role="status"><?=e($notice)?></p><?php endif ?>
     <h2 id="admin-<?=$table?>-title"><?=e($collection['label'])?> <span class="admin-result-count"><?=number_format($recordTotalCounts[$table], 0, '.', ' ')?> записей · <?=$recordPages[$table]?> из <?=$recordPageCounts[$table]?> страниц</span></h2>
-    <?php $selectedRecordStatus = $recordFilterTable === $table ? $recordFilterStatus : ($notificationTarget === $table ? 'new' : ''); ?>
+    <?php $selectedRecordStatus = $recordFilterTable === $table ? $recordFilterStatus : ($notificationTarget === $table ? ($table === 'reviews' ? 'pending' : 'new') : ''); ?>
     <form method="get" action="admin.php#<?=$table?>" class="admin-record-filter" role="search">
       <input type="hidden" name="filter_table" value="<?=$table?>">
       <label for="filter-status-<?=$table?>">Фильтр по статусу</label>

@@ -1,5 +1,9 @@
 # SQLite schema and migration notes
 
+## v17 · Obsolete booking confirmations
+
+Adds `cancelled` to the email outbox status constraint. SQLite requires a transactional table rebuild for the legacy CHECK: all existing columns/rows/IDs are copied, explicit indexes/triggers are recreated and the autoincrement high-water mark is preserved. Existing confirmed/sent/history data is retained. Obsolete pending/failed confirmation events become cancelled; unrelated receipt events remain untouched. Fresh databases start with the expanded constraint. Bootstrap readiness now requires v17. The migration regression covers old-schema upgrade, repeat application, row/body/ID/sequence/index preservation and foreign-key checks.
+
 Updated 2026-11-19
 
 The app runs `schema.sql` with `CREATE TABLE/INDEX IF NOT EXISTS`, then records explicit upgrades in `app_migrations`. Existing SQLite files are upgraded additively; migrations avoid deleting menu, user, order or booking data.

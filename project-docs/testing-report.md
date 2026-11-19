@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-19 · Admin booking/email integrity
+
+Reproduced a cancelled booking's old confirmation consuming an SMTP attempt on retry, using only loopback port 1. Added v17 outbox state/migration and booking-state checks. Passed 21 focused migration/cancellation assertions, 229 isolated PHP/SQLite integration assertions (including local fake SMTP/leases), authenticated admin/guest browser flow, Cyrillic search, pending-review dropdown, confirmation/cancellation badges and two durable notifications. PHP-mode Tokyo 2.0 regression passed 21 detail routes and interactive/cart flows; static export produced 37 pages. The first full PHP invocation exposed child-process extension configuration on Windows; rerunning with a temporary PHPRC loaded SQLite for all workers. [Evidence and boundaries](visual-qa/admin-mail-2026-11-19/comparison.md).
+
 ## 2026-11-19 · Local notification identity
 
 Reproduced a read booking reverting to unread when another booking was prepended (1 read became 0 read/2 unread). `test:notification-identity` now passes legacy receipt migration, durable IDs, prepend/reorder/reload, malformed storage, newly submitted local-booking metadata and desktop/mobile layout. Existing account-demo regression passed, including escaping, preserved data and clear-data behavior. Tokyo 2.0 PHP/static regression passed 21 PHP/19 static product routes and interaction flows. Export: 37 pages. [Evidence and limitations](visual-qa/notifications-2026-11-19/comparison.md).

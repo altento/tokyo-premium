@@ -15,7 +15,7 @@ if ($configuration !== 'ready') {
     exit(2);
 }
 $results = booking_mail_process_pending(db(), $limit);
-$counts = ['sent'=>0,'failed'=>0,'pending'=>0,'sending'=>0,'missing'=>0];
+$counts = ['sent'=>0,'failed'=>0,'pending'=>0,'sending'=>0,'missing'=>0,'cancelled'=>0];
 foreach ($results as $status) $counts[$status] = ($counts[$status] ?? 0) + 1;
-echo sprintf("Processed %d booking emails: sent=%d failed=%d pending=%d sending=%d.\n", count($results), $counts['sent'], $counts['failed'], $counts['pending'], $counts['sending']);
+echo sprintf("Processed %d booking emails: sent=%d failed=%d pending=%d sending=%d cancelled=%d.\n", count($results), $counts['sent'], $counts['failed'], $counts['pending'], $counts['sending'], $counts['cancelled']);
 exit($counts['failed'] > 0 ? 1 : 0);

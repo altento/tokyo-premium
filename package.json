@@ -32,6 +32,8 @@
     "test:offer-quote-state": "node tests/offer-quote-state.cjs",
     "test:ideal-evening-focused": "node tests/ideal-evening-focused.cjs",
     "test:notification-identity": "node tests/notification-identity.cjs",
+    "test:booking-mail-cancellation": "php tests/booking-mail-cancellation.php",
+    "test:admin-booking-browser": "node tests/admin-booking-browser.cjs",
     "test:menu-visual": "node tests/menu-visual-smoke.cjs",
     "test:philosophy-visual": "node tests/philosophy-visual.cjs",
     "test:dish-detail-focused": "node tests/dish-detail-focused.cjs"

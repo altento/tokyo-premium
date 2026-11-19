@@ -1,5 +1,7 @@
 ## Visual QA evidence
 
+PHP admin/mail follow-up: [2026-11-19 evidence](admin-mail-2026-11-19/comparison.md), stale-email reproduction, pending-review filter, confirmed guest badge and cancelled admin/mobile state.
+
 Notification persistence: [2026-11-19 evidence](notifications-2026-11-19/comparison.md), reproduced loss of read receipts and desktop/mobile account notification states after migration.
 
 Ideal Evening: [2026-11-19 evidence](ideal-evening-2026-11-19/comparison.md), reproduced preference/guest issues, complete populated-result desktop/mobile captures and the actual plant-preference empty state.
