@@ -339,8 +339,11 @@
   const signalText = dish => `${dish.name || ''} ${dish.description || ''} ${dish.category_name || ''} ${dish.category || ''}`.toLocaleLowerCase('ru-RU');
   const productKind = dish => {
     const text = signalText(dish);
-    if (/напит|drink|beverage|чай|матча|лимонад|кофе|саке/.test(text)) return 'drink';
+    const category = String(dish.category_name || dish.category || '').toLocaleLowerCase('ru-RU');
+    if (/десерт|dessert/.test(category)) return 'dessert';
+    if (/напит|drink|beverage/.test(category)) return 'drink';
     if (/десерт|dessert|моти|тирамису|морожен/.test(text)) return 'dessert';
+    if (/напит|drink|beverage|чай|матча|лимонад|кофе|саке/.test(text)) return 'drink';
     if (/(?:^|\W)(?:сет|сэт)|омак|set menu/.test(text)) return 'set';
     return 'dish';
   };
@@ -373,6 +376,9 @@
     const state = Object.create(null);
     const booking = one('[data-tp-evening-booking]', root);
     const initialBookingHref = booking instanceof HTMLAnchorElement ? booking.getAttribute('href') || booking.href : '';
+    const initialBookingLabel = booking?.textContent || '';
+    const edit = one('[data-tp-evening-edit]', root);
+    if (booking) booking.hidden = true;
     let current = 0;
     let recommendedPlan = null;
     const refreshNextButtons = () => {
@@ -383,7 +389,7 @@
         next.disabled = option ? !state[option.dataset.field] : input ? !input.checkValidity() : false;
       });
     };
-    const renderStep = () => {
+    const renderStep = (focus = false) => {
       steps.forEach((step, index) => { step.hidden = index !== current; step.setAttribute('aria-current', index === current ? 'step' : 'false'); });
       const progress = one('[data-tp-evening-progress]', root);
       if (progress) {
@@ -398,6 +404,10 @@
       many('[data-tp-evening-back]', root).forEach(back => { back.disabled = current === 0; });
       many('[data-tp-evening-next]', root).forEach(next => { next.textContent = current >= steps.length - 1 ? 'Показать подбор ↗' : 'Продолжить ↗'; });
       refreshNextButtons();
+      if (focus) {
+        const heading = one('h3', steps[current]);
+        if (heading) { heading.tabIndex = -1; heading.focus(); }
+      }
     };
 
     options.forEach(option => option.addEventListener('click', () => {
@@ -430,18 +440,22 @@
       const guestCount = Math.max(1, Math.min(12, Number(state.guests || 2)));
       const budget = Math.max(0, Number(state.budget || 0));
       const groupBudget = budget * guestCount;
-      const dishes = dishRows().filter(dish => dish && Number(dish.active ?? 1) !== 0 && Number(dish.price) >= 0);
+      const plantPreference = state.preference === 'plant';
+      const animalIngredients = /мяс|рыб|лосос|тун[её]?ц|угор|угр|кревет|сашими|говядин|утк|куриц|цыпл|свинин|бекон|икр|краб|гребеш|кальмар|осьмин|сурими|даси|даши|бонито|желатин|fish|salmon|tuna|eel|shrimp|prawn|scallop|crab|chicken|duck|beef|pork|bonito|dashi|gelatin/;
+      const dishes = dishRows().filter(dish => dish && Number(dish.active ?? 1) !== 0 && Number(dish.price) >= 0
+        && (!plantPreference || !animalIngredients.test(signalText(dish))));
       const byId = new Map(dishes.map(dish => [Number(dish.id), dish]));
       const pairings = Array.isArray(global.TP_DISH_PAIRINGS) ? global.TP_DISH_PAIRINGS : [];
       const setVariants = Array.isArray(global.TP_SET_VARIANTS) ? global.TP_SET_VARIANTS.filter(row => row && row.slug && row.name) : [];
-      const mains = dishes.filter(dish => !['drink', 'dessert'].includes(productKind(dish)))
+      const mains = dishes.filter(dish => !['drink', 'dessert'].includes(productKind(dish))
+        && (!plantPreference || signals.plant.some(word => signalText(dish).includes(word))))
         .sort((a, b) => scoreDish(b, state) - scoreDish(a, state) || Number(a.price) - Number(b.price));
       const pickPaired = (main, pairingType, fallbackKind) => {
         const linked = pairings
           .filter(pair => Number(pair.dish_id) === Number(main.id) && pair.pairing_type === pairingType)
           .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0))
           .map(pair => byId.get(Number(pair.paired_dish_id)))
-          .filter(dish => dish && Number(dish.id) !== Number(main.id));
+          .filter(dish => dish && Number(dish.id) !== Number(main.id) && productKind(dish) === fallbackKind);
         return linked[0] || dishes.filter(dish => productKind(dish) === fallbackKind && Number(dish.id) !== Number(main.id))
           .sort((a, b) => Number(a.price) - Number(b.price))[0] || null;
       };
@@ -515,7 +529,9 @@
       if (!chosen) {
         const empty = doc.createElement('p');
         empty.className = 'tp-empty-state';
-        safeText(empty, 'В каталоге пока нет блюд для подбора.');
+        safeText(empty, plantPreference
+          ? 'В текущем каталоге нет подходящих основных блюд с растительными ингредиентами по описанию. Обсудите состав при бронировании или измените предпочтения.'
+          : 'В каталоге пока нет блюд для подбора.');
         result.append(empty);
       }
       const list = doc.createElement('div');
@@ -572,7 +588,7 @@
       totalNode.className = 'tp-evening-estimate';
       const total = chosen?.total || 0;
       safeText(totalNode, `Ориентир на подбор для ${guestCount} гостей: ${money(total)}. ${staticDemo ? 'Демо-стоимость рассчитана в браузере и не проверяется сервером.' : 'Стоимость учебная; сервер проверяет цены при заказе.'}`);
-      result.append(totalNode);
+      if (chosen) result.append(totalNode);
       if (budget && total > groupBudget) {
         const budgetNote = doc.createElement('p');
         budgetNote.className = 'tp-budget-note';
@@ -585,7 +601,9 @@
         result.append(budgetNote);
       }
       const note = doc.createElement('small');
-      safeText(note, 'Сочетания напитков и дополнений взяты из каталога ресторана. Подбор сформирован по правилам, а не нейросетью.');
+      safeText(note, plantPreference
+        ? 'Фильтр учитывает только описания каталога и не подтверждает вегетарианский состав или отсутствие аллергенов. Состав и основу бульонов уточняйте отдельно.'
+        : 'Сочетания напитков и дополнений взяты из каталога ресторана. Подбор сформирован по правилам, а не нейросетью.');
       result.append(note);
       if (chosen) {
         const addPlan = doc.createElement('button');
@@ -607,8 +625,15 @@
         if (chosen) url.searchParams.set('experience', chosen.lines.map(line => `${line.qty} × ${line.dish.name}`).join(', ').slice(0, 180));
         else url.searchParams.delete('experience');
         booking.href = url.pathname + url.search + url.hash;
+        booking.hidden = false;
+        safeText(booking, chosen ? 'Перенести подбор в бронирование ↗' : 'Обсудить меню при бронировании ↗');
       }
-      setStatus(root, `Подбор готов. Ориентировочная сумма ${money(total)} для ${guestCount} гостей.`);
+      if (edit) edit.hidden = false;
+      result.tabIndex = -1;
+      result.setAttribute('role', 'region');
+      result.setAttribute('aria-label', 'Результат подбора вечера');
+      result.focus();
+      setStatus(root, chosen ? `Подбор готов. Ориентировочная сумма ${money(total)} для ${guestCount} гостей.` : 'Подходящий набор не найден. Можно изменить ответы или обсудить меню при бронировании.');
     };
 
     root.addEventListener('click', event => {
@@ -636,11 +661,21 @@
         if (next.disabled || !steps.length) return;
         if (current >= steps.length - 1) { renderResult(); return; }
         current = Math.min(steps.length - 1, current + 1);
-        renderStep();
+        renderStep(true);
         return;
       }
       const back = event.target.closest('[data-tp-evening-back]');
-      if (back && root.contains(back)) { current = Math.max(0, current - 1); renderStep(); }
+      if (back && root.contains(back)) { current = Math.max(0, current - 1); renderStep(true); }
+    });
+    edit?.addEventListener('click', () => {
+      current = 0;
+      recommendedPlan = null;
+      const result = one('[data-tp-evening-result]', root);
+      if (result) { result.hidden = true; result.replaceChildren(); }
+      if (booking instanceof HTMLAnchorElement) { booking.hidden = true; booking.href = initialBookingHref; safeText(booking, initialBookingLabel); }
+      edit.hidden = true;
+      renderStep(true);
+      setStatus(root, 'Ответы сохранены. Измените нужные параметры и сформируйте новый подбор.');
     });
     one('[data-tp-evening-restart]', root)?.addEventListener('click', () => {
       current = 0;
@@ -653,8 +688,9 @@
       const result = one('[data-tp-evening-result]', root);
       if (result) { result.hidden = true; result.replaceChildren(); }
       recommendedPlan = null;
-      if (booking instanceof HTMLAnchorElement) booking.href = initialBookingHref;
-      renderStep(); setStatus(root, 'Подбор сброшен.');
+      if (booking instanceof HTMLAnchorElement) { booking.href = initialBookingHref; booking.hidden = true; safeText(booking, initialBookingLabel); }
+      if (edit) edit.hidden = true;
+      renderStep(true); setStatus(root, 'Подбор сброшен.');
     });
     renderStep();
   }

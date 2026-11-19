@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-19 · Ideal Evening preferences
+
+Reproduced plant preference returning miso with dashi plus tuna nigiri, and empty guest input allowing progression. Focused PHP/static checks now pass conservative ingredient screening/empty state, guest validation, edit preservation, focus/reset, cart batching, budget warning and booking prefill. Synthetic catalog cases separately verify dessert classification and stale pairing-type rejection; they do not claim real menu availability. Six-width text bounds/overflow and full desktop/mobile captures passed after waiting for viewport style recalculation. Tokyo 2.0 regression passed 21 PHP/19 static detail routes and interactive/cart flows; final typography/contrast/grid changes were then checked by the focused suite. Export: 37 pages. [Evidence and limitations](visual-qa/ideal-evening-2026-11-19/comparison.md).
+
 ## 2026-11-19 · Set-builder summary
 
 Released as `ffd6c59`; [Actions 44475808433](https://github.com/altento/tokyo-premium/actions/runs/44475808433) passed build/deployment. Public Chromium passed summary/reload, 12,700 ₸ cart transfer, draft clearing without cart loss and mobile menu/bar behavior at 390/1440 px, without page errors or order submission.

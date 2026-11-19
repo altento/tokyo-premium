@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-19 · Ideal Evening recommendation integrity
+
+Plant preference screens named animal ingredients across mains, pairings and set fillers, including ambiguous dashi, and presents an honest empty state when needed. Category-aware classification keeps matcha desserts out of beverage fallback. Guest count is required. Added answer editing without losing selections, explicit focus movement and booking access after a result; edit/reset clears old result/booking context. Improved result-card layout, button wrapping and parchment-note contrast. [Actual checks and captures](visual-qa/ideal-evening-2026-11-19/comparison.md). This remains a descriptive rules-based helper, not dietary certification or live restaurant availability.
+
 ## 2026-11-19 · Set-builder state and mobile access
 
 Fixed the stale summary: price, portions, distinct count and progress now share the catalog's state. The one add-set action and status are beside the composition; draft clearing preserves accepted cart sets. Controls disable at actual limits, and the format heading no longer assumes exactly three admin-managed formats. The summary precedes the catalog on phones, with a fixed total/jump link that hides under open navigation; desktop keeps the two-column layout. [Checks, screenshots and remaining limits](visual-qa/set-builder-2026-11-19/comparison.md). Server set validation/pricing remain unchanged.

@@ -1,5 +1,7 @@
 ## Visual QA evidence
 
+Ideal Evening: [2026-11-19 evidence](ideal-evening-2026-11-19/comparison.md), reproduced preference/guest issues, complete populated-result desktop/mobile captures and the actual plant-preference empty state.
+
 Set-builder summary: [2026-11-19 evidence](set-builder-2026-11-19/comparison.md), before-fix values and desktop view, complete desktop/mobile layouts, the native mobile bottom bar and open-navigation state.
 
 Offers/quote consistency: [2026-11-19 evidence](offers-checkout-2026-11-19/comparison.md), before-fix state values, complete offers and discounted-cart captures at 1440/390 px, and a paired cart-concept comparison.
