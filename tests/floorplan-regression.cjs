@@ -65,6 +65,25 @@ async function run() {
       assert.match(await page.locator('[data-tp-floorplan-selection]').innerText(), /доступность|подтвердит отдельно/i, `${mode.name} does not claim live availability`);
       if (mode.name === 'Pages') await page.screenshot({ path: path.join(evidence, '07-booking-floorplan-desktop.png'), fullPage: true });
 
+      await page.locator('#full-booking-form').evaluate(form => form.reset());
+      await page.waitForFunction(() => document.querySelector('[name="table"]').value === '' && !document.querySelector('[data-tp-table].is-selected'));
+      const resetState = await page.evaluate(() => ({
+        zone: document.querySelector('[name="zone"]').value,
+        photo: document.querySelector('[data-tp-zone-photo]').getAttribute('src'),
+        selectedZone: document.querySelector('.tp-floorplan-mobile-zone.is-selected')?.dataset.tpZoneSelect,
+        selectedTables: document.querySelectorAll('[data-tp-table].is-selected').length,
+        formStatus: document.querySelector('#full-booking-form .table-selection').textContent
+      }));
+      assert.equal(resetState.zone, initialState.zone, `${mode.name} reset restores the default form zone`);
+      assert.equal(resetState.selectedZone, resetState.zone, `${mode.name} reset restores the same picker zone`);
+      assert.equal(resetState.photo, initialState.photo, `${mode.name} reset restores the default room photograph`);
+      assert.equal(resetState.selectedTables, 0, `${mode.name} reset clears SVG and mobile selection`);
+      assert.match(resetState.formStatus, /не выбран/i, `${mode.name} reset clears the selected-table message`);
+
+      await page.locator('.tp-seat-plan [data-tp-table="42"]').click();
+      await page.locator('[name="guests"]').selectOption('3');
+      assert.equal(await page.locator('[name="table"]').inputValue(), '', `${mode.name} changing guests clears the previous table`);
+
       await page.setViewportSize({ width: 390, height: 844 });
       const zoneButton = page.locator('.tp-floorplan-mobile-zone[data-tp-zone-select="Суши-бар"]');
       assert.ok(await zoneButton.isVisible(), `${mode.name} exposes touch-sized zone controls on mobile`);

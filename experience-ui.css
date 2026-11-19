@@ -531,3 +531,25 @@
  .menu-page .menu-hero-copy{width:min(430px,100%)}
  .menu-page .menu-hero-kanji{opacity:.35;pointer-events:none}
 }
+/* Booking and room chapters: align form fields and use the reference's shorter rhythm. */
+.editorial-page .booking-form>.school-note{grid-column:1 / -1;margin:0 0 8px;line-height:1.65}
+.editorial-page>#booking-form>.editorial-heading h2{font-size:clamp(28px,3vw,42px);line-height:1.15;max-width:none}
+.editorial-page .booking-faq-content .editorial-heading h2{font-size:clamp(30px,3.4vw,46px);line-height:1.15}
+.editorial-page #spaces{padding-block:38px}
+.editorial-page #spaces .editorial-heading h2,.editorial-page #gallery .editorial-heading h2{font-size:clamp(28px,3vw,42px);line-height:1.15}
+.editorial-page #spaces .zone-card{border-radius:10px;overflow:hidden}
+.editorial-page #spaces .zone-card h3{font-size:clamp(20px,1.7vw,25px);line-height:1.2}
+.editorial-page #spaces .zone-booking-link{min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.editorial-page #gallery{padding-block:38px}
+.editorial-page #gallery .filter-row{gap:8px;flex-wrap:wrap}
+.editorial-page #gallery .filter-btn{min-height:44px;border-radius:7px}
+.editorial-page .gallery-tile{border-radius:9px;overflow:hidden}
+.editorial-page .gallery-tile>span{overflow-wrap:anywhere;line-height:1.25}
+.editorial-page .gallery-hero{min-height:360px;padding-block:40px}
+@media(max-width:760px){
+ .editorial-page #spaces,.editorial-page #gallery{padding-block:28px}
+ .editorial-page .gallery-hero{min-height:360px;padding-block:32px}
+ .editorial-page .gallery-toolbar{align-items:start;gap:16px}
+ .editorial-page .gallery-tile>span{font-size:clamp(16px,4.6vw,21px);padding-inline:12px}
+ .editorial-page .image-lightbox .tp-gallery-control{min-width:44px;min-height:44px}
+}

@@ -2,11 +2,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
   // Filters affect the gallery only; room cards remain visible as navigation choices.
   const galleryGrid=$('#gallery-grid');
-  $$('[data-gallery]').forEach(button=>button.addEventListener('click',()=>{
-    $$('[data-gallery]').forEach(x=>x.classList.toggle('active',x===button));
+  $$('[data-gallery]').forEach(button=>{button.setAttribute('aria-pressed',String(button.classList.contains('active')));button.addEventListener('click',()=>{
+    $$('[data-gallery]').forEach(x=>{x.classList.toggle('active',x===button);x.setAttribute('aria-pressed',String(x===button))});
     const filter=button.dataset.gallery;
     $$('[data-gallery-filter]',galleryGrid||document).forEach(tile=>{tile.hidden=filter!=='all'&&tile.dataset.galleryFilter!==filter});
-  }));
+  })});
   const dialog=$('.image-lightbox'), lightboxImage=$('img',dialog||document);
   $$('[data-lightbox]').forEach(button=>button.addEventListener('click',()=>{
     if(!dialog||!lightboxImage)return;

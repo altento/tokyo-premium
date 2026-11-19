@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-19 · Booking and gallery consistency
+
+Booking reset now clears the table preference, SVG/mobile highlights and stale room photograph together. Room previews use their own correctly captioned album; filtered gallery arrows stay within matching photos. Filters expose selected state, vertical gestures no longer turn photos, and mobile captions wrap without clipping. Aligned the booking notice across the form and refined room/gallery spacing, headings and touch targets. PHP/static focused checks and the Tokyo 2.0 regression passed. [Evidence and remaining visual differences](visual-qa/booking-gallery-2026-11-19/comparison.md). This scoped update does not close overall visual acceptance or activate external payment/email services.
+
 ## 2026-11-19 · Menu and dish presentation
 
 Refined catalogue touch targets, card proportions and small-screen hero; corrected the default-sort label to match its original-order behavior. Product pages now emphasize the red purchase button and use more compact chef/composition/related chapters. Catalogue content, shared cart and distinct salmon photographs were preserved. [Checks, captures and remaining reference differences](visual-qa/menu-dish-2026-11-19/comparison.md).

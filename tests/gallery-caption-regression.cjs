@@ -32,7 +32,7 @@ async function main() {
       await dialog.locator('[data-tp-gallery-prev]').click();
       assert.equal((await caption.innerText()).trim(), 'Интерьер у садового окна', `${target.label} updates the caption with the previous image`);
       if (target.screenshot) {
-        const evidence = path.join(root, 'project-docs', 'visual-qa', 'gallery-caption-followup-2026-11-16');
+        const evidence = process.env.TOKYO_EVIDENCE_DIR || path.join(root, 'project-docs', 'visual-qa', 'gallery-caption-followup-2026-11-16');
         fs.mkdirSync(evidence, { recursive: true });
         await page.screenshot({ path: path.join(evidence, 'gallery-caption-desktop.png') });
         await page.setViewportSize({ width: 390, height: 844 });
@@ -42,6 +42,33 @@ async function main() {
       }
       await page.keyboard.press('Escape');
       assert.equal(await dialog.evaluate(element => element.open), false, `${target.label} lightbox still closes with Escape`);
+      const firstRoom = page.locator('#spaces .lightbox-trigger').first();
+      await firstRoom.click();
+      assert.equal((await caption.innerText()).trim(), 'Суши-бар', `${target.label} room preview replaces the previous gallery caption`);
+      await page.keyboard.press('ArrowRight');
+      assert.equal((await caption.innerText()).trim(), 'Основной зал', `${target.label} room arrows stay in the room album`);
+      await page.keyboard.press('Escape');
+      assert.equal(await firstRoom.evaluate(element => document.activeElement === element), true, `${target.label} closing room preview restores its trigger focus`);
+      await page.locator('[data-gallery="details"]').click();
+      assert.equal(await page.locator('[data-gallery="details"]').getAttribute('aria-pressed'), 'true', `${target.label} filter exposes its selected state`);
+      assert.equal(await page.locator('#spaces .zone-card:visible').count(), 4, `${target.label} gallery filter preserves all room cards`);
+      await page.locator('#gallery-grid .gallery-tile:not([hidden])').first().click();
+      assert.equal((await caption.innerText()).trim(), 'Нигири крупным планом', `${target.label} filtered gallery opens its first matching image`);
+      await page.keyboard.press('ArrowLeft');
+      assert.equal((await caption.innerText()).trim(), 'Чайная пауза', `${target.label} filtered gallery wraps within its own album`);
+      const swipe = async (dx, dy) => dialog.evaluate((node, delta) => {
+        const dispatch = (type, x, y) => {
+          const event = new Event(type, {bubbles:true});
+          Object.defineProperty(event, 'changedTouches', {value:[{clientX:x,clientY:y}]});
+          node.dispatchEvent(event);
+        };
+        dispatch('touchstart', 160, 160); dispatch('touchend', 160 + delta.dx, 160 + delta.dy);
+      }, {dx,dy});
+      await swipe(10, 90);
+      assert.equal((await caption.innerText()).trim(), 'Чайная пауза', `${target.label} vertical gestures do not change the photo`);
+      await swipe(-90, 5);
+      assert.equal((await caption.innerText()).trim(), 'Нигири крупным планом', `${target.label} horizontal swipe advances the filtered album`);
+      await page.keyboard.press('Escape');
     }
     assert.deepEqual(errors, [], 'gallery has no browser errors');
     console.log(`PASS: gallery lightbox captions in ${targets.map(target => target.label).join(' and ')} modes.`);

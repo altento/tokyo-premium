@@ -764,6 +764,17 @@
       }
     });
     const requestedZone = new URL(doc.location.href).searchParams.get('zone');
+    form?.addEventListener('reset', event => {
+      // Reset restores selects after dispatch; hidden inputs can retain their last value.
+      queueMicrotask(() => {
+        if (event.defaultPrevented) return;
+        const zone = zoneInput?.value || 'Основной зал';
+        applyZone(zone, false);
+        if (tableInput) { tableInput.value = ''; tableInput.defaultValue = ''; }
+        if (message) safeText(message, `${zone}: выберите предпочтительный стол. Доступность не проверяется.`);
+        if (formTableStatus) safeText(formTableStatus, 'Столик не выбран. Выберите номер на схеме или оставьте поле пустым.');
+      });
+    });
     const hasRequestedZone = requestedZone && many('[data-tp-zone]', root).some(item => !item.hasAttribute('data-tp-table') && item.dataset.tpZone === requestedZone);
     const initialZone = hasRequestedZone ? requestedZone : (zoneInput?.value || zoneInput?.selectedOptions?.[0]?.textContent?.trim());
     // The form starts with a selected zone. Keep its map, room image and
@@ -888,7 +899,9 @@
     if (!dialog) return;
     const image = one('img', dialog);
     if (!image) return;
-    const items = () => many('[data-lightbox]', root).filter(button => !button.hidden && button.offsetParent !== null);
+    const scope = root.closest('main') || root;
+    let album = root;
+    const items = () => many('[data-lightbox]', album).filter(button => !button.hidden && button.offsetParent !== null);
     let active = 0;
     let touchStart = null;
     const show = index => {
@@ -909,9 +922,10 @@
     let next = one('[data-tp-gallery-next]', dialog);
     if (!previous) { previous = doc.createElement('button'); previous.type = 'button'; previous.dataset.tpGalleryPrev = ''; previous.className = 'tp-gallery-control tp-gallery-prev'; previous.setAttribute('aria-label', 'Предыдущее фото'); safeText(previous, '←'); dialog.append(previous); }
     if (!next) { next = doc.createElement('button'); next.type = 'button'; next.dataset.tpGalleryNext = ''; next.className = 'tp-gallery-control tp-gallery-next'; next.setAttribute('aria-label', 'Следующее фото'); safeText(next, '→'); dialog.append(next); }
-    root.addEventListener('click', event => {
+    scope.addEventListener('click', event => {
       const trigger = event.target.closest('[data-lightbox]');
-      if (!trigger || !root.contains(trigger)) return;
+      if (!trigger || !scope.contains(trigger)) return;
+      album = trigger.closest('.zone-grid, #gallery-grid') || root;
       const list = items();
       const index = list.indexOf(trigger);
       if (index >= 0) show(index);
@@ -922,11 +936,15 @@
       if (event.key === 'ArrowLeft') { event.preventDefault(); show(active - 1); }
       if (event.key === 'ArrowRight') { event.preventDefault(); show(active + 1); }
     });
-    dialog.addEventListener('touchstart', event => { touchStart = event.changedTouches[0]?.clientX ?? null; }, { passive: true });
+    dialog.addEventListener('touchstart', event => { const touch = event.changedTouches[0]; touchStart = touch ? {x:touch.clientX,y:touch.clientY} : null; }, { passive: true });
+    dialog.addEventListener('touchcancel', () => { touchStart = null; }, { passive: true });
     dialog.addEventListener('touchend', event => {
-      const end = event.changedTouches[0]?.clientX;
-      if (touchStart == null || end == null || Math.abs(end - touchStart) < 45) return;
-      show(active + (end < touchStart ? 1 : -1)); touchStart = null;
+      const end = event.changedTouches[0];
+      const start = touchStart; touchStart = null;
+      if (!start || !end) return;
+      const dx = end.clientX - start.x, dy = end.clientY - start.y;
+      if (Math.abs(dx) < 45 || Math.abs(dx) <= Math.abs(dy)) return;
+      show(active + (dx < 0 ? 1 : -1));
     }, { passive: true });
   }
 

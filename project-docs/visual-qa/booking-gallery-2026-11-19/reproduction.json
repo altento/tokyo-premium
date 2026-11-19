@@ -1,0 +1,12 @@
+{
+  "roomPreview": {
+    "caption": "Интерьер у садового окна",
+    "source": "assets/generated/room-sushi-counter.webp"
+  },
+  "bookingReset": {
+    "zone": "Основной зал",
+    "table": "42",
+    "photo": "assets/generated/room-garden-terrace.webp",
+    "selectedTables": 2
+  }
+}

@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-19 · Booking reset and gallery albums
+
+Reproduced stale table/photo/highlight after native form reset and stale room-preview captions after opening a gallery image. Fixed both and extended the existing floorplan and gallery regressions; both pass in PHP and Pages modes, including focus restoration, filtered album navigation and horizontal/vertical gesture distinction. Added a layout check at 320, 390, 768, 1024, 1440 and 1920 px in both modes, covering actual heading/caption text bounds, photo decoding and form alignment. This found and fixed a clipped mobile gallery caption. Tokyo 2.0 regression also passed (21 PHP/19 static detail routes, cart and interactive modules). [Captures, reproduction and reference comparison](visual-qa/booking-gallery-2026-11-19/comparison.md).
+
 ## 2026-11-19 · Menu and product detail
 
 Focused menu coverage includes seven widths, original-order restore, combined search/category/favorites/sort, quick-view add and mobile navigation in PHP and static modes. Product checks passed for 19 public detail routes in each mode, real photo switching, quantity/add and six widths; no page errors or missing assets. Export produced 37 pages. Full-page images and reference comparisons: [menu/dish evidence](visual-qa/menu-dish-2026-11-19/comparison.md). Restricted Secret Menu routes and live payment were outside this scoped check.

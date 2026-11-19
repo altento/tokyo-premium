@@ -1,5 +1,7 @@
 ## Visual QA evidence
 
+Latest booking/gallery follow-up: [2026-11-19 comparison](booking-gallery-2026-11-19/comparison.md), including complete 1440/390 px captures, selected-table and modal states, baseline reproduction and paired reference images.
+
 Browser captures come from the locally served PHP preview and its generated static Pages export. `npm run test:browser` checks the 11 page types, all 20 dish details, and cart, booking, account, navigation, and menu flows. `npm run test:responsive` checks 320, 360, 375, 390, 430, 768, 1024, 1440, and 1920 px and checks text range rectangles for clipping.
 
 - `01-home-…` through `11-account-…` are the route screenshots. The account route screenshots include the PHP account implementation; use the paired `11-account-static-desktop.jpg` and `11-account-static-mobile.jpg` when comparing the static Pages profile to `design-references/11-account.png`.
