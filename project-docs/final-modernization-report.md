@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-19 · Omakase navigation and presentation
+
+Added sequential course browsing with a visible current-course marker, accessible progress text, endpoint handling and keyboard-compatible mobile thumbnail scrolling. The hero now leads to format comparison; existing query-based booking choices and real catalog images/prices remain intact. Restored red section rules, emphasized the seasonal-format action and replaced implementation-oriented backstage copy with editorial text. Removed an unused session-storage selection path; no stored choice overrides a booking URL. [Actual checks, captures and reference differences](visual-qa/omakase-2026-11-19/comparison.md).
+
 ## 2026-11-19 · Booking and gallery consistency
 
 Booking reset now clears the table preference, SVG/mobile highlights and stale room photograph together. Room previews use their own correctly captioned album; filtered gallery arrows stay within matching photos. Filters expose selected state, vertical gestures no longer turn photos, and mobile captions wrap without clipping. Aligned the booking notice across the form and refined room/gallery spacing, headings and touch targets. PHP/static focused checks and the Tokyo 2.0 regression passed. [Evidence and remaining visual differences](visual-qa/booking-gallery-2026-11-19/comparison.md). This scoped update does not close overall visual acceptance or activate external payment/email services.

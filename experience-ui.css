@@ -553,3 +553,25 @@
  .editorial-page .gallery-tile>span{font-size:clamp(16px,4.6vw,21px);padding-inline:12px}
  .editorial-page .image-lightbox .tp-gallery-control{min-width:44px;min-height:44px}
 }
+/* Omakase: a browsable sequence with a persistent, readable place marker. */
+.editorial-page:has(.omakase-hero) #omakase-tiers{scroll-margin-top:100px}
+.omakase-philosophy-copy h2::after,.tp20-course-heading h2::after,
+.omakase-reservation-copy h2::after,.editorial-page:has(.omakase-hero) .image-story h2::after{
+ content:"";display:block;width:44px;height:2px;margin-top:14px;background:var(--tp-crimson)
+}
+.tp20-course-navigation{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 14px;padding-block:10px;border-block:1px solid var(--tp-line)}
+.tp20-course-navigation button{flex:0 0 auto;min-height:44px;padding:10px 16px;border:1px solid var(--tp-line);border-radius:6px;background:#16120f;color:var(--tp-ivory);cursor:pointer}
+.tp20-course-navigation button:hover:not(:disabled){border-color:var(--tp-gold);background:#291b17}
+.tp20-course-navigation button:disabled{opacity:.4;cursor:default}
+.tp20-course-navigation p{margin:0;color:var(--tp-gold);text-align:center;font-size:.85rem;line-height:1.45;overflow-wrap:anywhere}
+.editorial-page:has(.omakase-hero) .tier-card-featured .button{background:var(--tp-crimson);border-color:var(--tp-crimson);color:#fff8ec}
+.editorial-page:has(.omakase-hero) .tier-card-featured .button:hover{background:#961420}
+@media(max-width:600px){
+ .editorial-page:has(.omakase-hero) .tp20-course-tabs{display:flex;gap:10px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;padding:3px 3px 12px;scrollbar-width:thin;scrollbar-color:var(--tp-gold) #16120f}
+ .editorial-page:has(.omakase-hero) .tp20-course-tabs [data-tp-course],
+ .editorial-page:has(.omakase-hero) .tp20-course-tabs [data-tp-course]:last-child:nth-child(odd){flex:0 0 44%;width:auto;min-width:136px;scroll-snap-align:start}
+ .editorial-page:has(.omakase-hero) .tp20-course-tabs .tp20-course-tab-copy strong{font-size:.8rem;line-height:1.35;overflow-wrap:anywhere}
+ .tp20-course-navigation{gap:8px}
+ .tp20-course-navigation button{padding:10px;font-size:.75rem}
+ .tp20-course-navigation p{font-size:.75rem;max-width:45%}
+}

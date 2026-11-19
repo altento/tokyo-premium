@@ -28,6 +28,7 @@
     "test:motion": "node tests/motion-system-regression.cjs",
     "test:floorplan": "node tests/floorplan-regression.cjs",
     "test:booking-gallery-layout": "node tests/booking-gallery-layout.cjs",
+    "test:omakase-focused": "node tests/omakase-focused.cjs",
     "test:menu-visual": "node tests/menu-visual-smoke.cjs",
     "test:philosophy-visual": "node tests/philosophy-visual.cjs",
     "test:dish-detail-focused": "node tests/dish-detail-focused.cjs"

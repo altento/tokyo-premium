@@ -28,21 +28,16 @@
     if (element) element.textContent = value == null ? '' : String(value);
   }
 
-  function formatHref(link, format) {
-    if (!link || !link.href || !format) return;
-    try {
-      const url = new URL(link.href, doc.baseURI);
-      url.searchParams.set('format', format);
-      link.href = url.pathname + url.search + url.hash;
-    } catch (_) { /* Keep the authored route if the URL cannot be parsed. */ }
-  }
-
   function initOmakase(root) {
     if (started.has(root)) return;
     started.add(root);
     const triggers = many('[data-tp-course]', root);
     const panels = many('[data-tp-course-panel]', root);
     if (!triggers.length || !panels.length) return;
+    const previous = one('[data-tp-course-prev]', root);
+    const next = one('[data-tp-course-next]', root);
+    const position = one('[data-tp-course-current]', root);
+    let selectedIndex = 0;
 
     const activate = (step, focus) => {
       const current = triggers.find(button => String(button.dataset.step) === String(step)) || triggers[0];
@@ -62,6 +57,12 @@
       });
       const progress = one('[data-tp-omakase-progress]', root);
       const index = Math.max(0, triggers.indexOf(current));
+      selectedIndex = index;
+      const stage = one('.tp20-course-tab-stage', current)?.textContent.trim().replace(/^\d+\s*/, '') || '';
+      const positionText = `Подача ${index + 1} из ${triggers.length}${stage ? ` · ${stage}` : ''}`;
+      safeText(position, positionText);
+      if (previous) previous.disabled = index === 0;
+      if (next) next.disabled = index === triggers.length - 1;
       if (progress) {
         progress.setAttribute('role', 'progressbar');
         progress.setAttribute('aria-label', 'Прогресс дегустации Omakase');
@@ -69,10 +70,28 @@
         progress.setAttribute('aria-valuemin', '1');
         progress.setAttribute('aria-valuemax', String(triggers.length));
         progress.setAttribute('aria-valuenow', String(index + 1));
+        progress.setAttribute('aria-valuetext', positionText);
         progress.style.setProperty('--tp-progress', `${percent}%`);
       }
-      if (focus) current.focus();
+      if (focus) current.focus({ preventScroll: true });
+      // Keep the selected thumbnail visible inside the phone's horizontal strip.
+      const strip = current.parentElement;
+      if (strip && strip.scrollWidth > strip.clientWidth) {
+        const itemBox = current.getBoundingClientRect(), stripBox = strip.getBoundingClientRect();
+        const delta = itemBox.left < stripBox.left ? itemBox.left - stripBox.left
+          : itemBox.right > stripBox.right ? itemBox.right - stripBox.right : 0;
+        if (delta) strip.scrollBy({ left: delta, behavior: 'instant' });
+      }
     };
+
+    previous?.addEventListener('click', () => {
+      if (selectedIndex > 0) activate(triggers[selectedIndex - 1].dataset.step, false);
+      if (previous.disabled) next?.focus({ preventScroll: true });
+    });
+    next?.addEventListener('click', () => {
+      if (selectedIndex < triggers.length - 1) activate(triggers[selectedIndex + 1].dataset.step, false);
+      if (next.disabled) previous?.focus({ preventScroll: true });
+    });
 
     triggers[0].parentElement?.setAttribute('role', 'tablist');
     triggers[0].parentElement?.setAttribute('aria-label', 'Этапы дегустации');
@@ -99,13 +118,7 @@
     root.setAttribute('aria-label', root.getAttribute('aria-label') || 'Этапы дегустации Omakase');
     const initial = triggers.find(button => button.getAttribute('aria-selected') === 'true') || triggers[0];
     activate(initial.dataset.step, false);
-    many('[data-tp-omakase-select]', root).forEach(link => {
-      const format = link.dataset.format || link.textContent.trim();
-      if (link instanceof HTMLAnchorElement) formatHref(link, format);
-      link.addEventListener('click', () => {
-        try { global.sessionStorage.setItem('tokyo-selected-omakase', format); } catch (_) { }
-      });
-    });
+    // Format links carry their own booking query; no hidden session choice overrides it.
   }
 
   function initSetBuilder(root) {

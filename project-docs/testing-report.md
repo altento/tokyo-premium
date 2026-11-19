@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-19 · Omakase sequential browsing
+
+Focused PHP/static checks passed: five distinct catalog photographs; sequential controls and endpoint disabled/focus states; tab keyboard navigation; progress/status updates; all three format links and refresh; six widths (320–1920 px), heading text bounds, no horizontal document overflow; reduced/normal-motion interaction; no page errors or failed HTTP responses. Tokyo 2.0 regression passed against the current PHP app and current static export, including 21 PHP/19 static detail routes. Export produced 37 pages; PHP/JS syntax and diff checks passed. A stale local static-server instance was detected and stopped before accepting the final results. [Screenshots and comparison](visual-qa/omakase-2026-11-19/comparison.md).
+
 ## 2026-11-19 · Booking reset and gallery albums
 
 Released as `35bbec6`; [run 44467862326](https://github.com/altento/tokyo-premium/actions/runs/44467862326) passed build and deployment. Fresh public Chromium checks passed booking reset and gallery album/filter behavior at 390/1440 px without page errors. No public data was submitted.
