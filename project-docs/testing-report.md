@@ -1,5 +1,11 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-19 · Marketing mutations and review density
+
+New isolated HTTP/SQLite marketing regression: 18 assertions passed, following a recorded pre-fix run with eight failures. Authenticated Chromium passed stock preservation with an intervening consumption update, promo create/duplicate/edit/disable, collection create/edit/membership, keyboard details controls and six widths. Existing gift quantity (19), pricing (6), loyalty-tier admin (8) and consolidated PHP integration (229) assertions passed. The old tier harness was updated to follow the existing successful POST/redirect/GET flow instead of expecting the HTML in the POST response. Reviews/form regression and four-seed review regression passed, including text clipping, local state, red rules and preserved filtering after the card layout change. Export produced 37 pages. [Admin evidence](visual-qa/admin-final-2026-11-19/comparison.md), [visual measurements](visual-qa/reviews-density-2026-11-19/comparison.md).
+
+Cart-store checks passed 14/14. Tokyo 2.0 passed in separate PHP and static mode runs, including 21 PHP/19 static detail-route checks and interactive commerce/layout scenarios. The initial combined run failed on one transient static console connection-refused resource; it was not counted as a pass. Both modes then passed independently. No Lighthouse or provider/SMTP live transaction was performed.
+
 ## 2026-11-19 · Review/contact lifecycle and validation
 
 `test:review-contact-forms` passed delayed real PHP response/edit scenarios for both forms, unedited reset, error preservation, Cyrillic min/max boundaries (review 19/20/1000/1001 and contact 4/5/1000/1001), static short/whitespace rejection, browser-local saving, safe review display/navigation, persistence, clearing, sorting and a simulated empty moderated topic. Both routes passed document, heading-text-fragment/ancestor-clipping and form-control bounds at 320/390/768/1024/1440/1920 px. Existing `test:reviews` passed; consolidated PHP/SQLite integration passed 229 assertions. Static export produced 37 pages; changed PHP/JS syntax and diff hygiene passed. Full-site motion/commerce suites were not repeated for this review/contact-only change. [Screenshots and scope](visual-qa/reviews-contacts-2026-11-19/comparison.md).

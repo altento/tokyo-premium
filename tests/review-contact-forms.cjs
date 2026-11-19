@@ -111,6 +111,17 @@ async function preserveWhilePending(page, type) {
     await page.goto(`${staticBase}/reviews.html`);
     assert.match(await page.locator('.review-submit-copy').innerText(), /только в этом браузере/);
     assert.doesNotMatch(await page.locator('main').innerText(), /сохраняется в (?:учебной )?базе/);
+    const reviewLayout = await page.locator('[data-review-card]').first().evaluate(card => {
+      const copy = card.querySelector('.review-card-copy').getBoundingClientRect();
+      const photo = card.querySelector('figure').getBoundingClientRect();
+      const heading = document.querySelector('.reviews-list-section h2');
+      const rule = getComputedStyle(heading, '::after');
+      return { photoBelowText: photo.top >= copy.bottom - 1, headingFont: parseFloat(getComputedStyle(heading).fontSize), redRule: rule.content !== 'none' && rule.display !== 'none' && parseFloat(rule.height) > 0 };
+    });
+    assert.equal(reviewLayout.photoBelowText, true, 'compact review cards lead with guest text');
+    assert.ok(reviewLayout.headingFont <= 46, 'review section heading preserves the compact scale');
+    assert.equal(reviewLayout.redRule, true, 'section heading retains the red rule');
+    report.static.layout = reviewLayout;
     const publicAverage = await page.locator('.review-score-band strong').innerText();
     form = await fill(page, 'review', 'Учебный отзыв: <img src=x onerror=window.reviewXss=1> Это только локальная запись.');
     await form.locator('button[type="submit"]').click();

@@ -52,6 +52,8 @@ jobs:
         run: node --test tests/cart-store.test.cjs
       - name: Run PHP and SQLite integrity checks
         run: php tests/php_integrity_integration.php
+      - name: Verify marketing mutations preserve stock and promo identity
+        run: php tests/admin-marketing-integrity.php
       - name: Verify obsolete booking confirmations and outbox migration
         run: php tests/booking-mail-cancellation.php
       - name: Verify FreedomPay signatures and amounts
@@ -167,6 +169,7 @@ jobs:
           TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:ideal-evening-focused
           TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:notification-identity
           npm run test:admin-booking-browser
+          npm run test:admin-marketing-browser
       - name: Save visual QA screenshots
         if: always() && steps.browser_qa.outcome == 'success'
         uses: actions/upload-artifact@v4

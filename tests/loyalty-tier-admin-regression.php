@@ -33,7 +33,10 @@ try{
         $runPhp($seed);
         $post['csrf']=$validCsrf?$token:'invalid-token';
         $request='session_save_path('.$sessionPath.'); session_id('.var_export($sessionId,true).'); $_SERVER["REQUEST_METHOD"]="POST"; $_POST='.var_export($post,true).'; require '.$route.';';
-        return$runPhp($request);
+        $response=$runPhp($request);
+        if($response!=='')return$response;
+        // Successful admin POSTs use PRG; render the next GET with the same session.
+        return$runPhp('session_save_path('.$sessionPath.'); session_id('.var_export($sessionId,true).'); $_SERVER["REQUEST_METHOD"]="GET"; $_GET=[]; require '.$route.';');
     };
 
     $anonymousSession='tp'.bin2hex(random_bytes(12));$sessionIds[]=$anonymousSession;

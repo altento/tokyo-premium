@@ -1,5 +1,11 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-19 · Marketing integrity and compact review composition
+
+Campaign metadata saves no longer reactivate disabled gifts or replace stock consumed since the editor was opened. Existing stock is managed explicitly; changing away from a gift reward stops threshold gifts. Promo create/edit identities are separate, preserving existing codes and usage history; invalid zero/overflow collection IDs cannot clear links or partially update metadata. Expanded promo editors now use the available width. [Admin reproduction, checks and screenshots](visual-qa/admin-final-2026-11-19/comparison.md).
+
+Review cards now lead with guest text and use smaller photo strips. Scoped section spacing, headings and form composition reduce the seeded desktop main content from 3433 to 2669 px without deleting records or form controls. Existing filters, local reviews and red heading rules are retained. [PHP/static captures and comparison](visual-qa/reviews-density-2026-11-19/comparison.md). This is a focused completion step, not a claim of full eleven-page pixel parity or live SMTP/payment activation.
+
 ## 2026-11-19 · Reviews and contact-form integrity
 
 Reproduced and fixed loss of a new review draft while an earlier PHP request finishes. Contact/review forms now clear only unchanged submitted values and retain edited drafts with an explicit unsent notice; errors retain input. Static contact messages enforce the same trimmed length range, while PHP counts Unicode code points instead of UTF-8 bytes. Added local-review navigation, selected-filter ARIA, an explained empty-topic state and a full-width review-form disclosure. [Actual checks, desktop/mobile captures and reference comparison](visual-qa/reviews-contacts-2026-11-19/comparison.md). Local messages/reviews remain browser-only; no production email or public PHP host was configured.

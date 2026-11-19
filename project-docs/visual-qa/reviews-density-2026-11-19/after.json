@@ -1,0 +1,30 @@
+{
+  "php-desktop": {
+    "width": 1440,
+    "documentWidth": 1440,
+    ".reviews-page": 2669,
+    ".reviews-list-section": 1102,
+    ".review-submit-band": 583
+  },
+  "php-mobile": {
+    "width": 390,
+    "documentWidth": 390,
+    ".reviews-page": 4311,
+    ".reviews-list-section": 1930,
+    ".review-submit-band": 1046
+  },
+  "static-desktop": {
+    "width": 1440,
+    "documentWidth": 1440,
+    ".reviews-page": 2669,
+    ".reviews-list-section": 1102,
+    ".review-submit-band": 583
+  },
+  "static-mobile": {
+    "width": 390,
+    "documentWidth": 390,
+    ".reviews-page": 4336,
+    ".reviews-list-section": 1930,
+    ".review-submit-band": 1072
+  }
+}

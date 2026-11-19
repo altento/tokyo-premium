@@ -1,0 +1,98 @@
+{
+    "date": "2026-11-19T10:32:52+00:00",
+    "scope": "isolated HTTP and SQLite marketing integrity",
+    "checks": 14,
+    "failed": 8,
+    "results": [
+        {
+            "name": "unauthenticated marketing mutation denied",
+            "passed": true,
+            "observed": {
+                "status": 403
+            }
+        },
+        {
+            "name": "real HTTP admin login succeeds",
+            "passed": true,
+            "observed": {
+                "status": 302
+            }
+        },
+        {
+            "name": "campaign creation sets initial gift stock",
+            "passed": true,
+            "observed": []
+        },
+        {
+            "name": "metadata save preserves explicitly disabled gift",
+            "passed": false,
+            "observed": {
+                "active": 1,
+                "remaining_quantity": 3,
+                "max_per_order": 2
+            }
+        },
+        {
+            "name": "metadata save cannot replenish stock consumed since editor opened",
+            "passed": false,
+            "observed": {
+                "active": 1,
+                "remaining_quantity": 3,
+                "max_per_order": 2
+            }
+        },
+        {
+            "name": "switching reward to none stops threshold gifts while retaining stored inventory",
+            "passed": false,
+            "observed": {
+                "gift_count": 1,
+                "option_count": 1
+            }
+        },
+        {
+            "name": "explicit stock management also supports promo gift campaigns",
+            "passed": false,
+            "observed": {
+                "remaining_quantity": 3,
+                "active": 1
+            }
+        },
+        {
+            "name": "new promo form cannot overwrite existing code",
+            "passed": false,
+            "observed": {
+                "maximum_uses": 999
+            }
+        },
+        {
+            "name": "explicit promo edit preserves identity and use history",
+            "passed": false,
+            "observed": []
+        },
+        {
+            "name": "stale promo editor cannot create a replacement code",
+            "passed": false,
+            "observed": []
+        },
+        {
+            "name": "promo edit rejects changed primary key",
+            "passed": false,
+            "observed": []
+        },
+        {
+            "name": "invalid CSRF cannot mutate a promo",
+            "passed": true,
+            "observed": []
+        },
+        {
+            "name": "collection create and edit retain item membership",
+            "passed": true,
+            "observed": []
+        },
+        {
+            "name": "invalid collection edit leaves existing record intact",
+            "passed": true,
+            "observed": []
+        }
+    ]
+}

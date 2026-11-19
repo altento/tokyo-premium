@@ -1,0 +1,118 @@
+{
+    "date": "2026-11-19T10:36:32+00:00",
+    "scope": "isolated HTTP and SQLite marketing integrity",
+    "checks": 18,
+    "failed": 0,
+    "results": [
+        {
+            "name": "unauthenticated marketing mutation denied",
+            "passed": true,
+            "observed": {
+                "status": 403
+            }
+        },
+        {
+            "name": "real HTTP admin login succeeds",
+            "passed": true,
+            "observed": {
+                "status": 302
+            }
+        },
+        {
+            "name": "campaign creation sets initial gift stock",
+            "passed": true,
+            "observed": []
+        },
+        {
+            "name": "metadata save preserves explicitly disabled gift",
+            "passed": true,
+            "observed": {
+                "active": 0,
+                "remaining_quantity": 3,
+                "max_per_order": 2
+            }
+        },
+        {
+            "name": "metadata save cannot replenish stock consumed since editor opened",
+            "passed": true,
+            "observed": {
+                "active": 1,
+                "remaining_quantity": 1,
+                "max_per_order": 2
+            }
+        },
+        {
+            "name": "switching reward to none stops threshold gifts while retaining stored inventory",
+            "passed": true,
+            "observed": {
+                "gift_count": 0,
+                "option_count": 0
+            }
+        },
+        {
+            "name": "explicit stock management also supports promo gift campaigns",
+            "passed": true,
+            "observed": {
+                "remaining_quantity": 2,
+                "active": 1
+            }
+        },
+        {
+            "name": "new promo form cannot overwrite existing code",
+            "passed": true,
+            "observed": {
+                "maximum_uses": 10
+            }
+        },
+        {
+            "name": "explicit promo edit preserves identity and use history",
+            "passed": true,
+            "observed": []
+        },
+        {
+            "name": "stale promo editor cannot create a replacement code",
+            "passed": true,
+            "observed": []
+        },
+        {
+            "name": "promo edit rejects changed primary key",
+            "passed": true,
+            "observed": []
+        },
+        {
+            "name": "invalid CSRF cannot mutate a promo",
+            "passed": true,
+            "observed": []
+        },
+        {
+            "name": "collection create and edit retain item membership",
+            "passed": true,
+            "observed": []
+        },
+        {
+            "name": "invalid collection edit leaves existing record intact",
+            "passed": true,
+            "observed": []
+        },
+        {
+            "name": "zero or overflowing collection IDs preserve metadata and links: 0",
+            "passed": true,
+            "observed": []
+        },
+        {
+            "name": "zero or overflowing collection IDs preserve metadata and links: 1,0",
+            "passed": true,
+            "observed": []
+        },
+        {
+            "name": "zero or overflowing collection IDs preserve metadata and links: 999999999999999999999999999999999999999999",
+            "passed": true,
+            "observed": []
+        },
+        {
+            "name": "blank collection membership remains an explicit clear operation",
+            "passed": true,
+            "observed": []
+        }
+    ]
+}

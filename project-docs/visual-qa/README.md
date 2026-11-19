@@ -1,5 +1,9 @@
 ## Visual QA evidence
 
+Marketing integrity: [2026-11-19 evidence](admin-final-2026-11-19/comparison.md), eight reproduced failure conditions, 18 passing HTTP checks, authenticated promo/collection/inventory flows and expanded desktop/mobile promo forms.
+
+Review composition: [2026-11-19 evidence](reviews-density-2026-11-19/comparison.md), measured before/after density and complete PHP/static desktop/mobile screenshots compared with the approved review concept.
+
 Reviews and contacts: [2026-11-19 evidence](reviews-contacts-2026-11-19/comparison.md), reproduced draft loss/short-message acceptance, full desktop/mobile captures, local review and empty-topic states, six-width bounds and PHP/static form checks.
 
 PHP admin/mail follow-up: [2026-11-19 evidence](admin-mail-2026-11-19/comparison.md), stale-email reproduction, pending-review filter, confirmed guest badge and cancelled admin/mobile state.

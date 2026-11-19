@@ -996,7 +996,7 @@ function commerce_quote(PDO $pdo, array $items, array $customSets = [], string $
         $q = $pdo->prepare("SELECT c.*,g.dish_id,g.remaining_quantity,g.max_per_order,d.name,d.price,d.category,d.image_url
             FROM promotion_campaigns c JOIN campaign_gift_options g ON g.campaign_id=c.id
             JOIN dishes d ON d.id=g.dish_id AND d.active=1
-            WHERE c.campaign_type='gift_threshold' AND c.active=1 AND g.active=1
+             WHERE c.campaign_type='gift_threshold' AND c.reward_type='gift_dish' AND c.active=1 AND g.active=1
               AND g.remaining_quantity>0 AND c.minimum_subtotal<=?
             ORDER BY c.minimum_subtotal DESC,c.sort_order,c.id");
         $q->execute([$subtotal]);

@@ -1,5 +1,9 @@
 # Offers, Tokyo Privilege and static-demo limits
 
+## 2026-11-19 · Safe marketing edits
+
+Creating a campaign may initialize gift stock. Editing an existing campaign preserves inventory, per-order limits and activation; newly selected gift items start with zero stock until explicitly configured. All gift-reward campaign types are available in the separate inventory form. Threshold gifts require `reward_type=gift_dish`. New promo creation refuses duplicates; existing codes use an explicit immutable identity and retain redemption history. Collection membership rejects zero/overflow IDs before any metadata/link write; blank input remains the intentional clear action.
+
 ## 2026-11-19 · Quote lifecycle
 
 Offer-code cards link directly to checkout with an explicit promo query in both modes. Removing a code clears its form default and URL, preventing restoration on reset or refresh. Quote state is invalidated by cart, promo, fulfillment, points and gift changes; a revision token and request cancellation prevent delayed answers from restoring stale estimates. Gift-only changes preserve available choices until recalculation. These are UI estimates, and PHP remains authoritative when saving an order. [Focused verification](visual-qa/offers-checkout-2026-11-19/comparison.md).
