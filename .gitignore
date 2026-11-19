@@ -1,6 +1,9 @@
 /data/*.sqlite
 *.sqlite
 *.db
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite.init.lock
 .env
 .env.*
 !.env.example

@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-19 · Payment integrity and home hosting
+
+Local checks passed: 27 isolated payment/router HTTP checks, 229 PHP/SQLite integrity assertions, 19 admin-search/referral assertions, 15 admin set-format assertions and 14 cart checks. PDO SQLite is installed locally and was enabled explicitly. Playwright MCP did not return a result; no fresh visual verification is claimed. Full details and remaining limitations: [final-pass-2026-11-19.md](final-pass-2026-11-19.md).
+
 ## 2026-11-18 booking email triage in admin
 
 Commit `8867502` adds an actionable `booking_emails` filter from the dashboard mail KPI. It lists bookings with pending or failed outbox mail and leaves the existing retry controls available. `php -l admin.php` and `git diff --check` passed. Hosted run [44274931548](https://github.com/altento/tokyo-premium/actions/runs/44274931548) passed targeted PHP/SQLite and admin/account regressions, syntax, smoke checks, static export, and Pages deployment; the long browser suite was skipped by the fast publish profile. Cache-busted public home, account, and dish routes returned HTTP 200. The PHP-only admin itself is not hosted on GitHub Pages.

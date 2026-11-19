@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-19 · Current accelerated checkpoint
+
+Fixed payment-status rendering, ambiguous payment retries and callback ID binding; added a local Windows launcher, protected public-route router and home-hosting guide; restored active section markers for Philosophy and Reviews. Focused local PHP/SQLite, admin, cart and payment/router checks passed. This does not claim complete visual parity or live payment/email activation. See [the current final-pass record](final-pass-2026-11-19.md) for evidence and remaining work.
+
 ## 2026-11-18 · Static SEO discovery
 
 The Pages exporter now generates `sitemap.xml` from its public route list and a matching `robots.txt`, deriving the project URL from `GITHUB_REPOSITORY` with an HTTPS override for other hosts. It excludes the browser-local cart/account, marks both `noindex,follow`, and cannot list locked dish routes because they are omitted from the exporter route table. The tracked `docs/` preview includes the same files. PHP syntax validation passed; GitHub Actions run [44344798353](https://github.com/altento/tokyo-premium/actions/runs/44344798353) built and deployed commit `42428db`. The public `robots.txt` and `sitemap.xml` returned HTTP 200; the published XML parsed successfully and contained 35 routes without cart, account, or restricted dish URLs. The local PHP runtime lacks PDO SQLite, so a local full export was unavailable. No broad test suite was run.

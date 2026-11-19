@@ -908,6 +908,7 @@ if ($exportTable !== '') {
             <span><?=$row['fulfillment'] === 'pickup' ? 'Самовывоз' : 'Доставка'?><?=$row['address'] !== '' ? ' · ' . e($row['address']) : ''?></span>
             <span>Сумма: <?=number_format((int)$row['total'], 0, '.', ' ')?> ₸</span>
             <span>Оплата: <?=e(match((string)$row['payment_status']){'paid'=>'Подтверждена','pending'=>'Ожидает FreedomPay','failed'=>'Не завершена',default=>'Не списывалась'})?><?=!empty($row['payment_reference'])?' · '.e($row['payment_reference']):''?></span>
+            <?php if ($row['status'] === 'cancelled' && $row['payment_status'] === 'paid'): ?><strong role="status">Оплата отменённого заказа получена. Проверьте возврат в кабинете FreedomPay.</strong><?php endif ?>
             <?php if (!empty($row['items_summary'])): ?><span>Состав: <?=e($row['items_summary'])?></span><?php endif ?>
             <?php if (!empty($row['comment'])): ?><span>Комментарий: <?=e($row['comment'])?></span><?php endif ?>
           <?php elseif ($table === 'bookings'): ?>

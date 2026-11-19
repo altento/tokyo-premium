@@ -31,6 +31,7 @@ Test mode is the default. FreedomPay must issue/enable the merchant test credent
 4. PHP signs the FreedomPay request, validates the signed XML response and only redirects to the HTTPS FreedomPay customer host.
 5. Only the signed server callback can set the order to `paid`. A browser return to the site displays the stored status but cannot mark the order paid.
 6. The callback checks the unique provider order/payment IDs, KZT currency and exact server-side amount; repeated notifications do not double-apply a payment.
+7. If payment-page creation times out, its result is uncertain. The attempt stays locked until the provider callback or manual provider reconciliation; a timeout never authorizes a second payment. A callback cannot replace an assigned provider payment ID. A non-rejectable payment received for a cancelled order is recorded as paid and flagged in the admin for refund review.
 
 Use a public HTTPS PHP installation for test callbacks. GitHub Pages has no backend endpoint, so the Pages demo intentionally offers no online payment. No card data or live payment credentials are stored by this project. Refunds, fiscal receipts, fulfillment notifications and provider-downtime reconciliation are not implemented; configure those with the merchant before commercial launch.
 
@@ -38,8 +39,10 @@ Use a public HTTPS PHP installation for test callbacks. GitHub Pages has no back
 
 ```sh
 php tests/freedompay-signature-test.php
+python tests/payment-home-http.py
 php -l payment.php
 php -l lib/freedompay.php
 ```
 
 The signature test uses FreedomPay's published test vector and no live credentials.
+The HTTP check uses a temporary local server and SQLite database with synthetic records; it does not contact FreedomPay. It covers callbacks, repeated notifications, amount/ID mismatch, uncertain-attempt locking, signed status rendering, private-file blocking and active navigation markers. Merchant transactions and provider reconciliation remain prerequisites for live activation.

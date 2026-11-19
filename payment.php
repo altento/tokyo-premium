@@ -22,12 +22,16 @@ if ($action === 'notify') {
     $pdo = db();
     $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
     try {
-        $query = $pdo->prepare('SELECT p.id AS payment_id,p.order_id,p.amount,p.status AS attempt_status,o.status AS order_status,o.payment_status FROM order_payments p JOIN orders o ON o.id=p.order_id WHERE p.provider_order_id=?');
+        $query = $pdo->prepare('SELECT p.id AS payment_id,p.order_id,p.amount,p.provider_payment_id,p.status AS attempt_status,o.status AS order_status,o.payment_status FROM order_payments p JOIN orders o ON o.id=p.order_id WHERE p.provider_order_id=?');
         $query->execute([$providerOrderId]);
         $payment = $query->fetch();
         if (!$payment || $amountMinor !== (int)$payment['amount'] * 100) {
             $pdo->rollBack();
             freedompay_callback_response('error', 'Order or amount mismatch.', $config['secret']);
+        }
+        if (!empty($payment['provider_payment_id']) && !hash_equals((string)$payment['provider_payment_id'], $providerPaymentId)) {
+            $pdo->rollBack();
+            http_response_code(409); exit('Payment identifier mismatch.');
         }
         $duplicate = $pdo->prepare('SELECT id FROM order_payments WHERE provider_payment_id=?');
         $duplicate->execute([$providerPaymentId]);
@@ -36,9 +40,9 @@ if ($action === 'notify') {
             $pdo->rollBack();
             freedompay_callback_response('error', 'Payment identifier is already in use.', $config['secret']);
         }
-        if ($result === '1' && $payment['order_status'] === 'cancelled') {
+        if ($result === '1' && $payment['order_status'] === 'cancelled' && (string)($fields['pg_can_reject'] ?? '0') === '1') {
             $pdo->rollBack();
-            freedompay_callback_response(((string)($fields['pg_can_reject'] ?? '0') === '1') ? 'rejected' : 'error', 'The order was cancelled.', $config['secret']);
+            freedompay_callback_response('rejected', 'The order was cancelled.', $config['secret']);
         }
         if ($result === '1') {
             $update = $pdo->prepare("UPDATE order_payments SET provider_payment_id=?,status='paid',last_error='',updated_at=CURRENT_TIMESTAMP,paid_at=COALESCE(paid_at,CURRENT_TIMESTAMP) WHERE id=?");
@@ -98,14 +102,7 @@ if ($action === 'start') {
             $pdo->commit(); echo json_encode(['ok'=>true,'redirect_url'=>$latest['checkout_url'],'test_mode'=>$config['test_mode']]); exit;
         }
         if ($latest && $latest['status'] === 'creating') {
-            $ageQuery = $pdo->prepare("SELECT CAST(strftime('%s','now') - strftime('%s',?) AS INTEGER)");
-            $ageQuery->execute([(string)$latest['updated_at']]);
-            $age = (int)$ageQuery->fetchColumn();
-            if ($age < 90) {
-                $pdo->commit(); http_response_code(409); echo json_encode(['ok'=>false,'message'=>'Платёжная страница уже создаётся. Подождите немного и повторите попытку.']); exit;
-            }
-            $pdo->prepare("UPDATE order_payments SET status='failed',last_error='Payment page creation timed out.',updated_at=CURRENT_TIMESTAMP WHERE id=? AND status='creating'")->execute([(int)$latest['id']]);
-            $latest['status'] = 'failed';
+            $pdo->commit(); http_response_code(409); echo json_encode(['ok'=>false,'message'=>'Результат создания платежа ещё не подтверждён. Новая попытка заблокирована до проверки, чтобы исключить двойную оплату. Обратитесь к администратору с номером заказа.']); exit;
         }
         $attempt = $latest ? (int)$latest['attempt_no'] + ((string)$latest['status'] === 'failed' ? 1 : 0) : 1;
         $payment = $latest && $latest['status'] !== 'failed' ? $latest : null;
@@ -156,14 +153,13 @@ if ($action === 'start') {
         if (!$redirectParts || strtolower((string)($redirectParts['scheme'] ?? '')) !== 'https' || strtolower((string)($redirectParts['host'] ?? '')) !== 'customer.freedompay.kz' || empty($gateway['pg_payment_id'])) {
             throw new RuntimeException('FreedomPay returned an unexpected checkout destination.');
         }
-        $pdo->prepare("UPDATE order_payments SET provider_payment_id=?,checkout_url=?,status='pending',last_error='',updated_at=CURRENT_TIMESTAMP WHERE id=?")->execute([(string)$gateway['pg_payment_id'],$redirect,$paymentId]);
+        $pdo->prepare("UPDATE order_payments SET provider_payment_id=?,checkout_url=?,status='pending',last_error='',updated_at=CURRENT_TIMESTAMP WHERE id=? AND status='creating'")->execute([(string)$gateway['pg_payment_id'],$redirect,$paymentId]);
         $pdo->prepare("UPDATE orders SET payment_status='pending',payment_provider='freedompay',payment_reference=? WHERE id=? AND payment_status<>'paid'")->execute([(string)$gateway['pg_payment_id'],(int)$order['id']]);
         echo json_encode(['ok'=>true,'redirect_url'=>$redirect,'test_mode'=>$config['test_mode']], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP);
     } catch (Throwable $error) {
-        $pdo->prepare("UPDATE order_payments SET status='failed',last_error='Payment link request failed.',updated_at=CURRENT_TIMESTAMP WHERE id=? AND status='creating'")->execute([$paymentId]);
-        $pdo->prepare("UPDATE orders SET payment_status='failed' WHERE id=? AND payment_status<>'paid'")->execute([(int)$order['id']]);
+        $pdo->prepare("UPDATE order_payments SET last_error='Payment link result is uncertain; provider reconciliation required.',updated_at=CURRENT_TIMESTAMP WHERE id=? AND status='creating'")->execute([$paymentId]);
         error_log('FreedomPay checkout link was not created: ' . $error->getMessage());
-        http_response_code(502); echo json_encode(['ok'=>false,'message'=>'Платёжная страница пока не ответила. Заказ сохранён; повторите попытку оплаты.'], JSON_UNESCAPED_UNICODE);
+        http_response_code(502); echo json_encode(['ok'=>false,'message'=>'Результат платежного запроса пока неизвестен. Заказ сохранён. Не создавайте новый заказ; обратитесь к администратору для проверки оплаты.'], JSON_UNESCAPED_UNICODE);
     }
     exit;
 }
@@ -181,7 +177,9 @@ if ($action === 'return' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $order = $query->fetch();
     if (!$order) { http_response_code(404); exit('Заказ не найден.'); }
     $labels = ['paid'=>'Платёж подтверждён','pending'=>'Проверяем платёж','failed'=>'Платёж не завершён','unpaid'=>'Ожидается оплата'];
-    $page_start('Статус оплаты · Tokyo Premium','Статус платежа по заказу Tokyo Premium.');
+    header('Cache-Control: private, no-store');
+    header('Referrer-Policy: no-referrer');
+    page_start('Статус оплаты · Tokyo Premium','Статус платежа по заказу Tokyo Premium.');
     header_html('');
     ?>
     <main class="editorial-page"><section class="section"><div class="editorial-heading"><div class="kicker">TOKYO PREMIUM · <?= $config['test_mode'] ? 'ТЕСТОВАЯ ОПЛАТА' : 'ОПЛАТА ЗАКАЗА' ?></div><h1><?=e($labels[(string)$order['payment_status']] ?? 'Статус оплаты')?></h1><p>Заказ №<?=(int)$order['id']?> · <?=number_format((int)$order['total'],0,'.',' ')?> ₸</p></div>

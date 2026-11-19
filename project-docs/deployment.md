@@ -9,6 +9,8 @@ Updated 2026-11-19
 
 ### Local static preview
 
+For the full PHP/SQLite application on a home Windows computer, use `Start-Tokyo.ps1` and follow [home-hosting.md](home-hosting.md). The launcher enables installed PDO SQLite, keeps data outside the repository, and uses a public-route allowlist router. Private Tailscale Serve access requires both devices to join the same network. Payment callbacks require a public HTTPS route and merchant configuration.
+
 From the repository root, serve the exported `docs/` folder:
 
 ```powershell
