@@ -1,0 +1,13 @@
+{
+  "release": "9fb34fc",
+  "base": "https://altento.github.io/tokyo-premium/",
+  "routes": {
+    "index.html": 200,
+    "account.html": 200,
+    "admin.php": 404,
+    "schema.sql": 404
+  },
+  "pageErrors": [],
+  "phpAdminVerification": "local isolated browser and PHP tests only",
+  "result": "passed"
+}

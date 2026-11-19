@@ -22,3 +22,9 @@ Baseline `a2bc130`; restoration branch `backup/admin-mail-20261119`.
 - PHP-mode `test:tokyo20` passed 21 detail routes and cart/interactive flows. Static export produced 37 pages; PHP/JS syntax and diff hygiene passed.
 
 The admin is PHP-only. Public Pages contains the generated UI demo, not admin/PHP/SQLite files. These checks do not activate production email or prove deployment to a public PHP host.
+
+## Publication
+
+Implementation `9fb34fc` was pushed to main. [Actions 44489862510](https://github.com/altento/tokyo-premium/actions/runs/44489862510) passed build and Pages deployment, including the new migration/cancellation test in the fast profile. Optional full browser CI was skipped; authenticated PHP browser checks ran locally.
+
+Fresh public Chromium loaded home/account with HTTP 200 and no page errors. Public `admin.php` and `schema.sql` returned 404 as expected for the static artifact. [Public verification](public-verification.json). No public PHP admin deployment is claimed.
