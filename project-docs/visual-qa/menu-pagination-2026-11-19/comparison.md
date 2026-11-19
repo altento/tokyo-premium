@@ -22,3 +22,9 @@ Opened `design-references/02-menu.png` and inspected [ascending desktop catalog]
 The approved concept defaults to a sushi section and uses different food/ornament arrangements. This view deliberately shows all categories sorted by price; it is a functional state comparison, not a pixel-parity claim or new eleven-page redesign. No photos were generated or replaced. Full-page captures temporarily normalize the sticky header and decode lazy images/fonts, without changing the shipped header.
 
 Publication/public verification will be appended after the release.
+
+## Publication
+
+Implementation `270e6ef` was pushed to main. [Actions 44540680387](https://github.com/altento/tokyo-premium/actions/runs/44540680387) passed its configured build/server checks and Pages deployment. Optional full browser CI was skipped; local PHP/static browser results are recorded above.
+
+The same focused menu test then passed in static-only mode against the actual public Pages origin, including complete pagination/order, composed filters, preserved favorite page, accessible modal status/mobile bounds/Escape focus and strict UI quantity acceptance. [Public verification](public-verification.json) records the origin, commit, time, actual selected test mode and zero page errors. All cart/favorite mutations used a fresh browser-local fixture. This does not claim a public PHP host or a new server pricing/payment test.

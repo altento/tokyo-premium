@@ -1,0 +1,31 @@
+{
+  "status": "passed",
+  "modes": [
+    {
+      "mode": "static",
+      "catalogCount": 19,
+      "result": "passed",
+      "pageErrors": []
+    }
+  ],
+  "checks": [
+    "global sorted pagination",
+    "default order restored",
+    "trimmed search/category/sort",
+    "favorite refresh retains page",
+    "ARIA/filter/empty status",
+    "modal accessibility feedback",
+    "quantity overflow rejected without partial add"
+  ],
+  "widths": [
+    320,
+    390,
+    768,
+    1024,
+    1440,
+    1920
+  ],
+  "implementation": "270e6ef",
+  "checkedAt": "2026-11-19T14:10:59.6636079Z",
+  "origin": "https://altento.github.io/tokyo-premium"
+}
