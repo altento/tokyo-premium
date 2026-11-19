@@ -91,7 +91,7 @@ document.addEventListener('submit', async event => {
       custom_sets: payload.custom_sets
     });
   } else if (type === 'booking') {
-    rows.unshift({ name: data.name, date: data.date, time: data.time, guests: data.guests, zone: data.zone, table: data.table, format: data.format || '', demo: true });
+    rows.unshift({ demoId: window.crypto?.randomUUID?.() || 'booking-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2), createdAt: new Date().toISOString(), name: data.name, date: data.date, time: data.time, guests: data.guests, zone: data.zone, table: data.table, format: data.format || '', demo: true });
   } else if (type === 'review') {
     if (String(data.body || '').trim().length < 20) {
       status.textContent = 'Добавьте отзыв не короче 20 символов.';

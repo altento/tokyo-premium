@@ -8,23 +8,39 @@ if(document.querySelector('.account-demo-page')&&!document.querySelector('link[d
 document.addEventListener('DOMContentLoaded',()=>{
  const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const read=key=>{try{return JSON.parse(localStorage.getItem(key)||'[]')}catch{return[]}};
- const readRows=key=>{const value=read(key);return Array.isArray(value)?value.filter(row=>row&&typeof row==='object'):[]};
+ const read=key=>{try{const value=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(value)?value:[]}catch{return[]}};
+ const readRows=key=>read(key).filter(row=>row&&typeof row==='object'&&!Array.isArray(row));
  const writeStatus=(form,msg)=>{const s=$('.form-status',form);if(s){s.textContent=msg;s.className='form-status success'}};
  const staticMode=Boolean($('.account-demo-page'));
  const menuHref=staticMode?'menu.html':'menu.php';
  const bookingHref=staticMode?'booking.html':'pages.php?page=booking';
+ const notificationRows=(key,kind,readIds)=>{
+  const rows=readRows(key);let changed=false;
+  const bookingKey=row=>[row.date,row.time,row.name,row.zone].join('|');
+  rows.forEach((row,index)=>{
+   if(row.demoId||(kind==='order'&&(row.orderId||row.createdAt)))return;
+   const prefix=kind==='booking'?'booking:'+bookingKey(row)+'|':null;
+   const oldId=kind==='booking'?prefix+index:'order:'+index;
+   const uniqueLegacyBooking=prefix&&rows.filter(other=>bookingKey(other)===bookingKey(row)).length===1;
+   const wasRead=readIds.has(oldId)||(uniqueLegacyBooking&&[...readIds].some(id=>id.startsWith(prefix)&&/^\d+$/.test(id.slice(prefix.length))));
+   row.demoId=window.crypto?.randomUUID?.()||'demo-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
+   if(wasRead)readIds.add(kind+':'+row.demoId);
+   changed=true;
+  });
+  if(changed){try{localStorage.setItem(key,JSON.stringify(rows));localStorage.setItem('tokyo-demo-read-notifications',JSON.stringify([...readIds]))}catch{/* Reading history still works if browser storage is unavailable. */}}
+  return rows;
+ };
  const demoNotifications=()=>{
-  const orders=readRows('tokyo-demo-orders').map((row,index)=>({id:'order:'+String(row.orderId||row.createdAt||index),kind:'order',title:'Демо-заказ сохранён',message:'Заказ '+String(row.orderId||'из истории')+' сохранён только в этом браузере. Он не оплачен и не отправлен ресторану.',date:String(row.date||'')}));
-  const bookings=readRows('tokyo-demo-bookings').map((row,index)=>({id:'booking:'+String(row.demoId||[row.date,row.time,row.name,row.zone,index].join('|')),kind:'booking',title:'Демо-запрос на бронь сохранён',message:'Запрос существует только в этом браузере; ресторан его не получил, стол не подтверждён.',date:[row.date,row.time].filter(Boolean).join(' · ')}));
   const readState=read('tokyo-demo-read-notifications');
   const readIds=new Set(Array.isArray(readState)?readState.filter(value=>typeof value==='string'):[]);
-  return [...orders,...bookings].map(row=>({...row,read:readIds.has(row.id)})).sort((a,b)=>b.id.localeCompare(a.id));
+  const orders=notificationRows('tokyo-demo-orders','order',readIds).map(row=>({id:'order:'+String(row.demoId||row.orderId||row.createdAt),kind:'order',created:Date.parse(row.createdAt)||0,title:'Демо-заказ сохранён',message:'Заказ '+String(row.orderId||'из истории')+' сохранён только в этом браузере. Он не оплачен и не отправлен ресторану.',date:String(row.date||'')}));
+  const bookings=notificationRows('tokyo-demo-bookings','booking',readIds).map(row=>({id:'booking:'+String(row.demoId),kind:'booking',created:Date.parse(row.createdAt)||0,title:'Демо-запрос на бронь сохранён',message:'Запрос существует только в этом браузере; ресторан его не получил, стол не подтверждён.',date:[row.date,row.time].filter(Boolean).join(' · ')}));
+  return [...orders,...bookings].map(row=>({...row,read:readIds.has(row.id)})).sort((a,b)=>b.created-a.created);
  };
  function render(){
   const orders=$('#demo-orders'),bookings=$('#demo-bookings');
   if(orders){
-   const rows=read('tokyo-demo-orders').filter(row=>row&&typeof row==='object');
+   const rows=readRows('tokyo-demo-orders');
    const dishes=window.DISHES||[];
    orders.innerHTML=rows.length?rows.map(row=>{
     const items=Array.isArray(row.items)?row.items.filter(item=>item&&typeof item==='object').slice(0,30):[];
@@ -47,7 +63,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     return '<article class="demo-order account-demo-order">'+preview+'<div class="demo-order-content"><div class="account-demo-order-head"><div class="account-demo-order-title">'+demoBadge+'<small>'+esc(row.orderId||'Демо-заказ')+'</small><strong>'+esc(row.date)+'</strong></div><div class="account-demo-order-total"><span>Итого · демо</span><strong>'+amountLabel+'</strong></div></div><p class="account-demo-order-meta">'+esc(row.name||'Гость')+' · '+Number(row.count||0)+' позиций · '+esc(row.fulfillment==='pickup'?'Самовывоз':'Демо-доставка')+'</p>'+(allLines?'<details class="demo-order-details"><summary>Состав заказа · '+lineCount+' позиций</summary><ul class="demo-order-items">'+allLines+'</ul></details>':'<p class="menu-note">Состав старого заказа недоступен.</p>')+(lineCount?'<button class="button secondary account-demo-repeat" type="button" data-repeat-order="'+esc(repeatData)+'">Собрать заказ снова</button>':'')+'</div></article>';
    }).join(''):'<div class="account-empty-state"><p>Здесь появятся локальные учебные заказы после демонстрационного оформления. Сейчас история пуста.</p><a class="button secondary" href="'+menuHref+'">Открыть меню ↗</a></div>'
   }
-  if(bookings){const rows=read('tokyo-demo-bookings');bookings.innerHTML=rows.length?rows.map(row=>'<article><div>'+(row.demo===true?'<span class="account-demo-record-badge">Учебный пример · локально</span>':'')+'<strong>'+esc(row.date)+' · '+esc(row.time)+'</strong><p>'+esc(row.name)+' · гостей: '+esc(row.guests)+' · '+esc(row.zone||'Зона не выбрана')+(row.format?' · формат Omakase «'+esc(row.format)+'»':'')+(row.table?' · стол '+esc(row.table):'')+'</p></div></article>').join(''):'<div class="account-empty-state"><p>Запросов на бронирование пока нет. Выберите дату и предпочтительную зону; демоверсия не резервирует стол.</p><a class="button secondary" href="'+bookingHref+'">Выбрать дату и зону ↗</a></div>'}
+  if(bookings){const rows=readRows('tokyo-demo-bookings');bookings.innerHTML=rows.length?rows.map(row=>'<article><div>'+(row.demo===true?'<span class="account-demo-record-badge">Учебный пример · локально</span>':'')+'<strong>'+esc(row.date)+' · '+esc(row.time)+'</strong><p>'+esc(row.name)+' · гостей: '+esc(row.guests)+' · '+esc(row.zone||'Зона не выбрана')+(row.format?' · формат Omakase «'+esc(row.format)+'»':'')+(row.table?' · стол '+esc(row.table):'')+'</p></div></article>').join(''):'<div class="account-empty-state"><p>Запросов на бронирование пока нет. Выберите дату и предпочтительную зону; демоверсия не резервирует стол.</p><a class="button secondary" href="'+bookingHref+'">Выбрать дату и зону ↗</a></div>'}
   const notificationList=$('#demo-notifications');
   const notifications=demoNotifications();
   if(notificationList){notificationList.innerHTML=notifications.length?notifications.map(item=>'<article class="account-notification-card '+(item.read?'is-read':'is-unread')+'"><div class="account-notification-copy"><div class="account-notification-heading"><h3>'+esc(item.title)+'</h3><span class="account-notification-state">'+(item.read?'Прочитано':'Новое · демо')+'</span></div><p>'+esc(item.message)+'</p><time>'+esc(item.date)+'</time></div><div class="account-notification-actions"><a class="account-inline-link" href="'+(item.kind==='booking'?'booking.html':'cart.html')+'">'+(item.kind==='booking'?'К бронированию ↗':'К корзине ↗')+'</a>'+(item.read?'':'<button class="button secondary" type="button" data-demo-notification-read="'+esc(item.id)+'">Отметить прочитанным</button>')+'</div></article>').join(''):'<div class="account-empty-state"><p>Уведомления появятся после сохранения заказа или запроса на бронирование в этом браузере.</p></div>'}

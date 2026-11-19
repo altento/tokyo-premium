@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-19 · Persistent local notifications
+
+Local booking read receipts now follow durable record IDs rather than array positions. New browser-only bookings receive an ID and creation timestamp; older records are upgraded while retaining identifiable legacy read receipts. Malformed array storage no longer breaks local history/read controls. Notifications sort by known creation time rather than random IDs. [Checks and captures](visual-qa/notifications-2026-11-19/comparison.md). PHP confirmation, authorization and server notification logic are unchanged; local records do not imply restaurant confirmation.
+
 ## 2026-11-19 · Ideal Evening recommendation integrity
 
 Plant preference screens named animal ingredients across mains, pairings and set fillers, including ambiguous dashi, and presents an honest empty state when needed. Category-aware classification keeps matcha desserts out of beverage fallback. Guest count is required. Added answer editing without losing selections, explicit focus movement and booking access after a result; edit/reset clears old result/booking context. Improved result-card layout, button wrapping and parchment-note contrast. [Actual checks and captures](visual-qa/ideal-evening-2026-11-19/comparison.md). This remains a descriptive rules-based helper, not dietary certification or live restaurant availability.
