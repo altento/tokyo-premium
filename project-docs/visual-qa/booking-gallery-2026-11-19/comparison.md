@@ -28,3 +28,9 @@ Baseline: `be6ed61`; restoration branch `backup/booking-gallery-20261119`. Appro
 Booking keeps the reference's dark photographic hero, red actions, zone/table choice, room image and scenic FAQ, but remains taller, with a combined form/map rather than the PNG's two-step composition. Its SVG shows 42 preferences instead of the reference's illustrated floorplan; it does not claim live availability. Gallery keeps the hero, four individual room cards and eight-image grid; photographs, ornaments and footer differ. The reference's unsupported 360-degree tour is intentionally absent. Full pixel parity is not claimed.
 
 Real email requires configured SMTP and a PHP host; real payment requires configured merchant credentials and HTTPS. Neither is activated by this update. GitHub Pages booking remains browser-local.
+
+## Publication
+
+Implementation commit `35bbec6` was pushed to main. [GitHub Actions run 44467862326](https://github.com/altento/tokyo-premium/actions/runs/44467862326) completed build and Pages deployment successfully. The fast CI profile ran its PHP/SQLite/cart/syntax/smoke/export checks; its optional full browser suite was skipped. The browser checks described above ran locally against both modes.
+
+After deployment, fresh Chromium opened cache-busted public booking/gallery routes at 390 and 1440 px. Native form reset, cleared table/highlights, default zone, room captions/arrows, gallery filter accessibility/state and persistent room cards all passed without page errors. No public booking was submitted. [Public verification record](public-verification.json).

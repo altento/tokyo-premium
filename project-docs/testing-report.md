@@ -2,6 +2,8 @@
 
 ## 2026-11-19 · Booking reset and gallery albums
 
+Released as `35bbec6`; [run 44467862326](https://github.com/altento/tokyo-premium/actions/runs/44467862326) passed build and deployment. Fresh public Chromium checks passed booking reset and gallery album/filter behavior at 390/1440 px without page errors. No public data was submitted.
+
 Reproduced stale table/photo/highlight after native form reset and stale room-preview captions after opening a gallery image. Fixed both and extended the existing floorplan and gallery regressions; both pass in PHP and Pages modes, including focus restoration, filtered album navigation and horizontal/vertical gesture distinction. Added a layout check at 320, 390, 768, 1024, 1440 and 1920 px in both modes, covering actual heading/caption text bounds, photo decoding and form alignment. This found and fixed a clipped mobile gallery caption. Tokyo 2.0 regression also passed (21 PHP/19 static detail routes, cart and interactive modules). [Captures, reproduction and reference comparison](visual-qa/booking-gallery-2026-11-19/comparison.md).
 
 ## 2026-11-19 · Menu and product detail
