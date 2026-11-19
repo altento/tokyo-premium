@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-19 · Set-builder summary
+
+Reproduced three selected dishes with a valid composition but sidebar total 0 ₸, count 0/8 and no progress value. The builder now updates summary elements in the shared layout rather than searching only inside its catalog. Extended `test:set-draft` passed in PHP/Pages for price/count/progress, reload, per-item/portion/distinct limits, clear, cart transfer, invalid draft IDs and preserving cart contents when a draft is cleared. Six-width checks include heading bounds, overflow, mobile summary navigation and hiding the bottom bar with open navigation. Tokyo 2.0 regression passed (21 PHP/19 static details plus cart and interactive flows); final price wrapping and menu-overlay checks were verified by the focused suite. Export produced 37 pages. [Reproduction and visual evidence](visual-qa/set-builder-2026-11-19/comparison.md).
+
 ## 2026-11-19 · Offer quote consistency
 
 Released as `5946e9c`; [Actions 44471466815](https://github.com/altento/tokyo-premium/actions/runs/44471466815) passed build and deployment. Public Chromium passed promo-to-cart, edit invalidation, removal/reset/refresh and recalculation without a code at 390/1440 px; no page errors or public order submission.

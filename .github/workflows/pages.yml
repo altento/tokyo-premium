@@ -160,6 +160,7 @@ jobs:
           TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:motion
           TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:omakase-focused
           TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:offer-quote-state
+          TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:set-draft
       - name: Save visual QA screenshots
         if: always() && steps.browser_qa.outcome == 'success'
         uses: actions/upload-artifact@v4

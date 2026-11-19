@@ -131,8 +131,9 @@
     const minDistinct = Math.max(1, Number(root.dataset.minDistinct) || 3);
     const maxDistinct = Math.max(minDistinct, Number(root.dataset.maxDistinct) || 5);
     const maxQuantity = Math.max(maxDistinct, Number(root.dataset.maxQuantity) || 8);
-    const status = one('[data-tp-status]', root);
-    const composition = one('[data-tp-set-composition]', root.parentElement || doc);
+    const layout = root.closest('.tp-set-layout') || root;
+    const status = one('[data-tp-status]', layout);
+    const composition = one('[data-tp-set-composition]', layout);
 
     const persistDraft = () => {
       try {
@@ -176,10 +177,15 @@
         const qty = selected.get(id) || 0;
         card.classList.toggle('is-selected', qty > 0);
         if (card.matches('button,[role="button"]')) card.setAttribute('aria-pressed', String(qty > 0));
+        many('[data-tp-set-step]', card).forEach(button => {
+          const increases = Number(button.dataset.tpSetStep) > 0;
+          button.disabled = increases ? qty >= 4 || pieces >= maxQuantity || (!qty && selected.size >= maxDistinct) : qty === 0;
+        });
         const addButton = one('[data-tp-set-add-dish]', card);
         if (addButton) addButton.setAttribute('aria-label', qty ? `Добавить ещё ${dishIndex().get(id)?.name || 'блюдо'}; выбрано ${qty}` : `Добавить ${dishIndex().get(id)?.name || 'блюдо'} в сет`);
       });
-      many('[data-tp-set-total]', root).forEach(output => safeText(output, money(estimate)));
+      many('[data-tp-set-total]', layout).forEach(output => safeText(output, money(estimate)));
+      many('[data-tp-set-mobile-total]', layout).forEach(output => safeText(output, money(estimate)));
       if (composition) {
         composition.replaceChildren();
         composition.setAttribute('aria-live', 'polite');
@@ -205,7 +211,7 @@
         }
       }
       const percent = Math.min(100, Math.round((pieces / maxQuantity) * 100));
-      many('[data-tp-set-progress]', root).forEach(progress => {
+      many('[data-tp-set-progress]', layout).forEach(progress => {
         progress.setAttribute('role', 'progressbar');
         progress.setAttribute('aria-label', 'Комплектация сета');
         progress.style.setProperty('--tp-progress', `${percent}%`);
@@ -214,9 +220,11 @@
         progress.setAttribute('aria-valuenow', String(pieces));
         progress.setAttribute('aria-valuetext', `${selected.size} из ${maxDistinct} разных блюд; ${pieces} из ${maxQuantity} порций`);
       });
-      const add = one('[data-tp-set-add]', root);
+      const add = one('[data-tp-set-add]', layout);
       if (add) add.disabled = selected.size < minDistinct || selected.size > maxDistinct || pieces > maxQuantity;
-      many('[data-tp-set-count]', root).forEach(output => safeText(output, `${selected.size} / ${maxDistinct} блюд · ${pieces} / ${maxQuantity} порций`));
+      const clear = one('[data-tp-set-clear]', layout);
+      if (clear) clear.disabled = selected.size === 0;
+      many('[data-tp-set-count]', layout).forEach(output => safeText(output, `${selected.size} / ${maxDistinct} блюд · ${pieces} / ${maxQuantity} порций`));
       if (status && !status.textContent) status.textContent = `Выбрано блюд: ${selected.size} из ${maxDistinct}; порций: ${pieces} из ${maxQuantity}. Цена предварительная.`;
     };
 
@@ -226,8 +234,8 @@
       const current = selected.get(id) || 0;
       const total = Array.from(selected.values()).reduce((sum, qty) => sum + qty, 0);
       const next = Math.max(0, Math.min(4, current + delta));
-      if (delta > 0 && total >= maxQuantity) { setStatus(root, `В этом варианте не больше ${maxQuantity} порций.`); return; }
-      if (delta > 0 && !current && selected.size >= maxDistinct) { setStatus(root, `В этом варианте не больше ${maxDistinct} разных блюд.`); return; }
+      if (delta > 0 && total >= maxQuantity) { setStatus(layout, `В этом варианте не больше ${maxQuantity} порций.`); return; }
+      if (delta > 0 && !current && selected.size >= maxDistinct) { setStatus(layout, `В этом варианте не больше ${maxDistinct} разных блюд.`); return; }
       if (next) selected.set(id, next); else selected.delete(id);
       persistDraft();
       if (status) status.textContent = `${dish.name}: ${next ? `выбрано ${next}` : 'удалено из сета'}. Черновик сохранён в этом браузере; ${staticDemo ? 'стоимость — локальная оценка без серверной проверки.' : 'цена ориентировочная и перепроверяется сервером.'}`;
@@ -248,14 +256,14 @@
       }
     });
 
-    const addSet = one('[data-tp-set-add]', root);
+    const addSet = one('[data-tp-set-add]', layout);
     addSet?.addEventListener('click', event => {
       event.preventDefault();
       const items = Array.from(selected, ([id, qty]) => ({ id, qty }));
       const quantity = items.reduce((sum, row) => sum + row.qty, 0);
       const distinct = items.length;
       if (distinct < minDistinct || distinct > maxDistinct || quantity > maxQuantity) {
-        setStatus(root, `Вариант требует ${minDistinct}–${maxDistinct} разных блюд и не больше ${maxQuantity} порций.`);
+        setStatus(layout, `Вариант требует ${minDistinct}–${maxDistinct} разных блюд и не больше ${maxQuantity} порций.`);
         return;
       }
       if (items.length === 0) return;
@@ -279,20 +287,20 @@
           selected.clear();
           persistDraft();
           render();
-          setStatus(root, staticDemo
+          setStatus(layout, staticDemo
             ? 'Сет добавлен в локальную корзину браузера. Стоимость остаётся демонстрационной и не проверяется сервером.'
             : 'Сет добавлен в общую корзину. Итоговая цена будет подтверждена сервером.');
           return;
         }
         const reason = result && typeof result === 'object' && typeof result.message === 'string' ? result.message : 'Корзина отклонила этот состав. Проверьте ограничения сета и попробуйте ещё раз.';
-        setStatus(root, reason);
+        setStatus(layout, reason);
       };
       detail.respond = respond;
       const customEvent = new CustomEvent('tokyo:custom-set:add', { bubbles: true, cancelable: true, detail });
       doc.dispatchEvent(customEvent);
       if (responded) return;
       if (customEvent.defaultPrevented) {
-        setStatus(root, 'Проверяем добавление набора в корзину…');
+        setStatus(layout, 'Проверяем добавление набора в корзину…');
         timeout = global.setTimeout(() => respond({ ok: false, message: 'Корзина не подтвердила добавление. Проверьте состав и повторите попытку.' }), 8000);
         return;
       }
@@ -301,13 +309,19 @@
         try { result = global.TokyoCart.addCustomSet(detail); }
         catch (error) { respond({ ok: false, message: error?.message || 'Не удалось добавить сет в корзину.' }); return; }
         if (result && typeof result.then === 'function') {
-          setStatus(root, 'Проверяем добавление набора в корзину…');
+          setStatus(layout, 'Проверяем добавление набора в корзину…');
           timeout = global.setTimeout(() => respond({ ok: false, message: 'Корзина не подтвердила добавление. Проверьте состав и повторите попытку.' }), 8000);
           result.then(respond).catch(error => respond({ ok: false, message: error?.message || 'Не удалось добавить сет в корзину.' }));
         } else respond(result);
         return;
       }
-      setStatus(root, 'Состав рассчитан для предпросмотра. Корзина не подтвердила добавление этого варианта.');
+      setStatus(layout, 'Состав рассчитан для предпросмотра. Корзина не подтвердила добавление этого варианта.');
+    });
+
+    const clear = one('[data-tp-set-clear]', layout);
+    clear?.addEventListener('click', () => {
+      selected.clear(); persistDraft(); render();
+      setStatus(layout, 'Состав очищен. Черновик удалён из этого браузера.');
     });
 
     render();

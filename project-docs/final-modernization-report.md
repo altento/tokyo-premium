@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-19 · Set-builder state and mobile access
+
+Fixed the stale summary: price, portions, distinct count and progress now share the catalog's state. The one add-set action and status are beside the composition; draft clearing preserves accepted cart sets. Controls disable at actual limits, and the format heading no longer assumes exactly three admin-managed formats. The summary precedes the catalog on phones, with a fixed total/jump link that hides under open navigation; desktop keeps the two-column layout. [Checks, screenshots and remaining limits](visual-qa/set-builder-2026-11-19/comparison.md). Server set validation/pricing remain unchanged.
+
 ## 2026-11-19 · Offers and checkout state
 
 Checkout estimates now invalidate when their inputs or basket change, cancel pending requests and reject stale responses. Gift selection/quantity invalidates the price without discarding valid options. Added explicit promo removal that survives reset/refresh and a direct offer-code-to-cart link in PHP and Pages. The exporter maps the promo query while retaining its PHP-link guard. Offers subheadings retain the red rule. Server pricing, promotion eligibility and order persistence are unchanged. [Actual checks, captures and remaining limits](visual-qa/offers-checkout-2026-11-19/comparison.md).

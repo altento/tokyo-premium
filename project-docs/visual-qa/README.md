@@ -1,5 +1,7 @@
 ## Visual QA evidence
 
+Set-builder summary: [2026-11-19 evidence](set-builder-2026-11-19/comparison.md), before-fix values and desktop view, complete desktop/mobile layouts, the native mobile bottom bar and open-navigation state.
+
 Offers/quote consistency: [2026-11-19 evidence](offers-checkout-2026-11-19/comparison.md), before-fix state values, complete offers and discounted-cart captures at 1440/390 px, and a paired cart-concept comparison.
 
 Omakase browsing update: [2026-11-19 comparison](omakase-2026-11-19/comparison.md), complete 1440/390 px captures with course 2 selected, baseline capture and paired approved-reference comparison.

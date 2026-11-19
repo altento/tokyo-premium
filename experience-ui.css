@@ -585,3 +585,26 @@
 .tp20-offers-page .tp20-secret-intro h2::after,.tp20-offers-page .tp20-privilege-cta h2::after{
  content:"";display:block;width:44px;height:2px;margin-top:14px;background:var(--tp-crimson)
 }
+/* The set summary shares one state with its catalog and remains easy to reach. */
+.tp20-builder-page .tp-set-catalog{grid-column:1;grid-row:1}
+.tp20-builder-page .tp-set-selection{grid-column:2;grid-row:1;top:96px;scroll-margin-top:100px}
+.tp20-builder-page .tp20-builder-action .button{width:100%;justify-content:center}
+.tp20-builder-page .tp20-builder-action{gap:8px}
+.tp20-builder-page .tp20-builder-action span{font-size:.75rem;line-height:1.5}
+.tp20-builder-page .tp20-set-card-bottom{flex-wrap:wrap;row-gap:10px}
+.tp20-builder-page .tp20-set-card-bottom>strong{white-space:nowrap;flex-shrink:0}
+.tp20-builder-page .tp-set-dish-controls{flex-shrink:0}
+.tp-set-clear{min-height:44px;padding:10px 0;border:0;background:transparent;color:var(--tp-gold);text-decoration:underline;text-underline-offset:4px;cursor:pointer}
+.tp-set-clear:disabled,.tp-set-dish-controls button:disabled{opacity:.4;cursor:default}
+.tp-set-dish-controls button:disabled:hover{background:#0a0908;transform:none}
+.tp-set-clear:focus-visible,.tp-set-mobile-summary:focus-visible{outline:2px solid var(--tp-gold);outline-offset:4px}
+.tp-set-mobile-summary{display:none}
+@media(max-width:900px){
+ .tp20-builder-page .tp-set-layout{grid-template-columns:1fr}
+ .tp20-builder-page .tp-set-selection{grid-column:1;grid-row:1;position:static}
+ .tp20-builder-page .tp-set-catalog{grid-column:1;grid-row:2}
+ .tp20-builder-page{padding-bottom:80px}
+ .tp-set-mobile-summary{display:flex;position:fixed;inset:auto 12px max(10px,env(safe-area-inset-bottom));z-index:30;min-height:56px;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border:1px solid var(--tp-gold);border-radius:10px;background:#15100f;color:var(--tp-ivory);box-shadow:0 8px 24px #0009;font-size:.8rem}
+ .tp-set-mobile-summary strong{display:block;color:var(--tp-gold);font-size:1rem}
+ .nav-open .tp-set-mobile-summary{display:none}
+}
