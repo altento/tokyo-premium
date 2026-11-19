@@ -220,7 +220,7 @@ async function run(options = {}) {
     await page.locator('#full-guest-name').fill('Гость бронирования QA');
     await page.locator('#full-guest-phone').fill('+77010000003');
     await page.locator('#full-guest-email').fill(`booking-qa-${Date.now()}@example.test`);
-    await page.locator('#full-guest-date').fill(await page.locator('#full-guest-date').getAttribute('min'));
+    await page.locator('#full-guest-date').fill(await page.locator('#full-guest-date').evaluate(input=>{const day=new Date(input.min+'T00:00:00Z');day.setUTCDate(day.getUTCDate()+1);return day.toISOString().slice(0,10)}));
     const bookingKeys = [];
     let bookingAttempt = 0;
     await page.route('**/api.php', async route => {

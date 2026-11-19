@@ -1,0 +1,15 @@
+{
+  "restaurant_clock": "2026-11-19T18:29:52+05:00",
+  "requested_date": "2026-11-19",
+  "requested_time": "12:00",
+  "status": 201,
+  "body": {
+    "ok": true,
+    "message": "Заявка сохранена. Email находится в очереди; для отправки настройте SMTP. Бронь пока не подтверждена.",
+    "mail_status": "pending",
+    "id": 1
+  },
+  "isolated_database": true,
+  "isolated_session": true,
+  "smtp_disabled": true
+}

@@ -1,0 +1,17 @@
+{
+  "request": {
+    "date": "2026-11-20",
+    "time": "12:00",
+    "guests": 2,
+    "zone": "Летняя терраса",
+    "table": "42"
+  },
+  "status": 422,
+  "body": {
+    "ok": false,
+    "message": "Проверьте предпочтительный стол."
+  },
+  "isolated_database": true,
+  "isolated_session": true,
+  "smtp_disabled": true
+}

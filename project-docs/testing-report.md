@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-19 · Future visit validation and 42-table parity
+
+New backend suite passed 64 deterministic/HTTP assertions for restaurant-clock boundaries, equality/past rejection, leap/calendar/365-day limits, all SVG table boundaries/zones, valid table42 persistence, unknown/mismatched table rejection, blank-zone inference, CSRF and idempotency/no-side-effect errors. Browser checks passed PHP/static home/full-form rollover, corrected dates, differing browser timezone, leap day, elapsed slots, final submit-time checks, reset, success persistence and six-width time-hint bounds, plus map-failure fallback. Existing home-step, notification-identity, floorplan and 14 cart checks passed. Combined PHP/static Tokyo 2.0 passed; after table validation changed, PHP mode and consolidated 229 PHP/SQLite assertions passed again. Syntax, diff hygiene and a 37-page static export passed. Booking fixtures that test other behaviors now choose tomorrow rather than accidentally relying on an elapsed same-day default. [Evidence](visual-qa/booking-time-2026-11-19/comparison.md).
+
 ## 2026-11-19 · Account resilience and transactional settings
 
 New account browser regression passed dirty-draft preservation, native two-tab sync/conflict notice, corrupted profile shapes, failed storage writes/read receipts/clear, address whitespace/duplicates/capacity, stale-index deletion and six-width bounds. It checks that exactly one account panel is visible. Existing account-demo and notification-identity suites passed. New admin-settings HTTP regression passed 26 assertions (auth/CSRF, omitted keys, full payload, types/UTF-8/length/fee bounds and injected database rollback). Consolidated PHP/SQLite integration passed 229 assertions; syntax and diff hygiene passed. Static export produced 37 pages. [Evidence](visual-qa/account-resilience-2026-11-19/comparison.md).

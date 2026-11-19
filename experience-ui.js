@@ -696,23 +696,19 @@
   }
 
   function makeFallbackFloorplan(root, message) {
-    const zones = [
-      ['Основной зал', ['1', '2', '3', '4', '5', '6']],
-      ['Суши-бар', ['7', '8', '9']],
-      ['Приватная комната', ['10', '11']],
-      ['Летняя терраса', ['12', '13']]
-    ];
+    const zones = ['Основной зал', 'Суши-бар', 'Приватная комната', 'Летняя терраса'];
+    const preview = one('[data-tp-zone-photo]', root.parentElement || doc);
+    if (preview) preview.hidden = true;
     const wrap = doc.createElement('div'); wrap.className = 'tp-floorplan-fallback';
-    const note = doc.createElement('p'); note.className = 'tp-floorplan-note'; safeText(note, message || 'Выберите предпочтительную зону и стол. Доступность не проверяется.'); wrap.append(note);
-    zones.forEach(([zone, tables]) => {
+    const note = doc.createElement('p'); note.className = 'tp-floorplan-note'; safeText(note, `${message || 'Схема недоступна.'} Выберите предпочтительную зону без номера стола. Доступность не проверяется.`); wrap.append(note);
+    zones.forEach(zone => {
       const group = doc.createElement('fieldset');
+      group.dataset.tpZone = zone;
       const legend = doc.createElement('legend'); safeText(legend, zone); group.append(legend);
-      tables.forEach(table => {
-        const button = doc.createElement('button');
-        button.type = 'button'; button.dataset.tpZone = zone; button.dataset.tpTable = table;
-        button.className = 'tp-seat-button'; button.setAttribute('aria-pressed', 'false');
-        safeText(button, `Стол ${table}`); group.append(button);
-      });
+      const button = doc.createElement('button');
+      button.type = 'button'; button.dataset.tpZoneSelect = zone;
+      button.className = 'tp-seat-button'; button.setAttribute('aria-pressed', 'false');
+      safeText(button, 'Выбрать зону'); group.append(button);
       wrap.append(group);
     });
     root.replaceChildren(wrap);
@@ -720,6 +716,8 @@
   }
 
   function bindFloorplanSelection(root) {
+    const zoneOnly = Boolean(root.querySelector('.tp-floorplan-fallback'));
+    const zoneInstruction = zone => zoneOnly ? `${zone}: зона выбрана как пожелание. Номер стола можно уточнить позже.` : `${zone}: выберите предпочтительный стол. Доступность не проверяется.`;
     const form = root.dataset.form ? one(root.dataset.form) : root.closest('form') || one('.booking-form');
     const zoneInput = form?.querySelector('[name="zone"]');
     const tableInput = form?.querySelector('[name="table"]');
@@ -732,8 +730,8 @@
         item.classList.remove('is-selected');
         item.setAttribute('aria-pressed', 'false');
       });
-      if (message) safeText(message, 'Параметры визита изменились. Выберите столик заново; доступность не проверяется.');
-      if (formTableStatus) safeText(formTableStatus, 'Параметры изменились. Выберите стол заново или оставьте поле пустым.');
+      if (message) safeText(message, zoneOnly ? zoneInstruction(zoneInput?.value || 'Основной зал') : 'Параметры визита изменились. Выберите столик заново; доступность не проверяется.');
+      if (formTableStatus) safeText(formTableStatus, zoneOnly ? 'Схема недоступна: передаётся только предпочтительная зона.' : 'Параметры изменились. Выберите стол заново или оставьте поле пустым.');
     };
     ['date', 'time', 'guests'].forEach(name => {
       form?.querySelector(`[name="${name}"]`)?.addEventListener('change', clearTablePreference);
@@ -780,9 +778,9 @@
         zonePhoto.alt = `${zone} — иллюстративное изображение учебной концепции`;
       }
       const seatCaption = one('[data-tp-seat-caption]', root.parentElement || doc);
-      if (seatCaption) safeText(seatCaption, `${zone}. Выберите предпочтительный стол; вместимость и доступность уточняются отдельно.`);
+      if (seatCaption) safeText(seatCaption, zoneOnly ? `${zone}. Номер стола, вместимость и доступность уточняются отдельно.` : `${zone}. Выберите предпочтительный стол; вместимость и доступность уточняются отдельно.`);
       if (announce) {
-        const zoneMessage = `${zone}: выберите предпочтительный стол. Доступность не проверяется.`;
+        const zoneMessage = zoneInstruction(zone);
         safeText(message, zoneMessage);
         if (formTableStatus) safeText(formTableStatus, zoneMessage);
       }
@@ -834,8 +832,8 @@
         const zone = zoneInput?.value || 'Основной зал';
         applyZone(zone, false);
         if (tableInput) { tableInput.value = ''; tableInput.defaultValue = ''; }
-        if (message) safeText(message, `${zone}: выберите предпочтительный стол. Доступность не проверяется.`);
-        if (formTableStatus) safeText(formTableStatus, 'Столик не выбран. Выберите номер на схеме или оставьте поле пустым.');
+        if (message) safeText(message, zoneInstruction(zone));
+        if (formTableStatus) safeText(formTableStatus, zoneOnly ? 'Схема недоступна: передаётся только предпочтительная зона.' : 'Столик не выбран. Выберите номер на схеме или оставьте поле пустым.');
       });
     });
     const hasRequestedZone = requestedZone && many('[data-tp-zone]', root).some(item => !item.hasAttribute('data-tp-table') && item.dataset.tpZone === requestedZone);
@@ -951,7 +949,7 @@
       });
       bindFloorplanSelection(root);
     } catch (_) {
-      makeFallbackFloorplan(root, 'Схема не загрузилась. Используйте доступный список выбора ниже; доступность столов не проверяется.');
+      makeFallbackFloorplan(root, 'Схема не загрузилась.');
     }
   }
 

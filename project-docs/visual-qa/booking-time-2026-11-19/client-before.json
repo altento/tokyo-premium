@@ -1,0 +1,31 @@
+{
+  "initial": {
+    "value": "",
+    "min": "2027-01-19",
+    "message": "Please fill out this field."
+  },
+  "corrected": {
+    "value": "2027-01-20",
+    "valid": true,
+    "customError": false,
+    "message": ""
+  },
+  "pastStored": {
+    "date": "2026-11-19",
+    "time": "12:00"
+  },
+  "rollover": {
+    "stale": {
+      "min": "2027-01-20",
+      "value": "2027-01-19",
+      "customError": true,
+      "message": "Выберите сегодняшнюю или будущую дату."
+    },
+    "corrected": {
+      "value": "2027-01-21",
+      "valid": false,
+      "customError": true,
+      "message": "Выберите сегодняшнюю или будущую дату."
+    }
+  }
+}

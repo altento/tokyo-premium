@@ -1,0 +1,257 @@
+{
+    "result": "PASS",
+    "assertions": 64,
+    "restaurant_clock": "2026-11-19T18:40:25+05:00",
+    "isolated_database": true,
+    "isolated_session": true,
+    "smtp_disabled": true,
+    "checks": [
+        "equal visit time is rejected",
+        "past visit time is rejected",
+        "future visit one second away is accepted without a lead-time policy",
+        "later same-day slot is accepted",
+        "next-day slot survives restaurant midnight boundary",
+        "last same-day slot is rejected after closing",
+        "external clock is converted to restaurant date",
+        "UTC date cannot admit previous restaurant day",
+        "equal UTC instant is rejected in restaurant zone",
+        "365th day remains accepted",
+        "366th day remains rejected",
+        "valid leap day is accepted in range",
+        "invalid date\/time is rejected: [\"2026-02-29\",\"12:00\"]",
+        "invalid date\/time is rejected: [\"2026-11-31\",\"12:00\"]",
+        "invalid date\/time is rejected: [\"2026-11-19\",\"15:00\"]",
+        "invalid date\/time is rejected: [\"2026-11-19\",\"12:01\"]",
+        "invalid date\/time is rejected: [\"2026-11-19\",\"12:00\\n\"]",
+        "invalid date\/time is rejected: [\"2026-11-19 \",\"12:00\"]",
+        "invalid date\/time is rejected: [\"2026-11-19\\u0000\",\"12:00\"]",
+        "restaurant clock is independent of process default timezone",
+        "trusted SVG exposes every table from 1 through 42",
+        "trusted SVG provides current four-zone distribution",
+        "table 1 accepts its actual SVG zone",
+        "table 20 accepts its actual SVG zone",
+        "table 21 accepts its actual SVG zone",
+        "table 28 accepts its actual SVG zone",
+        "table 29 accepts its actual SVG zone",
+        "table 32 accepts its actual SVG zone",
+        "table 33 accepts its actual SVG zone",
+        "table 42 accepts its actual SVG zone",
+        "blank zone is inferred from selected table",
+        "legacy zone alias is normalized before table consistency validation",
+        "table and zone preferences remain optional",
+        "zone-only preference remains valid",
+        "invalid table preference is rejected: [\"\\u041e\\u0441\\u043d\\u043e\\u0432\\u043d\\u043e\\u0439 \\u0437\\u0430\\u043b\",\"42\"]",
+        "invalid table preference is rejected: [\"\",\"43\"]",
+        "invalid table preference is rejected: [\"\",\"0\"]",
+        "invalid table preference is rejected: [\"\",\"042\"]",
+        "invalid table preference is rejected: [\"\",\"1e1\"]",
+        "invalid table preference is rejected: [\"\",\"42\\u0000\"]",
+        "invalid table preference is rejected: [\"Unknown\",\"\"]",
+        "isolated booking page creates CSRF-protected session",
+        "HTTP rejects invalid booking {\"date\":\"2026-11-19\",\"time\":\"12:00\"}",
+        "HTTP rejects invalid booking {\"date\":\"2026-11-18\"}",
+        "HTTP rejects invalid booking {\"date\":\"2026-02-30\"}",
+        "HTTP rejects invalid booking {\"date\":\"2027-11-20\"}",
+        "HTTP rejects invalid booking {\"time\":\"15:00\"}",
+        "HTTP rejects invalid booking {\"guests\":\"0\"}",
+        "HTTP rejects invalid booking {\"guests\":\"13\"}",
+        "HTTP rejects invalid booking {\"table\":\"42\",\"zone\":\"\\u041e\\u0441\\u043d\\u043e\\u0432\\u043d\\u043e\\u0439 \\u0437\\u0430\\u043b\"}",
+        "HTTP rejects invalid booking {\"table\":\"43\",\"zone\":\"\\u041b\\u0435\\u0442\\u043d\\u044f\\u044f \\u0442\\u0435\\u0440\\u0440\\u0430\\u0441\\u0430\"}",
+        "HTTP rejects invalid booking {\"table\":\"042\",\"zone\":\"\\u041b\\u0435\\u0442\\u043d\\u044f\\u044f \\u0442\\u0435\\u0440\\u0440\\u0430\\u0441\\u0430\"}",
+        "HTTP rejects invalid booking {\"date\":\"2026-11-19\",\"time\":\"18:00\"}",
+        "invalid visits create no booking, email, rate-limit entry or idempotency reservation",
+        "booking endpoint retains CSRF protection",
+        "HTTP accepts next-day future visit",
+        "successful booking retry preserves original response",
+        "idempotent retry stores one booking",
+        "HTTP accepts final allowed booking day",
+        "rejected request key remains usable after correcting visit",
+        "HTTP accepts table preference {\"table\":\"42\",\"zone\":\"\\u041b\\u0435\\u0442\\u043d\\u044f\\u044f \\u0442\\u0435\\u0440\\u0440\\u0430\\u0441\\u0430\",\"guests\":\"2\"}",
+        "HTTP stores canonical table zone without enforcing drawn capacity",
+        "HTTP accepts table preference {\"table\":\"21\",\"zone\":\"\",\"guests\":\"12\"}",
+        "HTTP stores canonical table zone without enforcing drawn capacity"
+    ],
+    "skipped": [],
+    "http": [
+        {
+            "request": {
+                "date": "2026-11-19",
+                "time": "12:00"
+            },
+            "status": 422,
+            "response": {
+                "ok": false,
+                "message": "Проверьте дату, время и количество гостей."
+            }
+        },
+        {
+            "request": {
+                "date": "2026-11-18"
+            },
+            "status": 422,
+            "response": {
+                "ok": false,
+                "message": "Проверьте дату, время и количество гостей."
+            }
+        },
+        {
+            "request": {
+                "date": "2026-02-30"
+            },
+            "status": 422,
+            "response": {
+                "ok": false,
+                "message": "Проверьте дату, время и количество гостей."
+            }
+        },
+        {
+            "request": {
+                "date": "2027-11-20"
+            },
+            "status": 422,
+            "response": {
+                "ok": false,
+                "message": "Проверьте дату, время и количество гостей."
+            }
+        },
+        {
+            "request": {
+                "time": "15:00"
+            },
+            "status": 422,
+            "response": {
+                "ok": false,
+                "message": "Проверьте дату, время и количество гостей."
+            }
+        },
+        {
+            "request": {
+                "guests": "0"
+            },
+            "status": 422,
+            "response": {
+                "ok": false,
+                "message": "Проверьте дату, время и количество гостей."
+            }
+        },
+        {
+            "request": {
+                "guests": "13"
+            },
+            "status": 422,
+            "response": {
+                "ok": false,
+                "message": "Проверьте дату, время и количество гостей."
+            }
+        },
+        {
+            "request": {
+                "table": "42",
+                "zone": "Основной зал"
+            },
+            "status": 422,
+            "response": {
+                "ok": false,
+                "message": "Выбранный стол не относится к указанной зоне."
+            }
+        },
+        {
+            "request": {
+                "table": "43",
+                "zone": "Летняя терраса"
+            },
+            "status": 422,
+            "response": {
+                "ok": false,
+                "message": "Проверьте предпочтительный стол."
+            }
+        },
+        {
+            "request": {
+                "table": "042",
+                "zone": "Летняя терраса"
+            },
+            "status": 422,
+            "response": {
+                "ok": false,
+                "message": "Проверьте предпочтительный стол."
+            }
+        },
+        {
+            "request": {
+                "date": "2026-11-19",
+                "time": "18:00"
+            },
+            "status": 422,
+            "response": {
+                "ok": false,
+                "message": "Проверьте дату, время и количество гостей."
+            }
+        },
+        {
+            "request": {
+                "date": "2026-11-20",
+                "time": "12:00"
+            },
+            "status": 201,
+            "response": {
+                "ok": true,
+                "message": "Заявка сохранена. Email находится в очереди; для отправки настройте SMTP. Бронь пока не подтверждена.",
+                "mail_status": "pending",
+                "id": 1
+            },
+            "replay_status": 201
+        },
+        {
+            "request": {
+                "date": "2027-11-19",
+                "time": "21:00"
+            },
+            "status": 201,
+            "response": {
+                "ok": true,
+                "message": "Заявка сохранена. Email находится в очереди; для отправки настройте SMTP. Бронь пока не подтверждена.",
+                "mail_status": "pending",
+                "id": 2
+            }
+        },
+        {
+            "request": {
+                "table": "42",
+                "zone": "Летняя терраса",
+                "guests": "2"
+            },
+            "status": 201,
+            "response": {
+                "ok": true,
+                "message": "Заявка сохранена. Email находится в очереди; для отправки настройте SMTP. Бронь пока не подтверждена.",
+                "mail_status": "pending",
+                "id": 4
+            },
+            "saved": {
+                "preferred_table": "42",
+                "zone": "Летняя терраса",
+                "guest_count": 2
+            }
+        },
+        {
+            "request": {
+                "table": "21",
+                "zone": "",
+                "guests": "12"
+            },
+            "status": 201,
+            "response": {
+                "ok": true,
+                "message": "Заявка сохранена. Email находится в очереди; для отправки настройте SMTP. Бронь пока не подтверждена.",
+                "mail_status": "pending",
+                "id": 5
+            },
+            "saved": {
+                "preferred_table": "21",
+                "zone": "Суши-бар",
+                "guest_count": 12
+            }
+        }
+    ]
+}

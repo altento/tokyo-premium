@@ -1,5 +1,7 @@
 <?php
 require __DIR__.'/bootstrap.php';
+require_once __DIR__.'/lib/booking_time.php';
+require_once __DIR__.'/lib/booking_tables.php';
 header('Content-Type: application/json; charset=utf-8');
 function answer(int $status,array $body): never {$json=json_encode($body,JSON_UNESCAPED_UNICODE);if($status===201&&!empty($GLOBALS['api_idempotency_token'])&&!in_array(($GLOBALS['api_idempotency_type']??''),['order','booking'],true)){try{$q=db()->prepare('INSERT OR IGNORE INTO api_idempotency(token,response_json,response_status) VALUES(?,?,?)');$q->execute([$GLOBALS['api_idempotency_token'],$json,$status]);}catch(Throwable $ignored){error_log('Idempotency cache write failed: '.$ignored->getMessage());}}http_response_code($status);echo $json;exit;}
 if($_SERVER['REQUEST_METHOD']==='GET' && ($_GET['type']??'')==='offers'){
@@ -78,9 +80,9 @@ try {
  if($type==='booking'){
   $email=strtolower(trim((string)($_POST['email']??'')));
   if(!filter_var($email,FILTER_VALIDATE_EMAIL)||strlen($email)>190) answer(422,['ok'=>false,'message'=>'Укажите корректный email для ответа по бронированию.']);
-  $guests=filter_var($_POST['guests']??null,FILTER_VALIDATE_INT);$date=(string)($_POST['date']??'');$time=(string)($_POST['time']??'');$d=DateTime::createFromFormat('!Y-m-d',$date);$dateErrors=DateTime::getLastErrors();$today=new DateTime('today');
-  if(!$guests||$guests<1||$guests>12||!$d||($dateErrors!==false&&($dateErrors['warning_count']||$dateErrors['error_count']))||$d->format('Y-m-d')!==$date||$d<$today||$d>$today->modify('+365 days')||!preg_match('/^(12|13|14|17|18|19|20|21):00$/',$time)) answer(422,['ok'=>false,'message'=>'Проверьте дату, время и количество гостей.']);
-  $zone=trim((string)($_POST['zone']??''));$zoneAliases=['Суши-стойка'=>'Суши-бар','Камерная комната'=>'Приватная комната','Зал дегустации'=>'Летняя терраса'];$zone=$zoneAliases[$zone]??$zone;$table=trim((string)($_POST['table']??''));$format=trim((string)($_POST['format']??''));if($zone!==''&&!in_array($zone,['Основной зал','Суши-бар','Приватная комната','Летняя терраса'],true)) answer(422,['ok'=>false,'message'=>'Выберите зону из списка.']);if($table!==''&&!preg_match('/^(?:[1-9]|1[0-3])$/',$table)) answer(422,['ok'=>false,'message'=>'Проверьте предпочтительный стол.']);if($format!==''&&!in_array($format,['Начало','Сезонный','Премиальный'],true)) answer(422,['ok'=>false,'message'=>'Выберите формат вечера из списка.']);
+  $guests=filter_var($_POST['guests']??null,FILTER_VALIDATE_INT);$date=(string)($_POST['date']??'');$time=(string)($_POST['time']??'');
+  if(!$guests||$guests<1||$guests>12||!booking_visit_time_is_valid($date,$time)) answer(422,['ok'=>false,'message'=>'Проверьте дату, время и количество гостей.']);
+  $preferences=booking_table_preferences((string)($_POST['zone']??''),(string)($_POST['table']??''));$zone=$preferences['zone'];$table=$preferences['table'];$format=trim((string)($_POST['format']??''));if($format!==''&&!in_array($format,['Начало','Сезонный','Премиальный'],true)) answer(422,['ok'=>false,'message'=>'Выберите формат вечера из списка.']);
   $pdo=db();$idempotencyToken=(string)($GLOBALS['api_idempotency_token']??'');$pdo->exec('BEGIN IMMEDIATE TRANSACTION');
   try{
    if($idempotencyToken!==''){

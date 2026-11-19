@@ -56,6 +56,8 @@ jobs:
         run: php tests/admin-marketing-integrity.php
       - name: Verify settings updates preserve omitted content and roll back
         run: php tests/admin-settings-integrity.php
+      - name: Verify booking times use the restaurant clock
+        run: php tests/booking-time-integrity.php
       - name: Verify obsolete booking confirmations and outbox migration
         run: php tests/booking-mail-cancellation.php
       - name: Verify FreedomPay signatures and amounts
@@ -161,6 +163,7 @@ jobs:
           TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:offers-evening
           TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:reviews
           TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:review-contact-forms
+          TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:booking-time-browser
           TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:cart-visual
           TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:responsive
           TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:visual-states

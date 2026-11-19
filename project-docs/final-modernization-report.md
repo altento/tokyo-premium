@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-19 · Booking clock and table identity
+
+Repaired a stale date-validation error after midnight, same-day elapsed-time acceptance in UI/API and the home-form success/reset race. The shared browser clock updates limits, disabled time options and messages on input, reset, page return and submission; PHP independently validates the complete future visit timestamp. No new lead-time policy was invented. The server's obsolete 1–13 table range now uses all 42 IDs and their actual zones from trusted SVG metadata. If the map cannot load, the UI offers zone-only preferences rather than an invented legacy table layout or mismatched room photo. [Reproductions, actual tests and screenshots](visual-qa/booking-time-2026-11-19/comparison.md). These are requests/preferences, not live availability or restaurant confirmation.
+
 ## 2026-11-19 · Account data preservation and admin settings
 
 Fixed confirmed local profile draft loss during favorite refresh, a null-profile crash, blank addresses and silent eviction at address capacity. Browser tabs synchronize saved data while preserving dirty profile input and warning about a conflict. Storage write/read-receipt/delete/clear failures receive honest feedback. Address deletion uses its saved value rather than a stale list index. The history panel now respects `hidden` when another tab is selected, removing unrelated content and excess scrolling. PHP settings preserve omitted values, validate all submitted values first and commit atomically. [Reproduction, tests and inspected screenshots](visual-qa/account-resilience-2026-11-19/comparison.md). Local drafts are not persisted until explicitly saved, and these changes do not enable production email or payments.

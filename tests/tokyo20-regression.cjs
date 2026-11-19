@@ -414,7 +414,7 @@ async function run() {
       check((await page.locator('[data-tp-floorplan-selection]').innerText()).includes('Предпочтение сохранено'), `${mode.name} floorplan states that a seat is only a preference`);
       check((await page.locator('.booking-form .table-selection').innerText()).includes('предпочтительный стол №1'), `${mode.name} selected table is reflected in the booking form`);
       const bookingDate = page.locator('.booking-form [name="date"]');
-      await bookingDate.fill(await bookingDate.getAttribute('min'));
+      await bookingDate.fill(await bookingDate.evaluate(input => { const day = new Date(input.min+'T00:00:00Z'); day.setUTCDate(day.getUTCDate()+1); return day.toISOString().slice(0,10); }));
       check(await page.locator('.booking-form [name="table"]').inputValue() === '', `${mode.name} changing visit date clears the preferred table`);
       check((await page.locator('.booking-form .table-selection').innerText()).includes('Параметры изменились'), `${mode.name} date change explains that table preference must be selected again`);
       await page.locator('[data-tp-table]').first().click();

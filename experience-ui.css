@@ -623,3 +623,9 @@
 #local-reviews{scroll-margin-top:100px}
 .form-status [data-local-review-link]{display:inline-flex;align-items:center;min-height:44px;color:var(--tp-gold);text-decoration:underline;text-underline-offset:4px}
 .review-form>.school-note{grid-column:1/-1;margin:0}
+.booking-time-hint{margin:6px 0 0;color:var(--tp-muted);font-size:.72rem;line-height:1.45;overflow-wrap:anywhere}
+.booking-time-hint.is-error{color:#efb2a1}
+.tp20-floorplan-layout [data-tp-zone-photo][hidden]{display:none}
+.tp-floorplan-fallback>.tp-floorplan-note{grid-column:1/-1;margin:0}
+.tp-floorplan-fallback fieldset{min-width:0}
+.tp-floorplan-fallback .tp-seat-button{width:100%;min-height:44px;height:auto;padding:10px 12px;line-height:1.4;border-radius:8px}

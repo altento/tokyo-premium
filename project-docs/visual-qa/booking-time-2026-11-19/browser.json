@@ -1,0 +1,44 @@
+{
+  "status": "passed",
+  "routes": [
+    {
+      "mode": "php",
+      "route": "/",
+      "result": "passed"
+    },
+    {
+      "mode": "php",
+      "route": "/pages.php?page=booking",
+      "result": "passed"
+    },
+    {
+      "mode": "static",
+      "route": "/index.html",
+      "result": "passed"
+    },
+    {
+      "mode": "static",
+      "route": "/booking.html",
+      "result": "passed"
+    }
+  ],
+  "checks": [
+    "corrected dates",
+    "local midnight rollover",
+    "leap day and 365-day limit",
+    "restaurant vs browser zone",
+    "past and fully elapsed hours",
+    "submit-time revalidation",
+    "reset and valid demo save",
+    "unavailable map uses zone-only fallback"
+  ],
+  "widths": [
+    320,
+    390,
+    768,
+    1024,
+    1440,
+    1920
+  ],
+  "pageErrors": []
+}

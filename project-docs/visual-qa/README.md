@@ -1,5 +1,7 @@
 ## Visual QA evidence
 
+Booking clock/table parity: [2026-11-19 evidence](booking-time-2026-11-19/comparison.md), reproduced elapsed-time acceptance, sticky date error and table42 rejection; corrected clock states and honest map-failure fallback in desktop/mobile captures.
+
 Account resilience: [2026-11-19 evidence](account-resilience-2026-11-19/comparison.md), lost-draft/null-profile/blank-address/hidden-history reproduction, native two-tab and storage-failure states, transactional admin settings and inspected desktop/mobile screenshots.
 
 Marketing integrity: [2026-11-19 evidence](admin-final-2026-11-19/comparison.md), eight reproduced failure conditions, 18 passing HTTP checks, authenticated promo/collection/inventory flows and expanded desktop/mobile promo forms.

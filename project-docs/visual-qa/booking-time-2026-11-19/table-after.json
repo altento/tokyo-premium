@@ -1,0 +1,81 @@
+{
+  "result": "PASS",
+  "assertions": 64,
+  "restaurant_clock": "2026-11-19T18:40:25+05:00",
+  "isolated_database": true,
+  "isolated_session": true,
+  "smtp_disabled": true,
+  "http": [
+    {
+      "request": {
+        "table": "42",
+        "zone": "Основной зал"
+      },
+      "status": 422,
+      "response": {
+        "ok": false,
+        "message": "Выбранный стол не относится к указанной зоне."
+      }
+    },
+    {
+      "request": {
+        "table": "43",
+        "zone": "Летняя терраса"
+      },
+      "status": 422,
+      "response": {
+        "ok": false,
+        "message": "Проверьте предпочтительный стол."
+      }
+    },
+    {
+      "request": {
+        "table": "042",
+        "zone": "Летняя терраса"
+      },
+      "status": 422,
+      "response": {
+        "ok": false,
+        "message": "Проверьте предпочтительный стол."
+      }
+    },
+    {
+      "request": {
+        "table": "42",
+        "zone": "Летняя терраса",
+        "guests": "2"
+      },
+      "status": 201,
+      "response": {
+        "ok": true,
+        "message": "Заявка сохранена. Email находится в очереди; для отправки настройте SMTP. Бронь пока не подтверждена.",
+        "mail_status": "pending",
+        "id": 4
+      },
+      "saved": {
+        "preferred_table": "42",
+        "zone": "Летняя терраса",
+        "guest_count": 2
+      }
+    },
+    {
+      "request": {
+        "table": "21",
+        "zone": "",
+        "guests": "12"
+      },
+      "status": 201,
+      "response": {
+        "ok": true,
+        "message": "Заявка сохранена. Email находится в очереди; для отправки настройте SMTP. Бронь пока не подтверждена.",
+        "mail_status": "pending",
+        "id": 5
+      },
+      "saved": {
+        "preferred_table": "21",
+        "zone": "Суши-бар",
+        "guest_count": 12
+      }
+    }
+  ]
+}

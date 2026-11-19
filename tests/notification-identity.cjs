@@ -52,7 +52,7 @@ const evidence = process.env.TOKYO_EVIDENCE_DIR || path.join(__dirname, '../proj
     await page.locator('#full-guest-name').fill('Local QA guest');
     await page.locator('#full-guest-phone').fill('+77010000000');
     await page.locator('#full-guest-email').fill('qa@example.test');
-    await page.locator('#full-guest-date').fill(await page.locator('#full-guest-date').getAttribute('min'));
+    await page.locator('#full-guest-date').fill(await page.locator('#full-guest-date').evaluate(input=>{const day=new Date(input.min+'T00:00:00Z');day.setUTCDate(day.getUTCDate()+1);return day.toISOString().slice(0,10)}));
     await page.locator('#full-booking-form').evaluate(form=>form.requestSubmit());
     await page.waitForFunction(()=>JSON.parse(localStorage.getItem('tokyo-demo-bookings')||'[]')[0]?.demoId);
     assert.ok(await page.evaluate(()=>Number.isFinite(Date.parse(JSON.parse(localStorage.getItem('tokyo-demo-bookings'))[0].createdAt))),'new local bookings have creation metadata before account visit');

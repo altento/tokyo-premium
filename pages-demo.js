@@ -16,6 +16,7 @@ document.addEventListener('submit', async event => {
   if (!(form instanceof HTMLFormElement) || !form.matches('form[data-api]')) return;
   event.preventDefault();
   event.stopImmediatePropagation();
+  if (form.dataset.api === 'booking' && !(window.TokyoPremiumBookingDates?.validate(form) ?? form.reportValidity())) return;
 
   const status = form.querySelector('.form-status');
   if (form.dataset.submitting === 'true') return;

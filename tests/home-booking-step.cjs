@@ -3,7 +3,7 @@ const path = require('node:path');
 const { chromium } = require('playwright');
 
 const base = (process.env.TOKYO_STATIC_BASE_URL || 'http://127.0.0.1:8776').replace(/\/$/, '');
-const evidence = path.resolve(__dirname, '..', 'project-docs', 'visual-qa', 'home-booking-progressive-2026-11-16');
+const evidence = process.env.TOKYO_EVIDENCE_DIR || path.resolve(__dirname, '..', 'project-docs', 'visual-qa', 'home-booking-progressive-2026-11-16');
 
 (async () => {
   const fs = require('node:fs');
