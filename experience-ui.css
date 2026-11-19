@@ -446,3 +446,39 @@
   .account-demo-page .account-demo-content { display: contents; }
   /* Keep the visual sequence aligned with the DOM and keyboard focus order. */
 }
+/* Philosophy chapter scale: follow the compact illustrated reference rhythm. */
+.about-page .about-chef .about-copy h2{font-size:clamp(32px,3.1vw,48px);line-height:1.12;margin:14px 0 18px;overflow-wrap:anywhere}
+.about-page .about-chef .about-copy .about-lead{font-size:clamp(16px,1.25vw,19px);line-height:1.5}
+.about-page .about-chef .about-copy p{font-size:13px;line-height:1.75}
+.about-page .about-source .source-copy h2{font-size:clamp(30px,3vw,44px);line-height:1.14;margin:12px 0 18px;overflow-wrap:anywhere}
+.about-page .about-source .source-copy p{font-size:13px;line-height:1.75}
+.about-page .about-principles .editorial-heading h2{font-size:clamp(28px,3vw,42px);line-height:1.2}
+.about-page .about-contact h2{font-size:clamp(28px,3vw,42px);line-height:1.2}
+.about-page .about-quote blockquote{max-width:850px;font-size:clamp(24px,2.5vw,36px);line-height:1.35}
+@media(min-width:1101px){
+ .about-page .about-chef{padding-block:42px;gap:28px;grid-template-columns:minmax(0,.95fr) minmax(0,1.1fr) minmax(0,.65fr)}
+ .about-page .chef-portrait img{height:340px;object-position:50% 35%}
+ .about-page .about-chef .about-copy h2{font-size:clamp(32px,2.7vw,42px);margin:10px 0 14px}
+ .about-page .about-chef .about-copy p{margin-block:10px}
+ .about-page .about-chef .chef-signature{margin:14px 0;font-size:34px}
+ .about-page .about-chef .about-copy>.button{margin-top:10px;min-height:44px;font-size:9px;padding-inline:16px}
+ .about-page .chef-landscape{min-height:0}
+ .about-page .chef-landscape img{max-height:280px}
+ .about-page .about-source{padding-block:38px;gap:46px;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+ .about-page .source-images img{height:240px}
+ .about-page .source-images figure:first-child{margin-top:0}
+ .about-page .about-principles{padding-block:38px}
+ .about-page .principle-grid{margin-top:22px}
+ .about-page .principle-grid article{min-height:170px}
+ .about-page .about-quote{padding-block:36px}
+ .about-page .about-contact{padding-block:34px}
+}
+@media(max-width:760px){
+ .about-page .about-chef{gap:24px;padding-block:36px}
+ .about-page .chef-portrait img{height:clamp(260px,90vw,390px)}
+ .about-page .about-copy h2,.about-page .source-copy h2{overflow-wrap:anywhere}
+ .about-page .about-source{gap:24px;padding-block:36px}
+ .about-page .about-principles{padding-block:36px}
+ .about-page .principle-grid article{min-height:0;padding:20px 12px}
+ .about-page .about-quote{padding:36px 22px}
+}

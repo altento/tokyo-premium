@@ -27,7 +27,8 @@
     "test:visual-fidelity": "node tests/visual-fidelity-regression.cjs",
     "test:motion": "node tests/motion-system-regression.cjs",
     "test:floorplan": "node tests/floorplan-regression.cjs",
-    "test:menu-visual": "node tests/menu-visual-smoke.cjs"
+    "test:menu-visual": "node tests/menu-visual-smoke.cjs",
+    "test:philosophy-visual": "node tests/philosophy-visual.cjs"
   },
   "devDependencies": {
     "playwright": "1.65.0"

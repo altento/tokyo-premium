@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-19 · Philosophy composition
+
+Compacted the chef, ingredient, principles, quote and closing booking chapters; replaced repetitive implementation-oriented copy with restaurant storytelling while retaining educational disclosures. Full desktop/mobile captures were inspected with reference 05. PHP and static checks passed at six widths; static export produced 37 pages. [Evidence and remaining differences](visual-qa/philosophy-2026-11-19/comparison.md). Remote access remains unconfigured: neither Tailscale nor cloudflared is installed/authenticated on this machine.
+
 ## 2026-11-19 · Current accelerated checkpoint
 
 Fixed payment-status rendering, ambiguous payment retries and callback ID binding; added a local Windows launcher, protected public-route router and home-hosting guide; restored active section markers for Philosophy and Reviews. Focused local PHP/SQLite, admin, cart and payment/router checks passed. This does not claim complete visual parity or live payment/email activation. See [the current final-pass record](final-pass-2026-11-19.md) for evidence and remaining work.

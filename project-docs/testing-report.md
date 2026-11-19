@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-19 · Philosophy visual follow-up
+
+PHP and exported Pages layouts passed focused checks at six widths (320–1920 px), including heading text bounds, loaded photographs, overflow and page errors. Export produced 37 pages. The approved reference, complete desktop/mobile captures and paired comparison were inspected; the page remains taller and less decorative than the approved PNG. Evidence: [philosophy comparison](visual-qa/philosophy-2026-11-19/comparison.md). No broad site-wide suite was repeated for this scoped copy/CSS update.
+
 ## 2026-11-19 · Payment integrity and home hosting
 
 Local checks passed: 27 isolated payment/router HTTP checks, 229 PHP/SQLite integrity assertions, 19 admin-search/referral assertions, 15 admin set-format assertions and 14 cart checks. PDO SQLite is installed locally and was enabled explicitly. Playwright MCP did not return a result; no fresh visual verification is claimed. Full details and remaining limitations: [final-pass-2026-11-19.md](final-pass-2026-11-19.md).
