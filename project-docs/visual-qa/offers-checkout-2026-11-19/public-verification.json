@@ -1,0 +1,22 @@
+{
+  "release": "5946e9c",
+  "base": "https://altento.github.io/tokyo-premium/",
+  "widths": [
+    {
+      "width": 390,
+      "offerToCart": "passed",
+      "editInvalidation": "passed",
+      "removalResetRefresh": "passed",
+      "quoteWithoutCode": "passed"
+    },
+    {
+      "width": 1440,
+      "offerToCart": "passed",
+      "editInvalidation": "passed",
+      "removalResetRefresh": "passed",
+      "quoteWithoutCode": "passed"
+    }
+  ],
+  "errors": [],
+  "result": "passed"
+}

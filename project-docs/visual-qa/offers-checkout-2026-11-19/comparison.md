@@ -25,3 +25,9 @@ Offers uses the existing dark/gold/red visual system, individual campaign imager
 - The focused test is included in optional full-QA CI. Fast default publication remains unchanged.
 
 PHP still enforces price, promotion entitlement, gift inventory and order transactions. Pages estimates are browser-local and do not reserve promotions or gifts, send real orders, activate email or process payments. External SMTP/payment configuration remains outside this update.
+
+## Publication
+
+Implementation `5946e9c` was pushed to main. [Actions run 44471466815](https://github.com/altento/tokyo-premium/actions/runs/44471466815) passed build and Pages deployment. The fast profile ran its server/cart/syntax/smoke/export checks; optional full browser CI was skipped. Browser results above were obtained locally.
+
+Fresh public Chromium verified offers-to-cart with DEMO10, visible local discount, invalidation on editing, code removal, native reset, refresh and a new zero-discount quote at 390/1440 px. No page errors occurred and no order was submitted. [Public verification](public-verification.json). The real delayed-response race was verified locally in PHP; GitHub Pages has no quote API.
