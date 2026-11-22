@@ -29,3 +29,8 @@
 Реальная оплата требует мерчанта, стабильного публичного HTTPS и сверки неизвестных платежей с провайдером. SMTP требует отправителя. Удалённый доступ требует установки Tailscale на обоих устройствах либо публичного туннеля. Ключи и учётные записи не выдуманы.
 
 Полная визуальная идентичность 11 макетам и боевой платёжный сценарий остаются непроверенными. Известные визуальные отличия перечислены в `visual-qa/full-static-2026-11-18/comparison.md`; этот проход не объявляет их устранёнными. Pages остаётся статической демонстрацией без PHP-админки.
+
+
+## 2026-11-23 — short admin acceptance follow-up
+
+Re-ran only the two authenticated admin browser paths on isolated disposable SQLite databases. `npm run test:admin-booking-browser` passed: admin login, pending-review filter, Cyrillic booking search, confirm/cancel, guest status badge and two status notifications. `npm run test:admin-marketing-browser` passed: campaign metadata and inventory preservation, promo create/edit/duplicate handling, seasonal collection and linked-item editing, and 390 px layout. These checks verify the tested workflows; SMTP remained deliberately disabled, so no external message was sent. No application defect reproduced in this short pass.
