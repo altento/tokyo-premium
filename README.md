@@ -100,6 +100,7 @@ PHP-версия сохраняет меню, пользователей, зак
 ```sh
 npm ci
 npm run test:cart
+npm run test:checkout
 php tests/gift-quantity-regression.php
 npx playwright install chromium
 php tests/php_integrity_integration.php
@@ -113,6 +114,8 @@ TOKYO_BASE_URL=http://127.0.0.1:8090 npm run test:visual-states
 TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:visual-fidelity
 TOKYO_BASE_URL=http://127.0.0.1:8090 TOKYO_STATIC_BASE_URL=http://127.0.0.1:8090/docs npm run test:motion
 ```
+
+`npm run test:checkout` — короткая проверка повторного оформления в Pages-демоверсии: самовывоз, сброс формы, обязательность адреса доставки, повторный заказ, переход по страницам и перезагрузка. Для проверки PHP/API используйте браузерный интеграционный прогон.
 
 Браузерный прогон проверяет 11 типов страниц, все 21 карточку блюда, пользовательские сценарии и целевые ширины от 320 до 1920 px. Отдельный набор корзины фиксирует desktop при ширине 1440 CSS px и mobile при 390 px, проверяет уникальность блюд, загруженные фото, фактическую сумму и выбранный способ получения перед созданием полноразмерных скриншотов. При съёмке фиксируется шапка в обычном потоке документа, чтобы full-page кадры не получали повторную липкую шапку. Скриншоты и состояния хранятся в `project-docs/visual-qa/`; CI сохраняет их как Actions artifact `tokyo-premium-visual-qa`.
 

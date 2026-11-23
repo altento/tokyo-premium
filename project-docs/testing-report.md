@@ -717,3 +717,7 @@ Gallery release `88aef6c`: [workflow 44542921835](https://github.com/altento/tok
 ## 2026-11-23 — bounded admin browser pass
 
 The authenticated booking/operations and Marketing & Loyalty browser regressions both passed on isolated SQLite fixtures. Coverage and limits are recorded in `final-pass-2026-11-19.md`; SMTP is not configured and the test deliberately sent no real email. This was a focused acceptance check, not a rerun of the full browser matrix.
+
+## 2026-11-23 — focused checkout reset command
+
+Added `npm run test:checkout`, a self-contained Playwright check that serves the current static export on an ephemeral local port. It passed pickup checkout/reset, cart clearing, delivery address visibility/required state, invalid delivery rejection, successful repeat delivery, pickup/delivery switching, route changes, reload persistence, and zero page errors. `node --check tests/checkout-reset-regression.cjs` and `git diff --check` passed. This verifies the Pages demo only; the PHP/API checkout scenario remains in the broader `tests/browser-regression.cjs` and needs a SQLite-enabled PHP server.
