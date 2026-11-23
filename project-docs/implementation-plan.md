@@ -64,6 +64,10 @@ The project remains the existing PHP 8+ application with SQLite. Public PHP rout
 
 The static account's order cards now keep the local-demo label, order ID and date on a compact wrapping line, reducing repeated vertical space while retaining totals, composition details and repeat-order actions. Root and exported CSS are byte-identical. The focused static account visual-fidelity route passed locally and on GitHub Pages at desktop and mobile widths; captures and the honest reference comparison are in `visual-qa/account-density-2026-11-23/`. PHP account markup was not changed. Commit `1f30d3a` is live; GitHub Actions run [45121694677](https://github.com/altento/tokyo-premium/actions/runs/45121694677) succeeded.
 
+## 2026-11-23 — dish composition density
+
+Dish ingredient cards now use a centered auto-fit grid based on confirmed catalog components, so a two-item composition no longer leaves a third blank track. The exported asset was synchronized with the PHP source; the focused static detail route passed at desktop and mobile widths. Captures and the comparison with reference 03 are in `visual-qa/dish-composition-density-2026-11-23/`. Nutrition and review figures remain absent where the catalog has no verified values.
+
 ## 2026-11-18 — admin workflow export
 
 The protected operations dashboard now has CSV exports for orders, bookings, reviews and contact messages. Each export uses the same session search, status filter, or notification scope as its section, streams all matching rows rather than only the visible page, includes a UTF-8 BOM, and prefixes spreadsheet formula-like text values. Downloads are private and non-cacheable. PHP lint, `git diff --check`, CI build and deployment passed. The authenticated export route itself is not covered by the CI smoke steps, and the feature does not expose the PHP admin through GitHub Pages.

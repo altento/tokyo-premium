@@ -85,6 +85,14 @@
   margin-top: auto;
 }
 
+/* Let the confirmed ingredient count determine the grid instead of leaving
+   empty placeholder columns when a dish has only one or two verified items. */
+.editorial-page .dish-composition-section .detail-ingredients {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  max-width: 1000px;
+  margin-inline: auto;
+}
+
 @media (max-width: 640px) {
   .dish-related-section .dish-grid-related .dish-meta {
     gap: 7px 8px;
@@ -97,4 +105,29 @@
   .dish-related-section .dish-grid-related .dish-card {
     transition: none;
   }
+}
+/* Purchase and supporting chapters follow the compact product composition. */
+.detail-feature--product .detail-purchase-group>.add-to-cart{background:linear-gradient(120deg,#c91527,#8e101c);border-color:#cd3540;color:#fff4e3;min-height:48px;font-size:12px;letter-spacing:.04em}
+.detail-feature--product .detail-purchase-group>.add-to-cart:hover{background:#d31a2c}
+.detail-feature--product .detail-purchase-group>.add-to-cart:focus-visible{outline:2px solid #e8c48a;outline-offset:4px}
+.detail-feature--product .quantity-control button{min-width:44px;min-height:44px}
+.detail-feature--product .detail-product-panel:before,.detail-feature--product .detail-product-panel:after{pointer-events:none}
+.editorial-page .dish-chef-section,.editorial-page .dish-composition-section,.editorial-page .dish-related-section{padding-block:32px}
+.editorial-page .dish-composition-section .editorial-heading{margin-bottom:22px}
+.editorial-page .dish-composition-section h2,.editorial-page .dish-related-section h2{font-size:clamp(28px,2.7vw,38px);line-height:1.2}
+.dish-related-section .dish-grid-related .dish-meta>h3{font-size:clamp(18px,1.6vw,23px)}
+.dish-related-section .dish-grid-related .dish-meta>p{font-size:12px}
+.dish-related-section .dish-grid-related .add-to-cart{min-height:44px;padding:8px 12px}
+.dish-related-section .dish-grid-related .dish-meta>.favorite-btn{min-width:40px;min-height:40px}
+@media(min-width:901px){
+ .editorial-page .dish-chef-story{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:32px;align-items:center}
+ .editorial-page .dish-chef-story>img{height:280px;width:100%;object-fit:cover;object-position:50% 35%}
+ .editorial-page .dish-chef-story .editorial-note{padding:26px 30px}
+ .editorial-page .dish-chef-story blockquote{font-size:clamp(23px,2.1vw,30px);line-height:1.3;margin-block:16px}
+}
+@media(max-width:760px){
+ .editorial-page .dish-chef-section,.editorial-page .dish-composition-section,.editorial-page .dish-related-section{padding-block:24px}
+ .editorial-page .dish-chef-story>img{max-height:300px;object-fit:cover}
+ .editorial-page .dish-chef-story .editorial-note{padding:22px}
+ .dish-related-section .dish-grid-related .dish-meta{grid-template-columns:minmax(0,1fr) 40px}
 }
