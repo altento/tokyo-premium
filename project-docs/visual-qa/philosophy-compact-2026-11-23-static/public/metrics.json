@@ -1,0 +1,120 @@
+[
+  {
+    "width": 390,
+    "scrollWidth": 390,
+    "height": 5769,
+    "chefHeight": 1178.15625,
+    "chapters": {
+      "story": {
+        "height": 1521,
+        "paddingTop": 58
+      },
+      "chef": {
+        "height": 1178,
+        "paddingTop": 36
+      },
+      "principles": {
+        "height": 720,
+        "paddingTop": 36
+      },
+      "source": {
+        "height": 630,
+        "paddingTop": 36
+      },
+      "quote": {
+        "height": 293,
+        "paddingTop": 36
+      }
+    },
+    "headings": [
+      {
+        "text": "Философия",
+        "clipped": false
+      },
+      {
+        "text": "Наша история",
+        "clipped": false
+      },
+      {
+        "text": "Этапы развития",
+        "clipped": false
+      },
+      {
+        "text": "Точностьбез лишнего шума",
+        "clipped": false
+      },
+      {
+        "text": "Невидимая работа вкуса",
+        "clipped": false
+      },
+      {
+        "text": "Сначала — сам продукт",
+        "clipped": false
+      },
+      {
+        "text": "Найдите собственный ритм",
+        "clipped": false
+      }
+    ],
+    "images": true
+  },
+  {
+    "width": 1440,
+    "scrollWidth": 1440,
+    "height": 3039,
+    "chefHeight": 470.8125,
+    "chapters": {
+      "story": {
+        "height": 454,
+        "paddingTop": 40
+      },
+      "chef": {
+        "height": 471,
+        "paddingTop": 40
+      },
+      "principles": {
+        "height": 431,
+        "paddingTop": 40
+      },
+      "source": {
+        "height": 350,
+        "paddingTop": 40
+      },
+      "quote": {
+        "height": 283,
+        "paddingTop": 42
+      }
+    },
+    "headings": [
+      {
+        "text": "Философия",
+        "clipped": false
+      },
+      {
+        "text": "Наша история",
+        "clipped": false
+      },
+      {
+        "text": "Этапы развития",
+        "clipped": false
+      },
+      {
+        "text": "Точностьбез лишнего шума",
+        "clipped": false
+      },
+      {
+        "text": "Невидимая работа вкуса",
+        "clipped": false
+      },
+      {
+        "text": "Сначала — сам продукт",
+        "clipped": false
+      },
+      {
+        "text": "Найдите собственный ритм",
+        "clipped": false
+      }
+    ],
+    "images": true
+  }
+]

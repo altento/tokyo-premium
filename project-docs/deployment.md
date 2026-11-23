@@ -33,7 +33,8 @@ Push to `main` and wait for the Pages workflow to finish. Inspect the workflow s
 
 ## 2026-11-23 — latest verified publication
 
-- Latest application commit: `c7ffe62` (reservation form flow); GitHub Pages workflow [run 45143146646](https://github.com/altento/tokyo-premium/actions/runs/45143146646) completed successfully, including build and deployment.
+- Latest application commit: `038413a` (philosophy page visual rhythm); GitHub Pages workflow [run 45155137552](https://github.com/altento/tokyo-premium/actions/runs/45155137552) completed successfully, including build and deployment. A subsequent documentation-only follow-up records the verification evidence.
+- The public philosophy route passed focused Playwright checks at 390 px and 1440 px after the release. Screenshots and measurements: [`visual-qa/philosophy-compact-2026-11-23-static/public/`](visual-qa/philosophy-compact-2026-11-23-static/public/). This does not replace a full-site visual review.
 - The live booking page passed the focused Playwright regression at desktop and mobile widths: semantic field order, all 42 preference markers, zone/photo synchronization, reset, single visible selection status, viewport fit and no browser errors. Screenshots: `visual-qa/booking-form-pairing-2026-11-23/public/`.
 - The previously verified homepage curation is still live: cards use IDs `6, 1, 12, 19`; the public 390 px viewport had no horizontal overflow or page errors. Evidence: `visual-qa/home-editorial-curation-2026-11-23/public/`.
 - Local home-hosting checks passed with PHP 8.4.25 / SQLite 3.53.4. `Start-Tokyo.ps1 -CheckOnly` loaded PDO SQLite; the allowlist router served `/` and food assets (200) and denied `schema.sql` and the database-file URL (404). This validates local startup prerequisites and route isolation, not a deployed PHP host or Tailscale access from another network.

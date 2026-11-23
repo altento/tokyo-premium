@@ -17,3 +17,7 @@ The test was updated to support a short viewport list and to cap image/font read
 I opened the approved PNG and inspected it alongside the new full-page desktop capture. The section rhythm is tighter and the story timeline is more compact. The page is still materially longer: the reference is 1024 × 1536 px, or 2160 px high when scaled proportionally to 1440 px width; the current 1440 px capture is 3039 px high (about 41% taller). Its hero image, added chef/source/contact chapters, and footer also differ. This is a focused visual improvement, not pixel-perfect parity or completion of the remaining page reviews.
 
 The local PHP CLI is PHP 8.5.11 but lacks PDO SQLite. A PHP-rendered capture failed in the footer because the database driver is unavailable, so this comparison uses the static Pages export only and does not claim PHP browser verification.
+
+## Public verification
+
+After commit [`038413a`](https://github.com/altento/tokyo-premium/commit/038413a04ca8ef5a4227fca3333b78aa79bffa87) deployed successfully in [workflow 45155137552](https://github.com/altento/tokyo-premium/actions/runs/45155137552), the same focused Playwright check passed against the public GitHub Pages route at 390 and 1440 px. Public screenshots and metrics are in [`public/`](public/). The live 1440 px document is 3039 CSS px tall and uses the compact desktop story spacing. CI's optional full browser suite was skipped by the fast profile; this public visual check ran separately with the repository Playwright test.
