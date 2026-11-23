@@ -60,6 +60,10 @@ The project remains the existing PHP 8+ application with SQLite. Public PHP rout
 - Current published checkpoint `51a16c3`: workflow 44278543876 succeeded. The admin image-preview release passed hosted focused checks and Pages deployment. Cache-busted public home and updated premium.css returned HTTP 200, with the new admin image-preview styles present. No browser screenshot or full visual suite was run for the PHP-only admin interface.
 - Post-release admin preview hardening: local preview paths now match PHP’s case-sensitive WebP rule, while HTTPS Unsplash previews reject encoded separators and dot segments. `node --check admin-dashboard.js` and `git diff --check` passed. This is PHP-admin-only source code; CI and browser checks were not rerun, and the published Pages artifact is unchanged.
 
+## 2026-11-23 — account order-history density
+
+The static account's order cards now keep the local-demo label, order ID and date on a compact wrapping line, reducing repeated vertical space while retaining totals, composition details and repeat-order actions. Root and exported CSS are byte-identical. The focused static account visual-fidelity route passed at desktop and mobile widths; captures and the honest reference comparison are in `visual-qa/account-density-2026-11-23/`. PHP account markup was not changed. Publication status is pending this commit.
+
 ## 2026-11-18 — admin workflow export
 
 The protected operations dashboard now has CSV exports for orders, bookings, reviews and contact messages. Each export uses the same session search, status filter, or notification scope as its section, streams all matching rows rather than only the visible page, includes a UTF-8 BOM, and prefixes spreadsheet formula-like text values. Downloads are private and non-cacheable. PHP lint, `git diff --check`, CI build and deployment passed. The authenticated export route itself is not covered by the CI smoke steps, and the feature does not expose the PHP admin through GitHub Pages.

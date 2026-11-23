@@ -626,3 +626,36 @@
  .account-demo-page .account-favorites-overview-heading{flex-wrap:wrap}
 }
 .account-demo-page [data-account-panel][hidden]{display:none!important}
+
+/* Keep the local-demo order history close to the compact editorial rows in
+   approved account reference 11 while preserving the demo and order details. */
+.account-demo-page .account-demo-order-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-items: initial;
+  gap: 3px 8px;
+}
+
+.account-demo-page .account-demo-order-title > small,
+.account-demo-page .account-demo-order-title > strong {
+  display: inline;
+  margin: 0;
+}
+
+.account-demo-page .account-demo-order-title > strong {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
+.account-demo-page .account-demo-order .account-demo-record-badge,
+.account-demo-page .account-demo-order .account-demo-local-badge {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+}
+
+.account-demo-page .account-demo-order .demo-order-content {
+  align-content: center;
+  row-gap: 5px;
+}
