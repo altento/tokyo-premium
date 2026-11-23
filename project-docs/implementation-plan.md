@@ -8,7 +8,7 @@ Reduced the desktop booking hero and its three explanatory cards so the reservat
 
 ## Current release checkpoint
 
-Latest `main` release: [`1329fa7`](https://github.com/altento/tokyo-premium/commit/1329fa7dcb3ed4cd23f9fe15a7ed3e2c0ac63f40), deployed successfully in [workflow 45168512393](https://github.com/altento/tokyo-premium/actions/runs/45168512393). The change surfaces the latest FreedomPay attempt and a manual-reconciliation warning in the protected order list; its 8-assertion isolated PHP/SQLite regression passed. The public Pages root returned HTTP 200, but Pages does not expose the PHP admin. The previous visual release `749dddc` and public booking-zone photo verification are recorded in `visual-qa/booking-photo-transition-2026-11-23/`. Full browser/visual QA remains opt-in and known reference differences remain open. Production PHP hosting, live payment, production data, and live email delivery remain unverified.
+Latest `main` application commit: [`fcd3525`](https://github.com/altento/tokyo-premium/commit/fcd3525452e84a17723bbd20608d2eaaa56aff9e), deployed successfully by [workflow 45193974873](https://github.com/altento/tokyo-premium/actions/runs/45193974873). The booking floorplan labels and table numbers are clearer; focused Playwright regression passed against local Pages and the public Pages route at desktop and mobile sizes. New captures and honest comparison with reference 07 are in `visual-qa/booking-floorplan-legibility-2026-11-23/`. This is a narrow visual and interaction check, not full acceptance. The protected PHP admin remains unavailable on Pages. Production PHP hosting, merchant credentials, production data, and live SMTP delivery remain unverified.
 
 ## 2026-11-23 — mobile cart and home editorial follow-ups
 
