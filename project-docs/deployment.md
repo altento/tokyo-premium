@@ -33,11 +33,11 @@ Push to `main` and wait for the Pages workflow to finish. Inspect the workflow s
 
 ## 2026-11-23 — latest verified publication
 
-- Published commit: 5be112fb9867e6b841e8417046d405434feff3b5.
-- GitHub Pages workflow [run 45113194916](https://github.com/altento/tokyo-premium/actions/runs/45113194916) completed successfully.
-- The published account route returned HTTP 200. A real browser loaded the birthday controls from the deployed account-demo.js; after opening profile settings, the month/day fields and independent consent checkbox were visible. February offered 29 days and April 30. The check left browser storage unchanged.
-- Focused local browser regressions passed for save/reload, leap day, month-specific day limits, withdrawal, and clear-data. Full suite was not rerun.
-- The change adds only an optional browser-local birthday preference in Pages. It does not send birthday email, create real coupons, or award production loyalty points. PHP/SQLite, SMTP, payment credentials, and a public PHP host remain external runtime requirements.
+- Published commit: 490c8e7b4f8f36f19ff4767ecb9670ea6869f265.
+- GitHub Pages workflow [run 45116563344](https://github.com/altento/tokyo-premium/actions/runs/45116563344) completed successfully, including PHP/SQLite integrity, API smoke, static export, and deploy.
+- The published gift-preview route returned HTTP 200. A real browser loaded the preview form and confirmed that no recipient-email input is present. A focused local Playwright test passed the Pages preview flow; the hosted PHP/SQLite integration sent a forged email field and confirmed that it was omitted from the response and stored as blank.
+- The optional browser-local birthday preference was also checked on the published account route: February offered 29 days and April 30, and the browser storage was unchanged by verification.
+- Full visual parity and the full browser suite were not rerun. Gift previews remain unpaid and non-redeemable; no birthday email/coupon or production loyalty points are issued. PHP/SQLite, SMTP, payment credentials, and a public PHP host remain external runtime requirements.
 
 ## 2026-11-19 — previous verified publication
 
