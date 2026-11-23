@@ -32,6 +32,7 @@ async function run() {
     page.on('pageerror', error => pageErrors.push(error.message));
     await page.goto(`${base}/gift-certificates.html`, { waitUntil: 'domcontentloaded' });
     assert.equal(await page.locator('[name="recipient_email"]').count(), 0, 'Pages preview does not collect recipient email');
+    assert.equal(await page.locator('.tp20-gift-value span').innerText(), 'ДЕМО-НОМИНАЛ', 'certificate amount is labeled clearly as a demo value');
     await page.locator('[name="recipient_name"]').fill('QA Recipient');
     await page.locator('[name="greeting"]').fill('Preview only');
     await page.locator('[data-tp-gift-form] button[type="submit"]').click();
