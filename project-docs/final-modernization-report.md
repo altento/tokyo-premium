@@ -777,3 +777,7 @@ Hosted run [45217309715](https://github.com/altento/tokyo-premium/actions/runs/4
 ## 2026-11-23 — Marketing admin keyboard search verification
 
 Extended `tests/admin-marketing-browser.cjs` to verify that `/` focuses the Marketing & Loyalty search, `Escape` clears it, and `/` does not take focus away from an active campaign field. The authenticated browser regression passed, including the existing campaign, promo, stock-preservation, and responsive admin checks. Evidence is in `visual-qa/admin-search-keyboard-2026-11-23/`. This closes the browser-verification gap recorded in the earlier keyboard-search entry; no production behavior changed in this test-and-evidence commit. The admin still requires the PHP host and is not served by GitHub Pages.
+
+## 2026-11-23 — account hero reference alignment
+
+Changed the static account dashboard hero to span the viewport on tablet and desktop, removing the inset card margins and rounded corners shown in the previous capture. This matches the full-width hero in reference 11 while retaining the compact contained layout on phones. The focused `npm run test:account-demo` browser regression passed and captured populated desktop and mobile states in `visual-qa/account-fullbleed-2026-11-23/`; I inspected the new desktop capture against `design-references/11-account.png` and confirmed the mobile layout remains contained. The CSS source and Pages copy are synchronized. PHP browser rendering was not separately exercised in this pass, and the remaining dashboard/page composition is not claimed pixel-perfect.

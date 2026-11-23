@@ -1104,6 +1104,9 @@ body.story-motion-gsap [data-story-reveal].story-visible img{animation:none}
    sample label and interaction intact. The tighter rhythm also shortens the
    first useful view on laptop screens. */
 .account-demo-page .account-overview{min-height:clamp(245px,22vw,286px);margin:20px auto 0;border-radius:8px}
+@media(min-width:761px){
+  .account-demo-page .account-overview{width:100vw;max-width:none;margin:0 calc(50% - 50vw);border-left:0;border-right:0;border-radius:0}
+}
 .account-demo-page .account-overview-art img{object-position:center 48%}
 .account-demo-page .account-overview-body{padding-block:clamp(24px,3vw,36px)}
 .account-demo-page .account-overview-body h1{font-size:clamp(2.25rem,4.6vw,3.7rem);line-height:1.04}
