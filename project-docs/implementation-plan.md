@@ -62,7 +62,7 @@ The project remains the existing PHP 8+ application with SQLite. Public PHP rout
 
 ## 2026-11-23 — account order-history density
 
-The static account's order cards now keep the local-demo label, order ID and date on a compact wrapping line, reducing repeated vertical space while retaining totals, composition details and repeat-order actions. Root and exported CSS are byte-identical. The focused static account visual-fidelity route passed at desktop and mobile widths; captures and the honest reference comparison are in `visual-qa/account-density-2026-11-23/`. PHP account markup was not changed. Publication status is pending this commit.
+The static account's order cards now keep the local-demo label, order ID and date on a compact wrapping line, reducing repeated vertical space while retaining totals, composition details and repeat-order actions. Root and exported CSS are byte-identical. The focused static account visual-fidelity route passed locally and on GitHub Pages at desktop and mobile widths; captures and the honest reference comparison are in `visual-qa/account-density-2026-11-23/`. PHP account markup was not changed. Commit `1f30d3a` is live; GitHub Actions run [45121694677](https://github.com/altento/tokyo-premium/actions/runs/45121694677) succeeded.
 
 ## 2026-11-18 — admin workflow export
 

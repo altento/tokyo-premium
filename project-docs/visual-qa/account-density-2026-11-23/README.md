@@ -6,6 +6,8 @@
 
 - `TOKYO_VISUAL_ROUTES=account TOKYO_VISUAL_MODE=static TOKYO_CAPTURE_STATIC=1 node tests/visual-fidelity-regression.cjs` — пройдено на локальном экспорте.
 - Сняты и визуально просмотрены `account-static-desktop.jpg` (1440 px) и `account-static-mobile.jpg` (390 px). Тест открыл учебные локальные записи, а не пользовательские данные.
+- После публикации тот же узкий сценарий пройден на GitHub Pages; публичные снимки лежат в `public/`.
+- Публичные `account.html` и `account-demo.css` вернули HTTP 200; CSS содержит новую компактную раскладку.
 - `git diff --check` — без ошибок.
 
 ## Сверка с макетом №11
