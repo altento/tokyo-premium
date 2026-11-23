@@ -8,7 +8,7 @@ Reduced the desktop booking hero and its three explanatory cards so the reservat
 
 ## Current release checkpoint
 
-Latest `main` application commit: [`fcd3525`](https://github.com/altento/tokyo-premium/commit/fcd3525452e84a17723bbd20608d2eaaa56aff9e), deployed successfully by [workflow 45193974873](https://github.com/altento/tokyo-premium/actions/runs/45193974873). The booking floorplan labels and table numbers are clearer; focused Playwright regression passed against local Pages and the public Pages route at desktop and mobile sizes. New captures and honest comparison with reference 07 are in `visual-qa/booking-floorplan-legibility-2026-11-23/`. This is a narrow visual and interaction check, not full acceptance. The protected PHP admin remains unavailable on Pages. Production PHP hosting, merchant credentials, production data, and live SMTP delivery remain unverified.
+Latest `main` application commit: [`831a826`](https://github.com/altento/tokyo-premium/commit/831a8261f6fabf7fbaf737f118503d21d805e560), deployed successfully by [workflow 45196587167](https://github.com/altento/tokyo-premium/actions/runs/45196587167). The desktop homepage is 259 px shorter at 1440 px; focused Playwright verification passed locally and on public Pages at 1440 px and 390 px. Evidence and the remaining visual gap are recorded in `visual-qa/home-density-followup-2026-11-23/`. The previous booking-floorplan correction remains public and regression-checked. These are scoped page passes, not full acceptance. The protected PHP admin remains unavailable on Pages. Production PHP hosting, merchant credentials, production data, and live SMTP delivery remain unverified.
 
 ## 2026-11-23 — mobile cart and home editorial follow-ups
 

@@ -12,9 +12,11 @@ The inspected 1440 px full-page capture fell from 3100 px to 2841 px (259 px / 8
 
 ## Verification
 
-`tests/visual-fidelity-regression.cjs` passed for the static home route at the test's 1440 px desktop and 390 px mobile viewports. It checked featured images and catalog IDs, visible page content, horizontal overflow and browser errors. Captures:
+`tests/visual-fidelity-regression.cjs` passed for the static home route locally and on the public Pages site at the test's 1440 px desktop and 390 px mobile viewports. It checked featured images and catalog IDs, visible page content, horizontal overflow and browser errors. Local captures:
 
 - `home-static-desktop.jpg` — 1440×2841
 - `home-static-mobile.jpg` — 390×4708
+
+Matching captures from the deployed public route are in `public/`. Workflow [45196587167](https://github.com/altento/tokyo-premium/actions/runs/45196587167) passed build and deployment for commit `831a826` before the public browser check.
 
 This is a focused density pass, not full homepage or all-page acceptance.
