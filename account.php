@@ -353,8 +353,11 @@ header_html();
           <a href="#account-orders"><span class="account-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 8h14l1 12H4L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></span><span class="account-nav-label">Мои заказы</span><small><?=$orderCount?></small></a>
           <a href="#account-bookings"><span class="account-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4m8-4v4M4 10h16m-12 4h3m-3 3h7"/></svg></span><span class="account-nav-label">Бронирования</span><small><?=$bookingCount?></small></a>
           <a href="#account-browser-favorites"><span class="account-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.8 8.7c0 5.1-8.8 11-8.8 11s-8.8-5.9-8.8-11A4.7 4.7 0 0 1 12 6.2a4.7 4.7 0 0 1 8.8 2.5Z"/></svg></span><span class="account-nav-label">Избранное</span><small>в браузере</small></a>
+          <a href="#account-loyalty"><span class="account-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 14.8 8.7 21 9.6l-4.5 4.4 1.1 6.2-5.6-2.9-5.6 2.9 1.1-6.2L3 9.6l6.2-.9L12 3Z"/></svg></span><span class="account-nav-label">Tokyo Privilege</span><small><?=number_format($loyaltyBalance,0,'.',' ')?></small></a>
+          <a href="#account-personal-offers"><span class="account-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7.5h16v13H4zM2.5 4h19v3.5h-19zM12 4v16m0-16c-4.5 0-5-4-2.2-4S12 4 12 4Zm0 0c4.5 0 5-4 2.2-4S12 4 12 4Z"/></svg></span><span class="account-nav-label">Предложения</span><small><?=count($personalOffers)?></small></a>
           <a href="#account-addresses"><span class="account-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 10c0 5.4-8 11-8 11S4 15.4 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span class="account-nav-label">Адреса</span><small><?=count($addresses)?></small></a>
           <a href="#account-referrals"><span class="account-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20v-1a6 6 0 0 1 12 0v1m2-10h5m-2.5-2.5v5"/></svg></span><span class="account-nav-label">Приглашения</span></a>
+          <a href="#account-ledger"><span class="account-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V5m0 14h17M8 15l3-4 3 2 5-7"/></svg></span><span class="account-nav-label">История бонусов</span><small><?=count($loyaltyEntries)?></small></a>
           <a href="#account-settings"><span class="account-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1m0-12.8-2.1 2.1m-8.6 8.6-2.1 2.1"/><circle cx="12" cy="12" r="5"/></svg></span><span class="account-nav-label">Настройки</span></a>
         </nav>
         <div class="account-dashboard-content">
@@ -489,7 +492,7 @@ header_html();
               <?php endif ?>
             </section>
 
-            <section class="account-section account-dashboard-panel" aria-labelledby="tp20-personal-offers">
+            <section id="account-personal-offers" class="account-section account-dashboard-panel" aria-labelledby="tp20-personal-offers">
               <div class="account-dashboard-section-heading"><div><span class="kicker">PRIVATE INVITATIONS</span><h2 id="tp20-personal-offers">Персональные предложения</h2></div></div>
               <?php if (!$personalOffers): ?>
                 <p class="account-section-copy">Персональных предложений пока нет. Здесь появятся только адресно назначенные действующие кампании.</p>

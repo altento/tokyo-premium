@@ -671,6 +671,10 @@ The PHP, static, and published Pages home routes now show four existing public d
 
 The next curation pass uses four real public items with more varied forms: tuna nigiri, Philadelphia roll, tuna tartare, and matcha tiramisu. The Hanami set was excluded after the static export confirmed it is Secret Menu restricted. Commit `a8b07ee` passed GitHub Actions run [45136549985](https://github.com/altento/tokyo-premium/actions/runs/45136549985). Focused PHP, static, and live Pages browser checks passed; the published 390 px viewport had no horizontal overflow or page errors. Updated captures are stored in [`visual-qa/home-editorial-curation-2026-11-23/`](visual-qa/home-editorial-curation-2026-11-23/).
 
+## 2026-11-23 — authenticated account navigation
+
+Added direct dashboard navigation to the Tokyo Privilege card, personal offers and bonus ledger; the bonus-ledger link opens its disclosure, including when reached by a URL fragment. Added a focused assertion that every new navigation target is present in the rendered, authenticated PHP account. The isolated PHP/SQLite profile regression passed 14 assertions; `account.php` lint, JavaScript syntax and `git diff --check` passed. This improves the PHP account route; GitHub Pages continues to use its separate browser-local account demo.
+
 ## 2026-11-23 — mobile cart checkout access
 
 Added a mobile-only bottom summary for populated carts, sharing its total with `TokyoCart` and opening the existing checkout details with keyboard focus moved to the disclosure. The panel hides on empty carts, while details are expanded, and while mobile navigation is open. Focused cart Playwright checks passed at 390 px and verified fit at 320 px; the PHP cart route returned HTTP 200 with the matching markup. Evidence: [`visual-qa/cart-mobile-summary-2026-11-23/`](visual-qa/cart-mobile-summary-2026-11-23/). This focused improvement does not complete Tokyo Premium 2.0 or assert full reference parity.

@@ -93,6 +93,9 @@ try {
     $nameOnlyHtml = $runPost($details('Ая Такада', (string)$owner['email']));
     $updated = $pdo->query('SELECT full_name,email,password_hash FROM users WHERE id='.$ownerId)->fetch();
     $assert(str_contains($nameOnlyHtml, 'Имя и контактный email сохранены.') && $updated['full_name']==='Ая Такада' && $updated['email']===$owner['email'], 'authenticated member can change name without entering a password when email stays the same');
+    foreach (['account-loyalty','account-personal-offers','account-ledger'] as $targetId) {
+        $assert(str_contains($nameOnlyHtml, 'href="#'.$targetId.'"') && str_contains($nameOnlyHtml, 'id="'.$targetId.'"'), 'account navigation target resolves: '.$targetId);
+    }
 
     $missingPasswordHtml = $runPost($details('Ая Такада', 'new-profile+'.bin2hex(random_bytes(4)).'@example.test'));
     $unchanged = $pdo->query('SELECT full_name,email FROM users WHERE id='.$ownerId)->fetch();

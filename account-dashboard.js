@@ -8,6 +8,11 @@
     .filter(Boolean);
   if (!sections.length) return;
 
+  const revealTarget = id => {
+    const target = document.getElementById(id);
+    if (target instanceof HTMLDetailsElement) target.open = true;
+  };
+
   const setCurrentSection = id => {
     links.forEach(link => {
       if (link.hash === `#${id}`) link.setAttribute('aria-current', 'location');
@@ -36,10 +41,17 @@
     const link = event.target.closest('a[href^="#"]');
     if (!link) return;
     const section = document.getElementById(decodeURIComponent(link.hash.slice(1)));
-    if (section) setCurrentSection(section.id);
+    if (section) {
+      revealTarget(section.id);
+      setCurrentSection(section.id);
+    }
   });
   window.addEventListener('scroll', scheduleUpdate, { passive: true });
   window.addEventListener('resize', scheduleUpdate, { passive: true });
-  window.addEventListener('hashchange', scheduleUpdate);
+  window.addEventListener('hashchange', () => {
+    if (window.location.hash) revealTarget(decodeURIComponent(window.location.hash.slice(1)));
+    scheduleUpdate();
+  });
+  if (window.location.hash) revealTarget(decodeURIComponent(window.location.hash.slice(1)));
   updateCurrentSection();
 })();
