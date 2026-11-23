@@ -31,7 +31,15 @@ GitHub Pages cannot run PHP. Supported static actions store demo values only in 
 ## Updating
 Push to `main` and wait for the Pages workflow to finish. Inspect the workflow summary, then open the public URL in a fresh browser session and check at least the home, menu, dish, booking, cart, contacts, and profile pages.
 
-## Latest verified publication
+## 2026-11-23 — latest verified publication
+
+- Published commit: 5be112fb9867e6b841e8417046d405434feff3b5.
+- GitHub Pages workflow [run 45113194916](https://github.com/altento/tokyo-premium/actions/runs/45113194916) completed successfully.
+- The published account route returned HTTP 200. A real browser loaded the birthday controls from the deployed account-demo.js; after opening profile settings, the month/day fields and independent consent checkbox were visible. February offered 29 days and April 30. The check left browser storage unchanged.
+- Focused local browser regressions passed for save/reload, leap day, month-specific day limits, withdrawal, and clear-data. Full suite was not rerun.
+- The change adds only an optional browser-local birthday preference in Pages. It does not send birthday email, create real coupons, or award production loyalty points. PHP/SQLite, SMTP, payment credentials, and a public PHP host remain external runtime requirements.
+
+## 2026-11-19 — previous verified publication
 
 - Published implementation commit: `fca4f112f52a178f2508c4ab3228e541c29aa069`.
 - Workflow for that release: [run 44423394180](https://github.com/altento/tokyo-premium/actions/runs/44423394180) — PHP/SQLite integrity and migration checks, PHP syntax, endpoint smoke, static export, and deployment succeeded. Browser/visual suites were skipped by the fast push profile.
