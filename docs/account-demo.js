@@ -8,23 +8,47 @@ if(document.querySelector('.account-demo-page')&&!document.querySelector('link[d
 document.addEventListener('DOMContentLoaded',()=>{
  const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const read=key=>{try{return JSON.parse(localStorage.getItem(key)||'[]')}catch{return[]}};
- const readRows=key=>{const value=read(key);return Array.isArray(value)?value.filter(row=>row&&typeof row==='object'):[]};
- const writeStatus=(form,msg)=>{const s=$('.form-status',form);if(s){s.textContent=msg;s.className='form-status success'}};
+ const read=key=>{try{const value=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(value)?value:[]}catch{return[]}};
+ const readRows=key=>read(key).filter(row=>row&&typeof row==='object'&&!Array.isArray(row));
+ const writeStatus=(form,msg,error=false)=>{const s=$('.form-status',form);if(s){s.textContent=msg;s.className='form-status '+(error?'error':'success')}};
+ const readAddresses=()=>read('tokyo-demo-addresses').filter(value=>typeof value==='string'&&value.trim()).map(value=>value.trim());
+ const monthDays=[31,29,31,30,31,30,31,31,30,31,30,31];
+ const validBirthday=(month,day)=>{const m=Number(month),d=Number(day);return Number.isInteger(m)&&m>=1&&m<=12&&Number.isInteger(d)&&d>=1&&d<=monthDays[m-1]};
+ const syncBirthdayDays=(form,monthValue,dayValue='')=>{const select=form?.elements?.birth_day;if(!select)return;const max=monthDays[Number(monthValue)-1]||0;select.replaceChildren(new Option('Выберите день',''));for(let day=1;day<=max;day++)select.add(new Option(String(day),String(day)));select.disabled=max===0;const wanted=Number(dayValue||'');select.value=Number.isInteger(wanted)&&wanted>=1&&wanted<=max?String(wanted):''};
+ const readProfile=()=>{try{const value=JSON.parse(localStorage.getItem('tokyo-demo-profile')||'{}');if(!value||typeof value!=='object'||Array.isArray(value))return{};const month=String(value.birthMonth??''),day=String(value.birthDay??''),hasBirthday=validBirthday(month,day);return{name:typeof value.name==='string'?value.name:'',phone:typeof value.phone==='string'?value.phone:'',birthMonth:hasBirthday?String(Number(month)):'',birthDay:hasBirthday?String(Number(day)):'',birthdayConsent:hasBirthday&&value.birthdayConsent===true}}catch{return{}}};
+ let profileDraftDirty=false,profileHydrated=false;
+ $('[data-local-form="profile"]')?.addEventListener('input',event=>{profileDraftDirty=true;const status=$('.form-status',event.currentTarget);if(status){status.textContent='Есть несохранённые изменения. Нажмите «Сохранить профиль».';status.className='form-status'}});
+ $('[data-local-form="profile"]')?.elements?.birth_month?.addEventListener('change',event=>syncBirthdayDays(event.currentTarget.form,event.currentTarget.value,event.currentTarget.form.elements.birth_day.value));
  const staticMode=Boolean($('.account-demo-page'));
  const menuHref=staticMode?'menu.html':'menu.php';
  const bookingHref=staticMode?'booking.html':'pages.php?page=booking';
+ const notificationRows=(key,kind,readIds)=>{
+  const rows=readRows(key);let changed=false;
+  const bookingKey=row=>[row.date,row.time,row.name,row.zone].join('|');
+  rows.forEach((row,index)=>{
+   if(row.demoId||(kind==='order'&&(row.orderId||row.createdAt)))return;
+   const prefix=kind==='booking'?'booking:'+bookingKey(row)+'|':null;
+   const oldId=kind==='booking'?prefix+index:'order:'+index;
+   const uniqueLegacyBooking=prefix&&rows.filter(other=>bookingKey(other)===bookingKey(row)).length===1;
+   const wasRead=readIds.has(oldId)||(uniqueLegacyBooking&&[...readIds].some(id=>id.startsWith(prefix)&&/^\d+$/.test(id.slice(prefix.length))));
+   row.demoId=window.crypto?.randomUUID?.()||'demo-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
+   if(wasRead)readIds.add(kind+':'+row.demoId);
+   changed=true;
+  });
+  if(changed){try{localStorage.setItem(key,JSON.stringify(rows));localStorage.setItem('tokyo-demo-read-notifications',JSON.stringify([...readIds]))}catch{/* Reading history still works if browser storage is unavailable. */}}
+  return rows;
+ };
  const demoNotifications=()=>{
-  const orders=readRows('tokyo-demo-orders').map((row,index)=>({id:'order:'+String(row.orderId||row.createdAt||index),kind:'order',title:'Демо-заказ сохранён',message:'Заказ '+String(row.orderId||'из истории')+' сохранён только в этом браузере. Он не оплачен и не отправлен ресторану.',date:String(row.date||'')}));
-  const bookings=readRows('tokyo-demo-bookings').map((row,index)=>({id:'booking:'+String(row.demoId||[row.date,row.time,row.name,row.zone,index].join('|')),kind:'booking',title:'Демо-запрос на бронь сохранён',message:'Запрос существует только в этом браузере; ресторан его не получил, стол не подтверждён.',date:[row.date,row.time].filter(Boolean).join(' · ')}));
   const readState=read('tokyo-demo-read-notifications');
   const readIds=new Set(Array.isArray(readState)?readState.filter(value=>typeof value==='string'):[]);
-  return [...orders,...bookings].map(row=>({...row,read:readIds.has(row.id)})).sort((a,b)=>b.id.localeCompare(a.id));
+  const orders=notificationRows('tokyo-demo-orders','order',readIds).map(row=>({id:'order:'+String(row.demoId||row.orderId||row.createdAt),kind:'order',created:Date.parse(row.createdAt)||0,title:'Демо-заказ сохранён',message:'Заказ '+String(row.orderId||'из истории')+' сохранён только в этом браузере. Он не оплачен и не отправлен ресторану.',date:String(row.date||'')}));
+  const bookings=notificationRows('tokyo-demo-bookings','booking',readIds).map(row=>({id:'booking:'+String(row.demoId),kind:'booking',created:Date.parse(row.createdAt)||0,title:'Демо-запрос на бронь сохранён',message:'Запрос существует только в этом браузере; ресторан его не получил, стол не подтверждён.',date:[row.date,row.time].filter(Boolean).join(' · ')}));
+  return [...orders,...bookings].map(row=>({...row,read:readIds.has(row.id)})).sort((a,b)=>b.created-a.created);
  };
  function render(){
   const orders=$('#demo-orders'),bookings=$('#demo-bookings');
   if(orders){
-   const rows=read('tokyo-demo-orders').filter(row=>row&&typeof row==='object');
+   const rows=readRows('tokyo-demo-orders');
    const dishes=window.DISHES||[];
    orders.innerHTML=rows.length?rows.map(row=>{
     const items=Array.isArray(row.items)?row.items.filter(item=>item&&typeof item==='object').slice(0,30):[];
@@ -38,7 +62,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     const repeatSets=customSets.map(set=>({variant:set.variant||set.setType||'signature',setType:set.variant||set.setType||'signature',name:set.name||'Авторский сет',qty:Number(set.qty||1),items:Array.isArray(set.items)?set.items.map(item=>({id:Number(item.id),qty:Number(item.qty)})):[]}));
     const repeatData=JSON.stringify({items,customSets:repeatSets});
     const lineCount=items.length+customSets.length;
-    const demoBadge=row.demo===true?'<span class="account-demo-record-badge">Учебный пример · локально</span>':'<span class="account-demo-record-badge">Только этот браузер</span>';
+    const demoBadge=row.demo===true?'<span class="account-demo-record-badge">Учебный пример · локально</span>':'<span class="account-demo-local-badge">Только этот браузер</span>';
     const firstDishId=Number(items.find(item=>Number.isSafeInteger(Number(item.id))&&Number(item.id)>0)?.id||customSets.flatMap(set=>Array.isArray(set.items)?set.items:[]).find(item=>Number.isSafeInteger(Number(item.id))&&Number(item.id)>0)?.id);
     const previewDish=dishes.find(dish=>Number(dish.id)===firstDishId&&typeof dish.image_url==='string'&&dish.image_url.length>0);
     const preview=previewDish?'<img class="account-order-preview" src="'+esc(previewDish.image_url)+'" alt="'+esc(previewDish.name)+'" loading="lazy" decoding="async">':'';
@@ -47,7 +71,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     return '<article class="demo-order account-demo-order">'+preview+'<div class="demo-order-content"><div class="account-demo-order-head"><div class="account-demo-order-title">'+demoBadge+'<small>'+esc(row.orderId||'Демо-заказ')+'</small><strong>'+esc(row.date)+'</strong></div><div class="account-demo-order-total"><span>Итого · демо</span><strong>'+amountLabel+'</strong></div></div><p class="account-demo-order-meta">'+esc(row.name||'Гость')+' · '+Number(row.count||0)+' позиций · '+esc(row.fulfillment==='pickup'?'Самовывоз':'Демо-доставка')+'</p>'+(allLines?'<details class="demo-order-details"><summary>Состав заказа · '+lineCount+' позиций</summary><ul class="demo-order-items">'+allLines+'</ul></details>':'<p class="menu-note">Состав старого заказа недоступен.</p>')+(lineCount?'<button class="button secondary account-demo-repeat" type="button" data-repeat-order="'+esc(repeatData)+'">Собрать заказ снова</button>':'')+'</div></article>';
    }).join(''):'<div class="account-empty-state"><p>Здесь появятся локальные учебные заказы после демонстрационного оформления. Сейчас история пуста.</p><a class="button secondary" href="'+menuHref+'">Открыть меню ↗</a></div>'
   }
-  if(bookings){const rows=read('tokyo-demo-bookings');bookings.innerHTML=rows.length?rows.map(row=>'<article><div>'+(row.demo===true?'<span class="account-demo-record-badge">Учебный пример · локально</span>':'')+'<strong>'+esc(row.date)+' · '+esc(row.time)+'</strong><p>'+esc(row.name)+' · гостей: '+esc(row.guests)+' · '+esc(row.zone||'Зона не выбрана')+(row.format?' · формат Omakase «'+esc(row.format)+'»':'')+(row.table?' · стол '+esc(row.table):'')+'</p></div></article>').join(''):'<div class="account-empty-state"><p>Запросов на бронирование пока нет. Выберите дату и предпочтительную зону; демоверсия не резервирует стол.</p><a class="button secondary" href="'+bookingHref+'">Выбрать дату и зону ↗</a></div>'}
+  if(bookings){const rows=readRows('tokyo-demo-bookings');bookings.innerHTML=rows.length?rows.map(row=>'<article><div>'+(row.demo===true?'<span class="account-demo-record-badge">Учебный пример · локально</span>':'')+'<strong>'+esc(row.date)+' · '+esc(row.time)+'</strong><p>'+esc(row.name)+' · гостей: '+esc(row.guests)+' · '+esc(row.zone||'Зона не выбрана')+(row.format?' · формат Omakase «'+esc(row.format)+'»':'')+(row.table?' · стол '+esc(row.table):'')+'</p></div></article>').join(''):'<div class="account-empty-state"><p>Запросов на бронирование пока нет. Выберите дату и предпочтительную зону; демоверсия не резервирует стол.</p><a class="button secondary" href="'+bookingHref+'">Выбрать дату и зону ↗</a></div>'}
   const notificationList=$('#demo-notifications');
   const notifications=demoNotifications();
   if(notificationList){notificationList.innerHTML=notifications.length?notifications.map(item=>'<article class="account-notification-card '+(item.read?'is-read':'is-unread')+'"><div class="account-notification-copy"><div class="account-notification-heading"><h3>'+esc(item.title)+'</h3><span class="account-notification-state">'+(item.read?'Прочитано':'Новое · демо')+'</span></div><p>'+esc(item.message)+'</p><time>'+esc(item.date)+'</time></div><div class="account-notification-actions"><a class="account-inline-link" href="'+(item.kind==='booking'?'booking.html':'cart.html')+'">'+(item.kind==='booking'?'К бронированию ↗':'К корзине ↗')+'</a>'+(item.read?'':'<button class="button secondary" type="button" data-demo-notification-read="'+esc(item.id)+'">Отметить прочитанным</button>')+'</div></article>').join(''):'<div class="account-empty-state"><p>Уведомления появятся после сохранения заказа или запроса на бронирование в этом браузере.</p></div>'}
@@ -63,13 +87,13 @@ document.addEventListener('DOMContentLoaded',()=>{
    if(overviewFavs){const limit=Number(overviewFavs.dataset.accountFavoritesLimit)||3;overviewFavs.innerHTML=cardRows.slice(0,limit).join('');if(overviewEmpty){overviewEmpty.hidden=saved.length>0;if(!saved.length)overviewEmpty.innerHTML=emptyFavorites}}
    const count=$('#account-favorite-count');if(count)count.textContent=String(saved.length);
   }
-  const addressRows=read('tokyo-demo-addresses'),addressList=$('#demo-addresses');if(addressList){addressList.innerHTML=addressRows.length?addressRows.map((v,i)=>'<article><div><strong>Адрес '+(i+1)+' · только этот браузер</strong><p>'+esc(v)+'</p></div><button class="text-button" type="button" data-address-remove="'+i+'">Удалить</button></article>').join(''):'<p class="menu-note">Адресов пока нет.</p>'}
+  const addressRows=readAddresses(),addressList=$('#demo-addresses');if(addressList){addressList.innerHTML=addressRows.length?addressRows.map((v,i)=>'<article><div><strong>Адрес '+(i+1)+' · только этот браузер</strong><p>'+esc(v)+'</p></div><button class="text-button" type="button" data-address-remove="'+i+'" data-address-value="'+esc(v)+'">Удалить</button></article>').join(''):'<p class="menu-note">Адресов пока нет.</p>'}
   const addressPreview=$('#demo-addresses-preview'),addressPreviewEmpty=$('#demo-addresses-preview-empty');if(addressPreview){addressPreview.innerHTML=addressRows.slice(0,2).map((value,index)=>'<article><span class="account-address-index">0'+(index+1)+'</span><div><strong>Адрес '+(index+1)+' · только этот браузер</strong><p>'+esc(value)+'</p></div></article>').join('');if(addressPreviewEmpty)addressPreviewEmpty.hidden=addressRows.length>0}
   const pform=$('[data-local-form="profile"]'),displayName=$('#demo-display-name'),profileName=$('#demo-profile-contact-name'),profilePhone=$('#demo-profile-contact-phone');
-  if(pform||displayName||profileName||profilePhone){const profile=(()=>{try{return JSON.parse(localStorage.getItem('tokyo-demo-profile')||'{}')}catch{return{}}})();if(pform){pform.elements.name.value=profile.name||'';pform.elements.phone.value=profile.phone||''}if(displayName)displayName.textContent=profile.name?('Здравствуйте, '+profile.name+'.'):'История, избранное и привилегии в одном месте.';if(profileName)profileName.textContent=profile.name||'Имя не указано';if(profilePhone)profilePhone.textContent=profile.phone||'Телефон не указан'}
+  if(pform||displayName||profileName||profilePhone){const profile=readProfile();if(pform&&(!profileHydrated||!profileDraftDirty)){pform.elements.name.value=profile.name||'';pform.elements.phone.value=profile.phone||'';pform.elements.birth_month.value=profile.birthMonth||'';syncBirthdayDays(pform,profile.birthMonth,profile.birthDay);pform.elements.birthday_offer_consent.checked=profile.birthdayConsent;profileHydrated=true}if(displayName)displayName.textContent=profile.name?('Здравствуйте, '+profile.name+'.'):'История, избранное и привилегии в одном месте.';if(profileName)profileName.textContent=profile.name||'Имя не указано';if(profilePhone)profilePhone.textContent=profile.phone||'Телефон не указан'}
   const statNodes=$$('[data-account-stat]');
   if(statNodes.length){
-   const ordersCount=read('tokyo-demo-orders').length,bookingsCount=read('tokyo-demo-bookings').length,favoritesCount=window.TokyoCart?.getFavorites().length||0,addressesCount=read('tokyo-demo-addresses').length;
+   const ordersCount=read('tokyo-demo-orders').length,bookingsCount=read('tokyo-demo-bookings').length,favoritesCount=window.TokyoCart?.getFavorites().length||0,addressesCount=readAddresses().length;
    const unreadNotifications=notifications.filter(item=>!item.read).length;
    const stats={orders:ordersCount,bookings:bookingsCount,favorites:favoritesCount,notifications:unreadNotifications};
    statNodes.forEach(node=>{node.textContent=String(stats[node.dataset.accountStat]??0)});
@@ -87,8 +111,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   const id=button.dataset.demoNotificationRead;
   const saved=read('tokyo-demo-read-notifications').filter(value=>typeof value==='string');
   if(!saved.includes(id))saved.push(id);
-  localStorage.setItem('tokyo-demo-read-notifications',JSON.stringify(saved));
-  render();
+  try{localStorage.setItem('tokyo-demo-read-notifications',JSON.stringify(saved));render()}
+  catch{const host=$('#demo-notifications');let status=$('[data-notification-error]',host);if(!status){status=document.createElement('p');status.dataset.notificationError='';status.className='form-status error';status.setAttribute('role','status');host.append(status)}status.textContent='Не удалось сохранить прочитанность. Хранилище браузера недоступно.'}
  });
  $$('[data-account-tab]').forEach(button=>button.addEventListener('click',()=>{$$('[data-account-tab]').forEach(b=>{b.classList.toggle('active',b===button);b.setAttribute('aria-current',b===button?'page':'false')});$$('[data-account-panel]').forEach(panel=>panel.hidden=panel.dataset.accountPanel!==button.dataset.accountTab)}));
  $$('[data-account-quick-target]').forEach(button=>button.addEventListener('click',()=>document.querySelector('.account-demo-nav [data-account-tab="'+button.dataset.accountQuickTarget+'"]')?.click()));
@@ -141,11 +165,43 @@ document.addEventListener('DOMContentLoaded',()=>{
   status.replaceChildren();if(!cart?.addOrder?.(payload)){status.textContent='Не удалось восстановить заказ целиком: проверьте доступность блюд и лимиты корзины.';status.className='form-status error';return}
   status.append(document.createTextNode('Состав добавлен в корзину. Проверьте его перед оформлением. '));const link=document.createElement('a');link.href='cart.html';link.textContent='Открыть корзину ↗';status.append(link);status.className='form-status success'
  });
- document.addEventListener('submit',event=>{const form=event.target;if(!form.matches('[data-local-form]'))return;event.preventDefault();const values=Object.fromEntries(new FormData(form).entries());if(form.dataset.localForm==='profile'){localStorage.setItem('tokyo-demo-profile',JSON.stringify(values));writeStatus(form,'Профиль сохранён только в этом браузере.');render()}else if(form.dataset.localForm==='address'){const list=read('tokyo-demo-addresses');list.unshift(values.address.trim());localStorage.setItem('tokyo-demo-addresses',JSON.stringify(list.slice(0,10)));form.reset();writeStatus(form,'Адрес сохранён только в этом браузере.');render()}});
- $('#demo-addresses')?.addEventListener('click',event=>{const b=event.target.closest('[data-address-remove]');if(!b)return;const list=read('tokyo-demo-addresses');list.splice(Number(b.dataset.addressRemove),1);localStorage.setItem('tokyo-demo-addresses',JSON.stringify(list));render()});
- $('#demo-clear-data')?.addEventListener('click',()=>{window.TokyoCart?.clear();window.TokyoCart?.setFavorites([]);['tokyo-demo-orders','tokyo-demo-bookings','tokyo-demo-reviews','tokyo-demo-contacts','tokyo-demo-profile','tokyo-demo-addresses','tokyo-demo-account-seeded','tokyo-demo-read-notifications'].forEach(key=>localStorage.removeItem(key));localStorage.setItem('tokyo-demo-account-seed-dismissed','1');const seedPanel=$('.account-demo-seed');if(seedPanel)seedPanel.hidden=false;const s=$('#demo-settings-status');if(s)s.textContent='Локальные данные этого сайта очищены.';render();document.dispatchEvent(new Event('tokyo-demo-data-updated'))});
+ document.addEventListener('submit',event=>{
+  const form=event.target;if(!form.matches('[data-local-form]'))return;event.preventDefault();const values=Object.fromEntries(new FormData(form).entries());
+  try{
+   if(form.dataset.localForm==='profile'){
+    const month=String(values.birth_month||'').trim(),day=String(values.birth_day||'').trim(),consent=values.birthday_offer_consent==='1';
+    if((month||day)&&!validBirthday(month,day)){writeStatus(form,'Выберите корректные месяц и день рождения или очистите оба поля.',true);return}
+    if(consent&&!month){writeStatus(form,'Для отдельного согласия сначала укажите месяц и день рождения.',true);return}
+    localStorage.setItem('tokyo-demo-profile',JSON.stringify({name:String(values.name||'').trim(),phone:String(values.phone||'').trim(),birthMonth:month?String(Number(month)):'',birthDay:day?String(Number(day)):'',birthdayConsent:consent}));profileDraftDirty=false;
+    const savedMessage=month?(consent?'День рождения и отдельное согласие сохранены только в этом браузере. Статическая версия не создаёт купон и не начисляет бонусы.':'День рождения сохранён только в этом браузере; согласие на персональные предложения не дано.'):'Профиль сохранён только в этом браузере.';
+    writeStatus(form,savedMessage);render();
+   }else if(form.dataset.localForm==='address'){
+    const value=String(values.address||'').trim(),list=readAddresses();
+    if(value.length<5||value.length>180){writeStatus(form,'Введите адрес от 5 до 180 символов.',true);return}
+    if(list.includes(value)){writeStatus(form,'Этот адрес уже сохранён.',true);return}
+    if(list.length>=10){writeStatus(form,'Можно сохранить не более 10 адресов. Удалите ненужный перед добавлением нового.',true);return}
+    list.unshift(value);localStorage.setItem('tokyo-demo-addresses',JSON.stringify(list));form.reset();writeStatus(form,'Адрес сохранён только в этом браузере.');render();
+   }
+  }catch{writeStatus(form,'Не удалось сохранить данные в этом браузере. Введённый текст оставлен в форме.',true)}
+ });
+ $('#demo-addresses')?.addEventListener('click',event=>{
+  const b=event.target.closest('[data-address-remove]');if(!b)return;const list=readAddresses(),index=list.indexOf(b.dataset.addressValue);if(index<0){render();return}
+  try{list.splice(index,1);localStorage.setItem('tokyo-demo-addresses',JSON.stringify(list));render()}catch{const form=$('[data-local-form="address"]');if(form)writeStatus(form,'Не удалось удалить адрес из хранилища браузера.',true)}
+ });
+ $('#demo-clear-data')?.addEventListener('click',()=>{
+  const status=$('#demo-settings-status');
+  try{window.TokyoCart?.clear();window.TokyoCart?.setFavorites([]);['tokyo-demo-orders','tokyo-demo-bookings','tokyo-demo-reviews','tokyo-demo-contacts','tokyo-demo-profile','tokyo-demo-addresses','tokyo-demo-account-seeded','tokyo-demo-read-notifications'].forEach(key=>localStorage.removeItem(key));localStorage.setItem('tokyo-demo-account-seed-dismissed','1');profileDraftDirty=false;profileHydrated=false;const seedPanel=$('.account-demo-seed');if(seedPanel)seedPanel.hidden=false;if(status){status.textContent='Локальные данные этого сайта очищены.';status.className='form-status success'}}
+  catch{if(status){status.textContent='Не все данные удалось очистить. Хранилище браузера недоступно; повторите попытку.';status.className='form-status error'}}
+  render();document.dispatchEvent(new Event('tokyo-demo-data-updated'));
+ });
  document.addEventListener('tokyo-demo-data-updated',render);document.addEventListener('tokyo-favorites-updated',render);
  const accountDataKeys=['tokyo-demo-orders','tokyo-demo-bookings','tokyo-demo-reviews','tokyo-demo-contacts','tokyo-demo-profile','tokyo-demo-addresses'];
+ window.addEventListener('storage',event=>{
+  if(event.key===null||accountDataKeys.includes(event.key)||event.key==='tokyo-demo-read-notifications'){
+   if((event.key===null||event.key==='tokyo-demo-profile')&&profileDraftDirty){const form=$('[data-local-form="profile"]');if(form)writeStatus(form,'Сохранённый профиль изменился в другой вкладке. Ваш черновик оставлен в форме и пока не сохранён.',true)}
+   render();
+  }
+ });
  const hasExistingLocalData=()=>{try{const stored=accountDataKeys.some(key=>{const raw=localStorage.getItem(key);if(!raw)return false;let value;try{value=JSON.parse(raw)}catch{return true}return Array.isArray(value)?value.length>0:!!(value&&typeof value==='object'&&Object.keys(value).length)});const cart=window.TokyoCart;return stored||Boolean(cart?.get?.().length||cart?.getCustomSets?.().length||cart?.getFavorites?.().length)}catch{return true}};
  let dismissed=false;try{dismissed=localStorage.getItem('tokyo-demo-account-seed-dismissed')==='1'}catch{dismissed=true}
  if(staticMode&&!dismissed&&!hasExistingLocalData()) $('[data-account-demo-seed]')?.click();

@@ -35,6 +35,8 @@ Tokyo Privilege levels and benefit settings are database records. Ledger entries
 The protected Marketing & Loyalty panel now creates, edits, orders, and deactivates custom-set formats. Slugs stay stable for existing links and campaign targeting. Server validation limits a format to 3–8 distinct dishes and at most 12 portions, and the set builder continues to derive prices from active catalogue records. Pages still exposes only the demo catalogue and browser-side estimate. The focused admin-set-variant-regression.php covers authorization, create/edit, invalid bounds, duplicate slugs, CSRF, transaction rollback, activation, and the public PHP builder view.
 ## GitHub Pages
 
+The static account adds an optional birthday month/day and a separate local consent checkbox. It deliberately omits birth year and stores the preference only in this browser. The demo does not create an actionable birthday coupon, award points, or send a message; the real PHP offer path remains controlled by server settings and authenticated account consent.
+
 The export presents local versions of the offers, set builder, recommendation wizard, seasonal collection, certificate preview, promo quote and loyalty summary. Any stored values stay in this browser's `localStorage`. The local price quote is marked as an estimate; `tokyo-secret-demo.js` carries an intentionally public client-only Secret Menu preview payload. This is presentation only and does not provide PHP authorization. Referral codes do not register users or earn a reward. The certificate UI explicitly says it is not payment or stored value. Static actions do not reach PHP, email or restaurant staff.
 
 ## Seed examples

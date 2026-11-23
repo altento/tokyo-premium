@@ -12,9 +12,13 @@ document.addEventListener('DOMContentLoaded',()=>{
  const readRows=key=>read(key).filter(row=>row&&typeof row==='object'&&!Array.isArray(row));
  const writeStatus=(form,msg,error=false)=>{const s=$('.form-status',form);if(s){s.textContent=msg;s.className='form-status '+(error?'error':'success')}};
  const readAddresses=()=>read('tokyo-demo-addresses').filter(value=>typeof value==='string'&&value.trim()).map(value=>value.trim());
- const readProfile=()=>{try{const value=JSON.parse(localStorage.getItem('tokyo-demo-profile')||'{}');if(!value||typeof value!=='object'||Array.isArray(value))return{};return{name:typeof value.name==='string'?value.name:'',phone:typeof value.phone==='string'?value.phone:''}}catch{return{}}};
+ const monthDays=[31,29,31,30,31,30,31,31,30,31,30,31];
+ const validBirthday=(month,day)=>{const m=Number(month),d=Number(day);return Number.isInteger(m)&&m>=1&&m<=12&&Number.isInteger(d)&&d>=1&&d<=monthDays[m-1]};
+ const syncBirthdayDays=(form,monthValue,dayValue='')=>{const select=form?.elements?.birth_day;if(!select)return;const max=monthDays[Number(monthValue)-1]||0;select.replaceChildren(new Option('Выберите день',''));for(let day=1;day<=max;day++)select.add(new Option(String(day),String(day)));select.disabled=max===0;const wanted=Number(dayValue||'');select.value=Number.isInteger(wanted)&&wanted>=1&&wanted<=max?String(wanted):''};
+ const readProfile=()=>{try{const value=JSON.parse(localStorage.getItem('tokyo-demo-profile')||'{}');if(!value||typeof value!=='object'||Array.isArray(value))return{};const month=String(value.birthMonth??''),day=String(value.birthDay??''),hasBirthday=validBirthday(month,day);return{name:typeof value.name==='string'?value.name:'',phone:typeof value.phone==='string'?value.phone:'',birthMonth:hasBirthday?String(Number(month)):'',birthDay:hasBirthday?String(Number(day)):'',birthdayConsent:hasBirthday&&value.birthdayConsent===true}}catch{return{}}};
  let profileDraftDirty=false,profileHydrated=false;
  $('[data-local-form="profile"]')?.addEventListener('input',event=>{profileDraftDirty=true;const status=$('.form-status',event.currentTarget);if(status){status.textContent='Есть несохранённые изменения. Нажмите «Сохранить профиль».';status.className='form-status'}});
+ $('[data-local-form="profile"]')?.elements?.birth_month?.addEventListener('change',event=>syncBirthdayDays(event.currentTarget.form,event.currentTarget.value,event.currentTarget.form.elements.birth_day.value));
  const staticMode=Boolean($('.account-demo-page'));
  const menuHref=staticMode?'menu.html':'menu.php';
  const bookingHref=staticMode?'booking.html':'pages.php?page=booking';
@@ -86,7 +90,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   const addressRows=readAddresses(),addressList=$('#demo-addresses');if(addressList){addressList.innerHTML=addressRows.length?addressRows.map((v,i)=>'<article><div><strong>Адрес '+(i+1)+' · только этот браузер</strong><p>'+esc(v)+'</p></div><button class="text-button" type="button" data-address-remove="'+i+'" data-address-value="'+esc(v)+'">Удалить</button></article>').join(''):'<p class="menu-note">Адресов пока нет.</p>'}
   const addressPreview=$('#demo-addresses-preview'),addressPreviewEmpty=$('#demo-addresses-preview-empty');if(addressPreview){addressPreview.innerHTML=addressRows.slice(0,2).map((value,index)=>'<article><span class="account-address-index">0'+(index+1)+'</span><div><strong>Адрес '+(index+1)+' · только этот браузер</strong><p>'+esc(value)+'</p></div></article>').join('');if(addressPreviewEmpty)addressPreviewEmpty.hidden=addressRows.length>0}
   const pform=$('[data-local-form="profile"]'),displayName=$('#demo-display-name'),profileName=$('#demo-profile-contact-name'),profilePhone=$('#demo-profile-contact-phone');
-  if(pform||displayName||profileName||profilePhone){const profile=readProfile();if(pform&&(!profileHydrated||!profileDraftDirty)){pform.elements.name.value=profile.name||'';pform.elements.phone.value=profile.phone||'';profileHydrated=true}if(displayName)displayName.textContent=profile.name?('Здравствуйте, '+profile.name+'.'):'История, избранное и привилегии в одном месте.';if(profileName)profileName.textContent=profile.name||'Имя не указано';if(profilePhone)profilePhone.textContent=profile.phone||'Телефон не указан'}
+  if(pform||displayName||profileName||profilePhone){const profile=readProfile();if(pform&&(!profileHydrated||!profileDraftDirty)){pform.elements.name.value=profile.name||'';pform.elements.phone.value=profile.phone||'';pform.elements.birth_month.value=profile.birthMonth||'';syncBirthdayDays(pform,profile.birthMonth,profile.birthDay);pform.elements.birthday_offer_consent.checked=profile.birthdayConsent;profileHydrated=true}if(displayName)displayName.textContent=profile.name?('Здравствуйте, '+profile.name+'.'):'История, избранное и привилегии в одном месте.';if(profileName)profileName.textContent=profile.name||'Имя не указано';if(profilePhone)profilePhone.textContent=profile.phone||'Телефон не указан'}
   const statNodes=$$('[data-account-stat]');
   if(statNodes.length){
    const ordersCount=read('tokyo-demo-orders').length,bookingsCount=read('tokyo-demo-bookings').length,favoritesCount=window.TokyoCart?.getFavorites().length||0,addressesCount=readAddresses().length;
@@ -165,8 +169,12 @@ document.addEventListener('DOMContentLoaded',()=>{
   const form=event.target;if(!form.matches('[data-local-form]'))return;event.preventDefault();const values=Object.fromEntries(new FormData(form).entries());
   try{
    if(form.dataset.localForm==='profile'){
-    localStorage.setItem('tokyo-demo-profile',JSON.stringify({name:String(values.name||'').trim(),phone:String(values.phone||'').trim()}));profileDraftDirty=false;
-    writeStatus(form,'Профиль сохранён только в этом браузере.');render();
+    const month=String(values.birth_month||'').trim(),day=String(values.birth_day||'').trim(),consent=values.birthday_offer_consent==='1';
+    if((month||day)&&!validBirthday(month,day)){writeStatus(form,'Выберите корректные месяц и день рождения или очистите оба поля.',true);return}
+    if(consent&&!month){writeStatus(form,'Для отдельного согласия сначала укажите месяц и день рождения.',true);return}
+    localStorage.setItem('tokyo-demo-profile',JSON.stringify({name:String(values.name||'').trim(),phone:String(values.phone||'').trim(),birthMonth:month?String(Number(month)):'',birthDay:day?String(Number(day)):'',birthdayConsent:consent}));profileDraftDirty=false;
+    const savedMessage=month?(consent?'День рождения и отдельное согласие сохранены только в этом браузере. Статическая версия не создаёт купон и не начисляет бонусы.':'День рождения сохранён только в этом браузере; согласие на персональные предложения не дано.'):'Профиль сохранён только в этом браузере.';
+    writeStatus(form,savedMessage);render();
    }else if(form.dataset.localForm==='address'){
     const value=String(values.address||'').trim(),list=readAddresses();
     if(value.length<5||value.length>180){writeStatus(form,'Введите адрес от 5 до 180 символов.',true);return}

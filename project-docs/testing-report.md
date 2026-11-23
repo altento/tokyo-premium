@@ -721,3 +721,8 @@ The authenticated booking/operations and Marketing & Loyalty browser regressions
 ## 2026-11-23 — focused checkout reset command
 
 Added `npm run test:checkout`, a self-contained Playwright check that serves the current static export on an ephemeral local port. It passed pickup checkout/reset, cart clearing, delivery address visibility/required state, invalid delivery rejection, successful repeat delivery, pickup/delivery switching, route changes, reload persistence, and zero page errors. `node --check tests/checkout-reset-regression.cjs` and `git diff --check` passed. This verifies the Pages demo only; the PHP/API checkout scenario remains in the broader `tests/browser-regression.cjs` and needs a SQLite-enabled PHP server.
+## 2026-11-23 — static birthday preference
+
+The GitHub Pages profile now offers an optional month/day birthday preference and separate opt-in. It stores no birth year, stays in this browser, can be withdrawn independently, and makes no coupon, bonus, email, or server request. A focused Playwright check passed save, reload, leap day, April day limits, opt-out and clear-data behavior. Desktop and 390 px profile screenshots are in `visual-qa/account-birthday-2026-11-23/`. PHP birthday persistence remains covered by its existing server profile flow; it could not be exercised against SQLite locally because this environment has no PDO SQLite driver. No broad test suite was run.
+
+After synchronizing the generated account scripts with the current exporter source, the existing browser-only account regression also passed against the local static export with screenshots disabled. It covered history, favorites, order repeat, notifications, local-data clearing, and escaped user content.

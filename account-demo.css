@@ -584,6 +584,18 @@
 .account-demo-page .account-demo-order .account-demo-order-total{min-width:76px}
 .account-demo-page .account-demo-order .demo-order-content>.account-demo-order-meta{grid-column:1 / -1;grid-row:auto}
 .account-demo-page .account-demo-panel h2{font-size:clamp(25px,2.2vw,34px);line-height:1.18}
+.account-demo-page .account-birthday-settings{grid-column:1/-1;min-width:0;margin:0;padding:16px;border:1px solid rgba(202,165,107,.28);border-radius:8px;background:linear-gradient(145deg,rgba(202,165,107,.05),rgba(12,10,9,.45))}
+.account-demo-page .account-birthday-settings legend{padding:0 8px;color:#e7c98f;font-family:'Playfair Display',Georgia,serif;font-size:1.15rem}
+.account-demo-page .account-birthday-settings .account-section-copy{margin:0 0 12px;color:var(--muted);font-size:.78rem;line-height:1.5}
+.account-demo-page .account-birthday-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.account-demo-page .account-birthday-controls .field{min-width:0}
+.account-demo-page .account-birthday-controls select{width:100%;min-height:44px}
+.account-demo-page .account-demo-form label.account-birthday-consent{display:flex;grid-column:1/-1;align-items:flex-start;justify-content:flex-start;gap:9px;width:100%;min-width:0;margin-top:13px;color:var(--ivory);font-size:.78rem;line-height:1.5;text-align:left}
+.account-demo-page .account-demo-form label.account-birthday-consent>span{display:block;flex:1;min-width:0}
+.account-demo-page .account-demo-form label.account-birthday-consent>input{display:block;flex:0 0 18px;width:18px;min-width:18px;height:18px;margin:2px 0 0;accent-color:#b71927}
+.account-demo-page .account-birthday-settings .account-local-note{margin:12px 0 0;color:#b9ad98;font-size:.72rem;line-height:1.5}
+.account-demo-page .account-birthday-settings[hidden]{display:none!important}
+@media(max-width:520px){.account-demo-page .account-birthday-controls{grid-template-columns:minmax(0,1fr)}}
 .account-demo-page .account-favorites-overview-heading{align-items:center;gap:16px}
 .account-demo-page .account-favorites-overview-heading .button{flex-shrink:0;min-height:44px}
 .account-demo-page .account-favorites-overview-grid .dish-card{min-width:0;min-height:0}
