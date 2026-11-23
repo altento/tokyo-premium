@@ -46,6 +46,7 @@ async function run() {
     assert.equal(await page.locator('[data-account-demo-seed]').count(), 1, 'account retains an explicit sample-data action for later use');
     assert.ok(!(await page.locator('.account-demo-seed').isVisible()), 'sample prompt is hidden after first-visit seeding');
     assert.equal(await page.locator('.account-overview h1').innerText(), 'Личный кабинет', 'account masthead keeps a stable page title');
+    assert.equal(await page.locator('.account-demo-avatar').getAttribute('data-initials'), null, 'empty profile keeps the neutral account icon');
     assert.equal(await page.locator('.account-overview-lead').innerText(), 'Ваше пространство в Tokyo Premium', 'account masthead follows the approved subtitle hierarchy');
     assert.match(await page.locator('.account-overview-privacy').innerText(), /не зашифровано/i, 'account explains that browser-local demo data is not encrypted');
     assert.equal(await page.locator('.account-overview-art img').getAttribute('src'), 'assets/generated/contact-exterior.webp', 'account uses an entrance photograph rather than a room photo');
@@ -226,6 +227,9 @@ async function run() {
     assert.match(await preservedPage.locator('#demo-notifications').innerText(), /не оплачен и не отправлен ресторану/i, 'saved demo order notification keeps its local-only status');
     assert.equal(await preservedPage.locator('#demo-orders .account-demo-record-badge').count(), 0, 'an existing user order is not relabeled as a system sample');
     assert.equal(await preservedPage.evaluate(() => JSON.parse(localStorage.getItem('tokyo-demo-profile') || '{}').name), 'Сохранённый гость', 'existing local profile data is preserved');
+    assert.equal(await preservedPage.locator('.account-demo-avatar').getAttribute('data-initials'), 'СГ', 'local profile initials personalize the account without implying a real profile photo');
+    assert.equal(await preservedPage.locator('.account-demo-avatar').evaluate(node => getComputedStyle(node, '::after').content), '"СГ"', 'profile initials render as text in the avatar');
+    if (captureScreenshots) await preservedPage.locator('.account-overview').screenshot({ path: path.join(evidence, '11-account-profile-initials-mobile.jpg'), type: 'jpeg', quality: 86 });
     assert.ok(await preservedPage.locator('.account-demo-seed').isVisible(), 'sample opt-in remains available when user data already exists');
     await preservedPage.locator('[data-account-demo-seed]').click();
     assert.deepEqual(await preservedPage.evaluate(() => JSON.parse(localStorage.getItem('tokyo-demo-addresses') || '[]')), ['<img src=x onerror=alert(1)>'], 'restoring examples never overwrites an existing saved address');

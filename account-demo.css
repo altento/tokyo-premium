@@ -472,6 +472,22 @@
   height: 40px;
 }
 
+.account-demo-page .account-demo-avatar[data-initials]:not([data-initials=""]) {
+  position: relative;
+  isolation: isolate;
+  font: 500 .78rem/1 'Playfair Display', Georgia, serif;
+  letter-spacing: .08em;
+  box-shadow: inset 0 0 0 3px rgba(202, 165, 107, .08), 0 0 16px rgba(202, 165, 107, .12);
+}
+
+.account-demo-page .account-demo-avatar[data-initials]:not([data-initials=""]) svg {
+  display: none;
+}
+
+.account-demo-page .account-demo-avatar[data-initials]:not([data-initials=""])::after {
+  content: attr(data-initials);
+}
+
 .account-demo-page .account-demo-contact-copy {
   display: grid;
   min-width: 0;
