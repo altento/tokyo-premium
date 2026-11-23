@@ -198,3 +198,7 @@ PHP account navigation and order-state presentation have been polished and local
 ## 2026-11-23 — contacts reference-order follow-up
 
 The transport/accessibility strip now follows the contact form and precedes the visit-planning section, matching the reading order in reference 09. The local focused regression and the deployed public-route regression passed at 1440 px and 390 px. GitHub Pages workflow [45187820484](https://github.com/altento/tokyo-premium/actions/runs/45187820484) succeeded; public captures and the route comparison are in `project-docs/visual-qa/contacts-strip-order-2026-11-23/`. Local PHP browser rendering was not run. The correction is verified for the static Pages route; the broader Tokyo Premium 2.0 acceptance remains in progress.
+
+## 2026-11-23 — philosophy desktop rhythm follow-up
+
+The targeted static route regression passed at 390 px and 1440 px. The timeline now pairs each year with its event and keeps 12 px descriptions; the history image, principles band and booking CTA are more compact. The measured desktop page height changed from 2548 to 2543 px while the mobile layout stayed unchanged. The full-page density gap remains, and PHP rendering/public deployment for this follow-up have not yet been verified. Evidence: `project-docs/visual-qa/philosophy-density-final-pass-2026-11-23/`. Overall acceptance remains in progress.

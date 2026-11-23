@@ -769,3 +769,7 @@ After commit `c7ffe62` deployed successfully in workflow [45143146646](https://g
 ## 2026-11-23 — contacts reference order
 
 Moved the transport/status strip before the visit-planning banner in the PHP template and static export to follow reference 09. Local contact-route visual regression passed at 1440 px and 390 px; the full-page captures were inspected and the DOM order is asserted. The Pages workflow [45187820484](https://github.com/altento/tokyo-premium/actions/runs/45187820484) passed, and the public route passed the focused browser regression at 1440 px and 390 px. PHP browser rendering was not run locally. Evidence: `visual-qa/contacts-strip-order-2026-11-23/`.
+
+## 2026-11-23 — philosophy desktop rhythm follow-up
+
+The focused philosophy visual test passed at 390 px and 1440 px after aligning the desktop timeline years beside events, keeping descriptions at 12 px, and reducing the story image and principles/CTA spacing. Images loaded, headings and four red rules stayed visible, and neither viewport overflowed. Mobile document height remained 5821 px; desktop height changed from 2548 to 2543 px. This is a visual-structure improvement, not closure of the still-measured page-density gap. PHP rendering and hosted deployment remain unverified for this change. Evidence: `visual-qa/philosophy-density-final-pass-2026-11-23/`.

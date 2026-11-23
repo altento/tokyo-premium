@@ -709,6 +709,23 @@
   .about-page .about-contact{gap:18px}
 }
 
+/* One desktop density pass: bring the story image and principle band closer
+   to reference 05 without shrinking body copy or changing mobile stacking. */
+@media(min-width:1101px){
+  .about-page .about-story{gap:clamp(18px,2vw,28px);padding-top:clamp(30px,2.4vw,36px);padding-bottom:clamp(30px,2.4vw,36px)}
+  .about-page .about-story .about-intro-image img{height:clamp(230px,17vw,250px)}
+  .about-page .about-story .timeline-list li{display:grid;grid-template-columns:46px minmax(0,1fr);grid-template-rows:auto auto;column-gap:8px;align-items:start}
+  .about-page .about-story .timeline-list li>span{grid-column:1;grid-row:1 / span 2;font-size:17px}
+  .about-page .about-story .timeline-list li>h3{grid-column:2;grid-row:1;margin:0 0 2px;font-size:15px;line-height:1.2}
+  .about-page .about-story .timeline-list li>p{grid-column:2;grid-row:2;max-width:none;margin:0;font-size:12px;line-height:1.35}
+  .about-page .about-principles{padding-block:clamp(16px,1.2vw,18px)}
+  .about-page .about-principles .principle-grid{margin-top:18px}
+  .about-page .about-principles .principle-grid article{min-height:104px;padding-block:6px}
+  .about-page .about-principles .principle-grid article>span.principle-medallion{width:50px;font-size:25px}
+  .about-page .about-contact{gap:14px;padding-block:clamp(10px,.8vw,12px)}
+  .about-page .about-contact h2{margin:2px 0 4px;font-size:clamp(22px,2vw,28px)}
+}
+
 /* Keep the red editorial divider under the plain-copy philosophy headings,
    matching the section-title treatment used elsewhere in the experience. */
 .about-page .about-story .about-copy h2::after,

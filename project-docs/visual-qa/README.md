@@ -331,3 +331,7 @@ Current evidence for the account layout update is under `account-dashboard-layou
 ## 2026-11-23 — contacts transport-strip order
 
 Reference 09 places transport, parking and accessibility between the contact form and the visit banner. The data are now displayed in that order in PHP and the static export, with unknown values kept explicit. The focused contacts Playwright regression passed locally and on the published Pages route at 1440 px and 390 px. The GitHub Pages workflow [45187820484](https://github.com/altento/tokyo-premium/actions/runs/45187820484) passed. Evidence and comparison: [`contacts-strip-order-2026-11-23`](contacts-strip-order-2026-11-23/comparison.md), including public captures. PHP browser rendering was not run locally.
+
+## 2026-11-23 — philosophy desktop rhythm follow-up
+
+The desktop history image and principles band are more compact; each timeline year now sits beside its event, matching the reference, and its description remains readable at 12 px. The mobile layout was not changed. Focused static Playwright passed at 390 px and 1440 px, with screenshots and measurements in [`philosophy-density-final-pass-2026-11-23`](philosophy-density-final-pass-2026-11-23/comparison.md). The 1440 px page height moved from 2548 to 2543 px, so the overall density gap remains; the focused pass does not claim to close it. PHP rendering and public deployment are pending.
