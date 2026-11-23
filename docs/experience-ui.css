@@ -398,6 +398,20 @@
   .editorial-page .booking-benefits article p { font-size: .73rem; }
   .editorial-page .table-map-wrap { padding: 10px; }
 }
+
+/* Keep the wide booking page close to the approved compact rhythm. */
+@media (min-width: 901px) {
+  .editorial-page > .booking-benefits-section { padding-block: 14px; }
+  .editorial-page .booking-benefits article { gap: 2px 10px; padding: 11px 10px; }
+  .editorial-page .booking-benefits article h3 { font-size: clamp(.98rem, 1.2vw, 1.08rem); }
+  .editorial-page .booking-benefits article p { font-size: .8rem; }
+  .editorial-page > #booking-form { padding-block: 42px; }
+  .editorial-page > #booking-form > .editorial-heading { margin-bottom: 22px; }
+  .editorial-page .booking-layout { gap: clamp(18px, 2.2vw, 30px); }
+  .editorial-page .booking-form .school-note { margin: 0; padding: 10px 12px; font-size: .74rem; line-height: 1.45; }
+  .editorial-page > .booking-faq-section { gap: clamp(24px, 4vw, 60px); padding-block: clamp(40px, 4.2vw, 58px); }
+  .editorial-page .booking-faq-art figure { aspect-ratio: 1.22; min-height: 300px; }
+}
 .tp-evening-set-card { grid-column: 1 / -1; border-color: rgba(210, 174, 108, .48); background: linear-gradient(120deg, rgba(138, 18, 29, .14), rgba(11, 10, 9, .88) 48%); }
 .tp-evening-set-components { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: .45rem 1rem; padding: 0; margin: .8rem 0 0; list-style: none; }
 .tp-evening-set-components li { display: flex; justify-content: space-between; gap: .8rem; padding: .45rem 0; border-bottom: 1px solid rgba(212, 178, 119, .16); }
