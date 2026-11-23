@@ -2,7 +2,7 @@
 
 ## 2026-11-23 — Homepage cadence follow-up
 
-A desktop-only CSS pass preserves all homepage sections while reducing oversized recommendation cards, editorial blocks, room story and booking padding. At 1440 px the full page fell from 2841 to 2617 px; the 390 px layout remained 4708 px. `tests/visual-fidelity-regression.cjs` passed for the static home route at both widths with no browser errors or horizontal overflow. Captures and the honest remaining gap to reference 01 are in [`home-final-cadence-2026-11-23`](visual-qa/home-final-cadence-2026-11-23/comparison.md). Public verification/deployment will be recorded separately.
+A desktop-only CSS pass preserves all homepage sections while reducing oversized recommendation cards, editorial blocks, room story and booking padding. At 1440 px the full page fell from 2841 to 2617 px; the 390 px layout remained 4708 px. `tests/visual-fidelity-regression.cjs` passed locally and on public Pages at both widths; no overflow, failed requests or page errors were found. The test now uses `DOMContentLoaded` and explicitly scrolls/reveals before capture, avoiding the public `networkidle` timeout. Captures, public evidence and the measured remaining gap to reference 01 are in [`home-final-cadence-2026-11-23`](visual-qa/home-final-cadence-2026-11-23/comparison.md).
 
 ## 2026-11-23 · Уточнение ритма страницы «Философия»
 

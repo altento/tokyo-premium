@@ -62,7 +62,7 @@ async function visit(browser, base, route, mode, capture = false) {
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
-  const response = await page.goto(`${base}${route[mode]}`, { waitUntil: 'networkidle' });
+  const response = await page.goto(`${base}${route[mode]}`, { waitUntil: 'domcontentloaded' });
   assert.equal(response?.status(), 200, `${mode} ${route.key} returns 200`);
   if (route.key === 'home') {
     const recommendationIds = await page.locator('.home-dish-card .add-to-cart').evaluateAll(buttons => buttons.map(button => Number(button.dataset.id)));

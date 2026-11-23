@@ -1,0 +1,37 @@
+{
+  "route": "home",
+  "publicUrl": "https://altento.github.io/tokyo-premium/index.html?qa=e780478",
+  "deployedCommit": "e7804788ec3714fd67eb1226f58bebaf88b9dc8c",
+  "workflow": {
+    "id": 45200002370,
+    "url": "https://github.com/altento/tokyo-premium/actions/runs/45200002370",
+    "conclusion": "success"
+  },
+  "verifiedAtUtc": "2026-11-23 15:06:13 UTC",
+  "check": "node tests/visual-fidelity-regression.cjs, TOKYO_VISUAL_ROUTES=home, TOKYO_VISUAL_MODE=static",
+  "readiness": "domcontentloaded; the test scrolls through the page, decodes images and asserts visible reveal content before capture",
+  "result": "passed locally and on public Pages",
+  "viewports": [
+    {
+      "width": 1440,
+      "fullPageHeight": 2617,
+      "scrollWidth": 1440,
+      "featuredDishCards": 4,
+      "pageErrors": 0,
+      "failedRequests": 0
+    },
+    {
+      "width": 390,
+      "fullPageHeight": 4708,
+      "scrollWidth": 390,
+      "featuredDishCards": 4,
+      "pageErrors": 0,
+      "failedRequests": 0
+    }
+  ],
+  "screenshots": [
+    "home-static-desktop.jpg",
+    "home-static-mobile.jpg"
+  ],
+  "limitation": "Pages is the browser-local demo; this check does not verify PHP/SQLite hosting, live payment or SMTP."
+}
