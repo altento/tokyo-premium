@@ -12,6 +12,10 @@ The focused Playwright check `tests/philosophy-visual.cjs` passed on the checked
 
 Fresh full-page captures and measurements are in this directory: [`desktop.jpg`](desktop.jpg), [`mobile.jpg`](mobile.jpg), and [`metrics.json`](metrics.json).
 
+## Public Pages check
+
+After source commit [`b068994`](https://github.com/altento/tokyo-premium/commit/b0689946df4906b35a8a1970aa640a2d785747f0) deployed successfully in [workflow 45180336157](https://github.com/altento/tokyo-premium/actions/runs/45180336157), the same focused Playwright check passed against the public Pages route at 390, 1440 and 1920 px. Public screenshots and metrics are in [`public/`](public/). Pages serves the static export only; this does not verify the PHP route.
+
 ## Comparison limits
 
 The approved PNG is 1024 × 1536 px (2160 px high when proportionally scaled to 1440 px width). The current desktop page is still about 18% taller, and differs in typography, image treatment, editorial copy and its additional booking call to action. This is a measured density improvement, not a pixel-match claim. PHP-rendered visual verification is not available in the local environment because the Windows PHP CLI has no PDO SQLite driver.
