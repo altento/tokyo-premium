@@ -777,3 +777,7 @@ The focused philosophy visual test passed at 390 px and 1440 px locally and publ
 ## 2026-11-23 — booking floorplan legibility
 
 Increased map-zone labels, explanatory notes and table numbers in both source and static CSS; moved the private-room title to avoid collision with its note. Added an SVG text-overlap assertion to the focused floorplan regression. Local and public Pages Playwright runs passed all 42 preference markers, zone/photo synchronization, reset and mobile-picker checks. Desktop/mobile captures were reviewed against reference 07; map text is clearer, but the whole-page composition remains a known visual gap. Workflow [45193974873](https://github.com/altento/tokyo-premium/actions/runs/45193974873) passed build and deployment. PHP browser rendering was not run. Evidence and comparison: `visual-qa/booking-floorplan-legibility-2026-11-23/`, including public captures.
+
+## 2026-11-23 — home desktop density follow-up
+
+The static home route passed the focused visual-fidelity regression at 1440 px and 390 px. Desktop full-page height decreased from 3100 px to 2841 px while the four public product cards and route checks remained valid; the mobile screenshot remains 390×4708. Both captures were inspected against reference 01. The home page is still about 681 px taller than the width-scaled reference and does not claim full visual parity. Evidence and comparison: `visual-qa/home-density-followup-2026-11-23/`.
