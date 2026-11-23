@@ -282,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const menuPagination = $('#menu-pagination');
   const originalDishOrder = new Map($$('.dish-card[data-category]').map((card, index) => [card, index]));
   let menuPage = 1;
-  const menuPageSize = 6;
+  let menuPageSize = window.matchMedia('(max-width: 700px)').matches ? 6 : 12;
   function renderFavorites() {
     if (!cart) return;
     const ids = cart.getFavorites();
@@ -343,6 +343,11 @@ document.addEventListener('DOMContentLoaded', () => {
       status.textContent = `Найдено блюд: ${visible}${visible ? ` · Страница ${menuPage} из ${pages}` : ''}.`;
     }
   }
+  const menuPageBreakpoint = window.matchMedia('(max-width: 700px)');
+  menuPageBreakpoint.addEventListener?.('change', event => {
+    menuPageSize = event.matches ? 6 : 12;
+    filterMenu();
+  });
   categoryButtons.forEach(button => button.addEventListener('click', () => {
     categoryButtons.forEach(item => { item.classList.toggle('active', item === button); item.setAttribute('aria-pressed', String(item === button)); });
     filterMenu();

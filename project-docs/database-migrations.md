@@ -28,8 +28,12 @@ The app runs `schema.sql` with `CREATE TABLE/INDEX IF NOT EXISTS`, then records 
 | 16 | Add optional order payment status, per-attempt FreedomPay records and a hashed payment capability. Existing orders remain unpaid; card data and credentials are not stored. |
 | 17 | Mark obsolete queued booking-confirmation email events as cancelled while preserving all outbox rows and IDs. |
 | 18 | Add nullable, session-keyed request fingerprints to order and booking idempotency rows. Existing rows are retained; an old replay with no fingerprint returns a conflict instead of claiming changed data was submitted. |
+| 19 | Add 29 fictional public menu items when absent, plus normalized ingredient, tag and pairing links. Existing administrator-edited dish rows are preserved; additions are transactional and idempotent. |
+| 20 | Add two additional public items to round the menu out to 50 visible dishes on databases that already contain two hidden Secret Menu entries; preserve existing products and related catalog links. |
 
 For migration v18, the fingerprint is an HMAC of canonical request fields excluding the CSRF token, with the current PHP session ID as the key. Exact retries replay the stored response; reusing a key with changed contact or order data returns HTTP 409. Raw personal data is not added to the idempotency tables. New reservations store the fingerprint in the same `BEGIN IMMEDIATE` transaction as the order/booking and replay result.
+
+Migrations v19–20 extend the fictional catalogue to 50 publicly visible items on the current database. The additional copycat image paths point to existing local WebP assets so every card loads offline; 29 new products still need their own dedicated photographs before the catalogue can be described as having unique dish photography.
 
 The account notification helpers are `commerce_account_notifications($pdo, $userId, $limit)` and `commerce_mark_account_notification_read($pdo, $userId, $notificationId)`. The mark-read helper only updates rows owned by the supplied user and is safe to retry. The authenticated `account.php` page exposes the `notification-read` POST action and checks CSRF before invoking the helper.
 

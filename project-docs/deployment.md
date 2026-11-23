@@ -1,6 +1,8 @@
 # Deployment notes
 Updated 2026-11-23
 
+Для переноса репозитория и запуска PHP-версии на другом Windows-компьютере см. [подробную инструкцию продолжения](continue-on-another-computer.md). Она отдельно объясняет, почему SQLite и секреты не входят в Git.
+
 ## Public preview
 - Repository: https://github.com/altento/tokyo-premium
 - Public URL: https://altento.github.io/tokyo-premium/

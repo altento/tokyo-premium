@@ -1,5 +1,5 @@
 # Content inventory
-Updated 2026-11-18
+Updated 2026-11-24
 
 | Content | Source | Status |
 |---|---|---|
@@ -15,6 +15,8 @@ Updated 2026-11-18
 | PHP orders, bookings, messages, reviews and admin users | SQLite | Local educational data; not connected to a real restaurant |
 
 No actual address or restaurant availability is claimed. The decorative map is explicitly a fictional diagram. Prices are examples in Kazakhstani tenge and are not a live offer.
+
+The additive catalogue migrations v19–20 bring the current public menu to 50 entries. Newly added menu items use existing local food photos chosen as the closest available visual match; the 29 added dishes do not yet have unique product photography.
 
 ## Tokyo Premium 2.0 content
 

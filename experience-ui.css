@@ -798,3 +798,228 @@
     font-size: clamp(33px, 8.7vw, 56px);
   }
 }
+
+#full-booking-form .field { align-content:start; min-width:0; }
+#full-booking-form .field small { color:#c6b8a3; font-size:.75rem; line-height:1.35; }
+#full-booking-form .booking-email-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(150px,.58fr); gap:10px; min-width:0; }
+#full-booking-form .booking-email-row input,
+#full-booking-form .booking-email-row select { width:100%; min-width:0; }
+#full-booking-form select option { background-color:#171411; color:#f7efe2; }
+@media(max-width:420px) {
+  #full-booking-form .booking-email-row { grid-template-columns:minmax(0,1fr) minmax(120px,.75fr); gap:6px; }
+  #full-booking-form .booking-email-row select { padding-inline:8px; font-size:.8rem; }
+}
+
+/* Homepage: a legible opening and a continuous restaurant story. */
+@media (min-width: 901px) {
+  .home-premium .home-hero-copy { width:min(760px,48vw); padding-block:70px 110px; }
+  .home-premium .home-hero[data-home-hero-scene="0"] h1 { font-size:clamp(78px,6.5vw,122px); line-height:.96; margin-block:24px; }
+  .home-premium .home-hero .eyebrow { font-size:12px; letter-spacing:.18em; }
+  .home-premium .home-hero-lead { max-width:520px; font-size:clamp(16px,1vw,19px); line-height:1.65; }
+  .home-premium .home-hero .button { min-height:54px; padding-inline:25px; font-size:12px; }
+}
+.home-premium .hero-scroll { display:flex; position:absolute; left:50%; bottom:26px; transform:translateX(-50%); flex-direction:column-reverse; gap:9px; font-size:11px; letter-spacing:.12em; text-align:center; white-space:nowrap; z-index:3; }
+.home-premium .hero-scroll span { width:1px; height:30px; background:linear-gradient(#e6c588,transparent); }
+.home-premium .hero-scroll::after { content:'↓'; font-size:21px; line-height:1; color:#e6c588; }
+.home-premium .home-philosophy,.home-premium .home-space { border:0; background:#100d0b; }
+.home-premium .home-philosophy,.home-premium .philosophy-photo-wrap { min-height:clamp(380px,27vw,520px); }
+.home-premium .home-space,.home-premium .space-photo { min-height:clamp(360px,25vw,500px); }
+.home-premium .philosophy-photo-wrap::after { background:linear-gradient(90deg,transparent 35%,#100d0b 100%),linear-gradient(0deg,#100d0b,transparent 25%); }
+.home-premium .space-photo::after { background:linear-gradient(90deg,transparent 35%,#100d0b 100%),linear-gradient(0deg,#100d0b 0%,transparent 30%); }
+.home-premium .philosophy-copy,.home-premium .space-copy { padding-block:clamp(45px,5vw,90px); }
+.home-premium .space-copy p:not(.kicker),.home-premium .philosophy-copy>p:not(.kicker):not(.japanese-line) { font-size:15px; line-height:1.8; }
+.home-premium .home-booking { position:relative; gap:clamp(30px,5vw,80px); padding-block:clamp(65px,6vw,100px); background:radial-gradient(ellipse at 12% 50%,#321719 0%,transparent 48%),linear-gradient(135deg,#17100d,#0c0b0a 70%); color:#f3e7d3; }
+.home-premium .home-booking::after { opacity:.12; filter:brightness(1.7); }
+.home-premium .booking-intro h2 { color:#f4e6cf; font-size:clamp(38px,3.5vw,54px); line-height:1.1; }
+.home-premium .booking-intro>p:not(.kicker) { color:#cbbba5; font-size:14px; }
+.home-premium .home-booking-form { align-items:start; gap:14px 12px; padding:clamp(18px,2vw,28px); border:1px solid #8f6a3c; background:rgba(22,17,14,.88); }
+.home-premium .home-booking-form .field { align-content:start; grid-template-rows:auto 50px auto; min-width:0; }
+.home-premium .home-booking-form label { color:#e2c18b; font-size:11px; }
+.home-premium .home-booking-form input,.home-premium .home-booking-form select { height:50px; min-height:50px; background:#15120f; border-color:#765c3b; color:#f4e8d4; color-scheme:dark; }
+.home-premium .home-booking-form select option { background:#171411; color:#f7efe2; }
+.home-premium .home-booking-form .field small { color:#c6b8a3; font-size:11px; line-height:1.4; }
+.home-premium .home-booking-form .button { min-height:48px; }
+.home-premium .home-booking-form .form-status,.home-premium .home-booking-step-note { color:#eee1c9; }
+@media(max-width:700px) {
+  .home-premium .hero-scroll { bottom:25px; left:14px; transform:none; flex-direction:row; gap:4px; font-size:8px; letter-spacing:.04em; }
+  .home-premium .hero-scroll span { width:10px; height:1px; }
+  .home-premium .hero-scroll::after { content:none; }
+  .home-premium .philosophy-photo-wrap,.home-premium .space-photo { min-height:280px; height:280px; }
+  .home-premium .philosophy-photo-wrap::after,.home-premium .space-photo::after { background:linear-gradient(0deg,#100d0b,transparent 55%); }
+  .home-premium .philosophy-copy,.home-premium .space-copy { padding:12px 22px 50px; }
+  .home-premium .home-booking { padding:55px 20px; }
+  .home-premium .home-booking-form { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+
+
+/* Softer booking card: retain the dark editorial look without the hard-box feel. */
+.home-premium .home-booking-form {
+  position: relative;
+  align-self: center;
+  padding: clamp(22px, 2.2vw, 34px);
+  border: 1px solid rgba(198, 153, 91, .42);
+  border-radius: 24px;
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(105, 34, 28, .2), transparent 44%),
+    linear-gradient(145deg, rgba(31, 23, 18, .96), rgba(16, 13, 11, .94));
+  box-shadow: 0 24px 64px rgba(0, 0, 0, .24), inset 0 1px rgba(255, 242, 213, .06);
+}
+.home-premium .home-booking-form input,
+.home-premium .home-booking-form select {
+  border: 1px solid rgba(181, 142, 91, .52);
+  border-radius: 10px;
+  transition: border-color .2s ease, background-color .2s ease, box-shadow .2s ease;
+}
+.home-premium .home-booking-form input:focus,
+.home-premium .home-booking-form select:focus {
+  border-color: #d7b273;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(215, 178, 115, .14);
+}
+.home-premium .home-booking-form .button {
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(139, 12, 23, .2);
+  transition: border-radius .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+.home-premium .home-booking-form .button:hover {
+  box-shadow: 0 10px 30px rgba(181, 17, 30, .3);
+  transform: translateY(-1px);
+}
+@media (max-width: 700px) {
+  .home-premium .home-booking-form {
+    align-self: stretch;
+    padding: 18px;
+    border-radius: 20px;
+  }
+  .home-premium .home-booking-form input,
+  .home-premium .home-booking-form select { border-radius: 9px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-premium .home-booking-form input,
+  .home-premium .home-booking-form select,
+  .home-premium .home-booking-form .button { transition: none; }
+}
+
+
+
+/* Menu catalogue: give the introduction and the 50-item grid one clear rhythm. */
+.menu-page .menu-hero {
+  min-height: clamp(390px, 30vw, 500px);
+  padding: clamp(52px, 6vw, 88px) max(22px, calc((100% - 1440px) / 2));
+}
+.menu-page .menu-hero-copy { width: min(560px, 100%); max-width: 560px; }
+.menu-page .menu-hero h1 { margin-block: .16em; font-size: clamp(4.1rem, 7vw, 7.5rem); line-height: .94; letter-spacing: -.035em; }
+.menu-page .menu-hero-sub { font-size: clamp(1.2rem, 2vw, 1.65rem); }
+.menu-page .menu-category-list { gap: 8px; }
+.menu-page .menu-category-list .filter-btn {
+  min-height: 46px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border-color: rgba(196, 163, 108, .25);
+  background: linear-gradient(115deg, rgba(255,255,255,.018), transparent);
+  transition: border-color .2s ease, background .2s ease, transform .2s ease;
+}
+.menu-page .menu-category-list .filter-btn:hover { transform: translateX(2px); border-color: rgba(215,178,115,.65); }
+.menu-page .menu-category-list .filter-btn.active { border-color: rgba(213,27,39,.76); background: linear-gradient(100deg,rgba(158,18,29,.58),rgba(51,19,18,.8)); }
+.menu-page .menu-toolbar input,
+.menu-page .menu-toolbar select { min-height: 48px; border-radius: 10px; border-color: rgba(196,163,108,.35); }
+.menu-page .menu-subfilter { border-radius: 999px; padding-inline: 18px; }
+.menu-page .menu-catalog .dish-card {
+  border: 1px solid rgba(196,163,108,.3);
+  border-radius: 16px;
+  background: linear-gradient(150deg,rgba(31,24,19,.96),rgba(13,12,11,.98));
+  box-shadow: 0 12px 36px rgba(0,0,0,.16);
+  transition: transform .24s ease, border-color .24s ease, box-shadow .24s ease;
+}
+.menu-page .menu-catalog .dish-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(215,178,115,.72);
+  box-shadow: 0 20px 46px rgba(0,0,0,.32);
+}
+.menu-page .menu-catalog .dish-image-wrap img { transition: transform .55s cubic-bezier(.2,.7,.2,1); }
+.menu-page .menu-catalog .dish-card:hover .dish-image-wrap img { transform: scale(1.045); }
+.menu-page .menu-catalog .dish-meta { padding: clamp(16px,1.6vw,22px); }
+.menu-page .menu-catalog .dish-bottom .add-to-cart { min-height: 42px; border-radius: 999px; }
+.menu-page .menu-pagination button,
+.menu-page .menu-pagination a { border-radius: 999px; }
+@media (max-width: 700px) {
+  .menu-page .menu-hero { min-height: 360px; padding: 36px 22px; }
+  .menu-page .menu-hero-copy { width: min(430px,100%); }
+  .menu-page .menu-hero h1 { font-size: clamp(3.6rem, 16vw, 5rem); }
+  .menu-page .menu-catalog .dish-card:hover { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .menu-page .menu-category-list .filter-btn,
+  .menu-page .menu-catalog .dish-card,
+  .menu-page .menu-catalog .dish-image-wrap img { transition: none; }
+}
+
+/* Omakase: align the hero with its chapters and turn course tabs into one
+   continuous tasting sequence instead of a second row of product cards. */
+.editorial-page:has(.omakase-hero) > .omakase-hero {
+  min-height: clamp(420px, 32vw, 520px);
+  padding-inline: max(24px, calc((100% - 1640px) / 2));
+}
+.editorial-page:has(.omakase-hero) > .omakase-hero .editorial-hero-copy {
+  max-width: min(590px, 56vw);
+}
+.editorial-page:has(.omakase-hero) .omakase-philosophy-strip {
+  border-block-color: rgba(196,163,108,.15);
+  background: radial-gradient(ellipse at 12% 0,rgba(113,28,26,.16),transparent 48%),#100e0c;
+}
+.tp20-omakase-experience .tp20-course-heading { align-items: end; }
+.tp20-omakase-experience .tp20-course-tabs { gap: 10px; margin-block: 20px 22px; }
+.tp20-omakase-experience .tp20-course-tabs button {
+  grid-template-columns: clamp(66px,5.8vw,88px) minmax(0,1fr);
+  grid-template-rows: 1fr;
+  align-items: center;
+  min-height: 108px;
+  padding: 9px;
+  border: 1px solid rgba(196,163,108,.32);
+  border-radius: 15px;
+  background: linear-gradient(145deg,rgba(31,24,19,.92),rgba(13,12,11,.98));
+  text-align: left;
+  transition: border-color .22s ease, background .22s ease, transform .22s ease, box-shadow .22s ease;
+}
+.tp20-omakase-experience .tp20-course-tabs button > img {
+  width: 100%;
+  height: 100%;
+  min-height: 72px;
+  aspect-ratio: 1;
+  border-radius: 10px;
+}
+.tp20-omakase-experience .tp20-course-tabs .tp20-course-tab-copy { min-width: 0; padding: 10px 12px; }
+.tp20-omakase-experience .tp20-course-tabs .tp20-course-tab-stage { line-height: 1.35; }
+.tp20-omakase-experience .tp20-course-tabs button[aria-selected="true"] {
+  border-color: #c9a66c;
+  background: linear-gradient(125deg,rgba(137,19,28,.28),rgba(30,23,18,.96) 68%);
+  box-shadow: 0 12px 30px rgba(0,0,0,.24), inset 0 0 0 1px rgba(201,166,108,.12);
+}
+.tp20-omakase-experience .tp20-course-panel {
+  overflow: hidden;
+  border: 1px solid rgba(196,163,108,.28);
+  border-radius: 20px;
+  background: linear-gradient(130deg,#17120f,#0d0c0b);
+  box-shadow: 0 24px 64px rgba(0,0,0,.22);
+}
+.tp20-omakase-experience .tp20-course-story { background: transparent; }
+.tp20-omakase-experience .tp20-course-story h3 { font-size: clamp(30px,3.2vw,46px); line-height: 1.08; }
+.tp20-omakase-experience .tp20-course-story > p { max-width: 52ch; line-height: 1.75; }
+.tp20-course-navigation { border-color: rgba(196,163,108,.2); }
+.tp20-course-navigation button { border-radius: 999px; padding-inline: 20px; }
+.editorial-page:has(.omakase-hero) .tier-card { border-radius: 18px; }
+@media (min-width: 601px) and (max-width: 900px) {
+  .tp20-omakase-experience .tp20-course-tabs { grid-template-columns: repeat(3,minmax(0,1fr)); }
+}
+@media (max-width: 700px) {
+  .editorial-page:has(.omakase-hero) > .omakase-hero {
+    min-height: 450px;
+    padding-inline: 22px;
+  }
+  .editorial-page:has(.omakase-hero) > .omakase-hero .editorial-hero-copy { max-width: 100%; }
+  .tp20-omakase-experience .tp20-course-panel { border-radius: 14px; }
+  .tp20-omakase-experience .tp20-course-story h3 { font-size: clamp(27px,8vw,36px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tp20-omakase-experience .tp20-course-tabs button { transition: none; }
+}

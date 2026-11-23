@@ -541,6 +541,113 @@ function commerce_migrate(PDO $pdo): void
         }
     }
 
+    // v19 expands the educational menu additively to fifty catalogue entries.
+    // Existing rows and administrator edits are left untouched.
+    if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=19')->fetchColumn()) {
+        sqlite_begin_immediate($pdo);
+        try {
+            $pdo->exec("INSERT OR IGNORE INTO categories(slug,name,sort_order) VALUES
+                ('starters','Закуски',1),('rolls','Роллы',2),('sushi','Суши и сашими',3),('soups','Супы',4),
+                ('hot','Горячее',5),('sets','Сеты',6),('desserts','Десерты',7),('drinks','Напитки',8)");
+
+            $catalog = [
+                ['rolls','Урамаки с лососем и авокадо','Лосось, авокадо, огурец и рис в лёгком урамаки с кунжутом.','300 г',5100,'01-philadelphia',0,5,['salmon','avocado','cucumber','rice','nori'],['лосось','авокадо','ролл','кунжут'],[[20,'drink'],[19,'dessert']]],
+                ['rolls','Спайси ролл с тунцом','Тунец, огурец и мягкий спайси-соус; остроту уравновешивают кунжут и рис.','280 г',4900,'06-nigiri-tuna',0,6,['tuna','cucumber','rice','nori','chili'],['тунец','острый','спайси','ролл'],[[20,'drink'],[6,'dish']]],
+                ['rolls','Унаги кабаяки ролл','Копчёный угорь, авокадо и огурец с тонкой глазурью кабаяки.','300 г',5900,'05-green-dragon',0,7,['eel','avocado','cucumber','rice','nori'],['угорь','унаги','ролл','кабаяки'],[[4,'drink'],[19,'dessert']]],
+                ['rolls','Эби темпура ролл','Хрустящая креветка темпура, авокадо и соус понзу в нори и рисе.','300 г',5700,'15-ebi-tempura',0,8,['shrimp','avocado','rice','nori','ponzu'],['креветка','темпура','ролл','хрустящий'],[[20,'drink'],[13,'dish']]],
+                ['rolls','Зелёный ролл с авокадо','Авокадо, огурец, зелёный лук и кунжут — лёгкая растительная подача.','260 г',3400,'02-california',0,9,['avocado','cucumber','rice','nori','sesame'],['вегетарианское','авокадо','ролл','лёгкое'],[[4,'drink'],[8,'dessert']]],
+                ['sushi','Нигири с хамачи','Плотное, деликатное филе хамачи на тёплом рисе для суши.','42 г',2300,'21-nigiri-scallop',0,5,['hamachi','rice'],['хамачи','нигири','рыба','япония'],[[20,'drink'],[3,'dish']]],
+                ['sushi','Нигири с угрём','Угорь кабаяки на рисе, с каплей унаги и белым кунжутом.','45 г',2200,'05-green-dragon',0,6,['eel','rice','sesame'],['угорь','нигири','унаги'],[[4,'drink'],[16,'dish']]],
+                ['sushi','Сашими из тунца','Тонко нарезанный тунец с дайконом, васаби и соевым соусом отдельно.','90 г',4400,'06-nigiri-tuna',0,7,['tuna','daikon'],['тунец','сашими','сырое','лёгкое'],[[20,'drink'],[12,'dish']]],
+                ['sushi','Сашими из лосося','Нежный лосось, дайкон и свежий цитрусовый акцент юдзу.','90 г',4200,'03-nigiri-salmon',0,8,['salmon','daikon','yuzu'],['лосось','сашими','юдзу','лёгкое'],[[4,'drink'],[12,'dish']]],
+                ['sushi','Гункан с тобико','Хрустящая тобико в оболочке из нори на рисе с деликатной нотой юдзу.','45 г',1900,'10-gunkan-roe',0,9,['roe','rice','nori','yuzu'],['тобико','икра','гункан'],[[20,'drink'],[3,'dish']]],
+                ['sushi','Гункан с острым крабом','Краб, японский майонез и лёгкий спайси-соус в нори.','50 г',2100,'02-california',0,10,['crab','rice','nori','chili'],['краб','острый','гункан','спайси'],[[20,'drink'],[8,'dessert']]],
+                ['starters','Эдамаме с морской солью','Молодые соевые бобы на пару с морской солью и цедрой лайма.','150 г',1900,'08-mochi',0,5,['soy','lime','sea-salt'],['эдамаме','закуска','вегетарианское'],[[20,'drink'],[11,'dish']]],
+                ['starters','Такояки с соусом тонкацу','Пять горячих шариков с осьминогом, имбирём и стружкой бонито.','5 шт.',3200,'13-duck-gyoza',0,6,['octopus','ginger','bonito','wheat'],['такояки','осьминог','горячая закуска'],[[20,'drink'],[14,'dish']]],
+                ['starters','Насу денгаку','Баклажан, запечённый под глазурью мисо, с кунжутом и зелёным луком.','220 г',3300,'16-eel-donburi',0,7,['eggplant','miso','sesame','green-onion'],['баклажан','мисо','вегетарианское'],[[4,'drink'],[14,'dish']]],
+                ['starters','Салат вакаме с кунжутом','Морские водоросли вакаме, огурец и рисовый уксус с кунжутом.','160 г',2400,'12-tuna-tartare-yuzu',0,8,['wakame','cucumber','sesame','rice-vinegar'],['вакаме','салат','лёгкое','вегетарианское'],[[20,'drink'],[6,'dish']]],
+                ['soups','Рамен тонкоцу','Плотный бульон тонкоцу, лапша, яйцо адзитама, нори и зелёный лук.','520 мл',5200,'07-ramen-beef',0,5,['pork','wheat','egg','nori','green-onion'],['рамен','тонкоцу','суп','согревающее'],[[4,'drink'],[19,'dessert']]],
+                ['soups','Мисо-суп с лососем','Бульон даси, лосось, тофу, вакаме и паста сира-мисо.','380 мл',3500,'14-miso-soup',0,6,['salmon','tofu','wakame','miso'],['лосось','мисо','суп'],[[4,'drink'],[3,'dish']]],
+                ['hot','Удон с говядиной и шиитаке','Удон, тонкие ломтики говядины, шиитаке и бульон на соевом соусе.','450 г',5100,'11-udon-chicken',0,5,['beef','wheat','shiitake','soy'],['удон','говядина','шиитаке','лапша'],[[20,'drink'],[19,'dessert']]],
+                ['hot','Курица карааге','Куриное бедро в лёгкой хрустящей панировке, лимон и домашний соус.','240 г',3900,'13-duck-gyoza',0,6,['chicken','wheat','ginger','lemon'],['курица','карааге','хрустящее','жареное'],[[20,'drink'],[8,'dessert']]],
+                ['hot','Лосось терияки с рисом','Запечённый лосось под глазурью терияки, рис и маринованный дайкон.','380 г',6500,'03-nigiri-salmon',0,7,['salmon','rice','soy','daikon'],['лосось','терияки','горячее'],[[20,'drink'],[19,'dessert']]],
+                ['hot','Донбури с вагю','Рис, тонкие ломтики говядины вагю, яйцо, лук и соус сукияки.','420 г',8900,'16-eel-donburi',0,8,['beef','rice','egg','onion','soy'],['вагю','донбури','говядина','рис'],[[4,'drink'],[19,'dessert']]],
+                ['hot','Сезонное ассорти темпура','Креветка и сезонные овощи в тонком кляре с тэнцую и дайконом.','280 г',6200,'15-ebi-tempura',0,9,['shrimp','wheat','daikon','ponzu'],['темпура','креветка','овощи','хрустящее'],[[20,'drink'],[14,'dish']]],
+                ['sets','Сет «Токио»','Двадцать четыре кусочка: лосось, тунец, креветка и два фирменных ролла.','24 шт.',17900,'18-hanami-set',0,3,['salmon','tuna','shrimp','rice','nori'],['сет','на двоих','роллы','нигири'],[[20,'drink'],[19,'dessert']]],
+                ['sets','Сет «Сакура»','Тридцать два кусочка с лососем, угрём и сезонным роллом для компании.','32 шт.',22900,'17-omakase-set',1,4,['salmon','eel','rice','nori','avocado'],['сет','на компанию','сакура','роллы'],[[20,'drink'],[19,'dessert']]],
+                ['sets','Nigiri selection','Двенадцать нигири из лосося, тунца, хамачи, креветки и морского гребешка.','12 шт.',15600,'21-nigiri-scallop',0,5,['salmon','tuna','hamachi','shrimp','scallop','rice'],['сет','нигири','дегустация'],[[20,'drink'],[19,'dessert']]],
+                ['desserts','Дораяки с кремом матча','Мягкие блинчики дораяки и крем на основе матча с белым шоколадом.','140 г',2900,'19-matcha-tiramisu',0,5,['matcha','wheat','egg','milk'],['дораяки','матча','десерт'],[[4,'drink'],[8,'dessert']]],
+                ['desserts','Чизкейк с юдзу','Сливочный чизкейк с цедрой юдзу и тонким песочным основанием.','140 г',3400,'19-matcha-tiramisu',0,6,['yuzu','milk','wheat','egg'],['чизкейк','юдзу','десерт'],[[20,'drink'],[4,'drink']]],
+                ['desserts','Вараби-моти с кинако','Нежное моти из крахмала вараби, пудра кинако и сироп куромицу.','120 г',2700,'08-mochi',0,7,['kinako','soy','sugar'],['моти','кинако','японский десерт'],[[4,'drink'],[19,'dessert']]],
+                ['drinks','Ходзича латте','Обжаренный японский чай ходзича с молоком и лёгкой карамельной нотой.','300 мл',2400,'04-matcha-latte',0,3,['hojicha','milk'],['ходзича','латте','чай','напиток'],[[19,'dessert'],[8,'dessert']]],
+            ];
+            $ingredientLabels = [
+                'salmon'=>'Лосось','avocado'=>'Авокадо','cucumber'=>'Огурец','rice'=>'Рис','nori'=>'Нори','tuna'=>'Тунец','chili'=>'Перец чили','eel'=>'Угорь','sesame'=>'Кунжут','shrimp'=>'Креветка','ponzu'=>'Соус понзу','hamachi'=>'Хамачи','daikon'=>'Дайкон','yuzu'=>'Юдзу','roe'=>'Икра тобико','crab'=>'Краб','soy'=>'Соя','lime'=>'Лайм','sea-salt'=>'Морская соль','octopus'=>'Осьминог','ginger'=>'Имбирь','bonito'=>'Стружка бонито','wheat'=>'Пшеница','eggplant'=>'Баклажан','miso'=>'Паста мисо','green-onion'=>'Зелёный лук','wakame'=>'Вакаме','rice-vinegar'=>'Рисовый уксус','pork'=>'Свинина','egg'=>'Яйцо','tofu'=>'Тофу','beef'=>'Говядина','shiitake'=>'Грибы шиитаке','chicken'=>'Курица','lemon'=>'Лимон','onion'=>'Лук','scallop'=>'Морской гребешок','matcha'=>'Матча','milk'=>'Молоко','kinako'=>'Кинако','sugar'=>'Сахар','hojicha'=>'Ходзича'
+            ];
+            $findDish = $pdo->prepare('SELECT id FROM dishes WHERE name=? ORDER BY id LIMIT 1');
+            $insertDish = $pdo->prepare('INSERT INTO dishes(category,name,description,weight,price,image_url,featured,active,sort_order) VALUES(?,?,?,?,?,?,?,?,?)');
+            $findIngredient = $pdo->prepare('SELECT slug FROM ingredients WHERE slug=? OR name=? ORDER BY CASE WHEN slug=? THEN 0 ELSE 1 END LIMIT 1');
+            $insertIngredient = $pdo->prepare('INSERT OR IGNORE INTO ingredients(slug,name,active) VALUES(?,?,1)');
+            $insertComposition = $pdo->prepare('INSERT OR IGNORE INTO dish_ingredients(dish_id,ingredient_slug,is_optional,sort_order) VALUES(?,?,0,?)');
+            $insertTag = $pdo->prepare('INSERT OR IGNORE INTO dish_tags(dish_id,tag) VALUES(?,?)');
+            $insertPairing = $pdo->prepare('INSERT OR IGNORE INTO dish_pairings(dish_id,paired_dish_id,pairing_type,sort_order) VALUES(?,?,?,?)');
+            foreach ($catalog as [$category,$name,$description,$weight,$price,$image,$featured,$sortOrder,$ingredients,$tags,$pairings]) {
+                $findDish->execute([$name]);
+                $dishId = (int)($findDish->fetchColumn() ?: 0);
+                if (!$dishId) {
+                    $insertDish->execute([$category,$name,$description,$weight,$price,'assets/food/'.$image.'.webp',$featured,1,100+$sortOrder]);
+                    $dishId = (int)$pdo->lastInsertId();
+                }
+                foreach (array_values(array_unique($ingredients)) as $index=>$slug) {
+                    $label = $ingredientLabels[$slug] ?? ucfirst(str_replace('-',' ',$slug));
+                    $findIngredient->execute([$slug,$label,$slug]);
+                    $actualSlug = $findIngredient->fetchColumn();
+                    if ($actualSlug === false) { $insertIngredient->execute([$slug,$label]); $actualSlug=$slug; }
+                    $insertComposition->execute([$dishId,(string)$actualSlug,($index+1)*10]);
+                }
+                foreach (array_values(array_unique($tags)) as $tag) $insertTag->execute([$dishId,$tag]);
+                foreach ($pairings as $index=>[$pairedId,$type]) if ($dishId !== (int)$pairedId) $insertPairing->execute([$dishId,(int)$pairedId,$type,($index+1)*10]);
+            }
+            $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(19)');
+            sqlite_commit($pdo);
+        } catch (Throwable $error) {
+            sqlite_rollback($pdo);
+            throw $error;
+        }
+    }
+
+    // v20 rounds the public menu out to fifty visible dishes after legacy
+    // databases that already had two Secret Menu entries are filtered.
+    if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=20')->fetchColumn()) {
+        sqlite_begin_immediate($pdo);
+        try {
+            $catalog = [
+                ['hot','Оякодон с курицей','Нежная курица и яйцо на рисе косихикари с луком и соусом на основе сои.','400 г',4600,'16-eel-donburi',0,170,['chicken','egg','rice','onion','soy'],['оякодон','курица','яйцо','донбури'],[[20,'drink'],[19,'dessert']]],
+                ['drinks','Холодная сенча с юдзу','Зелёный чай сенча, юдзу и лёгкая сладость; подаём охлаждённым.','300 мл',2600,'20-yuzu-lemonade',0,180,['sencha','yuzu'],['сенча','юдзу','чай','холодный напиток'],[[19,'dessert'],[8,'dessert']]],
+            ];
+            $labels=['chicken'=>'Курица','egg'=>'Яйцо','rice'=>'Рис','onion'=>'Лук','soy'=>'Соя','sencha'=>'Сенча','yuzu'=>'Юдзу'];
+            $findDish=$pdo->prepare('SELECT id FROM dishes WHERE name=? ORDER BY id LIMIT 1');
+            $insertDish=$pdo->prepare('INSERT INTO dishes(category,name,description,weight,price,image_url,featured,active,sort_order) VALUES(?,?,?,?,?,?,?,?,?)');
+            $findIngredient=$pdo->prepare('SELECT slug FROM ingredients WHERE slug=? OR name=? ORDER BY CASE WHEN slug=? THEN 0 ELSE 1 END LIMIT 1');
+            $insertIngredient=$pdo->prepare('INSERT OR IGNORE INTO ingredients(slug,name,active) VALUES(?,?,1)');
+            $insertComposition=$pdo->prepare('INSERT OR IGNORE INTO dish_ingredients(dish_id,ingredient_slug,is_optional,sort_order) VALUES(?,?,0,?)');
+            $insertTag=$pdo->prepare('INSERT OR IGNORE INTO dish_tags(dish_id,tag) VALUES(?,?)');
+            $insertPairing=$pdo->prepare('INSERT OR IGNORE INTO dish_pairings(dish_id,paired_dish_id,pairing_type,sort_order) VALUES(?,?,?,?)');
+            foreach($catalog as [$category,$name,$description,$weight,$price,$image,$featured,$sortOrder,$ingredients,$tags,$pairings]){
+                $findDish->execute([$name]);$dishId=(int)($findDish->fetchColumn()?:0);
+                if(!$dishId){$insertDish->execute([$category,$name,$description,$weight,$price,'assets/food/'.$image.'.webp',$featured,1,100+$sortOrder]);$dishId=(int)$pdo->lastInsertId();}
+                foreach(array_values(array_unique($ingredients)) as $index=>$slug){$label=$labels[$slug]??ucfirst(str_replace('-',' ',$slug));$findIngredient->execute([$slug,$label,$slug]);$actualSlug=$findIngredient->fetchColumn();if($actualSlug===false){$insertIngredient->execute([$slug,$label]);$actualSlug=$slug;}$insertComposition->execute([$dishId,(string)$actualSlug,($index+1)*10]);}
+                foreach(array_values(array_unique($tags)) as $tag)$insertTag->execute([$dishId,$tag]);
+                foreach($pairings as $index=>[$pairedId,$type])if($dishId!==(int)$pairedId)$insertPairing->execute([$dishId,(int)$pairedId,$type,($index+1)*10]);
+            }
+            $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(20)');
+            sqlite_commit($pdo);
+        } catch(Throwable $error) {
+            sqlite_rollback($pdo);
+            throw $error;
+        }
+    }
+
 }
 
 function commerce_actor_key(?int $userId, string $sessionId): string

@@ -150,3 +150,55 @@ document.addEventListener('DOMContentLoaded',()=>{
   $('#cart-clear')?.addEventListener('click',()=>window.TokyoCart?.clear());
   document.addEventListener('tokyo-cart-updated',renderCart);window.addEventListener('storage',renderCart);renderCart();
 });
+
+/* Booking field helpers keep the native inputs and submit their normal values. */
+(() => {
+  const form = document.getElementById('full-booking-form');
+  if (!form) return;
+  const phone = form.querySelector('#full-guest-phone');
+  const date = form.querySelector('#full-guest-date');
+  const email = form.querySelector('#full-guest-email');
+  if (phone) {
+    phone.placeholder = '+7 777 123 45 67';
+    phone.inputMode = 'tel';
+    phone.setAttribute('aria-describedby', 'booking-phone-help');
+    const help = document.createElement('small');
+    help.id = 'booking-phone-help';
+    help.textContent = 'С кодом страны';
+    phone.after(help);
+    const validatePhone = () => {
+      let value = phone.value.replace(/[^\d+\s()\-]/g, '');
+      value = value.replace(/(?!^)\+/g, '');
+      let digits = 0;
+      phone.value = Array.from(value).filter(ch => !/\d/.test(ch) || ++digits <= 15).join('');
+      phone.setCustomValidity(digits && digits < 7 ? 'Введите номер полностью: минимум 7 цифр.' : '');
+    };
+    phone.addEventListener('input', validatePhone);
+    phone.addEventListener('blur', validatePhone);
+  }
+  if (date) {
+    date.setAttribute('aria-label', 'Дата визита. Выберите день в календаре');
+    date.addEventListener('click', () => {
+      try { if (date.showPicker) date.showPicker(); } catch (_) { /* Native input remains usable. */ }
+    });
+  }
+  if (email) {
+    email.placeholder = 'name@example.com';
+    const select = document.createElement('select');
+    select.id = 'booking-email-domain';
+    select.setAttribute('aria-label', 'Почтовый сервис');
+    [['','Выбрать домен'],['gmail.com','@gmail.com'],['mail.ru','@mail.ru'],['yandex.ru','@yandex.ru'],['outlook.com','@outlook.com'],['other','Другой домен']].forEach(([value, text]) => select.add(new Option(text, value)));
+    const applyDomain = () => {
+      if (!select.value || select.value === 'other') return;
+      const local = email.value.trim().split('@')[0];
+      if (local) { email.value = local + '@' + select.value; email.dispatchEvent(new Event('input', {bubbles:true})); }
+    };
+    select.addEventListener('change', () => { applyDomain(); if (!email.value) email.focus(); });
+    email.addEventListener('blur', () => { if (!email.value.includes('@')) applyDomain(); });
+    form.addEventListener('reset', () => { select.value = ''; phone?.setCustomValidity(''); });
+    const row = document.createElement('div');
+    row.className = 'booking-email-row';
+    email.before(row);
+    row.append(email, select);
+  }
+})();

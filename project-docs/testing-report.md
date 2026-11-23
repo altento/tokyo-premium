@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-24 — меню до 50 позиций, визуальный проход и перенос проекта
+
+PHP-миграции v19–20 проверены на новой временной SQLite-базе: `dishes()` вернула 50 публичных позиций из 8 категорий. Та же локальная версия на `127.0.0.1:8081` открыта в браузере: меню показывает счётчик 50; Omakase показывает пять выбираемых этапов и три формата; главная сохраняет полноэкранный hero и подсказку прокрутки. Мобильные снимки меню, Omakase и главной осмотрены на встроенном браузере. `php -l` прошёл для `bootstrap.php`, `lib/commerce.php` и `tools/export-pages.php`; `node --check` прошёл для изменённых `luxury.js` и `pages-extra.js`; `git diff --check` чистый. Полный Playwright-набор и опубликованный Pages в этом проходе ещё не проверялись. Дополнительные 29 карточек пока используют наиболее близкие существующие фото; уникальные фото для них остаются ограничением. Подробные шаги переноса и запуска: [`continue-on-another-computer.md`](continue-on-another-computer.md).
+
 ## 2026-11-23 — Homepage cadence follow-up
 
 A desktop-only CSS pass preserves all homepage sections while reducing oversized recommendation cards, editorial blocks, room story and booking padding. At 1440 px the full page fell from 2841 to 2617 px; the 390 px layout remained 4708 px. `tests/visual-fidelity-regression.cjs` passed locally and on public Pages at both widths; no overflow, failed requests or page errors were found. It now waits for `DOMContentLoaded`, scrolls and decodes images before checking reveal visibility; this avoids a `networkidle` timeout on the public host. Captures and measured remaining reference gap: [`home-final-cadence-2026-11-23`](visual-qa/home-final-cadence-2026-11-23/comparison.md).

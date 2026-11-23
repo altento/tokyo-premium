@@ -1100,6 +1100,17 @@ body.story-motion-gsap [data-story-reveal].story-visible img{animation:none}
 @media(min-width:761px) and (max-width:1100px){.about-page .about-chef{grid-template-columns:minmax(230px,.8fr) minmax(0,1.2fr)}.about-page .chef-landscape{display:none}}
 @media(max-width:760px){.about-page .about-chef{grid-template-columns:1fr;padding:58px 22px}.about-page .chef-landscape{display:grid;order:3;min-height:0;max-height:250px;margin-top:-8px}.about-page .chef-landscape img{width:min(100%,300px);max-height:240px}}
 
+/* Match the approved philosophy page's tighter desktop editorial rhythm. */
+@media(min-width:1101px){
+  .about-page .about-story{padding-top:clamp(28px,2.5vw,36px);padding-bottom:clamp(28px,2.5vw,36px)}
+  .about-page .about-story .about-intro-image img{height:clamp(220px,18vw,270px)}
+  .about-page .about-principles{padding-block:clamp(32px,3.4vw,50px)}
+  .about-page .principle-grid{margin-top:22px}
+  .about-page .principle-grid article{min-height:158px}
+  .about-page .about-quote{padding-block:clamp(34px,3.5vw,50px)}
+  .about-page .about-contact{padding-block:32px}
+}
+
 /* Bring the browser-local account closer to reference 11 while keeping every
    sample label and interaction intact. The tighter rhythm also shortens the
    first useful view on laptop screens. */
