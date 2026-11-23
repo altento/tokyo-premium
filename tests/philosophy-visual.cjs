@@ -42,7 +42,7 @@ const widths = process.env.TOKYO_VIEWPORTS
           const rule = getComputedStyle(el, '::after');
           return { heading: el.textContent.trim(), visible: rule.content !== 'none' && parseFloat(rule.width) >= 40 && parseFloat(rule.height) === 2 };
         });
-        return { width: innerWidth, scrollWidth: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight, chefHeight: document.querySelector('.about-chef').getBoundingClientRect().height, chapters: { story: chapter('.about-story'), chef: chapter('.about-chef'), principles: chapter('.about-principles'), source: chapter('.about-source'), quote: chapter('.about-quote') }, headings, sectionRules, images: [...document.querySelectorAll('main img')].every(img => img.complete && img.naturalWidth > 0) };
+        return { width: innerWidth, scrollWidth: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight, chefHeight: document.querySelector('.about-chef').getBoundingClientRect().height, chapters: { story: chapter('.about-story'), chef: chapter('.about-chef'), principles: chapter('.about-principles'), source: chapter('.about-source'), quote: chapter('.about-quote'), contact: chapter('.about-contact') }, headings, sectionRules, images: [...document.querySelectorAll('main img')].every(img => img.complete && img.naturalWidth > 0) };
       });
       assert.equal(metrics.scrollWidth, width, `overflow at ${width}`);
       assert.ok(metrics.images, `images at ${width}`);
@@ -54,6 +54,10 @@ const widths = process.env.TOKYO_VIEWPORTS
       if (width >= 1101) {
         assert.ok(metrics.chapters.story.paddingTop < 50, 'compact philosophy story spacing');
         assert.ok(metrics.chapters.chef.paddingTop < 50, 'compact chef spacing');
+        assert.ok(metrics.chapters.principles.height < 350, 'compact principles chapter');
+        assert.ok(metrics.chapters.source.height < 280, 'compact sourcing chapter');
+        assert.ok(metrics.chapters.quote.height < 190, 'compact quote chapter');
+        assert.ok(metrics.chapters.contact.height < 140, 'compact booking call to action');
       }
       if ([390,1440].includes(width)) await page.screenshot({ path: path.join(evidence, `${width === 390 ? 'mobile' : 'desktop'}.jpg`), fullPage: true, type: 'jpeg', quality: 83 });
       results.push(metrics);
