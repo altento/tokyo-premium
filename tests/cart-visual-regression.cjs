@@ -88,7 +88,26 @@ async function run(options = {}) {
     assert.ok(mobileHeroHeight <= 270, `mobile cart hero stays compact without clipping (height ${mobileHeroHeight}px)`);
     const mobileFlow = await page.evaluate(() => ({ checkoutTop: document.querySelector('.cart-checkout').getBoundingClientRect().top, recommendationsTop: document.querySelector('.cart-recommendation-heading').getBoundingClientRect().top }));
     assert.ok(mobileFlow.checkoutTop < mobileFlow.recommendationsTop, 'mobile checkout appears before upsell recommendations');
+    const mobileSummary = page.locator('[data-cart-mobile-summary]');
+    assert.equal(await mobileSummary.isVisible(), true, 'a populated mobile cart exposes its compact checkout summary');
+    assert.equal(Number((await page.locator('[data-cart-mobile-total]').innerText()).replace(/\D/g, '')), computedTotal, 'mobile checkout summary uses the shared cart total');
+    assert.ok(await page.locator('[data-cart-mobile-checkout]').evaluate(button => button.getBoundingClientRect().height >= 44), 'mobile checkout CTA has a comfortable tap target');
     await screenshot(page, 'cart-populated-mobile.png');
+    await page.screenshot({ path: path.join(evidence, 'cart-populated-mobile-viewport.png') });
+    await page.evaluate(() => document.body.classList.add('nav-open'));
+    assert.equal(await mobileSummary.isVisible(), false, 'mobile summary yields to the open navigation');
+    await page.evaluate(() => document.body.classList.remove('nav-open'));
+    await page.setViewportSize({ width: 320, height: 740 });
+    const narrowSummary = await mobileSummary.boundingBox();
+    assert.ok(narrowSummary && narrowSummary.x >= 0 && narrowSummary.x + narrowSummary.width <= 320, 'mobile summary fits a 320px viewport');
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.locator('[data-cart-mobile-checkout]').click();
+    assert.equal(await page.locator('.cart-checkout-details').evaluate(details => details.open), true, 'mobile summary opens the checkout disclosure');
+    assert.equal(await mobileSummary.isHidden(), true, 'mobile summary hides while the full checkout form is open');
+    assert.equal(await page.locator('.cart-checkout-details > summary').evaluate(summary => summary === document.activeElement), true, 'mobile checkout transition moves keyboard focus to the checkout disclosure');
+    await page.locator('.cart-checkout-details > summary').click();
+    await mobileSummary.waitFor({ state: 'visible' });
+    assert.equal(await mobileSummary.isVisible(), true, 'collapsing checkout restores the compact mobile summary');
 
     await page.locator('.cart-checkout-details > summary').click();
     await page.locator('#checkout-name').fill('Демо-гость');
@@ -117,6 +136,7 @@ async function run(options = {}) {
 
     await page.locator('#cart-clear').click();
     assert.equal(await page.locator('#cart-page-empty').isVisible(), true);
+    assert.equal(await page.locator('[data-cart-mobile-summary]').isHidden(), true, 'empty cart has no fixed checkout summary');
     await page.locator('.cart-checkout-details > summary').click();
     await page.setViewportSize({ width: 1440, height: 1000 });
     await screenshot(page, 'cart-empty-desktop.png');

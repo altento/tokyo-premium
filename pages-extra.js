@@ -79,6 +79,27 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(savedAddressSelect?.value)copySavedAddress();
   const esc=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const recommendationContainer=$('.cart-recommendations');
+  const mobileSummary=$('[data-cart-mobile-summary]');
+  const mobileSummaryTotal=$('[data-cart-mobile-total]');
+  const checkoutDetails=$('#cart-checkout-details');
+  const mobileCheckoutButton=$('[data-cart-mobile-checkout]');
+  const mobileCheckoutMedia=window.matchMedia('(max-width: 700px)');
+  function syncMobileCartSummary(hasLines){
+    const visible=Boolean(hasLines&&mobileCheckoutMedia.matches&&!checkoutDetails?.open);
+    if(mobileSummary)mobileSummary.hidden=!visible;
+    document.body.classList.toggle('has-mobile-cart-summary',visible);
+  }
+  checkoutDetails?.addEventListener('toggle',()=>syncMobileCartSummary(window.TokyoCart?.get().length>0||window.TokyoCart?.customSetSnapshot().length>0));
+  mobileCheckoutMedia.addEventListener?.('change',()=>syncMobileCartSummary(window.TokyoCart?.get().length>0||window.TokyoCart?.customSetSnapshot().length>0));
+  mobileCheckoutButton?.addEventListener('click',()=>{
+    if(!checkoutDetails)return;
+    checkoutDetails.open=true;
+    syncMobileCartSummary(window.TokyoCart?.get().length>0||window.TokyoCart?.customSetSnapshot().length>0);
+    const summary=checkoutDetails.querySelector(':scope > summary');
+    summary?.focus({preventScroll:true});
+    const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    checkoutDetails.scrollIntoView({behavior:reducedMotion?'auto':'smooth',block:'center'});
+  });
   const allRecommendations=recommendationContainer?$$('.dish-card',recommendationContainer):[];
   function renderCart(){
     const container=$('#cart-page-items');if(!container)return;
@@ -107,6 +128,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     const hasLines=cart.length>0||customSets.length>0;
     const empty=$('#cart-page-empty');if(empty)empty.hidden=hasLines;
     const totalNode=$('#cart-page-total');if(totalNode)totalNode.textContent=store.total().toLocaleString('ru-RU')+' ₸'+(customSets.length?' · оценка':'');
+    if(mobileSummaryTotal)mobileSummaryTotal.textContent=store.total().toLocaleString('ru-RU')+' ₸'+(customSets.length?' · оценка':'');
+    syncMobileCartSummary(hasLines);
     const payload=store.orderPayload();
     const form=$('#checkout-form');
     const secretCodeField=form?.querySelector('[name="secret_code"]');

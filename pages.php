@@ -228,7 +228,7 @@ ep_hero('連絡先','TOKYO PREMIUM · УЧЕБНАЯ КОНЦЕПЦИЯ','Кон
       </section>
       <div class="field"><label for="fulfillment">Способ получения · демо</label><select id="fulfillment" name="fulfillment" form="checkout-form"><option value="delivery">Доставка · учебный режим</option><option value="pickup">Самовывоз · учебный режим</option></select></div>
       <div class="field"><label for="payment-method">Способ оплаты</label><select id="payment-method" name="payment_method" form="checkout-form"><option value="upon_receipt">При получении · демо, списания нет</option><?php if($freedompayReady): ?><option value="freedompay">Онлайн картой · FreedomPay<?= $freedompayTestMode?' · тестовый режим':'' ?></option><?php endif ?></select></div>
-      <details class="cart-checkout-details"><summary><span>Перейти к оформлению</span><small>Контакты · адрес при доставке</small></summary><div class="cart-checkout-details-body">
+      <details class="cart-checkout-details" id="cart-checkout-details"><summary><span>Перейти к оформлению</span><small>Контакты · адрес при доставке</small></summary><div class="cart-checkout-details-body">
         <div class="field"><label for="checkout-name">Имя</label><input form="checkout-form" id="checkout-name" name="name" required maxlength="80" autocomplete="name"></div>
         <div class="field"><label for="checkout-phone">Телефон</label><input form="checkout-form" id="checkout-phone" name="phone" type="tel" required maxlength="30" autocomplete="tel"></div>
         <?php if($savedCheckoutAddresses): ?><div class="field" id="checkout-saved-address-field"><label for="checkout-saved-address">Мой сохранённый адрес</label><select id="checkout-saved-address"><option value="">Ввести другой адрес</option><?php foreach($savedCheckoutAddresses as $savedAddress): ?><option value="<?= (int)$savedAddress['id']?>" data-address="<?=e($savedAddress['address'])?>" <?=!empty($savedAddress['is_default'])?'selected':''?>><?=e($savedAddress['label'])?> · <?=e($savedAddress['address'])?></option><?php endforeach ?></select></div><?php endif ?>
@@ -240,6 +240,10 @@ ep_hero('連絡先','TOKYO PREMIUM · УЧЕБНАЯ КОНЦЕПЦИЯ','Кон
     </aside>
     <div class="editorial-heading cart-recommendation-heading"><div class="kicker">Для полного вечера</div><h3>Добавьте к заказу</h3></div><div class="dish-grid cart-recommendations" tabindex="0" aria-label="Рекомендуемые блюда — прокручиваемая подборка"><?php foreach($all as $d) ep_card($d); ?></div>
   </div>
+  <aside class="cart-mobile-summary" data-cart-mobile-summary aria-label="Итог заказа" hidden>
+    <div><span>К оплате · демо</span><strong data-cart-mobile-total>0 ₸</strong></div>
+    <button type="button" class="button" data-cart-mobile-checkout aria-controls="cart-checkout-details">К оформлению <span aria-hidden="true">↓</span></button>
+  </aside>
 </section>
 <?php else: ?>
 <section class="page-hero"><div class="kicker">TOKYO PREMIUM</div><h1>Страница не найдена</h1><p>Откройте главную или меню.</p><a class="button" href="index.php">Главная ↗</a></section>
