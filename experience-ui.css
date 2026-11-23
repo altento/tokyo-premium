@@ -743,3 +743,58 @@
 .editorial-page [data-tp-zone-photo]{transition:opacity 180ms ease}
 .editorial-page [data-tp-zone-photo][data-tp-photo-loading]{opacity:.55}
 @media(prefers-reduced-motion:reduce){.editorial-page [data-tp-zone-photo]{transition:none}}
+
+/* Homepage opening: give the first story the full viewport and keep its
+   editorial controls clear of both the scroll cue and the scene note. */
+@media (min-width: 901px) {
+  .home-premium .home-hero {
+    height: auto;
+    min-height: calc(100svh - 76px);
+  }
+
+  .home-premium .home-hero-note {
+    right: calc(max(7vw, calc((100vw - var(--page-width)) / 2)) + 220px);
+    bottom: 78px;
+    max-width: min(360px, 30vw);
+    white-space: nowrap;
+  }
+}
+
+@media (min-width: 701px) and (max-width: 900px) {
+  .home-premium .home-hero {
+    height: auto;
+    min-height: calc(100svh - 70px);
+  }
+
+  .home-premium .home-hero-note { display: none; }
+}
+
+.home-premium .home-hero[data-home-hero-scene="1"] .home-hero-copy {
+  width: min(850px, 68vw);
+}
+
+.home-premium .home-hero[data-home-hero-scene="1"] h1 {
+  max-width: 100%;
+  font-size: clamp(40px, 4.25vw, 70px);
+  line-height: 1.02;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+@media (max-width: 700px) {
+  .home-premium .home-hero {
+    height: auto;
+    min-height: calc(100svh - 64px);
+    padding-bottom: 92px;
+  }
+
+  .home-premium .home-hero-note { display: none; }
+
+  .home-premium .home-hero[data-home-hero-scene="1"] .home-hero-copy {
+    width: 100%;
+  }
+
+  .home-premium .home-hero[data-home-hero-scene="1"] h1 {
+    font-size: clamp(33px, 8.7vw, 56px);
+  }
+}
