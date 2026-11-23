@@ -26,6 +26,10 @@ The app runs `schema.sql` with `CREATE TABLE/INDEX IF NOT EXISTS`, then records 
 | 14 | Save the selected custom-set format slug on each order line and backfill older set lines by their saved format name. Existing order snapshots and component rows remain intact, allowing account repeat-order to rebuild only currently available items at current catalogue prices. |
 | 15 | Add atomic administrator login cooldown buckets. SQLite stores keyed hashes only, with a 15-minute IP window and a higher account threshold; bootstrap readiness now requires v15 and the attempt table, so older v13/v14 databases continue through later migrations. |
 | 16 | Add optional order payment status, per-attempt FreedomPay records and a hashed payment capability. Existing orders remain unpaid; card data and credentials are not stored. |
+| 17 | Mark obsolete queued booking-confirmation email events as cancelled while preserving all outbox rows and IDs. |
+| 18 | Add nullable, session-keyed request fingerprints to order and booking idempotency rows. Existing rows are retained; an old replay with no fingerprint returns a conflict instead of claiming changed data was submitted. |
+
+For migration v18, the fingerprint is an HMAC of canonical request fields excluding the CSRF token, with the current PHP session ID as the key. Exact retries replay the stored response; reusing a key with changed contact or order data returns HTTP 409. Raw personal data is not added to the idempotency tables. New reservations store the fingerprint in the same `BEGIN IMMEDIATE` transaction as the order/booking and replay result.
 
 The account notification helpers are `commerce_account_notifications($pdo, $userId, $limit)` and `commerce_mark_account_notification_read($pdo, $userId, $notificationId)`. The mark-read helper only updates rows owned by the supplied user and is safe to retry. The authenticated `account.php` page exposes the `notification-read` POST action and checks CSRF before invoking the helper.
 

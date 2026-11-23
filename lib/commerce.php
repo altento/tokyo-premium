@@ -483,6 +483,22 @@ function commerce_migrate(PDO $pdo): void
         }
     }
 
+    // v18 binds order and booking replay keys to the original submitted payload.
+    if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=18')->fetchColumn()) {
+        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        try {
+            foreach (['api_order_requests','api_booking_requests'] as $table) {
+                $columns=$pdo->query('PRAGMA table_info(' . $table . ')')->fetchAll(PDO::FETCH_COLUMN,1);
+                if (!in_array('request_hash',$columns,true)) $pdo->exec('ALTER TABLE ' . $table . ' ADD COLUMN request_hash TEXT');
+            }
+            $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(18)');
+            $pdo->commit();
+        } catch (Throwable $error) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $error;
+        }
+    }
+
 }
 
 function commerce_actor_key(?int $userId, string $sessionId): string

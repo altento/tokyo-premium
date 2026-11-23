@@ -58,9 +58,11 @@ function db(): PDO
         // are present.
         $ready = false;
         try {
-            $ready = (bool)$connection->query("SELECT 1 FROM app_migrations WHERE version=17")->fetchColumn()
+            $ready = (bool)$connection->query("SELECT 1 FROM app_migrations WHERE version=18")->fetchColumn()
                 && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='api_order_requests'")->fetchColumn()
                 && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='api_booking_requests'")->fetchColumn()
+                && in_array('request_hash',$connection->query('PRAGMA table_info(api_order_requests)')->fetchAll(PDO::FETCH_COLUMN,1),true)
+                && in_array('request_hash',$connection->query('PRAGMA table_info(api_booking_requests)')->fetchAll(PDO::FETCH_COLUMN,1),true)
                 && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='booking_email_rate_limits'")->fetchColumn()
                 && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='user_addresses'")->fetchColumn()
                 && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='dish_pairings'")->fetchColumn()

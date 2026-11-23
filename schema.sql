@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS api_idempotency (token TEXT PRIMARY KEY, response_jso
 -- Order key reservation, order, items and replay response are written in one transaction.
 CREATE TABLE IF NOT EXISTS api_order_requests (
  token TEXT PRIMARY KEY,
+ request_hash TEXT,
  order_id INTEGER UNIQUE REFERENCES orders(id) ON DELETE SET NULL,
  response_json TEXT,
  response_status INTEGER,
@@ -46,6 +47,7 @@ CREATE TABLE IF NOT EXISTS api_order_requests (
 -- Booking key reservation and response are committed with the booking and mail outbox rows.
 CREATE TABLE IF NOT EXISTS api_booking_requests (
  token TEXT PRIMARY KEY,
+ request_hash TEXT,
  booking_id INTEGER UNIQUE REFERENCES bookings(id) ON DELETE SET NULL,
  response_json TEXT,
  response_status INTEGER,

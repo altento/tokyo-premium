@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-23 — Payload-bound checkout and booking retries
+
+Order and booking idempotency reservations now store a session-keyed HMAC of canonical form data (excluding the CSRF token). An exact retry replays the original response; reusing the key after changing contact details, cart, or booking values returns HTTP 409 instead of presenting the old result as the changed request's success. Migration v18 adds nullable columns without deleting legacy records; legacy keys without fingerprints, including entries in the older generic cache, fail closed with a conflict. Regression assertions cover exact replay, changed payloads, legacy-cache conflict, and the v18 migration. PHP syntax passed, and an isolated local SQLite check simulated a v17 database with missing fingerprint columns and upgraded it to v18. The full local HTTP integration could not run because its spawned PHP workers do not inherit SQLite DLLs loaded through command-line flags; CI is required to confirm the replay path. No credentials or user content are stored in the fingerprint.
+
 ## 2026-11-23 — Homepage cadence follow-up
 
 A desktop-only CSS pass preserves all homepage sections while reducing oversized recommendation cards, editorial blocks, room story and booking padding. At 1440 px the full page fell from 2841 to 2617 px; the 390 px layout remained 4708 px. `tests/visual-fidelity-regression.cjs` passed locally and on public Pages at both widths; no overflow, failed requests or page errors were found. The test now uses `DOMContentLoaded` and explicitly scrolls/reveals before capture, avoiding the public `networkidle` timeout. Captures, public evidence and the measured remaining gap to reference 01 are in [`home-final-cadence-2026-11-23`](visual-qa/home-final-cadence-2026-11-23/comparison.md).

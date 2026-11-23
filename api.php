@@ -4,6 +4,26 @@ require_once __DIR__.'/lib/booking_time.php';
 require_once __DIR__.'/lib/booking_tables.php';
 header('Content-Type: application/json; charset=utf-8');
 function answer(int $status,array $body): never {$json=json_encode($body,JSON_UNESCAPED_UNICODE);if($status===201&&!empty($GLOBALS['api_idempotency_token'])&&!in_array(($GLOBALS['api_idempotency_type']??''),['order','booking'],true)){try{$q=db()->prepare('INSERT OR IGNORE INTO api_idempotency(token,response_json,response_status) VALUES(?,?,?)');$q->execute([$GLOBALS['api_idempotency_token'],$json,$status]);}catch(Throwable $ignored){error_log('Idempotency cache write failed: '.$ignored->getMessage());}}http_response_code($status);echo $json;exit;}
+function api_canonicalize_idempotency_payload(mixed $value): mixed
+{
+ if(!is_array($value))return $value;
+ if(array_is_list($value))return array_map('api_canonicalize_idempotency_payload',$value);
+ $normalized=[];foreach($value as $key=>$item)$normalized[(string)$key]=api_canonicalize_idempotency_payload($item);ksort($normalized,SORT_STRING);return $normalized;
+}
+function api_request_fingerprint(string $type): string
+{
+ $payload=$_POST;unset($payload['csrf']);
+ $canonical=api_canonicalize_idempotency_payload(['type'=>$type,'user_id'=>$_SESSION['user_id']??null,'admin_id'=>$_SESSION['admin_id']??null,'payload'=>$payload]);
+ $encoded=json_encode($canonical,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_INVALID_UTF8_SUBSTITUTE);
+ if(!is_string($encoded)||session_id()==='')throw new RuntimeException('Cannot fingerprint the idempotent request.');
+ return hash_hmac('sha256',$encoded,session_id());
+}
+function api_replay_idempotent_response(array $cached): never
+{
+ $expected=(string)($GLOBALS['api_request_fingerprint']??'');$saved=$cached['request_hash']??null;
+ if($expected===''||!is_string($saved)||$saved===''||!hash_equals($saved,$expected))answer(409,['ok'=>false,'message'=>'Этот ключ повтора уже связан с другой или более ранней заявкой. Проверьте историю перед новой отправкой.']);
+ http_response_code((int)$cached['response_status']);echo (string)$cached['response_json'];exit;
+}
 if($_SERVER['REQUEST_METHOD']==='GET' && ($_GET['type']??'')==='offers'){
  try{
   $pdo=db();$userId=isset($_SESSION['user_id'])?(int)$_SESSION['user_id']:null;
@@ -45,10 +65,18 @@ $requestKey=(string)($_SERVER['HTTP_IDEMPOTENCY_KEY']??'');
 if($requestKey!==''){
  if(!preg_match('/^[A-Za-z0-9._:-]{16,128}$/',$requestKey))answer(422,['ok'=>false,'message'=>'Ключ повтора имеет неверный формат.']);
  $GLOBALS['api_idempotency_token']=hash('sha256',session_id().'|'.$type.'|'.$requestKey);
- $q=db()->prepare('SELECT response_json,response_status FROM api_idempotency WHERE token=?');$q->execute([$GLOBALS['api_idempotency_token']]);$cached=$q->fetch();$q->closeCursor();
- if($cached){http_response_code((int)$cached['response_status']);echo $cached['response_json'];exit;}
- if($type==='order'){$q=db()->prepare('SELECT response_json,response_status FROM api_order_requests WHERE token=?');$q->execute([$GLOBALS['api_idempotency_token']]);$cached=$q->fetch();$q->closeCursor();if($cached&&$cached['response_json']!==null){http_response_code((int)$cached['response_status']);echo $cached['response_json'];exit;}}
- if($type==='booking'){$q=db()->prepare('SELECT response_json,response_status FROM api_booking_requests WHERE token=?');$q->execute([$GLOBALS['api_idempotency_token']]);$cached=$q->fetch();$q->closeCursor();if($cached&&$cached['response_json']!==null){http_response_code((int)$cached['response_status']);echo $cached['response_json'];exit;}}
+ if(in_array($type,['order','booking'],true))$GLOBALS['api_request_fingerprint']=api_request_fingerprint($type);
+  if(in_array($type,['order','booking'],true)){
+   // Older releases cached these successful responses in the generic table
+   // without a request fingerprint. Fail closed rather than replay or duplicate.
+   $q=db()->prepare('SELECT token FROM api_idempotency WHERE token=?');$q->execute([$GLOBALS['api_idempotency_token']]);$legacy=$q->fetchColumn();$q->closeCursor();
+   if($legacy!==false)api_replay_idempotent_response(['request_hash'=>null]);
+   if($type==='order'){$q=db()->prepare('SELECT request_hash,response_json,response_status FROM api_order_requests WHERE token=?');$q->execute([$GLOBALS['api_idempotency_token']]);$cached=$q->fetch();$q->closeCursor();if($cached&&$cached['response_json']!==null)api_replay_idempotent_response($cached);}
+   if($type==='booking'){$q=db()->prepare('SELECT request_hash,response_json,response_status FROM api_booking_requests WHERE token=?');$q->execute([$GLOBALS['api_idempotency_token']]);$cached=$q->fetch();$q->closeCursor();if($cached&&$cached['response_json']!==null)api_replay_idempotent_response($cached);}
+  }else{
+   $q=db()->prepare('SELECT response_json,response_status FROM api_idempotency WHERE token=?');$q->execute([$GLOBALS['api_idempotency_token']]);$cached=$q->fetch();$q->closeCursor();
+   if($cached){http_response_code((int)$cached['response_status']);echo $cached['response_json'];exit;}
+  }
 }
 $sessionUserId=isset($_SESSION['user_id'])?(int)$_SESSION['user_id']:null;
 $sessionAdminId=isset($_SESSION['admin_id'])?(int)$_SESSION['admin_id']:null;
@@ -86,8 +114,8 @@ try {
   $pdo=db();$idempotencyToken=(string)($GLOBALS['api_idempotency_token']??'');$pdo->exec('BEGIN IMMEDIATE TRANSACTION');
   try{
    if($idempotencyToken!==''){
-    $reserve=$pdo->prepare('INSERT OR IGNORE INTO api_booking_requests(token) VALUES(?)');$reserve->execute([$idempotencyToken]);
-    if($reserve->rowCount()===0){$q=$pdo->prepare('SELECT response_json,response_status FROM api_booking_requests WHERE token=?');$q->execute([$idempotencyToken]);$cached=$q->fetch();$pdo->commit();if($cached&&$cached['response_json']!==null){http_response_code((int)$cached['response_status']);echo $cached['response_json'];exit;}answer(409,['ok'=>false,'message'=>'Заявка с этим ключом ещё обрабатывается. Повторите попытку.']);}
+    $reserve=$pdo->prepare('INSERT OR IGNORE INTO api_booking_requests(token,request_hash) VALUES(?,?)');$reserve->execute([$idempotencyToken,(string)($GLOBALS['api_request_fingerprint']??'')]);
+    if($reserve->rowCount()===0){$q=$pdo->prepare('SELECT request_hash,response_json,response_status FROM api_booking_requests WHERE token=?');$q->execute([$idempotencyToken]);$cached=$q->fetch();$pdo->commit();if($cached&&$cached['response_json']!==null)api_replay_idempotent_response($cached);answer(409,['ok'=>false,'message'=>'Заявка с этим ключом ещё обрабатывается. Повторите попытку.']);}
    }
    $pdo->exec("DELETE FROM booking_email_rate_limits WHERE created_at<datetime('now','-2 days')");
    $rateBuckets=[['email',hash('sha256','booking-email|'.$email),3,'-1 day']];$remoteIp=trim((string)($_SERVER['REMOTE_ADDR']??''));
@@ -115,8 +143,8 @@ try {
   $giftQuantity=filter_var($_POST['gift_quantity']??1,FILTER_VALIDATE_INT);if($giftQuantity===false||$giftQuantity<1||$giftQuantity>10)answer(422,['ok'=>false,'message'=>'Количество подарка должно быть от 1 до 10.']);
   $pdo=db();$idempotencyToken=(string)($GLOBALS['api_idempotency_token']??'');$pdo->exec('BEGIN IMMEDIATE TRANSACTION');
   if($idempotencyToken!==''){
-   $reserve=$pdo->prepare('INSERT OR IGNORE INTO api_order_requests(token) VALUES(?)');$reserve->execute([$idempotencyToken]);
-   if($reserve->rowCount()===0){$q=$pdo->prepare('SELECT response_json,response_status FROM api_order_requests WHERE token=?');$q->execute([$idempotencyToken]);$cached=$q->fetch();$pdo->commit();if($cached&&$cached['response_json']!==null){http_response_code((int)$cached['response_status']);echo $cached['response_json'];exit;}answer(409,['ok'=>false,'message'=>'Запрос с этим ключом ещё обрабатывается. Повторите попытку.']);}
+   $reserve=$pdo->prepare('INSERT OR IGNORE INTO api_order_requests(token,request_hash) VALUES(?,?)');$reserve->execute([$idempotencyToken,(string)($GLOBALS['api_request_fingerprint']??'')]);
+   if($reserve->rowCount()===0){$q=$pdo->prepare('SELECT request_hash,response_json,response_status FROM api_order_requests WHERE token=?');$q->execute([$idempotencyToken]);$cached=$q->fetch();$pdo->commit();if($cached&&$cached['response_json']!==null)api_replay_idempotent_response($cached);answer(409,['ok'=>false,'message'=>'Запрос с этим ключом ещё обрабатывается. Повторите попытку.']);}
   }
   $input=['name'=>$name,'phone'=>$phone,'address'=>$address,'fulfillment'=>$fulfillment,'comment'=>(string)($_POST['comment']??''),'items'=>$items,'custom_sets'=>$customSets,'promo_code'=>(string)($_POST['promo_code']??''),'secret_code'=>(string)($_POST['secret_code']??$sessionSecretCode) ?: $sessionSecretCode,'is_admin'=>$sessionAdminId>0,'gift_dish_id'=>$giftId===null?null:(int)$giftId,'gift_quantity'=>(int)$giftQuantity,'points_to_redeem'=>(int)$points];
   $response=commerce_persist_order($pdo,$input,$sessionUserId,commerce_actor_key($sessionUserId,session_id()));
