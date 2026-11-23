@@ -3,6 +3,26 @@
   const staticDemo = window.TOKYO_STATIC_DEMO === true || /(^|\.)github\.io$/i.test(location.hostname);
   const catalog = Array.isArray(window.DISHES) ? window.DISHES : [];
   const money = value => `${Math.max(0, Math.round(Number(value) || 0)).toLocaleString('ru-RU')} ₸`;
+  const calculateStaticDemoQuote = (subtotal, fields) => {
+    const safeSubtotal = Math.max(0, Math.round(Number(subtotal) || 0));
+    const fulfillment = String(fields?.get?.('fulfillment') || 'delivery');
+    const code = String(fields?.get?.('promo_code') || '').trim().toUpperCase();
+    let discount = 0;
+    if (code === 'DEMO10') discount = Math.min(5000, Math.floor(safeSubtotal * 0.10));
+    else if (code === 'TOKYOHOUR') {
+      const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Qyzylorda', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date());
+      const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+      const hour = Number(values.hour);
+      if (!['Mon','Tue','Wed','Thu','Fri'].includes(values.weekday) || hour < 14 || hour >= 17) {
+        throw new Error('TOKYOHOUR действует в учебном сценарии по будням с 14:00 до 17:00, Asia/Qyzylorda.');
+      }
+      discount = Math.min(4000, Math.floor(safeSubtotal * 0.15));
+    } else if (code) {
+      throw new Error('В локальной демонстрации доступны коды DEMO10 и TOKYOHOUR.');
+    }
+    return { subtotal: safeSubtotal, discount_total: discount, delivery_fee: 0, total: Math.max(0, safeSubtotal - discount), promo_code: code, requires_gift_choice: false, gift_options: [], demo_only: true, fulfillment, estimated: true };
+  };
+  if (staticDemo) window.TokyoDemoCheckoutQuote = Object.freeze({ calculate: calculateStaticDemoQuote });
 
   document.querySelectorAll('[data-copy-code]').forEach(button => {
     button.addEventListener('click', async () => {
@@ -196,24 +216,6 @@
       syncPromoControl();
     };
     syncPromoControl();
-    const staticQuote = (payload, fields) => {
-      const subtotal = Number(window.TokyoCart?.total() || 0);
-      const fulfillment = String(fields.get('fulfillment') || 'delivery');
-      const code = String(fields.get('promo_code') || '').trim().toUpperCase();
-      let discount = 0;
-      if (code) {
-        if (code === 'DEMO10') discount = Math.min(5000, Math.floor(subtotal * 0.10));
-        else if (code === 'TOKYOHOUR') {
-          const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Qyzylorda', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date());
-          const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
-          const hour = Number(values.hour);
-          const weekday = ['Mon','Tue','Wed','Thu','Fri'].includes(values.weekday);
-          if (!weekday || hour < 14 || hour >= 17) throw new Error('TOKYOHOUR действует в учебном сценарии по будням с 14:00 до 17:00, Asia/Qyzylorda.');
-          discount = Math.min(4000, Math.floor(subtotal * 0.15));
-        } else throw new Error('В локальной демонстрации доступны коды DEMO10 и TOKYOHOUR.');
-      }
-      return { subtotal, discount_total: discount, delivery_fee: 0, total: Math.max(0, subtotal - discount), promo_code: code, requires_gift_choice: false, gift_options: [], demo_only: true, fulfillment, estimated: true };
-    };
     const renderQuote = data => {
       quoteTotal.textContent = 'Подытог ' + money(data.subtotal) + ' · скидка ' + money(data.discount_total) + ' · получение ' + money(data.delivery_fee) + ' · итог ' + money(data.total) + (data.estimated ? ' · локальная оценка' : ' · серверный расчёт');
       quoteTotal.hidden = false;
@@ -250,7 +252,7 @@
         fields.set('items', JSON.stringify(cartPayload.items));
         fields.set('custom_sets', JSON.stringify(cartPayload.custom_sets));
         let quote;
-        if (staticDemo) quote = staticQuote(cartPayload, fields);
+        if (staticDemo) quote = calculateStaticDemoQuote(window.TokyoCart.total(), fields);
         else {
           const response = await fetch('api.php', { method: 'POST', body: new URLSearchParams(fields), credentials: 'same-origin', signal: controller.signal, headers: { Accept: 'application/json' } });
           const body = await response.json();

@@ -53,18 +53,13 @@ document.addEventListener('submit', async event => {
     const subtotal = cart.total();
     const promoCode = String(data.promo_code || '').trim().toUpperCase();
     let discountTotal = 0;
-    if (promoCode === 'DEMO10') discountTotal = Math.min(5000, Math.floor(subtotal * 0.10));
-    else if (promoCode === 'TOKYOHOUR') {
-      const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Qyzylorda', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date());
-      const local = Object.fromEntries(parts.map(part => [part.type, part.value]));
-      if (!['Mon','Tue','Wed','Thu','Fri'].includes(local.weekday) || Number(local.hour) < 14 || Number(local.hour) >= 17) {
-        cart.finishCheckout(); form.dataset.submitting = 'false'; if (submit) submit.disabled = false;
-        status.textContent = 'TOKYOHOUR действует только по будням с 14:00 до 17:00 по времени Asia/Qyzylorda.'; status.className = 'form-status error'; return;
-      }
-      discountTotal = Math.min(4000, Math.floor(subtotal * 0.15));
-    } else if (promoCode) {
+    try {
+      const demoQuote = window.TokyoDemoCheckoutQuote?.calculate(subtotal, new FormData(form));
+      if (!demoQuote) throw new Error('Не удалось рассчитать локальное демо-предложение. Обновите страницу и попробуйте ещё раз.');
+      discountTotal = demoQuote.discount_total;
+    } catch (error) {
       cart.finishCheckout(); form.dataset.submitting = 'false'; if (submit) submit.disabled = false;
-      status.textContent = 'В демоверсии доступны промокоды DEMO10 и TOKYOHOUR.'; status.className = 'form-status error'; return;
+      status.textContent = error.message || 'Проверьте условия демонстрационного промокода.'; status.className = 'form-status error'; return;
     }
     const validDishes = snapshot.items.every(row => Number.isSafeInteger(row.id) && row.id > 0 && Number.isSafeInteger(row.qty) && row.qty > 0 && row.qty <= 20 && Number.isSafeInteger(row.unitPrice) && row.unitPrice >= 0 && Number.isSafeInteger(row.lineTotal));
     const validSets = customSets.every(set => typeof set.variant === 'string' && set.items.length >= 3 && set.items.length <= 8 && Number.isSafeInteger(set.qty) && set.qty > 0 && set.qty <= 3 && Number.isSafeInteger(set.unitPrice) && set.unitPrice >= 0 && Number.isSafeInteger(set.lineTotal) && set.items.every(item => Number.isSafeInteger(item.id) && item.id > 0 && Number.isSafeInteger(item.qty) && item.qty > 0 && item.qty <= 4));
