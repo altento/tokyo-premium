@@ -20,7 +20,7 @@ $sentMail=booking_mail_queue($pdo,$cancelled,'qa:already-sent','qa@example.test'
 $pdo->exec("UPDATE email_outbox SET status='sent',attempts=1,sent_at=CURRENT_TIMESTAMP WHERE id=$sentMail");
 $pdo->exec("UPDATE sqlite_sequence SET seq=100 WHERE name='email_outbox'");
 commerce_migrate($pdo);
-$check((int)$pdo->query('SELECT MAX(version) FROM app_migrations')->fetchColumn()===17,'migration v17 is applied');
+$check((int)$pdo->query('SELECT 1 FROM app_migrations WHERE version=17')->fetchColumn()===1,'migration v17 is applied even when later migrations are present');
 $check((int)$pdo->query('SELECT COUNT(*) FROM email_outbox')->fetchColumn()===4,'migration preserves every outbox row');
 $check($pdo->query("SELECT body FROM email_outbox WHERE id=$cancelMail")->fetchColumn()==='Preserved body','migration preserves body and ID');
 $check($pdo->query("SELECT status FROM email_outbox WHERE id=$cancelMail")->fetchColumn()==='cancelled','migration suppresses obsolete pending confirmations');
