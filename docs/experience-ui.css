@@ -661,3 +661,30 @@
 .tp-floorplan-fallback fieldset{min-width:0}
 .tp-floorplan-fallback .tp-seat-button{width:100%;min-height:44px;height:auto;padding:10px 12px;line-height:1.4;border-radius:8px}
 .menu-results-status{margin:0 0 16px;color:var(--tp-muted);font-size:.84rem;line-height:1.5}
+
+/* Match the philosophy reference's compact desktop chapter rhythm without
+   changing the stacked tablet and mobile layouts. */
+@media(min-width:1101px){
+  .about-page .about-story{padding-block:clamp(28px,2.8vw,40px)}
+  .about-page .about-story .about-intro-image img{height:clamp(230px,19vw,280px)}
+  .about-page .about-story .about-timeline .editorial-heading{margin-bottom:8px}
+  .about-page .about-story .about-timeline .editorial-heading h2{font-size:clamp(26px,2vw,29px)}
+  .about-page .about-story .timeline-list{margin-top:8px}
+  .about-page .about-story .timeline-list li{padding-bottom:5px}
+  .about-page .about-story .timeline-list li>span{font-size:16px}
+  .about-page .about-story .timeline-list h3{font-size:14px;line-height:1.15}
+  .about-page .about-story .timeline-list p{font-size:10px;line-height:1.35}
+  .about-page .about-chef{padding-block:clamp(28px,2.8vw,40px)}
+  .about-page .chef-portrait img{height:clamp(270px,21vw,320px)}
+  .about-page .chef-landscape{min-height:190px}
+  .about-page .chef-landscape img{max-height:320px}
+  .about-page .about-principles{padding-block:clamp(28px,2.8vw,40px)}
+  .about-page .principle-grid{margin-top:16px}
+  .about-page .principle-grid article{min-height:142px;padding-block:12px 10px}
+  .about-page .about-source{gap:clamp(26px,3vw,42px);padding-block:clamp(28px,2.8vw,40px)}
+  .about-page .source-images img{height:clamp(160px,14vw,200px)}
+  .about-page .source-images figure:first-child{margin-top:16px}
+  .about-page .about-quote{padding-block:clamp(28px,3vw,42px)}
+  .about-page .about-quote blockquote{font-size:clamp(23px,2.1vw,32px);line-height:1.25}
+  .about-page .about-contact{padding-block:clamp(20px,2vw,28px)}
+}
