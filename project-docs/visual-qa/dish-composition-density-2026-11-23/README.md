@@ -6,6 +6,8 @@
 
 - `TOKYO_VISUAL_ROUTES=dish TOKYO_VISUAL_MODE=static TOKYO_CAPTURE_STATIC=1 node tests/visual-fidelity-regression.cjs` — пройдено на локальном статическом маршруте в desktop и mobile viewport.
 - `dish-static-desktop.jpg` (1440 px) и `dish-static-mobile.jpg` (390 px) сняты после фикса и визуально просмотрены.
+- Тот же короткий сценарий пройден на GitHub Pages; публичные снимки сохранены в `public/` и просмотрены.
+- После деплоя публичные `dish-3.html` и `assets/dish-detail-refinement.css` вернули HTTP 200; в CSS присутствует новая сетка состава.
 - `assets/dish-detail-refinement.css` и `docs/assets/dish-detail-refinement.css` синхронизированы побайтно.
 - `git diff --check` — без ошибок.
 
