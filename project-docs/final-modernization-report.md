@@ -667,7 +667,7 @@ Commit `6d21ef6` added a populated-cart bottom summary that reads from `TokyoCar
 
 ## 2026-11-23 — home editorial curation
 
-The local PHP and static home routes now show four existing public dishes in an explicit seafood-and-dessert order and move directly from the restaurant-space story into booking. A regression test verifies the selected public dish IDs and section order; focused visual-fidelity runs passed in both rendering modes at desktop and mobile widths. Static desktop/mobile screenshots were inspected against reference 01; the PHP screenshots are also stored in [`visual-qa/home-editorial-curation-2026-11-23/`](visual-qa/home-editorial-curation-2026-11-23/). This local change has not yet been published, and no pixel-perfect parity is claimed.
+The PHP, static, and published Pages home routes now show four existing public dishes in an explicit seafood-and-dessert order and move directly from the restaurant-space story into booking. A regression test verifies the selected public dish IDs and section order; focused visual-fidelity runs passed at desktop and mobile widths in all three modes. Static desktop/mobile screenshots were inspected against reference 01; the PHP and public captures are also stored in [`visual-qa/home-editorial-curation-2026-11-23/`](visual-qa/home-editorial-curation-2026-11-23/). GitHub Actions run [45134262257](https://github.com/altento/tokyo-premium/actions/runs/45134262257) passed and deployed commit `3d08759`. This is a focused comparison, not a claim of pixel-perfect parity.
 
 ## 2026-11-23 — mobile cart checkout access
 

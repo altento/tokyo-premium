@@ -13,5 +13,7 @@ Compared `design-references/01-home.png` with the current PHP and GitHub Pages h
 - Focused `tests/visual-fidelity-regression.cjs` passed for the home route in static and PHP modes at desktop and mobile widths.
 - The test asserts the exact four public item IDs and the direct space-to-booking section order.
 - Both static and PHP screenshots were captured; static desktop/mobile screenshots were opened and compared with reference 01. This is a focused visual comparison, not a pixel-level match claim.
+- After commit `3d08759`, the focused home-route checks also passed against the public GitHub Pages site at desktop and mobile widths. Public screenshots are in `public/`; the separately captured 390 px viewport screenshot was inspected, and no horizontal overflow or browser errors were found.
+- GitHub Actions run [45134262257](https://github.com/altento/tokyo-premium/actions/runs/45134262257) passed and deployed the change.
 
 Captures: `home-static-desktop.jpg`, `home-static-mobile.jpg`, `home-php-desktop.jpg`, `home-php-mobile.jpg`.
