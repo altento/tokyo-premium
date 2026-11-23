@@ -111,24 +111,24 @@ try {
   $guests=filter_var($_POST['guests']??null,FILTER_VALIDATE_INT);$date=(string)($_POST['date']??'');$time=(string)($_POST['time']??'');
   if(!$guests||$guests<1||$guests>12||!booking_visit_time_is_valid($date,$time)) answer(422,['ok'=>false,'message'=>'Проверьте дату, время и количество гостей.']);
   $preferences=booking_table_preferences((string)($_POST['zone']??''),(string)($_POST['table']??''));$zone=$preferences['zone'];$table=$preferences['table'];$format=trim((string)($_POST['format']??''));if($format!==''&&!in_array($format,['Начало','Сезонный','Премиальный'],true)) answer(422,['ok'=>false,'message'=>'Выберите формат вечера из списка.']);
-  $pdo=db();$idempotencyToken=(string)($GLOBALS['api_idempotency_token']??'');$pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+  $pdo=db();$idempotencyToken=(string)($GLOBALS['api_idempotency_token']??'');sqlite_begin_immediate($pdo);
   try{
    if($idempotencyToken!==''){
     $reserve=$pdo->prepare('INSERT OR IGNORE INTO api_booking_requests(token,request_hash) VALUES(?,?)');$reserve->execute([$idempotencyToken,(string)($GLOBALS['api_request_fingerprint']??'')]);
-    if($reserve->rowCount()===0){$q=$pdo->prepare('SELECT request_hash,response_json,response_status FROM api_booking_requests WHERE token=?');$q->execute([$idempotencyToken]);$cached=$q->fetch();$pdo->commit();if($cached&&$cached['response_json']!==null)api_replay_idempotent_response($cached);answer(409,['ok'=>false,'message'=>'Заявка с этим ключом ещё обрабатывается. Повторите попытку.']);}
+    if($reserve->rowCount()===0){$q=$pdo->prepare('SELECT request_hash,response_json,response_status FROM api_booking_requests WHERE token=?');$q->execute([$idempotencyToken]);$cached=$q->fetch();sqlite_commit($pdo);if($cached&&$cached['response_json']!==null)api_replay_idempotent_response($cached);answer(409,['ok'=>false,'message'=>'Заявка с этим ключом ещё обрабатывается. Повторите попытку.']);}
    }
    $pdo->exec("DELETE FROM booking_email_rate_limits WHERE created_at<datetime('now','-2 days')");
    $rateBuckets=[['email',hash('sha256','booking-email|'.$email),3,'-1 day']];$remoteIp=trim((string)($_SERVER['REMOTE_ADDR']??''));
    if(filter_var($remoteIp,FILTER_VALIDATE_IP))$rateBuckets[]=['ip',hash('sha256','booking-ip|'.$remoteIp),5,'-1 hour'];
    $rateQuery=$pdo->prepare("SELECT COUNT(*) FROM booking_email_rate_limits WHERE bucket_hash=? AND created_at>=datetime('now',?)");$rateInsert=$pdo->prepare('INSERT INTO booking_email_rate_limits(bucket_hash) VALUES(?)');
-   foreach($rateBuckets as [$kind,$bucketHash,$limit,$window]){$rateQuery->execute([$bucketHash,$window]);if((int)$rateQuery->fetchColumn()>=$limit){$pdo->rollBack();header('Retry-After: 3600');answer(429,['ok'=>false,'message'=>'Слишком много заявок за короткое время. Попробуйте позже или свяжитесь с рестораном другим способом.']);}$rateInsert->execute([$bucketHash]);}
+   foreach($rateBuckets as [$kind,$bucketHash,$limit,$window]){$rateQuery->execute([$bucketHash,$window]);if((int)$rateQuery->fetchColumn()>=$limit){sqlite_rollback($pdo);header('Retry-After: 3600');answer(429,['ok'=>false,'message'=>'Слишком много заявок за короткое время. Попробуйте позже или свяжитесь с рестораном другим способом.']);}$rateInsert->execute([$bucketHash]);}
    $q=$pdo->prepare('INSERT INTO bookings(user_id,guest_name,guest_email,phone,guest_count,booking_date,booking_time,zone,preferred_table,format,message) VALUES(?,?,?,?,?,?,?,?,?,?,?)');
    $q->execute([$sessionUserId,$name,$email,$phone,$guests,$date,$time,$zone,$table,$format,substr(trim((string)($_POST['message']??'')),0,240)]);
    $bookingId=(int)$pdo->lastInsertId();$mailIds=booking_mail_queue_request($pdo,$bookingId);
    $pendingResponse=['ok'=>true,'message'=>booking_mail_delivery_message('pending'),'mail_status'=>'pending','id'=>$bookingId];
    if($idempotencyToken!==''){$q=$pdo->prepare('UPDATE api_booking_requests SET booking_id=?,response_json=?,response_status=201 WHERE token=?');$q->execute([$bookingId,json_encode($pendingResponse,JSON_UNESCAPED_UNICODE),$idempotencyToken]);}
-   $pdo->commit();
-  }catch(Throwable $error){if($pdo->inTransaction())$pdo->rollBack();throw $error;}
+   sqlite_commit($pdo);
+  }catch(Throwable $error){sqlite_rollback($pdo);throw $error;}
   $mailStatuses=[];foreach($mailIds as $mailId)$mailStatuses[]=booking_mail_deliver($pdo,$mailId);
   $mailStatus=in_array('failed',$mailStatuses,true)?'failed':($mailStatuses&&count(array_filter($mailStatuses,static fn($status)=>$status==='sent'))===count($mailStatuses)?'sent':'pending');
   $response=['ok'=>true,'message'=>booking_mail_delivery_message($mailStatus),'mail_status'=>$mailStatus,'id'=>$bookingId];
@@ -141,10 +141,10 @@ try {
   $points=filter_var($_POST['points_to_redeem']??0,FILTER_VALIDATE_INT);if($points===false||$points<0)answer(422,['ok'=>false,'message'=>'Проверьте количество бонусов.']);
   $giftId=isset($_POST['gift_dish_id'])&&$_POST['gift_dish_id']!==''?filter_var($_POST['gift_dish_id'],FILTER_VALIDATE_INT):null;if($giftId===false)answer(422,['ok'=>false,'message'=>'Проверьте выбранный подарок.']);
   $giftQuantity=filter_var($_POST['gift_quantity']??1,FILTER_VALIDATE_INT);if($giftQuantity===false||$giftQuantity<1||$giftQuantity>10)answer(422,['ok'=>false,'message'=>'Количество подарка должно быть от 1 до 10.']);
-  $pdo=db();$idempotencyToken=(string)($GLOBALS['api_idempotency_token']??'');$pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+  $pdo=db();$idempotencyToken=(string)($GLOBALS['api_idempotency_token']??'');sqlite_begin_immediate($pdo);
   if($idempotencyToken!==''){
    $reserve=$pdo->prepare('INSERT OR IGNORE INTO api_order_requests(token,request_hash) VALUES(?,?)');$reserve->execute([$idempotencyToken,(string)($GLOBALS['api_request_fingerprint']??'')]);
-   if($reserve->rowCount()===0){$q=$pdo->prepare('SELECT request_hash,response_json,response_status FROM api_order_requests WHERE token=?');$q->execute([$idempotencyToken]);$cached=$q->fetch();$pdo->commit();if($cached&&$cached['response_json']!==null)api_replay_idempotent_response($cached);answer(409,['ok'=>false,'message'=>'Запрос с этим ключом ещё обрабатывается. Повторите попытку.']);}
+   if($reserve->rowCount()===0){$q=$pdo->prepare('SELECT request_hash,response_json,response_status FROM api_order_requests WHERE token=?');$q->execute([$idempotencyToken]);$cached=$q->fetch();sqlite_commit($pdo);if($cached&&$cached['response_json']!==null)api_replay_idempotent_response($cached);answer(409,['ok'=>false,'message'=>'Запрос с этим ключом ещё обрабатывается. Повторите попытку.']);}
   }
   $input=['name'=>$name,'phone'=>$phone,'address'=>$address,'fulfillment'=>$fulfillment,'comment'=>(string)($_POST['comment']??''),'items'=>$items,'custom_sets'=>$customSets,'promo_code'=>(string)($_POST['promo_code']??''),'secret_code'=>(string)($_POST['secret_code']??$sessionSecretCode) ?: $sessionSecretCode,'is_admin'=>$sessionAdminId>0,'gift_dish_id'=>$giftId===null?null:(int)$giftId,'gift_quantity'=>(int)$giftQuantity,'points_to_redeem'=>(int)$points];
   $response=commerce_persist_order($pdo,$input,$sessionUserId,commerce_actor_key($sessionUserId,session_id()));
@@ -158,7 +158,7 @@ try {
    $response['message']='Заказ №'.(int)$response['id'].' подготовлен. Открываем защищённую страницу оплаты FreedomPay.'.($paymentConfig['test_mode']?' Используется тестовый режим — деньги не списываются.':'');
   }else{$response['payment_method']='upon_receipt';$response['payment_status']='unpaid';}
   if($idempotencyToken!==''){$json=json_encode($response,JSON_UNESCAPED_UNICODE);$q=$pdo->prepare('UPDATE api_order_requests SET order_id=?,response_json=?,response_status=201 WHERE token=?');$q->execute([$response['id'],$json,$idempotencyToken]);}
-  $pdo->commit();answer(201,$response);
+  sqlite_commit($pdo);answer(201,$response);
  }
  if($type==='contact'){
   $email=trim((string)($_POST['email']??''));$subject=trim((string)($_POST['subject']??''));$message=trim((string)($_POST['message']??''));$messageLength=preg_match_all('/./us',$message);
@@ -169,4 +169,4 @@ try {
   $rating=filter_var($_POST['rating']??null,FILTER_VALIDATE_INT);$body=trim((string)($_POST['body']??''));$theme=(string)($_POST['theme']??'Кухня');$bodyLength=preg_match_all('/./us',$body);if(!$rating||$rating<1||$rating>5||$bodyLength===false||$bodyLength<20||$bodyLength>1000||!in_array($theme,['Кухня','Сервис','Атмосфера','Омакасе'],true)) answer(422,['ok'=>false,'message'=>'Проверьте оценку, категорию и текст отзыва.']);$q=db()->prepare('INSERT INTO reviews(guest_name,rating,body,theme) VALUES(?,?,?,?)');$q->execute([$name,$rating,$body,$theme]);answer(201,['ok'=>true,'message'=>'Отзыв сохранён в учебной базе. Публичная оценка не изменена, уведомление не отправлялось.']);
  }
  answer(400,['ok'=>false,'message'=>'Неизвестная форма.']);
-} catch(DomainException $ex){if(db()->inTransaction())db()->rollBack();answer(422,['ok'=>false,'message'=>$ex->getMessage()]);}catch(Throwable $ex){if(db()->inTransaction())db()->rollBack();error_log($ex->getMessage());answer(500,['ok'=>false,'message'=>'Не удалось сохранить заявку. Попробуйте позже.']);}
+} catch(DomainException $ex){sqlite_rollback(db());answer(422,['ok'=>false,'message'=>$ex->getMessage()]);}catch(Throwable $ex){sqlite_rollback(db());error_log($ex->getMessage());answer(500,['ok'=>false,'message'=>'Не удалось сохранить заявку. Попробуйте позже.']);}

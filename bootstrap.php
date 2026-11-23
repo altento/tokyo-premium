@@ -91,29 +91,29 @@ function db(): PDO
             if (!in_array('fulfillment', $orderCols, true)) $connection->exec("ALTER TABLE orders ADD COLUMN fulfillment TEXT NOT NULL DEFAULT 'delivery'");
 
             if (!$connection->query('SELECT 1 FROM app_migrations WHERE version=1')->fetchColumn()) {
-                $connection->beginTransaction();
+                sqlite_begin_immediate($connection);
                 try {
                     $seed = file_get_contents(__DIR__.'/seed.sql');
                     if ($seed === false) throw new RuntimeException('Could not read the SQLite seed.');
                     $connection->exec($seed);
                     $connection->exec('INSERT INTO app_migrations(version) VALUES (1)');
-                    $connection->commit();
+                    sqlite_commit($connection);
                 } catch (Throwable $error) {
-                    if ($connection->inTransaction()) $connection->rollBack();
+                    sqlite_rollback($connection);
                     throw $error;
                 }
             }
 
             if (!$connection->query('SELECT 1 FROM app_migrations WHERE version=2')->fetchColumn()) {
-                $connection->beginTransaction();
+                sqlite_begin_immediate($connection);
                 try {
                     $imageMap = [1=>'01-philadelphia',2=>'02-california',3=>'03-nigiri-salmon',4=>'04-matcha-latte',5=>'05-green-dragon',6=>'06-nigiri-tuna',7=>'07-ramen-beef',8=>'08-mochi',9=>'09-volcano',10=>'10-gunkan-roe',11=>'11-udon-chicken',12=>'12-tuna-tartare-yuzu',13=>'13-duck-gyoza',14=>'14-miso-soup',15=>'15-ebi-tempura',16=>'16-eel-donburi',17=>'17-omakase-set',18=>'18-hanami-set',19=>'19-matcha-tiramisu',20=>'20-yuzu-lemonade'];
                     $updateImage = $connection->prepare("UPDATE dishes SET image_url=? WHERE id=? AND image_url LIKE 'https://%'");
                     foreach ($imageMap as $id => $name) $updateImage->execute(['assets/food/'.$name.'.webp', $id]);
                     $connection->exec('INSERT INTO app_migrations(version) VALUES (2)');
-                    $connection->commit();
+                    sqlite_commit($connection);
                 } catch (Throwable $error) {
-                    if ($connection->inTransaction()) $connection->rollBack();
+                    sqlite_rollback($connection);
                     throw $error;
                 }
             }

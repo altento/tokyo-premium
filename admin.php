@@ -308,7 +308,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $dishCheck = $pdo->prepare('SELECT COUNT(*) FROM dishes WHERE id IN (?,?)');
                 $dishCheck->execute([$dishId, $pairedDishId]);
                 if ((int)$dishCheck->fetchColumn() !== 2) throw new RuntimeException('Одно из выбранных блюд не найдено.');
-                $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+                sqlite_begin_immediate($pdo);
                 try {
                     if ($oldType !== '') {
                         $removeOld = $pdo->prepare('DELETE FROM dish_pairings WHERE dish_id=? AND paired_dish_id=? AND pairing_type=?');
@@ -317,9 +317,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     $savePairing = $pdo->prepare('INSERT INTO dish_pairings(dish_id,paired_dish_id,pairing_type,sort_order) VALUES(?,?,?,?) ON CONFLICT(dish_id,paired_dish_id,pairing_type) DO UPDATE SET sort_order=excluded.sort_order');
                     $savePairing->execute([$dishId, $pairedDishId, $pairingType, $sortOrder]);
-                    $pdo->commit();
+                    sqlite_commit($pdo);
                 } catch (Throwable $exception) {
-                    if ($pdo->inTransaction()) $pdo->rollBack();
+                    sqlite_rollback($pdo);
                     throw $exception;
                 }
                 $_SESSION['admin_flash'] = $oldType === '' ? 'Сочетание добавлено.' : 'Сочетание обновлено.';
@@ -352,7 +352,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $recordId = filter_var($_POST['id'] ?? null, FILTER_VALIDATE_INT);
                 if (!$recordId || $recordId < 1) throw new RuntimeException('Запись не найдена.');
                 if ($table === 'bookings') {
-                    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+                    sqlite_begin_immediate($pdo);
                     try {
                         $bookingQuery = $pdo->prepare('SELECT id,user_id,status FROM bookings WHERE id=?');
                         $bookingQuery->execute([$recordId]);
@@ -370,9 +370,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // second account notification or a duplicate message.
                         if ($status === 'confirmed') $confirmationMailId = booking_mail_queue_confirmation($pdo,(int)$recordId);
                         else booking_mail_cancel_obsolete_confirmation($pdo,(int)$recordId);
-                        $pdo->commit();
+                        sqlite_commit($pdo);
                     } catch (Throwable $error) {
-                        if ($pdo->inTransaction()) $pdo->rollBack();
+                        sqlite_rollback($pdo);
                         throw $error;
                     }
                     if ($status === 'confirmed') {
@@ -445,13 +445,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
                 if ($updates === []) throw new RuntimeException('Выберите настройки для сохранения.');
-                $pdo->beginTransaction();
+                sqlite_begin_immediate($pdo);
                 try {
                     $saveSetting = $pdo->prepare('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value');
                     foreach ($updates as $key=>$value) $saveSetting->execute([$key, $value]);
-                    $pdo->commit();
+                    sqlite_commit($pdo);
                 } catch (Throwable $exception) {
-                    if ($pdo->inTransaction()) $pdo->rollBack();
+                    sqlite_rollback($pdo);
                     throw $exception;
                 }
                 $_SESSION['admin_flash'] = 'Настройки сайта сохранены.';

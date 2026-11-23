@@ -124,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($giftDishId) { $checkDish=$pdo->prepare('SELECT id FROM dishes WHERE id=? AND active=1'); $checkDish->execute([$giftDishId]); if (!$checkDish->fetchColumn()) throw new DomainException('Выберите активное блюдо для подарка.'); }
             if (in_array($reward, ['gift_dish'], true) && !$giftDishId) throw new DomainException('Выберите блюдо для подарка.');
             $values = [$slug,$type,$title,$description,$image,$reward,(int)$value,$giftDishId,(int)$minimum,(int)$maximum,$start ?: null,$end ?: null,$type === 'golden_hour' ? 62 : 127,$timeStart ?: null,$timeEnd ?: null,'Asia/Qyzylorda',trim((string)($_POST['required_tier'] ?? '')) ?: null,isset($_POST['active']) ? 1 : 0,isset($_POST['stackable']) ? 1 : 0,1,(int)($_POST['sort_order'] ?? 50)];
-            $pdo->beginTransaction();
+            sqlite_begin_immediate($pdo);
             if ($id) {
                 $existingCampaign = $pdo->prepare('SELECT campaign_type,weekday_mask FROM promotion_campaigns WHERE id=?');
                 $existingCampaign->execute([$id]);
@@ -153,7 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stock = $pdo->prepare('INSERT INTO campaign_gift_options(campaign_id,dish_id,remaining_quantity,max_per_order,active) VALUES(?,?,?,?,1) ON CONFLICT(campaign_id,dish_id) DO NOTHING');
                 $stock->execute([$savedCampaignId,$giftDishId,$id ? 0 : (int)$giftQuantity,$id ? 1 : (int)$giftMaxPerOrder]);
             }
-            $pdo->commit();
+            sqlite_commit($pdo);
         } elseif ($action === 'campaign-toggle') {
             $id = filter_var($_POST['id'] ?? null, FILTER_VALIDATE_INT);
             if (!$id) throw new DomainException('Не найдена кампания.');
@@ -169,7 +169,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!preg_match('/^[A-Z0-9][A-Z0-9_-]{2,30}$/', $code) || !$campaignId || ($maxUses !== '' && (!ctype_digit($maxUses) || (int)$maxUses < 1)) || ($maxPerUser !== '' && (!ctype_digit($maxPerUser) || (int)$maxPerUser < 1))) throw new DomainException('Проверьте код и лимиты применений.');
             $campaign = $pdo->prepare('SELECT id FROM promotion_campaigns WHERE id=?'); $campaign->execute([$campaignId]); if (!$campaign->fetchColumn()) throw new DomainException('Выберите существующую кампанию.');
             $start=$localDateTime($_POST['starts_at']??''); $end=$localDateTime($_POST['ends_at']??''); if ($start && $end && $end <= $start) throw new DomainException('Дата завершения должна быть позже начала.');
-            $pdo->beginTransaction();
+            sqlite_begin_immediate($pdo);
             $existing=$pdo->prepare('SELECT code FROM promo_codes WHERE code=?');$existing->execute([$code]);$existingCode=$existing->fetchColumn();
             $promoValues=[(int)$campaignId,isset($_POST['active'])?1:0,$start?:null,$end?:null,$maxUses===''?null:(int)$maxUses,$maxPerUser===''?null:(int)$maxPerUser,isset($_POST['first_order_only'])?1:0];
             if ($originalCode !== null) {
@@ -181,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt=$pdo->prepare('INSERT INTO promo_codes(campaign_id,active,starts_at,ends_at,maximum_uses,maximum_uses_per_user,first_order_only,code) VALUES(?,?,?,?,?,?,?,?)');
                 $stmt->execute([...$promoValues,$code]);
             }
-            $pdo->commit();
+            sqlite_commit($pdo);
             $notice='Промокод сохранён. Ограничения проверяются сервером при оформлении заказа.';
         } elseif ($action === 'collection-save') {
             $rawId = trim((string)($_POST['id'] ?? ''));
@@ -219,7 +219,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $check->execute($dishIds);
                 if ((int)$check->fetchColumn() !== count($dishIds)) throw new DomainException('В коллекцию можно добавлять только активные блюда.');
             }
-            $pdo->beginTransaction();
+            sqlite_begin_immediate($pdo);
             try {
                 if ($id) {
                     $exists = $pdo->prepare('SELECT 1 FROM seasonal_collections WHERE id=?');
@@ -236,9 +236,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo->prepare('DELETE FROM seasonal_collection_items WHERE collection_id=?')->execute([$collectionId]);
                 $insert = $pdo->prepare('INSERT INTO seasonal_collection_items(collection_id,dish_id,sort_order) VALUES(?,?,?)');
                 foreach ($dishIds as $position => $dishId) $insert->execute([$collectionId, $dishId, $position * 10]);
-                $pdo->commit();
+                sqlite_commit($pdo);
             } catch (Throwable $collectionError) {
-                if ($pdo->inTransaction()) $pdo->rollBack();
+                sqlite_rollback($pdo);
                 throw $collectionError;
             }
             $notice = 'Сезонная коллекция и состав сохранены.';
@@ -262,7 +262,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 || $sortOrder === false || $sortOrder < 0 || $sortOrder > 10000) {
                 throw new DomainException('Проверьте название и формат ограничений: от 3 до 8 блюд, максимум 12 порций.');
             }
-            $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+            sqlite_begin_immediate($pdo);
             try {
                 if (!$active) {
                     $activeOtherQuery = $id !== ''
@@ -286,15 +286,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $insert->execute([$slug,$name,(int)$minimum,(int)$maximum,(int)$total,$active,(int)$sortOrder]);
                     $notice = 'Формат сета создан как учебная настройка.';
                 }
-                $pdo->commit();
+                sqlite_commit($pdo);
             } catch (Throwable $setVariantError) {
-                if ($pdo->inTransaction()) $pdo->rollBack();
+                sqlite_rollback($pdo);
                 throw $setVariantError;
             }
         } elseif ($action === 'set-variant-toggle') {
             $slug = strtolower(trim((string)($_POST['slug'] ?? '')));
             if (!preg_match('/^[a-z0-9][a-z0-9-]{1,50}$/', $slug)) throw new DomainException('Не найден формат сета.');
-            $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+            sqlite_begin_immediate($pdo);
             try {
                 $find = $pdo->prepare('SELECT active FROM custom_set_variants WHERE slug=?');
                 $find->execute([$slug]);
@@ -307,10 +307,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $toggle = $pdo->prepare('UPDATE custom_set_variants SET active=CASE active WHEN 1 THEN 0 ELSE 1 END WHERE slug=?');
                 $toggle->execute([$slug]);
-                $pdo->commit();
+                sqlite_commit($pdo);
                 $notice = (int)$current === 1 ? 'Формат сета отключён.' : 'Формат сета активирован.';
             } catch (Throwable $setVariantToggleError) {
-                if ($pdo->inTransaction()) $pdo->rollBack();
+                sqlite_rollback($pdo);
                 throw $setVariantToggleError;
             }
         } elseif ($action === 'tier-save') {
@@ -319,7 +319,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if($id===false||$id<0||($id===0&&!preg_match('/^[a-z0-9-]{2,30}$/',$slug))||$name===''||strlen($name)>60||$spend===false||$spend<0||$spend>1000000000000||$multiplier===false||$multiplier<0||$multiplier>100000||$sortOrder===false||$sortOrder<0||$sortOrder>10000||strlen($benefits)>500)throw new DomainException('Проверьте уровень, порог, множитель, привилегии и порядок показа.');
             $list=array_values(array_filter(array_map('trim',preg_split('/\R/',$benefits)?:[]),static fn(string $v):bool=>$v!==''));
             if(count($list)>12||array_filter($list,static fn(string $value):bool=>strlen($value)>120))throw new DomainException('Укажите не более 12 привилегий, каждая до 120 символов.');
-            $pdo->beginTransaction();
+            sqlite_begin_immediate($pdo);
             try {
                 if($id>0){
                     $current=$pdo->prepare('SELECT slug FROM loyalty_tiers WHERE id=?');$current->execute([$id]);$currentSlug=$current->fetchColumn();
@@ -335,9 +335,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt->execute([$slug,$name,(int)$spend,(int)$multiplier,json_encode($list,JSON_UNESCAPED_UNICODE),(int)isset($_POST['active']),(int)$sortOrder]);
                     $notice='Демо-уровень программы создан.';
                 }
-                $pdo->commit();
+                sqlite_commit($pdo);
             } catch(Throwable $tierError) {
-                if($pdo->inTransaction())$pdo->rollBack();
+                sqlite_rollback($pdo);
                 throw $tierError;
             }
         } elseif ($action === 'gift-stock-save') {
@@ -353,7 +353,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if($kind==='role'&&!in_array($required,['admin','member'],true))throw new DomainException('Роль должна быть admin или member.');
             if($kind==='tier'){$q=$pdo->prepare('SELECT slug FROM loyalty_tiers WHERE slug=? AND active=1');$q->execute([$required]);if(!$q->fetchColumn())throw new DomainException('Выберите активный уровень клуба.');}
             if($kind==='code')$required=strtoupper($required);
-            $pdo->beginTransaction();
+            sqlite_begin_immediate($pdo);
             try {
                 if($kind==='code'){
                     $promo=$pdo->prepare('SELECT campaign_id,active FROM promo_codes WHERE code=?');$promo->execute([$required]);$promoRow=$promo->fetch(PDO::FETCH_ASSOC);
@@ -363,8 +363,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 if($id){$exists=$pdo->prepare('SELECT 1 FROM secret_menu_rules WHERE id=?');$exists->execute([$id]);if(!$exists->fetchColumn())throw new DomainException('Правило Secret Menu не найдено.');$q=$pdo->prepare('UPDATE secret_menu_rules SET campaign_id=?,access_kind=?,required_value=?,starts_at=?,ends_at=?,active=? WHERE id=?');$q->execute([$campaignId,$kind,$required,$start,$end,isset($_POST['active'])?1:0,$id]);}
                 else{$q=$pdo->prepare('INSERT INTO secret_menu_rules(campaign_id,access_kind,required_value,starts_at,ends_at,active) VALUES(?,?,?,?,?,?)');$q->execute([$campaignId,$kind,$required,$start,$end,isset($_POST['active'])?1:0]);}
-                $pdo->commit();
-            } catch(Throwable $secretRuleError) { if($pdo->inTransaction())$pdo->rollBack(); throw $secretRuleError; }
+                sqlite_commit($pdo);
+            } catch(Throwable $secretRuleError) { sqlite_rollback($pdo); throw $secretRuleError; }
             $notice=$kind==='code'?'Правило сохранено; код доступа связан с кампанией и проверяется сервером.':'Правило Secret Menu сохранено и проверяется сервером.';
         } elseif ($action === 'secret-rule-toggle') {
             $id=filter_var($_POST['id']??null,FILTER_VALIDATE_INT);if(!$id)throw new DomainException('Не найдено правило доступа.');$exists=$pdo->prepare('SELECT campaign_id,access_kind,required_value,active FROM secret_menu_rules WHERE id=?');$exists->execute([$id]);$ruleToToggle=$exists->fetch(PDO::FETCH_ASSOC);if(!$ruleToToggle)throw new DomainException('Правило Secret Menu не найдено.');if((int)$ruleToToggle['active']===0&&$ruleToToggle['access_kind']==='code'){$promo=$pdo->prepare('SELECT active FROM promo_codes WHERE code=? AND campaign_id=?');$promo->execute([$ruleToToggle['required_value'],$ruleToToggle['campaign_id']]);if(!(int)$promo->fetchColumn())throw new DomainException('Для включения правила активируйте совпадающий код в разделе «Промокоды».');}$pdo->prepare('UPDATE secret_menu_rules SET active=CASE active WHEN 1 THEN 0 ELSE 1 END WHERE id=?')->execute([$id]);$notice='Статус правила доступа изменён.';
@@ -385,8 +385,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($action === 'personal-offer-revoke') {
             $offerId=filter_var($_POST['offer_id']??null,FILTER_VALIDATE_INT);if(!$offerId)throw new DomainException('Персональное предложение не найдено.');commerce_revoke_personal_offer($pdo,(int)$offerId);$notice='Неиспользованное персональное предложение отозвано.';
         } else throw new DomainException('Неизвестное действие.');
-    } catch (DomainException $exception) { if ($pdo->inTransaction()) $pdo->rollBack(); $error=$exception->getMessage(); }
-      catch (Throwable $exception) { if ($pdo->inTransaction()) $pdo->rollBack(); error_log('Marketing admin: '.$exception->getMessage()); $error='Изменения не сохранены. Проверьте slug, даты и уникальность кода.'; }
+    } catch (DomainException $exception) { sqlite_rollback($pdo); $error=$exception->getMessage(); }
+      catch (Throwable $exception) { sqlite_rollback($pdo); error_log('Marketing admin: '.$exception->getMessage()); $error='Изменения не сохранены. Проверьте slug, даты и уникальность кода.'; }
 
     if ($notice !== '') {
         $anchors = [

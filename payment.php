@@ -20,28 +20,28 @@ if ($action === 'notify') {
     }
 
     $pdo = db();
-    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    sqlite_begin_immediate($pdo);
     try {
         $query = $pdo->prepare('SELECT p.id AS payment_id,p.order_id,p.amount,p.provider_payment_id,p.status AS attempt_status,o.status AS order_status,o.payment_status FROM order_payments p JOIN orders o ON o.id=p.order_id WHERE p.provider_order_id=?');
         $query->execute([$providerOrderId]);
         $payment = $query->fetch();
         if (!$payment || $amountMinor !== (int)$payment['amount'] * 100) {
-            $pdo->rollBack();
+            sqlite_rollback($pdo);
             freedompay_callback_response('error', 'Order or amount mismatch.', $config['secret']);
         }
         if (!empty($payment['provider_payment_id']) && !hash_equals((string)$payment['provider_payment_id'], $providerPaymentId)) {
-            $pdo->rollBack();
+            sqlite_rollback($pdo);
             http_response_code(409); exit('Payment identifier mismatch.');
         }
         $duplicate = $pdo->prepare('SELECT id FROM order_payments WHERE provider_payment_id=?');
         $duplicate->execute([$providerPaymentId]);
         $duplicateId = $duplicate->fetchColumn();
         if ($duplicateId !== false && (int)$duplicateId !== (int)$payment['payment_id']) {
-            $pdo->rollBack();
+            sqlite_rollback($pdo);
             freedompay_callback_response('error', 'Payment identifier is already in use.', $config['secret']);
         }
         if ($result === '1' && $payment['order_status'] === 'cancelled' && (string)($fields['pg_can_reject'] ?? '0') === '1') {
-            $pdo->rollBack();
+            sqlite_rollback($pdo);
             freedompay_callback_response('rejected', 'The order was cancelled.', $config['secret']);
         }
         if ($result === '1') {
@@ -53,9 +53,9 @@ if ($action === 'notify') {
             $update->execute([$providerPaymentId,(int)$payment['payment_id']]);
             $pdo->prepare("UPDATE orders SET payment_status='failed' WHERE id=? AND payment_status<>'paid'")->execute([(int)$payment['order_id']]);
         }
-        $pdo->commit();
+        sqlite_commit($pdo);
     } catch (Throwable $error) {
-        if ($pdo->inTransaction()) $pdo->rollBack();
+        sqlite_rollback($pdo);
         error_log('FreedomPay notification could not be processed: ' . $error->getMessage());
         http_response_code(500); exit('Notification processing failed.');
     }
@@ -78,7 +78,7 @@ if ($action === 'start') {
     }
 
     $pdo = db();
-    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    sqlite_begin_immediate($pdo);
     try {
         if (preg_match('/^[a-f0-9]{64}$/', $token)) {
             $query = $pdo->prepare('SELECT id,total,status,payment_status FROM orders WHERE payment_access_hash=?');
@@ -91,18 +91,18 @@ if ($action === 'start') {
             $query->execute([(int)$requestedOrderId]);
         }
         $order = $query->fetch();
-        if (!$order) { $pdo->rollBack(); http_response_code(404); echo json_encode(['ok'=>false,'message'=>'Заказ для оплаты не найден.']); exit; }
-        if ((int)$order['total'] < 1 || $order['status'] === 'cancelled') { $pdo->rollBack(); http_response_code(409); echo json_encode(['ok'=>false,'message'=>'Этот заказ нельзя оплатить.']); exit; }
-        if ($order['payment_status'] === 'paid') { $pdo->commit(); echo json_encode(['ok'=>true,'paid'=>true,'message'=>'Заказ уже оплачен.']); exit; }
+        if (!$order) { sqlite_rollback($pdo); http_response_code(404); echo json_encode(['ok'=>false,'message'=>'Заказ для оплаты не найден.']); exit; }
+        if ((int)$order['total'] < 1 || $order['status'] === 'cancelled') { sqlite_rollback($pdo); http_response_code(409); echo json_encode(['ok'=>false,'message'=>'Этот заказ нельзя оплатить.']); exit; }
+        if ($order['payment_status'] === 'paid') { sqlite_commit($pdo); echo json_encode(['ok'=>true,'paid'=>true,'message'=>'Заказ уже оплачен.']); exit; }
 
         $latestQuery = $pdo->prepare('SELECT * FROM order_payments WHERE order_id=? ORDER BY attempt_no DESC LIMIT 1');
         $latestQuery->execute([(int)$order['id']]);
         $latest = $latestQuery->fetch();
         if ($latest && $latest['status'] === 'pending' && $latest['checkout_url'] !== '') {
-            $pdo->commit(); echo json_encode(['ok'=>true,'redirect_url'=>$latest['checkout_url'],'test_mode'=>$config['test_mode']]); exit;
+            sqlite_commit($pdo); echo json_encode(['ok'=>true,'redirect_url'=>$latest['checkout_url'],'test_mode'=>$config['test_mode']]); exit;
         }
         if ($latest && $latest['status'] === 'creating') {
-            $pdo->commit(); http_response_code(409); echo json_encode(['ok'=>false,'message'=>'Результат создания платежа ещё не подтверждён. Новая попытка заблокирована до проверки, чтобы исключить двойную оплату. Обратитесь к администратору с номером заказа.']); exit;
+            sqlite_commit($pdo); http_response_code(409); echo json_encode(['ok'=>false,'message'=>'Результат создания платежа ещё не подтверждён. Новая попытка заблокирована до проверки, чтобы исключить двойную оплату. Обратитесь к администратору с номером заказа.']); exit;
         }
         $attempt = $latest ? (int)$latest['attempt_no'] + ((string)$latest['status'] === 'failed' ? 1 : 0) : 1;
         $payment = $latest && $latest['status'] !== 'failed' ? $latest : null;
@@ -116,9 +116,9 @@ if ($action === 'start') {
             $providerOrderId = (string)$payment['provider_order_id'];
         }
         $pdo->prepare("UPDATE orders SET payment_status='pending',payment_provider='freedompay' WHERE id=?")->execute([(int)$order['id']]);
-        $pdo->commit();
+        sqlite_commit($pdo);
     } catch (Throwable $error) {
-        if ($pdo->inTransaction()) $pdo->rollBack();
+        sqlite_rollback($pdo);
         error_log('FreedomPay checkout preparation failed: ' . $error->getMessage());
         http_response_code(500); echo json_encode(['ok'=>false,'message'=>'Не удалось подготовить оплату. Попробуйте ещё раз.']); exit;
     }

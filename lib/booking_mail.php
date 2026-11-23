@@ -210,36 +210,36 @@ function booking_mail_deliver(PDO $pdo, int $outboxId): string
     }
     if ($config === null) return (string)$state['status'];
 
-    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    sqlite_begin_immediate($pdo);
     try {
         $query = $pdo->prepare('SELECT * FROM email_outbox WHERE id=?');
         $query->execute([$outboxId]);
         $message = $query->fetch();
-        if (!$message) { $pdo->commit(); return 'missing'; }
-        if ($message['status'] === 'sent') { $pdo->commit(); return 'sent'; }
+        if (!$message) { sqlite_commit($pdo); return 'missing'; }
+        if ($message['status'] === 'sent') { sqlite_commit($pdo); return 'sent'; }
         if ($message['status'] === 'sending' && $message['locked_at'] !== null) {
             // SQLite CURRENT_TIMESTAMP is UTC; do not parse this timezone-less value
             // using PHP's Asia/Qyzylorda default or a fresh lease looks five hours old.
             $lease = $pdo->prepare("SELECT datetime(?) > datetime('now','-10 minutes')");
             $lease->execute([(string)$message['locked_at']]);
-            if ((int)$lease->fetchColumn() === 1) { $pdo->commit(); return 'sending'; }
+            if ((int)$lease->fetchColumn() === 1) { sqlite_commit($pdo); return 'sending'; }
         }
         if (preg_match('/^booking:(\d+):confirmed:guest$/',(string)$message['event_key'],$confirmation)) {
             $bookingState = $pdo->prepare('SELECT status FROM bookings WHERE id=?');
             $bookingState->execute([(int)$confirmation[1]]);
             if ($bookingState->fetchColumn() !== 'confirmed') {
                 $pdo->prepare("UPDATE email_outbox SET status='cancelled',locked_at=NULL,last_error='Confirmation no longer matches booking status',updated_at=CURRENT_TIMESTAMP WHERE id=? AND status<>'sent'")->execute([$outboxId]);
-                $pdo->commit(); return 'cancelled';
+                sqlite_commit($pdo); return 'cancelled';
             }
         }
-        if ($message['status'] === 'cancelled') { $pdo->commit(); return 'cancelled'; }
-        if ((int)$message['attempts'] >= 8) { $pdo->commit(); return 'failed'; }
+        if ($message['status'] === 'cancelled') { sqlite_commit($pdo); return 'cancelled'; }
+        if ((int)$message['attempts'] >= 8) { sqlite_commit($pdo); return 'failed'; }
         $claim = $pdo->prepare("UPDATE email_outbox SET status='sending',attempts=attempts+1,locked_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=? AND status IN('pending','failed','sending')");
         $claim->execute([$outboxId]);
-        if ($claim->rowCount() !== 1) { $pdo->commit(); return 'sending'; }
-        $pdo->commit();
+        if ($claim->rowCount() !== 1) { sqlite_commit($pdo); return 'sending'; }
+        sqlite_commit($pdo);
     } catch (Throwable $error) {
-        if ($pdo->inTransaction()) $pdo->rollBack();
+        sqlite_rollback($pdo);
         throw $error;
     }
 
@@ -256,7 +256,7 @@ function booking_mail_deliver(PDO $pdo, int $outboxId): string
 
 function booking_mail_retry(PDO $pdo, int $outboxId): string
 {
-    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    sqlite_begin_immediate($pdo);
     try {
         $query = $pdo->prepare("SELECT status FROM email_outbox WHERE id=? AND status IN('pending','failed')");
         $query->execute([$outboxId]);
@@ -264,13 +264,13 @@ function booking_mail_retry(PDO $pdo, int $outboxId): string
             $query = $pdo->prepare('SELECT status FROM email_outbox WHERE id=?');
             $query->execute([$outboxId]);
             $status = $query->fetchColumn();
-            $pdo->commit();
+            sqlite_commit($pdo);
             return $status === false ? 'missing' : (string)$status;
         }
         $pdo->prepare("UPDATE email_outbox SET status='pending',attempts=0,last_error='',locked_at=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=?")->execute([$outboxId]);
-        $pdo->commit();
+        sqlite_commit($pdo);
     } catch (Throwable $error) {
-        if ($pdo->inTransaction()) $pdo->rollBack();
+        sqlite_rollback($pdo);
         throw $error;
     }
     return booking_mail_deliver($pdo,$outboxId);

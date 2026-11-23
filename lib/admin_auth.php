@@ -72,7 +72,7 @@ function admin_authenticate(PDO $pdo, string $emailInput, string $password, stri
     $passwordMatches = password_verify($passwordForVerify, $hash);
     $verified = $admin !== false && strlen($password) <= 4096 && $passwordMatches;
 
-    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    sqlite_begin_immediate($pdo);
     try {
         $pdo->exec('DELETE FROM admin_login_attempts WHERE updated_at < ' . max(0, $now - 86400));
         $read = $pdo->prepare('SELECT bucket_hash,window_started_at,attempts,locked_until FROM admin_login_attempts WHERE bucket_hash IN ('
@@ -86,7 +86,7 @@ function admin_authenticate(PDO $pdo, string $emailInput, string $password, stri
             if (isset($rows[$hash]) && (int)$rows[$hash]['locked_until'] > $now) $locked = true;
         }
         if ($locked) {
-            $pdo->commit();
+            sqlite_commit($pdo);
             return null;
         }
 
@@ -94,7 +94,7 @@ function admin_authenticate(PDO $pdo, string $emailInput, string $password, stri
             $clear = $pdo->prepare('DELETE FROM admin_login_attempts WHERE bucket_hash IN ('
                 . implode(',', array_fill(0, count($bucketHashes), '?')) . ')');
             $clear->execute($bucketHashes);
-            $pdo->commit();
+            sqlite_commit($pdo);
             return (int)$admin['id'];
         }
 
@@ -112,10 +112,10 @@ function admin_authenticate(PDO $pdo, string $emailInput, string $password, stri
             $lockedUntil = $attempts >= $limit ? $now + $windowSeconds : 0;
             $save->execute([$hash, $started, $attempts, $lockedUntil, $now]);
         }
-        $pdo->commit();
+        sqlite_commit($pdo);
         return null;
     } catch (Throwable $error) {
-        if ($pdo->inTransaction()) $pdo->rollBack();
+        sqlite_rollback($pdo);
         throw $error;
     }
 }

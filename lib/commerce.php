@@ -1,5 +1,47 @@
 <?php
 declare(strict_types=1);
+/**
+ * Preserve BEGIN IMMEDIATE semantics while accounting for PDO_SQLite versions
+ * that do not expose SQL-started transactions through PDO::inTransaction().
+ */
+function sqlite_manual_transactions(): WeakMap
+{
+    static $transactions = null;
+    if (!$transactions instanceof WeakMap) $transactions = new WeakMap();
+    return $transactions;
+}
+function sqlite_in_transaction(PDO $pdo): bool
+{
+    return $pdo->inTransaction() || isset(sqlite_manual_transactions()[$pdo]);
+}
+function sqlite_begin_immediate(PDO $pdo): void
+{
+    if (sqlite_in_transaction($pdo)) throw new LogicException('A SQLite transaction is already active.');
+    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    sqlite_manual_transactions()[$pdo] = true;
+}
+function sqlite_commit(PDO $pdo): void
+{
+    $transactions = sqlite_manual_transactions();
+    if (isset($transactions[$pdo])) {
+        $pdo->exec('COMMIT');
+        unset($transactions[$pdo]);
+        return;
+    }
+    $pdo->commit();
+}
+function sqlite_rollback(PDO $pdo): void
+{
+    $transactions = sqlite_manual_transactions();
+    if (isset($transactions[$pdo])) {
+        try { $pdo->exec('ROLLBACK'); } catch (Throwable) { /* preserve the original failure */ }
+        unset($transactions[$pdo]);
+        return;
+    }
+    if ($pdo->inTransaction()) {
+        try { $pdo->rollBack(); } catch (Throwable) { /* preserve the original failure */ }
+    }
+}
 
 /**
  * Additive schema upgrade for the commerce modules. schema.sql creates the
@@ -10,7 +52,7 @@ function commerce_migrate(PDO $pdo): void
 {
     $seen = $pdo->query('SELECT 1 FROM app_migrations WHERE version=3')->fetchColumn();
     if (!$seen) {
-    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    sqlite_begin_immediate($pdo);
     try {
         $columns = $pdo->query('PRAGMA table_info(orders)')->fetchAll(PDO::FETCH_COLUMN, 1);
         $additions = [
@@ -55,16 +97,16 @@ function commerce_migrate(PDO $pdo): void
         $collectionItem=$pdo->prepare('INSERT OR IGNORE INTO seasonal_collection_items(collection_id,dish_id,sort_order) VALUES(?,?,?)');
         foreach ([6,12,17,19,20] as $position=>$dishId) $collectionItem->execute([$collectionId,$dishId,($position+1)*10]);
         $pdo->exec("INSERT OR IGNORE INTO app_migrations(version) VALUES(3)");
-        $pdo->commit();
+        sqlite_commit($pdo);
     } catch (Throwable $error) {
-        if ($pdo->inTransaction()) $pdo->rollBack();
+        sqlite_rollback($pdo);
         throw $error;
     }
     }
     // v4 adds certificate-preview rate limiting and editable denomination settings.
     // Keep this separate so installations that already recorded v3 are upgraded too.
     if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=4')->fetchColumn()) {
-        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        sqlite_begin_immediate($pdo);
         try {
             $columns = $pdo->query('PRAGMA table_info(gift_certificate_previews)')->fetchAll(PDO::FETCH_COLUMN, 1);
             if (!in_array('actor_key', $columns, true)) {
@@ -73,26 +115,26 @@ function commerce_migrate(PDO $pdo): void
             $pdo->exec('CREATE INDEX IF NOT EXISTS idx_gift_preview_actor_created ON gift_certificate_previews(actor_key,created_at DESC)');
             $pdo->exec("INSERT OR IGNORE INTO settings(key,value) VALUES('certificate_denominations','[10000,20000,30000,50000]')");
             $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(4)');
-            $pdo->commit();
+            sqlite_commit($pdo);
         } catch (Throwable $error) {
-            if ($pdo->inTransaction()) $pdo->rollBack();
+            sqlite_rollback($pdo);
             throw $error;
         }
     }
     if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=5')->fetchColumn()) {
-        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        sqlite_begin_immediate($pdo);
         try {
             $pdo->exec("UPDATE seasonal_collections SET image_url='assets/generated/tokyo-seasonal-omakase-v2.webp' WHERE slug='autumn-in-kyoto' AND demo_only=1 AND image_url='assets/generated/room-garden-terrace.webp'");
             $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(5)');
-            $pdo->commit();
+            sqlite_commit($pdo);
         } catch (Throwable $error) {
-            if ($pdo->inTransaction()) $pdo->rollBack();
+            sqlite_rollback($pdo);
             throw $error;
         }
     }
 
     if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=6')->fetchColumn()) {
-        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        sqlite_begin_immediate($pdo);
         try {
             $bookingColumns = $pdo->query('PRAGMA table_info(bookings)')->fetchAll(PDO::FETCH_COLUMN, 1);
             if (!in_array('guest_email', $bookingColumns, true)) {
@@ -116,15 +158,15 @@ function commerce_migrate(PDO $pdo): void
             $pdo->exec('CREATE INDEX IF NOT EXISTS idx_email_outbox_status_id ON email_outbox(status,id)');
             $pdo->exec('CREATE INDEX IF NOT EXISTS idx_email_outbox_booking_id ON email_outbox(booking_id,id)');
             $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(6)');
-            $pdo->commit();
+            sqlite_commit($pdo);
         } catch (Throwable $error) {
-            if ($pdo->inTransaction()) $pdo->rollBack();
+            sqlite_rollback($pdo);
             throw $error;
         }
     }
 
     if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=7')->fetchColumn()) {
-        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        sqlite_begin_immediate($pdo);
         try {
             $pdo->exec("CREATE TABLE IF NOT EXISTS api_booking_requests (
                 token TEXT PRIMARY KEY,
@@ -141,16 +183,16 @@ function commerce_migrate(PDO $pdo): void
             )");
             $pdo->exec('CREATE INDEX IF NOT EXISTS idx_booking_email_rate_bucket_time ON booking_email_rate_limits(bucket_hash,created_at)');
             $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(7)');
-            $pdo->commit();
+            sqlite_commit($pdo);
         } catch (Throwable $error) {
-            if ($pdo->inTransaction()) $pdo->rollBack();
+            sqlite_rollback($pdo);
             throw $error;
         }
     }
 
     $addressTableExists = (bool)$pdo->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='user_addresses'")->fetchColumn();
     if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=8')->fetchColumn() || !$addressTableExists) {
-        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        sqlite_begin_immediate($pdo);
         try {
             $pdo->exec("CREATE TABLE IF NOT EXISTS user_addresses (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -164,9 +206,9 @@ function commerce_migrate(PDO $pdo): void
             $pdo->exec('CREATE INDEX IF NOT EXISTS idx_user_addresses_owner ON user_addresses(user_id,id DESC)');
             $pdo->exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_user_addresses_one_default ON user_addresses(user_id) WHERE is_default=1');
             $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(8)');
-            $pdo->commit();
+            sqlite_commit($pdo);
         } catch (Throwable $error) {
-            if ($pdo->inTransaction()) $pdo->rollBack();
+            sqlite_rollback($pdo);
             throw $error;
         }
     }
@@ -174,7 +216,7 @@ function commerce_migrate(PDO $pdo): void
     // v9 seeds editable educational pairings for the existing catalogue.
     // INSERT OR IGNORE preserves any pairings an administrator has already set.
     if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=9')->fetchColumn()) {
-        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        sqlite_begin_immediate($pdo);
         try {
             $pdo->exec("CREATE TABLE IF NOT EXISTS dish_pairings (
                 dish_id INTEGER NOT NULL REFERENCES dishes(id) ON DELETE CASCADE,
@@ -209,9 +251,9 @@ function commerce_migrate(PDO $pdo): void
             $insertPairing = $pdo->prepare('INSERT OR IGNORE INTO dish_pairings(dish_id,paired_dish_id,pairing_type,sort_order) VALUES(?,?,?,?)');
             foreach ($pairings as $pairing) $insertPairing->execute($pairing);
             $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(9)');
-            $pdo->commit();
+            sqlite_commit($pdo);
         } catch (Throwable $error) {
-            if ($pdo->inTransaction()) $pdo->rollBack();
+            sqlite_rollback($pdo);
             throw $error;
         }
     }
@@ -219,7 +261,7 @@ function commerce_migrate(PDO $pdo): void
     // v10 adds one photographed scallop nigiri to make the existing scallop
     // ingredient filter useful. Keep it additive: never replace an edited dish.
     if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=10')->fetchColumn()) {
-        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        sqlite_begin_immediate($pdo);
         try {
             $pdo->exec("INSERT OR IGNORE INTO ingredients(slug,name,active) VALUES ('scallop','Морской гребешок',1)");
             $ingredientQuery = $pdo->query("SELECT slug FROM ingredients WHERE slug='scallop' OR name='Морской гребешок' ORDER BY CASE WHEN slug='scallop' THEN 0 ELSE 1 END LIMIT 1");
@@ -240,9 +282,9 @@ function commerce_migrate(PDO $pdo): void
             $linkPairing = $pdo->prepare("INSERT OR IGNORE INTO dish_pairings(dish_id,paired_dish_id,pairing_type,sort_order) VALUES(?,20,'drink',10)");
             $linkPairing->execute([$dishId]);
             $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(10)');
-            $pdo->commit();
+            sqlite_commit($pdo);
         } catch (Throwable $error) {
-            if ($pdo->inTransaction()) $pdo->rollBack();
+            sqlite_rollback($pdo);
             throw $error;
         }
     }
@@ -250,7 +292,7 @@ function commerce_migrate(PDO $pdo): void
     // v11 adds source-backed ingredient notes for the educational dish cards.
     // Seed once and only insert missing links so later admin edits are preserved.
     if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=11')->fetchColumn()) {
-        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        sqlite_begin_immediate($pdo);
         try {
             $composition = [
                 'Филадельфия' => ['Лосось','Сливочный сыр','Огурец','Рис для суши','Нори'],
@@ -291,9 +333,9 @@ function commerce_migrate(PDO $pdo): void
                 }
             }
             $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(11)');
-            $pdo->commit();
+            sqlite_commit($pdo);
         } catch (Throwable $error) {
-            if ($pdo->inTransaction()) $pdo->rollBack();
+            sqlite_rollback($pdo);
             throw $error;
         }
     }
@@ -301,7 +343,7 @@ function commerce_migrate(PDO $pdo): void
     // v12 adds durable, account-scoped status notifications and booking event
     // IDs. Both tables are also declared in schema.sql for new installations.
     if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=12')->fetchColumn()) {
-        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        sqlite_begin_immediate($pdo);
         try {
             $pdo->exec("CREATE TABLE IF NOT EXISTS booking_status_events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -325,9 +367,9 @@ function commerce_migrate(PDO $pdo): void
             $pdo->exec('CREATE INDEX IF NOT EXISTS idx_user_notifications_owner_created ON user_notifications(user_id,created_at DESC,id DESC)');
             $pdo->exec('CREATE INDEX IF NOT EXISTS idx_user_notifications_owner_unread ON user_notifications(user_id,read_at,id DESC)');
             $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(12)');
-            $pdo->commit();
+            sqlite_commit($pdo);
         } catch (Throwable $error) {
-            if ($pdo->inTransaction()) $pdo->rollBack();
+            sqlite_rollback($pdo);
             throw $error;
         }
     }
@@ -335,7 +377,7 @@ function commerce_migrate(PDO $pdo): void
     // v13 assigns dedicated campaign imagery without overwriting administrator
     // edits and seeds one time-limited, catalogue-linked chef-drop example.
     if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=13')->fetchColumn()) {
-        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        sqlite_begin_immediate($pdo);
         try {
             $campaignImageUpdates = [
                 ['demo-privilege','assets/generated/home-hero-nigiri-v2.webp','assets/generated/campaign-exclusive-v1.webp'],
@@ -359,9 +401,9 @@ function commerce_migrate(PDO $pdo): void
                 $target->execute([(int)$dropCampaignId,(string)$dropDishId]);
             }
             $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(13)');
-            $pdo->commit();
+            sqlite_commit($pdo);
         } catch (Throwable $error) {
-            if ($pdo->inTransaction()) $pdo->rollBack();
+            sqlite_rollback($pdo);
             throw $error;
         }
     }
@@ -369,7 +411,7 @@ function commerce_migrate(PDO $pdo): void
     // v14 preserves the selected custom-set format with order snapshots so
     // authenticated guests can rebuild prior orders using current catalogue prices.
     if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=14')->fetchColumn()) {
-        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        sqlite_begin_immediate($pdo);
         try {
             $columns = $pdo->query('PRAGMA table_info(order_items)')->fetchAll(PDO::FETCH_COLUMN, 1);
             if (!in_array('custom_set_variant_slug', $columns, true)) {
@@ -385,16 +427,16 @@ function commerce_migrate(PDO $pdo): void
                   AND order_items.custom_set_variant_slug IS NULL
                   AND order_items.item_name LIKE '% · сет на заказ'");
             $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(14)');
-            $pdo->commit();
+            sqlite_commit($pdo);
         } catch (Throwable $error) {
-            if ($pdo->inTransaction()) $pdo->rollBack();
+            sqlite_rollback($pdo);
             throw $error;
         }
     }
 
     // v15 adds privacy-preserving attempt buckets for administrative login.
     if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=15')->fetchColumn()) {
-        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        sqlite_begin_immediate($pdo);
         try {
             $pdo->exec('CREATE TABLE IF NOT EXISTS admin_login_attempts (
                 bucket_hash TEXT PRIMARY KEY CHECK(length(bucket_hash)=64),
@@ -405,16 +447,16 @@ function commerce_migrate(PDO $pdo): void
             )');
             $pdo->exec('CREATE INDEX IF NOT EXISTS idx_admin_login_attempts_updated ON admin_login_attempts(updated_at)');
             $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(15)');
-            $pdo->commit();
+            sqlite_commit($pdo);
         } catch (Throwable $error) {
-            if ($pdo->inTransaction()) $pdo->rollBack();
+            sqlite_rollback($pdo);
             throw $error;
         }
     }
 
     // v16 adds optional hosted card payments. Existing orders remain unpaid.
     if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=16')->fetchColumn()) {
-        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        sqlite_begin_immediate($pdo);
         try {
             $columns = $pdo->query('PRAGMA table_info(orders)')->fetchAll(PDO::FETCH_COLUMN, 1);
             foreach ([
@@ -444,16 +486,16 @@ function commerce_migrate(PDO $pdo): void
             )");
             $pdo->exec('CREATE INDEX IF NOT EXISTS idx_order_payments_status ON order_payments(status,updated_at)');
             $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(16)');
-            $pdo->commit();
+            sqlite_commit($pdo);
         } catch (Throwable $error) {
-            if ($pdo->inTransaction()) $pdo->rollBack();
+            sqlite_rollback($pdo);
             throw $error;
         }
     }
 
     // v17 adds a terminal state for obsolete confirmation emails, preserving rows and IDs.
     if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=17')->fetchColumn()) {
-        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        sqlite_begin_immediate($pdo);
         try {
             $definition = (string)$pdo->query("SELECT sql FROM sqlite_master WHERE type='table' AND name='email_outbox'")->fetchColumn();
             if (!str_contains($definition, "'cancelled'")) {
@@ -476,25 +518,25 @@ function commerce_migrate(PDO $pdo): void
                 WHERE status IN('pending','failed') AND event_key GLOB 'booking:[0-9]*:confirmed:guest'
                 AND NOT EXISTS(SELECT 1 FROM bookings b WHERE b.id=email_outbox.booking_id AND b.status='confirmed')");
             $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(17)');
-            $pdo->commit();
+            sqlite_commit($pdo);
         } catch (Throwable $error) {
-            if ($pdo->inTransaction()) $pdo->rollBack();
+            sqlite_rollback($pdo);
             throw $error;
         }
     }
 
     // v18 binds order and booking replay keys to the original submitted payload.
     if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=18')->fetchColumn()) {
-        $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+        sqlite_begin_immediate($pdo);
         try {
             foreach (['api_order_requests','api_booking_requests'] as $table) {
                 $columns=$pdo->query('PRAGMA table_info(' . $table . ')')->fetchAll(PDO::FETCH_COLUMN,1);
                 if (!in_array('request_hash',$columns,true)) $pdo->exec('ALTER TABLE ' . $table . ' ADD COLUMN request_hash TEXT');
             }
             $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(18)');
-            $pdo->commit();
+            sqlite_commit($pdo);
         } catch (Throwable $error) {
-            if ($pdo->inTransaction()) $pdo->rollBack();
+            sqlite_rollback($pdo);
             throw $error;
         }
     }
@@ -644,20 +686,20 @@ function commerce_birthday_eligible(PDO $pdo, int $userId): bool
 function commerce_award_birthday_points(PDO $pdo, int $userId): int
 {
     if ($userId<1) return 0;
-    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    sqlite_begin_immediate($pdo);
     try {
         $settings=$pdo->query('SELECT enabled,birthday_reward_points FROM loyalty_settings WHERE id=1')->fetch() ?: [];
         $points=(int)($settings['birthday_reward_points']??0);
         $occurrence=(!empty($settings['enabled']) && $points>0) ? commerce_birthday_occurrence($pdo,$userId) : null;
-        if (!$occurrence) { $pdo->commit(); return 0; }
+        if (!$occurrence) { sqlite_commit($pdo); return 0; }
         $eventKey='birthday:'.$userId.':'.$occurrence->format('Y');
         $insert=$pdo->prepare("INSERT OR IGNORE INTO loyalty_ledger(user_id,event_key,transaction_type,points,note) VALUES(?,?,'birthday',?,'Поздравительные бонусы Tokyo Privilege')");
         $insert->execute([$userId,$eventKey,$points]);
         $awarded=$insert->rowCount()===1 ? $points : 0;
-        $pdo->commit();
+        sqlite_commit($pdo);
         return $awarded;
     } catch (Throwable $error) {
-        if ($pdo->inTransaction()) $pdo->rollBack();
+        sqlite_rollback($pdo);
         throw $error;
     }
 }
@@ -665,13 +707,13 @@ function commerce_award_birthday_points(PDO $pdo, int $userId): int
 function commerce_referral_code_for_user(PDO $pdo, int $userId): string
 {
     if ($userId<1) throw new DomainException('Войдите в аккаунт, чтобы получить приглашение.');
-    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    sqlite_begin_immediate($pdo);
     try {
         $find=$pdo->prepare('SELECT referral_code FROM user_profiles WHERE user_id=?');
         $find->execute([$userId]);
         $existing=$find->fetchColumn();
         if (is_string($existing) && preg_match('/^TP[A-F0-9]{10}$/',$existing)) {
-            $pdo->commit();
+            sqlite_commit($pdo);
             return $existing;
         }
 
@@ -686,7 +728,7 @@ function commerce_referral_code_for_user(PDO $pdo, int $userId): string
                 $find->execute([$userId]);
                 $saved=$find->fetchColumn();
                 if (is_string($saved) && preg_match('/^TP[A-F0-9]{10}$/',$saved)) {
-                    $pdo->commit();
+                    sqlite_commit($pdo);
                     return $saved;
                 }
             } catch (PDOException $error) {
@@ -701,7 +743,7 @@ function commerce_referral_code_for_user(PDO $pdo, int $userId): string
                 $find->execute([$userId]);
                 $saved=$find->fetchColumn();
                 if (is_string($saved) && preg_match('/^TP[A-F0-9]{10}$/',$saved)) {
-                    $pdo->commit();
+                    sqlite_commit($pdo);
                     return $saved;
                 }
             } catch (PDOException $error) {
@@ -710,7 +752,7 @@ function commerce_referral_code_for_user(PDO $pdo, int $userId): string
         }
         throw new RuntimeException('Не удалось создать код приглашения.');
     } catch (Throwable $error) {
-        if ($pdo->inTransaction()) $pdo->rollBack();
+        sqlite_rollback($pdo);
         throw $error;
     }
 }
@@ -719,7 +761,7 @@ function commerce_attach_referral(PDO $pdo, int $referredUserId, string $code): 
 {
     $code=strtoupper(trim($code));
     if ($referredUserId<1 || !preg_match('/^TP[A-F0-9]{10}$/',$code)) throw new DomainException('Код приглашения имеет неверный формат.');
-    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    sqlite_begin_immediate($pdo);
     try {
         $q=$pdo->prepare('SELECT user_id FROM user_profiles WHERE referral_code=? COLLATE NOCASE');
         $q->execute([$code]); $inviterUserId=(int)$q->fetchColumn();
@@ -734,7 +776,7 @@ function commerce_attach_referral(PDO $pdo, int $referredUserId, string $code): 
         $q->execute([$referredUserId]); $existingInviter=$q->fetchColumn();
         if ($existingInviter!==false) {
             if ((int)$existingInviter===$inviterUserId) {
-                $pdo->commit();
+                sqlite_commit($pdo);
                 return true;
             }
             throw new DomainException('Для аккаунта уже задан код приглашения.');
@@ -747,7 +789,7 @@ function commerce_attach_referral(PDO $pdo, int $referredUserId, string $code): 
             $trackingCode='TP'.strtoupper(bin2hex(random_bytes(5)));
             try {
                 $insert->execute([$trackingCode,$inviterUserId,$referredUserId]);
-                $pdo->commit();
+                sqlite_commit($pdo);
                 return true;
             } catch (PDOException $error) {
                 if ((string)$error->getCode()!=='23000' && !str_contains(strtolower($error->getMessage()),'unique')) throw $error;
@@ -755,7 +797,7 @@ function commerce_attach_referral(PDO $pdo, int $referredUserId, string $code): 
         }
         throw new RuntimeException('Не удалось сохранить приглашение.');
     } catch (Throwable $error) {
-        if ($pdo->inTransaction()) $pdo->rollBack();
+        sqlite_rollback($pdo);
         throw $error;
     }
 }
@@ -1093,7 +1135,7 @@ function commerce_find_active_dish(PDO $pdo, int $id): array
 
 function commerce_persist_order(PDO $pdo, array $input, ?int $userId, string $actorKey): array
 {
-    if (!$pdo->inTransaction()) throw new LogicException('Создание заказа требует активной транзакции.');
+    if (!sqlite_in_transaction($pdo)) throw new LogicException('Создание заказа требует активной транзакции.');
     $quote=commerce_quote($pdo,$input['items']??[], $input['custom_sets']??[], (string)($input['promo_code']??''), (string)($input['fulfillment']??'delivery'), $userId, $actorKey, isset($input['gift_dish_id'])?(int)$input['gift_dish_id']:null, (int)($input['points_to_redeem']??0), (string)($input['secret_code']??''), !empty($input['is_admin']), (int)($input['gift_quantity']??1));
     if (!$quote['ok']) throw new DomainException((string)$quote['message']);
     if ($quote['requires_gift_choice']) throw new DomainException('Выберите доступный подарок.');
@@ -1249,12 +1291,12 @@ function commerce_set_order_status(PDO $pdo, int $orderId, string $newStatus): b
 {
     $allowed=['new','confirmed','preparing','ready','completed','cancelled'];
     if (!in_array($newStatus,$allowed,true)) throw new DomainException('Недопустимый статус заказа.');
-    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    sqlite_begin_immediate($pdo);
     try {
         $q=$pdo->prepare('SELECT * FROM orders WHERE id=?'); $q->execute([$orderId]); $order=$q->fetch();
         if (!$order) throw new DomainException('Заказ не найден.');
         $previous=(string)$order['status'];
-        if ($previous===$newStatus) { $pdo->commit(); return false; }
+        if ($previous===$newStatus) { sqlite_commit($pdo); return false; }
         $pdo->prepare('UPDATE orders SET status=? WHERE id=?')->execute([$newStatus,$orderId]);
         $pdo->prepare('INSERT INTO order_status_events(order_id,previous_status,new_status) VALUES(?,?,?)')->execute([$orderId,$previous,$newStatus]);
         $eventId=(int)$pdo->lastInsertId();
@@ -1316,10 +1358,10 @@ function commerce_set_order_status(PDO $pdo, int $orderId, string $newStatus): b
             }
             $pdo->prepare("UPDATE referrals SET status='cancelled',qualifying_order_id=NULL,qualified_at=NULL WHERE qualifying_order_id=?")->execute([$orderId]);
         }
-        $pdo->commit();
+        sqlite_commit($pdo);
         return true;
     } catch (Throwable $error) {
-        if ($pdo->inTransaction()) $pdo->rollBack();
+        sqlite_rollback($pdo);
         throw $error;
     }
 }
@@ -1340,7 +1382,7 @@ function commerce_save_user_address(PDO $pdo, int $userId, string $label, string
     if ($userId < 1 || $labelLength === false || $labelLength < 2 || $labelLength > 60 || strlen($label) > 240 || $addressLength === false || $addressLength < 5 || $addressLength > 240 || strlen($address) > 1000) {
         throw new DomainException('Укажите название адреса и адрес длиной от 5 до 240 символов.');
     }
-    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    sqlite_begin_immediate($pdo);
     try {
         if ($addressId !== null) {
             $exists = $pdo->prepare('SELECT 1 FROM user_addresses WHERE id=? AND user_id=?');
@@ -1357,33 +1399,33 @@ function commerce_save_user_address(PDO $pdo, int $userId, string $label, string
             $save->execute([$userId, $label, $address, $userId]);
             $id = (int)$pdo->lastInsertId();
         }
-        $pdo->commit();
+        sqlite_commit($pdo);
         return $id;
     } catch (Throwable $error) {
-        if ($pdo->inTransaction()) $pdo->rollBack();
+        sqlite_rollback($pdo);
         throw $error;
     }
 }
 
 function commerce_set_user_address_default(PDO $pdo, int $userId, int $addressId): void
 {
-    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    sqlite_begin_immediate($pdo);
     try {
         $exists = $pdo->prepare('SELECT 1 FROM user_addresses WHERE id=? AND user_id=?');
         $exists->execute([$addressId, $userId]);
         if (!$exists->fetchColumn()) throw new DomainException('Сохранённый адрес не найден.');
         $pdo->prepare('UPDATE user_addresses SET is_default=0 WHERE user_id=?')->execute([$userId]);
         $pdo->prepare('UPDATE user_addresses SET is_default=1,updated_at=CURRENT_TIMESTAMP WHERE id=? AND user_id=?')->execute([$addressId, $userId]);
-        $pdo->commit();
+        sqlite_commit($pdo);
     } catch (Throwable $error) {
-        if ($pdo->inTransaction()) $pdo->rollBack();
+        sqlite_rollback($pdo);
         throw $error;
     }
 }
 
 function commerce_delete_user_address(PDO $pdo, int $userId, int $addressId): void
 {
-    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    sqlite_begin_immediate($pdo);
     try {
         $query = $pdo->prepare('SELECT is_default FROM user_addresses WHERE id=? AND user_id=?');
         $query->execute([$addressId, $userId]);
@@ -1396,9 +1438,9 @@ function commerce_delete_user_address(PDO $pdo, int $userId, int $addressId): vo
             $nextId = $next->fetchColumn();
             if ($nextId !== false) $pdo->prepare('UPDATE user_addresses SET is_default=1,updated_at=CURRENT_TIMESTAMP WHERE id=? AND user_id=?')->execute([(int)$nextId, $userId]);
         }
-        $pdo->commit();
+        sqlite_commit($pdo);
     } catch (Throwable $error) {
-        if ($pdo->inTransaction()) $pdo->rollBack();
+        sqlite_rollback($pdo);
         throw $error;
     }
 }
@@ -1406,17 +1448,17 @@ function commerce_delete_user_address(PDO $pdo, int $userId, int $addressId): vo
 function commerce_adjust_loyalty(PDO $pdo, int $userId, int $points, string $eventKey, string $note, ?int $adminId = null): void
 {
     if ($points===0 || $userId<1 || !$adminId || $adminId<1 || !preg_match('/^[A-Za-z0-9._:-]{8,160}$/',$eventKey)) throw new DomainException('Некорректная операция с бонусами.');
-    if ($pdo->inTransaction()) throw new LogicException('Административная корректировка бонусов должна владеть транзакцией.');
-    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    if (sqlite_in_transaction($pdo)) throw new LogicException('Административная корректировка бонусов должна владеть транзакцией.');
+    sqlite_begin_immediate($pdo);
     try {
         // Serialize the balance check with the ledger write so concurrent
         // deductions cannot both spend the same points.
         if ($points<0 && commerce_get_loyalty_balance($pdo,$userId)<abs($points)) throw new DomainException('Нельзя списать больше доступного баланса.');
         $q=$pdo->prepare("INSERT INTO loyalty_ledger(user_id,event_key,transaction_type,points,admin_id,note) VALUES(?,?,'admin_adjustment',?,?,?)");
         $q->execute([$userId,$eventKey,$points,$adminId,substr($note,0,240)]);
-        $pdo->commit();
+        sqlite_commit($pdo);
     } catch (Throwable $error) {
-        if ($pdo->inTransaction()) $pdo->rollBack();
+        sqlite_rollback($pdo);
         throw $error;
     }
 }
@@ -1424,7 +1466,7 @@ function commerce_adjust_loyalty(PDO $pdo, int $userId, int $points, string $eve
 function commerce_assign_personal_offer(PDO $pdo, int $userId, int $campaignId, ?string $expiresAt = null): int
 {
     if ($userId < 1 || $campaignId < 1) throw new DomainException('Выберите аккаунт и персональную кампанию.');
-    if ($pdo->inTransaction()) throw new LogicException('Назначение предложения должно владеть транзакцией.');
+    if (sqlite_in_transaction($pdo)) throw new LogicException('Назначение предложения должно владеть транзакцией.');
     // `personalized_offers.expires_at` is compared with SQLite CURRENT_TIMESTAMP,
     // so keep the persisted value in UTC even though the admin enters local time.
     $timezone = new DateTimeZone('UTC');
@@ -1436,7 +1478,7 @@ function commerce_assign_personal_offer(PDO $pdo, int $userId, int $campaignId, 
         }
     }
 
-    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    sqlite_begin_immediate($pdo);
     try {
         $user = $pdo->prepare('SELECT 1 FROM users WHERE id=?');
         $user->execute([$userId]);
@@ -1467,10 +1509,10 @@ function commerce_assign_personal_offer(PDO $pdo, int $userId, int $campaignId, 
             $pdo->prepare('INSERT INTO personalized_offers(user_id,campaign_id,expires_at) VALUES(?,?,?)')->execute([$userId, $campaignId, $expiresAt]);
             $offerId = (int)$pdo->lastInsertId();
         }
-        $pdo->commit();
+        sqlite_commit($pdo);
         return $offerId;
     } catch (Throwable $error) {
-        if ($pdo->inTransaction()) $pdo->rollBack();
+        sqlite_rollback($pdo);
         throw $error;
     }
 }
@@ -1478,15 +1520,15 @@ function commerce_assign_personal_offer(PDO $pdo, int $userId, int $campaignId, 
 function commerce_revoke_personal_offer(PDO $pdo, int $offerId): void
 {
     if ($offerId < 1) throw new DomainException('Персональное предложение не найдено.');
-    if ($pdo->inTransaction()) throw new LogicException('Отзыв предложения должен владеть транзакцией.');
-    $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    if (sqlite_in_transaction($pdo)) throw new LogicException('Отзыв предложения должен владеть транзакцией.');
+    sqlite_begin_immediate($pdo);
     try {
         $delete = $pdo->prepare('DELETE FROM personalized_offers WHERE id=? AND used_order_id IS NULL');
         $delete->execute([$offerId]);
         if ($delete->rowCount() !== 1) throw new DomainException('Предложение уже использовано или не найдено.');
-        $pdo->commit();
+        sqlite_commit($pdo);
     } catch (Throwable $error) {
-        if ($pdo->inTransaction()) $pdo->rollBack();
+        sqlite_rollback($pdo);
         throw $error;
     }
 }
@@ -1520,8 +1562,8 @@ function commerce_create_certificate_preview(PDO $pdo, ?int $userId, string $act
     if (preg_match('/^.{241,}$/us',$greeting)) throw new DomainException('Поздравление должно быть не длиннее 240 символов.');
     $actorKey=substr($actorKey,0,128);
     if ($actorKey==='') throw new DomainException('Не удалось проверить сессию предварительного просмотра.');
-    $ownsTransaction=!$pdo->inTransaction();
-    if ($ownsTransaction) $pdo->exec('BEGIN IMMEDIATE TRANSACTION');
+    $ownsTransaction=!sqlite_in_transaction($pdo);
+    if ($ownsTransaction) sqlite_begin_immediate($pdo);
     try {
         $q=$pdo->prepare("SELECT COUNT(*) FROM gift_certificate_previews WHERE actor_key=? AND created_at>=datetime('now','-1 hour')");
         $q->execute([$actorKey]);
@@ -1529,10 +1571,10 @@ function commerce_create_certificate_preview(PDO $pdo, ?int $userId, string $act
         $q=$pdo->prepare("INSERT INTO gift_certificate_previews(user_id,actor_key,recipient_name,recipient_email,amount,theme_key,greeting,status) VALUES(?,?,?,?,?,?,?,'preview_only')");
         $q->execute([$userId,$actorKey,$recipientName,'',$amount,$theme,$greeting]);
         $preview=['id'=>(int)$pdo->lastInsertId(),'recipient_name'=>$recipientName,'amount'=>$amount,'theme'=>$theme,'greeting'=>$greeting,'status'=>'preview_only'];
-        if ($ownsTransaction) $pdo->commit();
+        if ($ownsTransaction) sqlite_commit($pdo);
         return $preview;
     } catch (Throwable $error) {
-        if ($ownsTransaction && $pdo->inTransaction()) $pdo->rollBack();
+        if ($ownsTransaction) sqlite_rollback($pdo);
         throw $error;
     }
 }

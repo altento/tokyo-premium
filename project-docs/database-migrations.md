@@ -42,3 +42,7 @@ php tests/php_integrity_integration.php
 ```
 
 It creates a temporary SQLite database, exercises migrations and business rules, and removes the database after the run. Deployment should back up the SQLite file before upgrading any persistent production copy. This repository is a fictional educational project, not a configured production data service.
+
+### Cross-version SQLite transactions
+
+Application code that needs `BEGIN IMMEDIATE` uses `sqlite_begin_immediate()`, `sqlite_commit()` and `sqlite_rollback()` from `lib/commerce.php`. PDO_SQLite versions differ in how SQL-started transactions are exposed through `PDO::inTransaction()` and `PDO::commit()`. A per-connection `WeakMap` tracks those explicit transactions while preserving native PDO transactions, so migrations, checkout, payment callbacks, admin mutations and mail-outbox claims share the same transaction semantics.
