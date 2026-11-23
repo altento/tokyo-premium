@@ -1,10 +1,10 @@
 # Tokyo Premium 2.0 implementation record
 
-Updated 2026-11-18
+Updated 2026-11-23
 
 ## 2026-11-23 — booking page rhythm
 
-Reduced the desktop booking hero and its three explanatory cards so the reservation form starts sooner and the first screen is closer to approved reference 07. The change is scoped to the booking page; mobile hero sizing, table preference behavior, and the explicit no-live-availability notice are unchanged. PHP and static stylesheet copies were updated together. Public browser verification is pending this release; no full regression suite was run for this CSS-only adjustment.
+Reduced the desktop booking hero and its three explanatory cards so the reservation form starts sooner and the first screen is closer to approved reference 07. Browser inspection found a shared 38 px hero button margin and a timezone hint that made only the time field taller than its neighbor. The hero margin is now 18 px and the booking time hint spans the form row. In a browser using the deployed booking route with the modified local assets, hero height fell from 332 to 280 px at 1024 px and from 365 to 312 px at 1440 px; the 390 px mobile layout stayed at 390 px. All three viewports had no page overflow; the heading remained visible. Public verification of this follow-up is pending. No full suite was run for this scoped layout change.
 
 ## Current release checkpoint
 

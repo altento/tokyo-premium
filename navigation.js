@@ -46,7 +46,9 @@
         if (!hint) {
           hint = document.createElement('p'); hint.dataset.bookingTimeHint = ''; hint.className = 'booking-time-hint';
           hint.id = `${time.id || 'booking-time'}-hint`; hint.setAttribute('role', 'status'); hint.setAttribute('aria-live', 'polite');
-          time.after(hint);
+          const timeField = time.closest('.field');
+          if (timeField && form?.classList.contains('booking-form')) timeField.after(hint);
+          else time.after(hint);
           time.setAttribute('aria-describedby', [time.getAttribute('aria-describedby'), hint.id].filter(Boolean).join(' '));
         }
         const futureOptions = [...time.options].some(option => option.value && !option.disabled);

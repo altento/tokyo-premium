@@ -291,7 +291,9 @@
 .editorial-page .editorial-hero.booking-hero { box-sizing: border-box; min-height: clamp(250px, 21vw, 320px); padding-block: 26px; align-items: center; }
 .editorial-page .booking-hero .editorial-hero-copy { max-width: min(590px, 62vw); }
 .editorial-page .booking-hero h1 { font-size: clamp(2.65rem, 4.2vw, 4rem); line-height: 1.02; overflow-wrap: anywhere; }
-.editorial-page .booking-hero .editorial-hero-copy > p:not(.editorial-sub) { max-width: 500px; font-size: .94rem; line-height: 1.55; margin-block: 8px; }
+.editorial-page .booking-hero .editorial-hero-copy > p:not(.editorial-sub) { max-width: 590px; font-size: .94rem; line-height: 1.55; margin-block: 8px; }
+.editorial-page .booking-hero .editorial-sub { margin-bottom: .45em; }
+.editorial-page .booking-hero .button-row { margin-top: 18px; }
 .editorial-page .booking-hero .school-note { display: none; }
 @media (max-width: 700px) {
   .editorial-page .editorial-hero.booking-hero { min-height: clamp(360px, 100vw, 420px); padding: 88px 22px 24px; align-items: flex-end; }
@@ -632,7 +634,7 @@
 #local-reviews{scroll-margin-top:100px}
 .form-status [data-local-review-link]{display:inline-flex;align-items:center;min-height:44px;color:var(--tp-gold);text-decoration:underline;text-underline-offset:4px}
 .review-form>.school-note{grid-column:1/-1;margin:0}
-.booking-time-hint{margin:6px 0 0;color:var(--tp-muted);font-size:.72rem;line-height:1.45;overflow-wrap:anywhere}
+.booking-time-hint{grid-column:1/-1;margin:-5px 0 1px;color:var(--tp-muted);font-size:.72rem;line-height:1.45;overflow-wrap:anywhere}
 .booking-time-hint.is-error{color:#efb2a1}
 .tp20-floorplan-layout [data-tp-zone-photo][hidden]{display:none}
 .tp-floorplan-fallback>.tp-floorplan-note{grid-column:1/-1;margin:0}
