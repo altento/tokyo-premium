@@ -1368,3 +1368,7 @@ body.story-motion-gsap [data-story-reveal].story-visible img{animation:none}
     margin-top: 16px;
   }
 }
+
+/* Keep the reservation hero focused on its prepared table. */
+.booking-hero .editorial-hero-photo{object-position:58% 62%}
+@media(max-width:640px){.booking-hero .editorial-hero-photo{object-position:62% 58%}}

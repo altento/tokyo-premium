@@ -38,6 +38,9 @@ async function run() {
       page.on('pageerror', error => errors.push(error.message));
       const response = await page.goto(mode.url, { waitUntil: 'domcontentloaded' });
       assert.equal(response?.status(), 200, `${mode.name} booking route loads`);
+      const heroPresentation = await page.locator('.booking-hero .editorial-hero-photo').evaluate(image => ({ source: image.getAttribute('src') || '', position: getComputedStyle(image).objectPosition }));
+      assert.match(heroPresentation.source, /room-main-hall\.webp$/, `${mode.name} booking hero shows the prepared main-hall table`);
+      assert.equal(heroPresentation.position, '58% 62%', `${mode.name} desktop booking hero keeps the table in frame`);
       await page.waitForSelector('.tp-seat-plan [data-tp-table="42"]', { timeout: 10000 });
       await page.waitForFunction(() => /выберите предпочтительный стол/i.test(document.querySelector('[data-tp-floorplan-selection]')?.textContent || ''), null, { timeout: 5000 });
 
@@ -108,6 +111,7 @@ async function run() {
       assert.equal(await page.locator('[name="table"]').inputValue(), '', `${mode.name} changing guests clears the previous table`);
 
       await page.setViewportSize({ width: 390, height: 844 });
+      assert.equal(await page.locator('.booking-hero .editorial-hero-photo').evaluate(image => getComputedStyle(image).objectPosition), '62% 58%', 'mobile booking hero keeps the table visible');
       const zoneButton = page.locator('.tp-floorplan-mobile-zone[data-tp-zone-select="Суши-бар"]');
       assert.ok(await zoneButton.isVisible(), `${mode.name} exposes touch-sized zone controls on mobile`);
       const zoneBox = await zoneButton.boundingBox();
