@@ -199,6 +199,8 @@ function parallelOrderRequests(array $fields, string $idempotencyKey, int $count
  } catch (Throwable $ex) {
   try { $pdo->exec('ROLLBACK'); } catch (Throwable $ignored) {}
   foreach ($sockets as $socket) if (is_resource($socket)) fclose($socket);
+  $annotationMessage=str_replace(["%","\r","\n"],["%25","%0D","%0A"],$ex->getMessage());
+  fwrite(STDERR, "::error title=PHP integrity integration failure::".$annotationMessage."\n");
   throw $ex;
  }
  $responses = [];
@@ -686,6 +688,8 @@ try {
  echo "PASS: {$checks} integration assertions; isolated DB: {$dbPath}\n";
 } catch (Throwable $ex) {
  if (is_file($serverLog)) fwrite(STDERR, "\nPHP test server log:\n" . file_get_contents($serverLog) . "\n");
+  $annotationMessage=str_replace(["%","\r","\n"],["%25","%0D","%0A"],$ex->getMessage());
+  fwrite(STDERR, "::error title=PHP integrity integration failure::".$annotationMessage."\n");
  throw $ex;
 } finally {
  proc_terminate($server); foreach ($pipes as $pipe) if (is_resource($pipe)) fclose($pipe); proc_close($server);
