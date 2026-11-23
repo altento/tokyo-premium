@@ -18,6 +18,10 @@ I opened the approved PNG and inspected it alongside the new full-page desktop c
 
 The local PHP CLI is PHP 8.5.11 but lacks PDO SQLite. A PHP-rendered capture failed in the footer because the database driver is unavailable, so this comparison uses the static Pages export only and does not claim PHP browser verification.
 
+## Red section dividers follow-up
+
+The reference's recurring red section accent was missing under the philosophy story, chef, sourcing and contact headings. Added the same 42 × 2 px crimson rule beneath those four headings in the source and Pages CSS. The focused Playwright check now verifies all four pseudo-elements are visible, in addition to the existing image, title-bound and overflow checks. At 390 px and 1440 px the local Pages export passed; refreshed full-page captures and metrics are saved here. This corrects the missing accent only and does not close the documented full-page composition gap.
+
 ## Public verification
 
 After commit [`038413a`](https://github.com/altento/tokyo-premium/commit/038413a04ca8ef5a4227fca3333b78aa79bffa87) deployed successfully in [workflow 45155137552](https://github.com/altento/tokyo-premium/actions/runs/45155137552), the same focused Playwright check passed against the public GitHub Pages route at 390 and 1440 px. Public screenshots and metrics are in [`public/`](public/). The live 1440 px document is 3039 CSS px tall and uses the compact desktop story spacing. CI's optional full browser suite was skipped by the fast profile; this public visual check ran separately with the repository Playwright test.

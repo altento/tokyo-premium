@@ -688,3 +688,17 @@
   .about-page .about-quote blockquote{font-size:clamp(23px,2.1vw,32px);line-height:1.25}
   .about-page .about-contact{padding-block:clamp(20px,2vw,28px)}
 }
+
+/* Keep the red editorial divider under the plain-copy philosophy headings,
+   matching the section-title treatment used elsewhere in the experience. */
+.about-page .about-story .about-copy h2::after,
+.about-page .about-chef .about-copy h2::after,
+.about-page .about-source .source-copy h2::after,
+.about-page .about-contact h2::after{
+  display:block;
+  width:42px;
+  height:2px;
+  margin-top:11px;
+  background:linear-gradient(90deg,#d51b27,#7e0b13);
+  content:"";
+}

@@ -38,11 +38,17 @@ const widths = process.env.TOKYO_VIEWPORTS
           const style = getComputedStyle(element);
           return { height: Math.round(element.getBoundingClientRect().height), paddingTop: parseFloat(style.paddingTop) };
         };
-        return { width: innerWidth, scrollWidth: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight, chefHeight: document.querySelector('.about-chef').getBoundingClientRect().height, chapters: { story: chapter('.about-story'), chef: chapter('.about-chef'), principles: chapter('.about-principles'), source: chapter('.about-source'), quote: chapter('.about-quote') }, headings, images: [...document.querySelectorAll('main img')].every(img => img.complete && img.naturalWidth > 0) };
+        const sectionRules = [...document.querySelectorAll('.about-story .about-copy h2,.about-chef .about-copy h2,.about-source .source-copy h2,.about-contact h2')].map(el => {
+          const rule = getComputedStyle(el, '::after');
+          return { heading: el.textContent.trim(), visible: rule.content !== 'none' && parseFloat(rule.width) >= 40 && parseFloat(rule.height) === 2 };
+        });
+        return { width: innerWidth, scrollWidth: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight, chefHeight: document.querySelector('.about-chef').getBoundingClientRect().height, chapters: { story: chapter('.about-story'), chef: chapter('.about-chef'), principles: chapter('.about-principles'), source: chapter('.about-source'), quote: chapter('.about-quote') }, headings, sectionRules, images: [...document.querySelectorAll('main img')].every(img => img.complete && img.naturalWidth > 0) };
       });
       assert.equal(metrics.scrollWidth, width, `overflow at ${width}`);
       assert.ok(metrics.images, `images at ${width}`);
       assert.ok(!metrics.headings.some(h => h.clipped), `heading clipping at ${width}`);
+      assert.equal(metrics.sectionRules.length, 4, `expected four editorial red rules at ${width}`);
+      assert.ok(metrics.sectionRules.every(rule => rule.visible), `missing red section rule at ${width}`);
       assert.deepEqual(errors, []);
       if (width >= 1440) assert.ok(metrics.chefHeight < 560, 'compact chef chapter');
       if (width >= 1101) {
@@ -54,6 +60,6 @@ const widths = process.env.TOKYO_VIEWPORTS
       await page.close();
     }
     fs.writeFileSync(path.join(evidence, 'metrics.json'), JSON.stringify(results, null, 2));
-    console.log(`PASS: philosophy at ${results.map(r=>r.width).join(', ')}px; photographs, text bounds and desktop chapter spacing checked`);
+    console.log(`PASS: philosophy at ${results.map(r=>r.width).join(', ')}px; photographs, title bounds, red section rules and desktop spacing checked`);
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exit(1); });
