@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-23 · Philosophy desktop spacing
+
+Focused `tests/philosophy-visual.cjs` passed on the checked-in Pages export at 390 px and 1440 px. All page images decoded; headings remain within bounds; all four crimson rules are visible; there is no horizontal overflow or page error. Fresh metrics show 2864 px desktop height versus the previous saved 3065 px baseline; mobile remained unchanged at 5821 px. Captures and reference notes: [`philosophy-density-2026-11-23`](visual-qa/philosophy-density-2026-11-23/comparison.md). PHP rendering and public deployment were not tested in this pass.
+
 ## 2026-11-19 · Catalog sort/pagination and modal cart feedback
 
 New `test:menu-state` passed in PHP/static: complete ascending/descending/name order across every page, default restoration, trimmed search/category/sort composition, favorite refresh without page reset, empty states, ARIA/focus and six widths. Modal status is included in Chromium's accessibility tree, mobile feedback fits, Escape restores trigger focus, and detail/quick-view over-cap additions preserve the cart rather than silently adding part of the requested quantity. Existing menu visual smoke passed seven sizes in each mode; Tokyo 2.0 passed PHP + static (21/19 detail routes), and cart-store passed 14 checks. Static export produced 37 pages; JS syntax/diff checks passed. No new local PHP integration run was needed for this JS-only behavior change; the configured PHP checks still run on deployment. [Evidence](visual-qa/menu-pagination-2026-11-19/comparison.md).
