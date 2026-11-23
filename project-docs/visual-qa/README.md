@@ -1,6 +1,7 @@
 ## Visual QA evidence
 
 Booking field order: [2026-11-23 comparison](booking-form-pairing-2026-11-23/comparison.md), with PHP/Pages desktop and mobile selected-table captures after pairing date/time and guest count/zone.
+Public booking verification: same targeted Playwright route passed after deployment; captures are in `booking-form-pairing-2026-11-23/public/`.
 
 Catalog ordering and add feedback: [2026-11-19 evidence](menu-pagination-2026-11-19/comparison.md), reproduced wrong cheapest-page membership, silent partial quantity acceptance and inaccessible modal feedback; corrected desktop/mobile catalog and modal states.
 

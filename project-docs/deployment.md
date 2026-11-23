@@ -33,9 +33,9 @@ Push to `main` and wait for the Pages workflow to finish. Inspect the workflow s
 
 ## 2026-11-23 — latest verified publication
 
-- Latest source commit: `a8b07ee` (homepage recommendation curation); current docs commit: `47a9feb`.
-- GitHub Pages workflow [run 45137046609](https://github.com/altento/tokyo-premium/actions/runs/45137046609) completed successfully, including build and deployment.
-- The live homepage was checked after the content release at desktop/mobile widths. Its cards were IDs `6, 1, 12, 19`; a 390 px browser viewport had no horizontal overflow or page errors. Evidence: `visual-qa/home-editorial-curation-2026-11-23/public/`.
+- Latest application commit: `c7ffe62` (reservation form flow); GitHub Pages workflow [run 45143146646](https://github.com/altento/tokyo-premium/actions/runs/45143146646) completed successfully, including build and deployment.
+- The live booking page passed the focused Playwright regression at desktop and mobile widths: semantic field order, all 42 preference markers, zone/photo synchronization, reset, single visible selection status, viewport fit and no browser errors. Screenshots: `visual-qa/booking-form-pairing-2026-11-23/public/`.
+- The previously verified homepage curation is still live: cards use IDs `6, 1, 12, 19`; the public 390 px viewport had no horizontal overflow or page errors. Evidence: `visual-qa/home-editorial-curation-2026-11-23/public/`.
 - Local home-hosting checks passed with PHP 8.4.25 / SQLite 3.53.4. `Start-Tokyo.ps1 -CheckOnly` loaded PDO SQLite; the allowlist router served `/` and food assets (200) and denied `schema.sql` and the database-file URL (404). This validates local startup prerequisites and route isolation, not a deployed PHP host or Tailscale access from another network.
 - Full 11-page visual parity and production PHP hosting remain unverified. Gift previews remain unpaid and non-redeemable; no birthday email/coupon or production loyalty points are issued. SMTP and payment credentials, and a public PHP host, remain external runtime requirements.
 
