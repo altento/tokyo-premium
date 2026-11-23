@@ -661,6 +661,14 @@ The Pages checkout and order-history handler independently calculated the two de
 
 Commit `31be795` was published by GitHub Actions run [45130366636](https://github.com/altento/tokyo-premium/actions/runs/45130366636) with a successful build/deploy. A cache-busted public cart route returned HTTP 200, and the same focused Playwright checkout/quote consistency path passed against the live GitHub Pages site at 390 px. Public captures are in [`visual-qa/static-quote-consistency-2026-11-23/public/`](visual-qa/static-quote-consistency-2026-11-23/public/). The deployed Pages order remains a local browser demo; no server order, delivery, or payment was created.
 
+## 2026-11-23 — mobile cart summary release
+
+Commit `6d21ef6` added a populated-cart bottom summary that reads from `TokyoCart`, opens checkout with keyboard focus, and yields to the expanded form, empty-cart state, and mobile navigation. The focused cart Playwright scenario passed locally, with 320 px fit and 390 px interaction checks plus eight cart-state screenshots. GitHub Actions run [45132928328](https://github.com/altento/tokyo-premium/actions/runs/45132928328) succeeded. Cache-busted public cart HTML, `pages-extra.js`, and `premium.css` returned HTTP 200 and contained the released markup/behavior. Evidence: [`visual-qa/cart-mobile-summary-2026-11-23/`](visual-qa/cart-mobile-summary-2026-11-23/). This scoped release does not represent final Tokyo Premium 2.0 acceptance.
+
+## 2026-11-23 — home editorial curation
+
+The local PHP and static home routes now show four existing public dishes in an explicit seafood-and-dessert order and move directly from the restaurant-space story into booking. A regression test verifies the selected public dish IDs and section order; focused visual-fidelity runs passed in both rendering modes at desktop and mobile widths. Static desktop/mobile screenshots were inspected against reference 01; the PHP screenshots are also stored in [`visual-qa/home-editorial-curation-2026-11-23/`](visual-qa/home-editorial-curation-2026-11-23/). This local change has not yet been published, and no pixel-perfect parity is claimed.
+
 ## 2026-11-23 — mobile cart checkout access
 
 Added a mobile-only bottom summary for populated carts, sharing its total with `TokyoCart` and opening the existing checkout details with keyboard focus moved to the disclosure. The panel hides on empty carts, while details are expanded, and while mobile navigation is open. Focused cart Playwright checks passed at 390 px and verified fit at 320 px; the PHP cart route returned HTTP 200 with the matching markup. Evidence: [`visual-qa/cart-mobile-summary-2026-11-23/`](visual-qa/cart-mobile-summary-2026-11-23/). This focused improvement does not complete Tokyo Premium 2.0 or assert full reference parity.

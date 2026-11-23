@@ -8,7 +8,11 @@ Reduced the desktop booking hero and its three explanatory cards so the reservat
 
 ## Current release checkpoint
 
-The latest verified public release is `31be795` (GitHub Actions run [45130366636](https://github.com/altento/tokyo-premium/actions/runs/45130366636); build and deploy succeeded). The 37-page static export was checked for Omakase/set-builder parity, the booking floorplan status, and static checkout quote consistency. The live booking and cart routes returned HTTP 200; focused browser checks passed for the published checkout at 390 px. Recent changes compact the desktop home, improve booking operations in the admin, tighten booking-page rhythm, repair the static export and align booking floorplan announcements. The PHP admin was checked in a real local browser against an isolated SQLite database with synthetic bookings; production data and live email delivery were not tested. Full browser/visual QA remains opt-in and known visual gaps remain open; evidence is in `project-docs/visual-qa/admin-operations-2026-11-18/`, `project-docs/visual-qa/static-export-parity-2026-11-23/`, and `project-docs/visual-qa/static-quote-consistency-2026-11-23/`.
+The latest verified public release is `6d21ef6` (GitHub Actions run [45132928328](https://github.com/altento/tokyo-premium/actions/runs/45132928328); build and deploy succeeded). Cache-busted public cart HTML, `pages-extra.js`, and `premium.css` returned HTTP 200 and contained the mobile summary implementation. The 37-page static export was also checked for Omakase/set-builder parity, booking floorplan status, and checkout quote consistency. Full browser/visual QA remains opt-in and known visual gaps remain open. The PHP admin was checked locally against an isolated SQLite database with synthetic bookings; production data and live email delivery were not tested.
+
+## 2026-11-23 — mobile cart and home editorial follow-ups
+
+The mobile cart summary from `6d21ef6` is live and its route/assets were confirmed over HTTP after the successful deployment. The next local change curates four existing public home dishes in a stable order and removes the duplicate Omakase/sample-review blocks so the home now moves from space directly to booking. Focused visual-fidelity checks passed for the static and PHP home routes at desktop and mobile widths. Captures and the comparison with reference 01 are in `visual-qa/home-editorial-curation-2026-11-23/`. The home edit is not yet published at this checkpoint; Tokyo Premium 2.0 remains in progress.
 
 ## 2026-11-23 — mobile cart checkout access
 

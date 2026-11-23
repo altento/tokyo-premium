@@ -2,8 +2,13 @@
 require __DIR__.'/bootstrap.php';
 page_start('Tokyo Premium — японская кухня как искусство момента','Авторская японская кухня, сезонные вкусы и ритуал гостеприимства в вымышленном Tokyo Premium. Учебная концепция.');
 header_html('home');
+$homeCatalog=array_merge(dishes(true),dishes());$homeById=[];
+foreach($homeCatalog as $dish)$homeById[(int)$dish['id']]=$dish;
 $featured=[];$featuredImages=[];
-foreach(array_merge(dishes(true),dishes()) as $dish){$image=trim((string)$dish['image_url']);if($image===''||isset($featuredImages[$image]))continue;$featuredImages[$image]=true;$featured[]=$dish;if(count($featured)===4)break;}
+// Keep the homepage editorial order independent of category sort_order and
+// use only public dishes; Secret Menu items remain behind their access rule.
+foreach([6,3,21,19] as $dishId){$dish=$homeById[$dishId]??null;if(!$dish)continue;$image=trim((string)$dish['image_url']);if($image===''||isset($featuredImages[$image]))continue;$featuredImages[$image]=true;$featured[]=$dish;}
+foreach($homeCatalog as $dish){if(count($featured)>=4)break;$image=trim((string)$dish['image_url']);if($image===''||isset($featuredImages[$image]))continue;$featuredImages[$image]=true;$featured[]=$dish;}
 $heroScenes=[
   ['image'=>'assets/generated/home-hero-salmon-nigiri-v3.webp','alt'=>'Нигири с лососем подают японскими палочками в тёплом свете — учебная концепция','eyebrow'=>setting('hero_eyebrow'),'title'=>'TOKYO','accent'=>'PREMIUM','lead'=>'Искусство японской кухни: сезонные продукты, точность мастера и уважение к каждому ингредиенту.','primary'=>['label'=>'Открыть меню','href'=>'menu.php'],'secondary'=>['label'=>'Выбрать вечер','href'=>'pages.php?page=booking']],
   ['image'=>'assets/generated/tokyo-seasonal-omakase-v2.webp','alt'=>'Сезонная композиция из японских блюд при свете фонаря — учебная концепция','eyebrow'=>'OMAKASE · СЕЗОННЫЙ МАРШРУТ','title'=>'Позвольте вечеру','accent'=>'постепенно раскрыться','lead'=>'Несколько подач, единый ритм и внимание к сезону. Изучите учебный сценарий Omakase и выберите формат ужина.','primary'=>['label'=>'История Omakase','href'=>'pages.php?page=omakase'],'secondary'=>['label'=>'Собрать свой сет','href'=>'set-builder.php']],
@@ -72,19 +77,6 @@ $heroScenes=[
     <div class="space-photo" data-story-reveal><img src="assets/generated/restaurant-interior.webp" width="1672" height="944" alt="Вымышленный интерьер Tokyo Premium: ореховое дерево, тёплый свет и садовое окно" loading="lazy" decoding="async"></div>
     <div class="space-copy" data-story-reveal><p class="kicker">Пространство · тёплая тишина</p><h2>Вечер начинается<br><em>ещё до первой подачи</em></h2><p>Тёмный орех, мягкий свет бумажных фонарей и камерная суши-стойка создают спокойный ритм для долгого ужина.</p><a class="text-link" href="pages.php?page=gallery">Исследовать пространство <span aria-hidden="true">↗</span></a></div>
     <span class="space-side-note" lang="ja" aria-hidden="true">間 · пространство</span>
-  </section>
-
-  <section class="home-omakase-strip" data-story-chapter="omakase">
-    <div class="omakase-seal" data-story-reveal aria-hidden="true"><span>おまかせ</span><b>匠</b></div>
-    <div data-story-reveal><p class="kicker">Omakase · доверьтесь выбору шефа</p><h2>История вкуса<br><em>в нескольких подачах</em></h2><p>Сезонный дегустационный маршрут — от лёгкого первого акцента до спокойного финала.</p><a class="button" href="pages.php?page=omakase">Узнать об Omakase <span aria-hidden="true">↗</span></a></div>
-    <div class="omakase-decoration" aria-hidden="true"><span>一</span><span>期</span><span>一</span><span>会</span></div>
-  </section>
-
-  <section class="home-review-note">
-    <p class="kicker">Истории гостей · демонстрационные примеры</p>
-    <blockquote>«В нигири слышно главное: свежесть рыбы, тёплый рис и точность прикосновения»</blockquote>
-    <p class="review-credit">Учебный отзыв · вымышленный персонаж</p>
-    <a class="text-link" href="reviews.php">Читать и оставить отзыв <span aria-hidden="true">↗</span></a>
   </section>
 
   <section class="home-booking" id="booking" data-story-chapter="booking">
