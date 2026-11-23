@@ -59,6 +59,8 @@ async function run() {
     });
     assert.ok(orderGeometry.titleRight <= orderGeometry.totalLeft, 'order title and amount never overlap');
     assert.ok(orderGeometry.rowWidth >= orderGeometry.panelWidth * .85, 'order history uses the dashboard width instead of a narrow half column');
+    const desktopOrderHeight = await page.locator('#demo-orders .account-demo-order').first().evaluate(row => row.getBoundingClientRect().height);
+    assert.ok(desktopOrderHeight <= 116, `desktop order rows stay compact while retaining all actions (actual ${desktopOrderHeight}px)`);
     assert.equal(await page.locator('.account-quick-actions').evaluate(node => getComputedStyle(node).gridTemplateColumns.split(' ').length), 4, 'desktop quick actions form a compact row within the dashboard column');
     const desktopAccountColumns = await page.locator('.account-demo-layout').evaluate(node => {
       const nav = node.querySelector('.account-demo-nav').getBoundingClientRect();

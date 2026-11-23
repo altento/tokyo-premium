@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-23 · Компактные карточки заказов в демо-кабинете
+
+История заказов в browser-local dashboard уменьшена по высоте на desktop: сведения о заказе, раскрытие состава и действие повтора размещены в одной строке. На мобильном сохранена вертикальная компоновка с удобными целями нажатия. Целевой `account-demo` Playwright прогон прошёл на локальном Pages-экспорте; desktop/mobile снимки просмотрены и сопоставлены с `design-references/11-account.png`. Полная визуальная идентичность макету не заявляется. [Проверка и снимки](visual-qa/account-compact-orders-2026-11-23/README.md).
+
 ## 2026-11-19 · Global catalog sorting and honest add feedback
 
 Fixed a real pagination/sort mismatch: filtered page membership used the original card array after the DOM was sorted. Pagination now follows current sorted order, and favorite refresh preserves the current page. Search trims outer spaces; category/favorite states expose ARIA selection; paging retains keyboard focus, disables boundary arrows and respects reduced motion. Add buttons reject over-cap requests atomically rather than silently adding fewer units. Quick-view results are inside the native modal's live status, with old feedback cleared on reopen. The central store's legacy clamp API remains intact. [Reproduction, browser checks and inspected captures](visual-qa/menu-pagination-2026-11-19/comparison.md).

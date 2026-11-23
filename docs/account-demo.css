@@ -659,3 +659,40 @@
   align-content: center;
   row-gap: 5px;
 }
+
+@media (min-width: 901px) {
+  .account-demo-page .account-demo-order .demo-order-content {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    column-gap: 12px;
+  }
+
+  .account-demo-page .account-demo-order .account-demo-order-head {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .account-demo-page .account-demo-order .demo-order-content > .account-demo-order-meta {
+    grid-column: 1;
+    grid-row: 2;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .account-demo-page .account-demo-order .demo-order-details {
+    grid-column: 2;
+    grid-row: 2;
+    white-space: nowrap;
+  }
+
+  .account-demo-page .account-demo-order .demo-order-content > .account-demo-repeat {
+    grid-column: 3;
+    grid-row: 2;
+    justify-self: end;
+    min-height: 36px;
+    margin: 0;
+    padding: 6px 10px;
+  }
+}
