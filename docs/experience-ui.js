@@ -774,8 +774,35 @@
       const zoneGroup = many('[data-tp-zone]', root).find(item => !item.hasAttribute('data-tp-table') && item.dataset.tpZone === zone);
       const zonePhoto = one('[data-tp-zone-photo]', root.parentElement || doc);
       if (zoneGroup?.dataset.tpPhoto && zonePhoto instanceof HTMLImageElement) {
-        zonePhoto.src = zoneGroup.dataset.tpPhoto;
-        zonePhoto.alt = `${zone} — иллюстративное изображение учебной концепции`;
+        const photoSource = zoneGroup.dataset.tpPhoto;
+        const photoAlt = `${zone} — иллюстративное изображение учебной концепции`;
+        if (zonePhoto.getAttribute('src') === photoSource) {
+          zonePhoto.alt = photoAlt;
+        } else {
+          const requestId = String((Number(zonePhoto.dataset.tpPhotoRequest) || 0) + 1);
+          zonePhoto.dataset.tpPhotoRequest = requestId;
+          zonePhoto.dataset.tpPhotoLoading = 'true';
+          zonePhoto.setAttribute('aria-busy', 'true');
+          const preloadedPhoto = new Image();
+          preloadedPhoto.decoding = 'async';
+          preloadedPhoto.onload = () => {
+            if (zonePhoto.dataset.tpPhotoRequest !== requestId) return;
+            zonePhoto.src = photoSource;
+            zonePhoto.alt = photoAlt;
+            delete zonePhoto.dataset.tpPhotoLoading;
+            zonePhoto.removeAttribute('aria-busy');
+            delete zonePhoto.dataset.tpPhotoError;
+          };
+          preloadedPhoto.onerror = () => {
+            if (zonePhoto.dataset.tpPhotoRequest !== requestId) return;
+            delete zonePhoto.dataset.tpPhotoLoading;
+            zonePhoto.removeAttribute('aria-busy');
+            zonePhoto.dataset.tpPhotoError = 'true';
+            const caption = one('[data-tp-seat-caption]', root.parentElement || doc);
+            if (caption) safeText(caption, `${zone}. Фото выбранной зоны не загрузилось; показан предыдущий кадр. Вместимость и доступность уточняются отдельно.`);
+          };
+          preloadedPhoto.src = photoSource;
+        }
       }
       const seatCaption = one('[data-tp-seat-caption]', root.parentElement || doc);
       if (seatCaption) safeText(seatCaption, zoneOnly ? `${zone}. Номер стола, вместимость и доступность уточняются отдельно.` : `${zone}. Выберите предпочтительный стол; вместимость и доступность уточняются отдельно.`);

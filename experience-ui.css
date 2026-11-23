@@ -702,3 +702,7 @@
   background:linear-gradient(90deg,#d51b27,#7e0b13);
   content:"";
 }
+
+.editorial-page [data-tp-zone-photo]{transition:opacity 180ms ease}
+.editorial-page [data-tp-zone-photo][data-tp-photo-loading]{opacity:.55}
+@media(prefers-reduced-motion:reduce){.editorial-page [data-tp-zone-photo]{transition:none}}

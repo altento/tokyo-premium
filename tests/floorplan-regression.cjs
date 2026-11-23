@@ -83,6 +83,7 @@ async function run() {
       assert.equal(layout.zones, 4, `${mode.name} SVG exposes four selectable zones`);
 
       await page.locator('.tp-seat-plan [data-tp-table="42"]').click();
+await page.waitForFunction(() => { const image = document.querySelector('[data-tp-zone-photo]'); return image && image.getAttribute('src')?.endsWith('room-garden-terrace.webp') && image.complete && image.naturalWidth > 0 && !image.hasAttribute('data-tp-photo-loading'); }, null, { timeout: 10000 });
       assert.equal(await page.locator('[name="table"]').inputValue(), '42', `${mode.name} SVG table choice reaches the form`);
       assert.equal(await page.locator('[name="zone"]').inputValue(), 'Летняя терраса', `${mode.name} table choice also selects its zone`);
       assert.equal(await page.locator('#full-booking-form .booking-table-state').evaluate(item => item.hidden), true, `${mode.name} keeps the form status non-visual`);
@@ -107,6 +108,7 @@ async function run() {
       assert.match(resetState.formStatus, /не выбран/i, `${mode.name} reset clears the selected-table message`);
 
       await page.locator('.tp-seat-plan [data-tp-table="42"]').click();
+await page.waitForFunction(() => { const image = document.querySelector('[data-tp-zone-photo]'); return image && image.getAttribute('src')?.endsWith('room-garden-terrace.webp') && image.complete && image.naturalWidth > 0 && !image.hasAttribute('data-tp-photo-loading'); }, null, { timeout: 10000 });
       await page.locator('[name="guests"]').selectOption('3');
       assert.equal(await page.locator('[name="table"]').inputValue(), '', `${mode.name} changing guests clears the previous table`);
 
@@ -116,7 +118,16 @@ async function run() {
       assert.ok(await zoneButton.isVisible(), `${mode.name} exposes touch-sized zone controls on mobile`);
       const zoneBox = await zoneButton.boundingBox();
       assert.ok(zoneBox && zoneBox.height >= 44, `${mode.name} mobile zone control is at least 44 px tall`);
+      const photoBeforeZoneChange = await page.locator('[data-tp-zone-photo]').getAttribute('src');
+      await page.route('**/assets/generated/room-sushi-counter.webp', async route => { await new Promise(resolve => setTimeout(resolve, 350)); await route.continue(); });
       await zoneButton.click();
+      const photoWhileLoading = await page.locator('[data-tp-zone-photo]').evaluate(image => ({ source: image.getAttribute('src'), loading: image.dataset.tpPhotoLoading === 'true', visibleWidth: image.naturalWidth }));
+      assert.equal(photoWhileLoading.source, photoBeforeZoneChange, `${mode.name} keeps the previous room photo visible while the next zone loads`);
+      assert.equal(photoWhileLoading.loading, true, `${mode.name} exposes a busy state while preloading the next room photo`);
+      assert.ok(photoWhileLoading.visibleWidth > 0, `${mode.name} keeps a loaded photograph during the transition`);
+await page.waitForFunction(() => { const image = document.querySelector('[data-tp-zone-photo]'); return image && image.getAttribute('src')?.endsWith('room-sushi-counter.webp') && image.complete && image.naturalWidth > 0 && !image.hasAttribute('data-tp-photo-loading'); }, null, { timeout: 10000 });
+      await page.unroute('**/assets/generated/room-sushi-counter.webp');
+
       const sushiPanel = page.locator('.tp-floorplan-mobile-zone-options[data-tp-floorplan-zone-options="Суши-бар"]');
       assert.ok(await sushiPanel.isVisible(), `${mode.name} reveals the selected zone's mobile table list`);
       assert.equal(await sushiPanel.locator('[data-tp-seat-button]').count(), 8, `${mode.name} lists all sushi-bar preferences`);
