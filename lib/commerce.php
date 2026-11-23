@@ -1495,8 +1495,8 @@ function commerce_create_certificate_preview(PDO $pdo, ?int $userId, string $act
 {
     $recipientName=trim($recipientName);
     if (!preg_match('/^[\p{L}\p{M} .’\'-]{2,80}$/u',$recipientName)) throw new DomainException('Укажите имя получателя от 2 до 80 символов.');
-    $recipientEmail=trim($recipientEmail);
-    if ($recipientEmail!=='' && (!filter_var($recipientEmail,FILTER_VALIDATE_EMAIL) || strlen($recipientEmail)>160)) throw new DomainException('Проверьте email получателя.');
+    // Keep the old argument for compatibility, but never retain contact data for an unsent preview.
+    $recipientEmail='';
     if (!in_array($amount,commerce_certificate_denominations($pdo),true)) throw new DomainException('Выберите один из доступных демонстрационных номиналов.');
     if (!in_array($theme,['sakura','enso','gold'],true)) throw new DomainException('Выберите доступное оформление сертификата.');
     if (!preg_match('//u',$greeting)) throw new DomainException('Текст поздравления имеет неверную кодировку.');
@@ -1511,8 +1511,8 @@ function commerce_create_certificate_preview(PDO $pdo, ?int $userId, string $act
         $q->execute([$actorKey]);
         if ((int)$q->fetchColumn()>=5) throw new DomainException('За последний час создано слишком много предварительных макетов. Попробуйте позже.');
         $q=$pdo->prepare("INSERT INTO gift_certificate_previews(user_id,actor_key,recipient_name,recipient_email,amount,theme_key,greeting,status) VALUES(?,?,?,?,?,?,?,'preview_only')");
-        $q->execute([$userId,$actorKey,$recipientName,$recipientEmail,$amount,$theme,$greeting]);
-        $preview=['id'=>(int)$pdo->lastInsertId(),'recipient_name'=>$recipientName,'recipient_email'=>$recipientEmail,'amount'=>$amount,'theme'=>$theme,'greeting'=>$greeting,'status'=>'preview_only'];
+        $q->execute([$userId,$actorKey,$recipientName,'',$amount,$theme,$greeting]);
+        $preview=['id'=>(int)$pdo->lastInsertId(),'recipient_name'=>$recipientName,'amount'=>$amount,'theme'=>$theme,'greeting'=>$greeting,'status'=>'preview_only'];
         if ($ownsTransaction) $pdo->commit();
         return $preview;
     } catch (Throwable $error) {

@@ -81,6 +81,13 @@ try {
     $storedOrderDiscount = (int)$pdo->query('SELECT discount_total FROM orders WHERE id='.(int)$pointOrder['id'])->fetchColumn();
     $check($storedPromoDiscount === $expectedPromoDiscount && $storedOrderDiscount === $expectedPromoDiscount + $pointsToRedeem, 'promo redemption stores only the promo discount while order totals include points');
 
+    $certificateAmount = commerce_certificate_denominations($pdo)[0] ?? 0;
+    $certificate = commerce_create_certificate_preview($pdo,$userId,'qa-certificate-privacy-'.bin2hex(random_bytes(4)),'QA Recipient','recipient@example.test',$certificateAmount,'sakura','Privacy regression preview');
+    $certificateEmail = $pdo->prepare('SELECT recipient_email FROM gift_certificate_previews WHERE id=?');
+    $certificateEmail->execute([$certificate['id']]);
+    $check((string)$certificateEmail->fetchColumn() === '', 'gift certificate preview does not persist a recipient email, even if a caller supplies one');
+    $check(!array_key_exists('recipient_email',$certificate), 'gift certificate preview response omits recipient contact data');
+
     fwrite(STDOUT,"PASS: {$checks} commerce pricing regression checks\n");
 } finally {
     $pdo = null;

@@ -4,6 +4,7 @@
   "scripts": {
     "test:cart": "node --test tests/cart-store.test.cjs",
     "test:commerce-pricing": "php tests/commerce-pricing-regression.php",
+    "test:gift-certificate-privacy": "node tests/gift-certificate-privacy.cjs",
     "test:gift-quantity": "php tests/gift-quantity-regression.php",
     "test:saved-addresses": "php tests/saved-address-regression.php",
     "test:account-profile": "php tests/account-profile-regression.php",

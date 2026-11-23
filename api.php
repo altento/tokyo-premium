@@ -70,11 +70,11 @@ try {
   answer(200,['ok'=>true,'demo_only'=>true,'subtotal'=>$quote['subtotal'],'discount_total'=>$quote['discount_total'],'delivery_fee'=>$quote['delivery_fee'],'total'=>$quote['total'],'promo_code'=>$quote['promo_code'],'points_to_redeem'=>$quote['points_to_redeem'],'points_discount'=>$quote['points_discount'],'requires_gift_choice'=>$quote['requires_gift_choice'],'gift_options'=>array_map(static fn(array $row):array=>['id'=>(int)$row['dish_id'],'name'=>$row['name'],'image_url'=>$row['image_url'],'price'=>(int)$row['price'],'remaining_quantity'=>(int)$row['remaining_quantity'],'max_per_order'=>(int)$row['max_per_order']],$quote['gift_options']),'gift_items'=>array_map(static fn(array $row):array=>['id'=>$row['dish']['id'],'name'=>$row['dish']['name'],'image_url'=>$row['dish']['image_url'],'quantity'=>$row['qty']],$quote['gift_items']),'adjustments'=>$quote['adjustments'],'promotion'=>$quote['promotion']]);
  }
  if($type==='gift_preview'){
-  $recipient=trim((string)($_POST['recipient_name']??''));$email=trim((string)($_POST['recipient_email']??''));
+  $recipient=trim((string)($_POST['recipient_name']??''));
   $amount=filter_var($_POST['amount']??null,FILTER_VALIDATE_INT);$theme=(string)($_POST['theme']??'');$greeting=(string)($_POST['greeting']??'');
   if($amount===false)answer(422,['ok'=>false,'message'=>'Выберите доступный номинал сертификата.']);
   $actor=commerce_actor_key($sessionUserId,session_id());
-  $preview=commerce_create_certificate_preview(db(),$sessionUserId,$actor,$recipient,$email,(int)$amount,$theme,$greeting);
+  $preview=commerce_create_certificate_preview(db(),$sessionUserId,$actor,$recipient,'',(int)$amount,$theme,$greeting);
   answer(201,['ok'=>true,'demo_only'=>true,'payment_status'=>'unpaid','redeemable'=>false,'message'=>'Сохранён только демонстрационный макет. Сертификат не оплачен, не отправлен и не может быть погашен.','preview'=>$preview]);
  }
  if($type==='booking'){

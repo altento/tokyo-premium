@@ -317,6 +317,9 @@ try {
  for ($i=0; $i<30; $i++) { [$status] = request('/admin.php'); if ($status === 200) { $ready = true; break; } usleep(100000); }
  check($ready, 'PHP server starts');
  [$status,$html] = request('/admin.php'); check($status===200 && str_contains($html,'Вход в панель'), 'admin login page available'); $csrf=tokenFrom($html);
+ [$giftStatus,$giftJson]=request('/api.php',['csrf'=>$csrf,'type'=>'gift_preview','recipient_name'=>'QA Recipient','recipient_email'=>'crafted-recipient@example.test','amount'=>'10000','theme'=>'sakura','greeting'=>'Privacy test']);$giftData=json_decode($giftJson,true);$giftPreviewId=(int)($giftData['preview']['id']??0);
+ check($giftStatus===201&&$giftPreviewId>0&&!array_key_exists('recipient_email',$giftData['preview']??[]),'gift preview API ignores a forged recipient email and omits it from the response');
+ check((string)testDatabaseValue($dbPath,'SELECT recipient_email FROM gift_certificate_previews WHERE id=?',[$giftPreviewId])==='','gift preview API persists no recipient email');
  [$status,$loginBody,$loginHeaders] = request('/admin.php',['csrf'=>$csrf,'action'=>'login','email'=>'integration@example.test','password'=>$password]);
  check($status===302, 'admin login succeeds' . ($status===302 ? '' : ' (HTTP '.$status.'; response '.substr(strip_tags($loginBody),0,180).'; headers '.implode(' | ',$loginHeaders).')'));
  [$status,$html] = request('/admin.php'); check($status===200 && str_contains($html,'Панель сайта') && str_contains($html,'Поиск по панели') && str_contains($html,'Уведомления') && str_contains($html,'Гастрономические сочетания') && str_contains($html,'data-smtp-state="not_configured"') && str_contains($html,'Как настроить почту'), 'authenticated admin loads search, notifications, pairing manager and clear SMTP readiness'); $csrf=tokenFrom($html);
