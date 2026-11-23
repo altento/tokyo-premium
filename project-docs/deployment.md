@@ -33,11 +33,11 @@ Push to `main` and wait for the Pages workflow to finish. Inspect the workflow s
 
 ## 2026-11-23 — latest verified publication
 
-- Published commit: 490c8e7b4f8f36f19ff4767ecb9670ea6869f265.
-- GitHub Pages workflow [run 45116563344](https://github.com/altento/tokyo-premium/actions/runs/45116563344) completed successfully, including PHP/SQLite integrity, API smoke, static export, and deploy.
-- The published gift-preview route returned HTTP 200. A real browser loaded the preview form and confirmed that no recipient-email input is present. A focused local Playwright test passed the Pages preview flow; the hosted PHP/SQLite integration sent a forged email field and confirmed that it was omitted from the response and stored as blank.
-- The optional browser-local birthday preference was also checked on the published account route: February offered 29 days and April 30, and the browser storage was unchanged by verification.
-- Full visual parity and the full browser suite were not rerun. Gift previews remain unpaid and non-redeemable; no birthday email/coupon or production loyalty points are issued. PHP/SQLite, SMTP, payment credentials, and a public PHP host remain external runtime requirements.
+- Latest source commit: `a8b07ee` (homepage recommendation curation); current docs commit: `47a9feb`.
+- GitHub Pages workflow [run 45137046609](https://github.com/altento/tokyo-premium/actions/runs/45137046609) completed successfully, including build and deployment.
+- The live homepage was checked after the content release at desktop/mobile widths. Its cards were IDs `6, 1, 12, 19`; a 390 px browser viewport had no horizontal overflow or page errors. Evidence: `visual-qa/home-editorial-curation-2026-11-23/public/`.
+- Local home-hosting checks passed with PHP 8.4.25 / SQLite 3.53.4. `Start-Tokyo.ps1 -CheckOnly` loaded PDO SQLite; the allowlist router served `/` and food assets (200) and denied `schema.sql` and the database-file URL (404). This validates local startup prerequisites and route isolation, not a deployed PHP host or Tailscale access from another network.
+- Full 11-page visual parity and production PHP hosting remain unverified. Gift previews remain unpaid and non-redeemable; no birthday email/coupon or production loyalty points are issued. SMTP and payment credentials, and a public PHP host, remain external runtime requirements.
 
 ## 2026-11-19 — previous verified publication
 
