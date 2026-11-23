@@ -2,7 +2,7 @@
 
 ## 2026-11-23 · Philosophy desktop spacing
 
-Focused `tests/philosophy-visual.cjs` passed on the checked-in Pages export at 390 px and 1440 px. All page images decoded; headings remain within bounds; all four crimson rules are visible; there is no horizontal overflow or page error. Fresh metrics show 2864 px desktop height versus the previous saved 3065 px baseline; mobile remained unchanged at 5821 px. Captures and reference notes: [`philosophy-density-2026-11-23`](visual-qa/philosophy-density-2026-11-23/comparison.md). PHP rendering and public deployment were not tested in this pass.
+Focused `tests/philosophy-visual.cjs` passed on the checked-in Pages export and the cache-busted public route at 390 px and 1440 px. All page images decoded; headings remain within bounds; all four crimson rules are visible; there is no horizontal overflow or page error. Fresh metrics show 2864 px desktop height versus the previous saved 3065 px baseline; mobile remained unchanged at 5821 px. Commit `0d6988e` deployed successfully in [Actions run 45171370418](https://github.com/altento/tokyo-premium/actions/runs/45171370418). Captures and reference notes: [`philosophy-density-2026-11-23`](visual-qa/philosophy-density-2026-11-23/comparison.md). PHP rendering was not tested in this pass.
 
 ## 2026-11-19 · Catalog sort/pagination and modal cart feedback
 

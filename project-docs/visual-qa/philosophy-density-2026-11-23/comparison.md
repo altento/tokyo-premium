@@ -10,5 +10,7 @@ Compared the current Pages export with [`05-philosophy.png`](../../../design-ref
 |---|---|---|
 | Desktop, 1440 px | [`desktop.jpg`](desktop.jpg) | Inspected after the change; section gaps and images are more compact. |
 | Mobile, 390 px | [`mobile.jpg`](mobile.jpg) | Inspected; previous stacked layout is unchanged. |
+| Public desktop, 1440 px | [`public/desktop.jpg`](public/desktop.jpg) | Inspected after deployment; matches the released spacing. |
+| Public mobile, 390 px | [`public/mobile.jpg`](public/mobile.jpg) | Public browser assertions passed. |
 
-The scaled 1440 px reference height is approximately 2160 px. The current page remains materially taller because it includes longer editorial copy, extra figures, a booking CTA and a fuller footer; this pass does not claim full visual parity. PHP rendering and public deployment were not checked.
+The same focused browser script passed on the cache-busted public Pages route at 390 px and 1440 px after commit [`0d6988e`](https://github.com/altento/tokyo-premium/commit/0d6988ea35d26579518ad618d2987222e6a11064) deployed successfully in [Actions run 45171370418](https://github.com/altento/tokyo-premium/actions/runs/45171370418). The scaled 1440 px reference height is approximately 2160 px. The current page remains materially taller because it includes longer editorial copy, extra figures, a booking CTA and a fuller footer; this pass does not claim full visual parity. PHP rendering was not checked.
