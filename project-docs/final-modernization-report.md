@@ -646,3 +646,7 @@ Reproduced the blank failed-photo viewer and removed duplicate image ownership. 
 
 
 Gallery release `88aef6c`: [workflow 44542921835](https://github.com/altento/tokyo-premium/actions/runs/44542921835) passed the fast server/export/deploy checks. The focused loading/retry/navigation/fallback and six-width browser suite then passed on the public Pages site. Evidence: `visual-qa/gallery-loading-2026-11-19/public-verification.json`. Optional full-browser CI remained skipped; local PHP/static browser results are recorded above.
+
+## 2026-11-23 — booking floorplan status parity
+
+Fixed a PHP/Pages mismatch on booking: the static export did not announce its initial selected zone and did not clear the table preference after form reset. The form's duplicate status copy is now hidden; the floorplan owns the single visible live announcement. The focused static browser regression passed on desktop and mobile and captured the selected-table state in `visual-qa/booking-status-2026-11-23/`. PHP browser execution remains unverified locally because PDO SQLite is unavailable; the underlying PHP behavior was preserved. This closes the tested state defect only and does not claim full booking-page visual parity or final Tokyo Premium 2.0 acceptance.

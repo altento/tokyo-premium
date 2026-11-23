@@ -17,10 +17,19 @@ async function run() {
   const { chromium } = require('playwright');
   fs.mkdirSync(evidence, { recursive: true });
   const browser = await chromium.launch({ headless: true });
-  const modes = [
+  const availableModes = [
     { name: 'PHP', url: `${base}/pages.php?page=booking` },
     { name: 'Pages', url: `${staticBase}/booking.html` }
   ];
+  const modeFilter = process.env.TOKYO_FLOORPLAN_MODE?.toLowerCase();
+  const modes = modeFilter ? availableModes.filter(mode => mode.name.toLowerCase() === modeFilter) : availableModes;
+  assert.ok(modes.length, `Unknown TOKYO_FLOORPLAN_MODE: ${modeFilter}`);
+  const capturePage = async (page, filename) => {
+    await page.evaluate(() => window.scrollTo(0, 0));
+    const freezeStickyHeader = await page.addStyleTag({ content: '.site-header{position:relative!important;top:auto!important}' });
+    try { await page.screenshot({ path: filename, fullPage: true }); }
+    finally { await freezeStickyHeader.evaluate(style => style.remove()); }
+  };
 
   try {
     for (const mode of modes) {
@@ -30,6 +39,7 @@ async function run() {
       const response = await page.goto(mode.url, { waitUntil: 'domcontentloaded' });
       assert.equal(response?.status(), 200, `${mode.name} booking route loads`);
       await page.waitForSelector('.tp-seat-plan [data-tp-table="42"]', { timeout: 10000 });
+      await page.waitForFunction(() => /выберите предпочтительный стол/i.test(document.querySelector('[data-tp-floorplan-selection]')?.textContent || ''), null, { timeout: 5000 });
 
       const initialState = await page.evaluate(() => {
         const zone = document.querySelector('[name="zone"]')?.value;
@@ -40,10 +50,14 @@ async function run() {
           zone,
           selectedZone,
           photo: document.querySelector('[data-tp-zone-photo]')?.getAttribute('src'),
-          status: document.querySelector('[data-tp-floorplan-selection]')?.textContent || ''
+          status: document.querySelector('[data-tp-floorplan-selection]')?.textContent || '',
+          hiddenFormStatus: document.querySelector('#full-booking-form .booking-table-state')?.hidden,
+          visibleSelectionStatuses: Array.from(document.querySelectorAll('.table-selection')).filter(item => !item.hidden).length
         };
       });
       assert.equal(initialState.selectedZone, initialState.zone, `${mode.name} highlights the form's default zone on initial render`);
+      assert.equal(initialState.hiddenFormStatus, true, `${mode.name} keeps the duplicate form copy out of the visual and accessibility trees`);
+      assert.equal(initialState.visibleSelectionStatuses, 1, `${mode.name} exposes one visible table-selection status`);
       assert.match(initialState.photo || '', /room-main-hall\.webp$/, `${mode.name} shows the matching room image on initial render`);
       assert.match(initialState.status, /выберите предпочтительный стол/i, `${mode.name} explains the initial zone and table preference`);
 
@@ -61,9 +75,11 @@ async function run() {
       await page.locator('.tp-seat-plan [data-tp-table="42"]').click();
       assert.equal(await page.locator('[name="table"]').inputValue(), '42', `${mode.name} SVG table choice reaches the form`);
       assert.equal(await page.locator('[name="zone"]').inputValue(), 'Летняя терраса', `${mode.name} table choice also selects its zone`);
+      assert.equal(await page.locator('#full-booking-form .booking-table-state').evaluate(item => item.hidden), true, `${mode.name} keeps the form status non-visual`);
+      assert.equal(await page.locator('.table-selection:visible').count(), 1, `${mode.name} shows one current selection status`);
       assert.match(await page.locator('[data-tp-floorplan-selection]').innerText(), /предпочтение сохранено/i, `${mode.name} states that selection is only a preference`);
       assert.match(await page.locator('[data-tp-floorplan-selection]').innerText(), /доступность|подтвердит отдельно/i, `${mode.name} does not claim live availability`);
-      if (mode.name === 'Pages') await page.screenshot({ path: path.join(evidence, '07-booking-floorplan-desktop.png'), fullPage: true });
+      if (mode.name === 'Pages') await capturePage(page, path.join(evidence, '07-booking-floorplan-desktop.png'));
 
       await page.locator('#full-booking-form').evaluate(form => form.reset());
       await page.waitForFunction(() => document.querySelector('[name="table"]').value === '' && !document.querySelector('[data-tp-table].is-selected'));
@@ -100,7 +116,7 @@ async function run() {
       assert.equal(await page.locator('[name="table"]').inputValue(), '21', `${mode.name} mobile picker updates the booking form`);
       assert.equal(await page.locator('[name="zone"]').inputValue(), 'Суши-бар', `${mode.name} mobile picker preserves the chosen zone`);
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${mode.name} mobile floorplan does not overflow horizontally`);
-      if (mode.name === 'Pages') await page.screenshot({ path: path.join(evidence, '07-booking-floorplan-mobile.png'), fullPage: true });
+      if (mode.name === 'Pages') await capturePage(page, path.join(evidence, '07-booking-floorplan-mobile.png'));
       assert.deepEqual(errors, [], `${mode.name} booking flow has no browser errors`);
       await page.close();
     }
@@ -108,7 +124,7 @@ async function run() {
     await browser.close();
   }
 
-  console.log(`PASS: 42-table booking plan, mobile picker, honest preference status and two delivery modes. Evidence: ${evidence}`);
+  console.log(`PASS: ${modes.map(({ name }) => name).join('/')} booking plan, mobile picker, preference status and reset. Evidence: ${evidence}`);
 }
 
 run().catch(error => { console.error(error); process.exitCode = 1; });

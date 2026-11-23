@@ -763,10 +763,21 @@
         event.preventDefault(); applyZone(zoneHit.closest('[data-tp-zone]')?.dataset.tpZone);
       }
     });
+    form?.addEventListener('reset', event => {
+      // Let the browser restore the select first, then clear the dependent table preference.
+      queueMicrotask(() => {
+        if (event.defaultPrevented) return;
+        const zone = zoneInput?.value || 'Основной зал';
+        applyZone(zone, false);
+        if (tableInput) { tableInput.value = ''; tableInput.defaultValue = ''; }
+        if (message) safeText(message, `${zone}: выберите предпочтительный стол. Доступность не проверяется.`);
+        if (formTableStatus) safeText(formTableStatus, 'Столик не выбран. Выберите номер на схеме или оставьте поле пустым.');
+      });
+    });
     const requestedZone = new URL(doc.location.href).searchParams.get('zone');
     const hasRequestedZone = requestedZone && many('[data-tp-zone]', root).some(item => !item.hasAttribute('data-tp-table') && item.dataset.tpZone === requestedZone);
     const initialZone = hasRequestedZone ? requestedZone : (zoneInput?.value || zoneInput?.selectedOptions?.[0]?.textContent?.trim());
-    if (initialZone) applyZone(initialZone, false);
+    if (initialZone) applyZone(initialZone, true);
   }
 
   function appendMobileFloorplanPicker(root, svg) {
