@@ -4,7 +4,7 @@ Compared `design-references/01-home.png` with the current PHP and GitHub Pages h
 
 ## Changes
 
-- Homepage recommendations now use a deliberate public-catalog order: tuna nigiri, salmon nigiri, scallop nigiri, and matcha tiramisu. The order no longer depends on cross-category `sort_order`, and hidden Secret Menu items are not exposed.
+- Homepage recommendations now use a deliberate public-catalog order: tuna nigiri, Philadelphia roll, tuna tartare with yuzu, and matcha tiramisu. This keeps real catalog names, photos, weights, prices, and cart IDs together while giving the row a nigiri/roll/chilled fish/dessert rhythm close to reference 01. The order no longer depends on cross-category `sort_order`; the regression also ensures a Secret Menu-only set is not used as a public recommendation.
 - Removed the duplicate home Omakase and sample-review sections so restaurant space transitions directly into the booking form, matching the approved home composition. Omakase and reviews remain accessible from their dedicated routes and site navigation.
 - The recommendation area remains four cards on desktop and a single-column sequence on mobile.
 

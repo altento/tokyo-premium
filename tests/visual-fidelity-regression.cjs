@@ -66,7 +66,7 @@ async function visit(browser, base, route, mode, capture = false) {
   assert.equal(response?.status(), 200, `${mode} ${route.key} returns 200`);
   if (route.key === 'home') {
     const recommendationIds = await page.locator('.home-dish-card .add-to-cart').evaluateAll(buttons => buttons.map(button => Number(button.dataset.id)));
-    assert.deepEqual(recommendationIds, [6, 3, 21, 19], `${mode} homepage recommendations use the curated public sushi and dessert order`);
+    assert.deepEqual(recommendationIds, [6, 1, 12, 19], `${mode} homepage recommendations balance nigiri, roll, chilled fish starter and dessert using public catalog entries`);
     assert.equal(await page.locator('.home-omakase-strip, .home-review-note').count(), 0, `${mode} homepage moves directly from restaurant space to the booking form as in reference 01`);
   }
   assert.equal(await page.locator('meta[property="og:image"]').getAttribute('content'), route.ogImage, `${mode} ${route.key} exposes its own social image`);

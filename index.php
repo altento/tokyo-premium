@@ -7,7 +7,7 @@ foreach($homeCatalog as $dish)$homeById[(int)$dish['id']]=$dish;
 $featured=[];$featuredImages=[];
 // Keep the homepage editorial order independent of category sort_order and
 // use only public dishes; Secret Menu items remain behind their access rule.
-foreach([6,3,21,19] as $dishId){$dish=$homeById[$dishId]??null;if(!$dish)continue;$image=trim((string)$dish['image_url']);if($image===''||isset($featuredImages[$image]))continue;$featuredImages[$image]=true;$featured[]=$dish;}
+foreach([6,1,12,19] as $dishId){$dish=$homeById[$dishId]??null;if(!$dish)continue;$image=trim((string)$dish['image_url']);if($image===''||isset($featuredImages[$image]))continue;$featuredImages[$image]=true;$featured[]=$dish;}
 foreach($homeCatalog as $dish){if(count($featured)>=4)break;$image=trim((string)$dish['image_url']);if($image===''||isset($featuredImages[$image]))continue;$featuredImages[$image]=true;$featured[]=$dish;}
 $heroScenes=[
   ['image'=>'assets/generated/home-hero-salmon-nigiri-v3.webp','alt'=>'Нигири с лососем подают японскими палочками в тёплом свете — учебная концепция','eyebrow'=>setting('hero_eyebrow'),'title'=>'TOKYO','accent'=>'PREMIUM','lead'=>'Искусство японской кухни: сезонные продукты, точность мастера и уважение к каждому ингредиенту.','primary'=>['label'=>'Открыть меню','href'=>'menu.php'],'secondary'=>['label'=>'Выбрать вечер','href'=>'pages.php?page=booking']],
