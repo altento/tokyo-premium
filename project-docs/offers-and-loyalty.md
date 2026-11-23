@@ -1,5 +1,9 @@
 # Offers, Tokyo Privilege and static-demo limits
 
+## Admin payment recovery visibility — 2026-11-23
+
+The protected order list shows the latest FreedomPay attempt number, provider order ID and attempt state. A request left in `creating` is explicitly marked for manual verification in the provider dashboard before another attempt; admin search accepts the provider order ID. This is operational visibility only: refunds and provider-side reconciliation remain manual, and the adapter is inactive until merchant credentials and a public HTTPS PHP host are configured.
+
 ## 2026-11-19 · Safe marketing edits
 
 Creating a campaign may initialize gift stock. Editing an existing campaign preserves inventory, per-order limits and activation; newly selected gift items start with zero stock until explicitly configured. All gift-reward campaign types are available in the separate inventory form. Threshold gifts require `reward_type=gift_dish`. New promo creation refuses duplicates; existing codes use an explicit immutable identity and retain redemption history. Collection membership rejects zero/overflow IDs before any metadata/link write; blank input remains the intentional clear action.

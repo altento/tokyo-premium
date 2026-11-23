@@ -565,7 +565,7 @@ if (!isset($statusOptions[$recordFilterTable]) || !isset($statusOptions[$recordF
     $recordFilterTable = '';
     $recordFilterStatus = '';
 }
-$orderFilter = admin_search_where(['CAST(o.id AS TEXT)','o.customer_name','o.phone','o.address','o.fulfillment','o.status','CAST(o.total AS TEXT)','oi.item_name'], $search);
+$orderFilter = admin_search_where(['CAST(o.id AS TEXT)','o.customer_name','o.phone','o.address','o.fulfillment','o.status','CAST(o.total AS TEXT)','o.payment_reference','(SELECT GROUP_CONCAT(payment_search.provider_order_id,\' \') FROM order_payments payment_search WHERE payment_search.order_id=o.id)','oi.item_name'], $search);
 if ($notificationTarget === 'orders') $orderFilter = [' WHERE o.status=?', ['new']];
 elseif ($recordFilterTable === 'orders') $orderFilter = admin_add_filter($orderFilter, 'o.status', $recordFilterStatus);
 $bookingFilter = admin_search_where(['CAST(b.id AS TEXT)','b.guest_name','b.guest_email','b.phone','b.booking_date','b.booking_time','b.zone','b.preferred_table','b.format','b.message','b.status'], $search);
@@ -599,8 +599,11 @@ foreach ($recordTotalCounts as $table=>$total) {
     $recordPageOffsets[$table] = ($recordPages[$table] - 1) * $adminPageSize;
 }
 $orders = admin_rows($pdo,
-    "SELECT o.*,GROUP_CONCAT(oi.item_name || ' × ' || oi.quantity,' · ') AS items_summary
-     FROM orders o LEFT JOIN order_items oi ON oi.order_id=o.id" . $orderFilter[0] . '
+    "SELECT o.*,GROUP_CONCAT(oi.item_name || ' × ' || oi.quantity,' · ') AS items_summary,
+        latest_payment.attempt_no AS payment_attempt_no,latest_payment.provider_order_id AS payment_provider_order_id,
+        latest_payment.status AS payment_attempt_status
+     FROM orders o LEFT JOIN order_items oi ON oi.order_id=o.id
+     LEFT JOIN order_payments latest_payment ON latest_payment.id=(SELECT payment_row.id FROM order_payments payment_row WHERE payment_row.order_id=o.id ORDER BY payment_row.attempt_no DESC,payment_row.id DESC LIMIT 1)" . $orderFilter[0] . '
      GROUP BY o.id ORDER BY o.id DESC LIMIT ' . $adminPageSize . ' OFFSET ' . $recordPageOffsets['orders'], $orderFilter[1]);
 $restaurantZone = new DateTimeZone('Asia/Qyzylorda');
 $localNow = new DateTimeImmutable('now', $restaurantZone);
@@ -925,6 +928,10 @@ if ($exportTable !== '') {
             <span><?=$row['fulfillment'] === 'pickup' ? 'Самовывоз' : 'Доставка'?><?=$row['address'] !== '' ? ' · ' . e($row['address']) : ''?></span>
             <span>Сумма: <?=number_format((int)$row['total'], 0, '.', ' ')?> ₸</span>
             <span>Оплата: <?=e(match((string)$row['payment_status']){'paid'=>'Подтверждена','pending'=>'Ожидает FreedomPay','failed'=>'Не завершена',default=>'Не списывалась'})?><?=!empty($row['payment_reference'])?' · '.e($row['payment_reference']):''?></span>
+            <?php if (!empty($row['payment_attempt_no'])): ?>
+              <span>FreedomPay · попытка №<?=(int)$row['payment_attempt_no']?> · <?=e((string)$row['payment_provider_order_id'])?> · <?=e(match((string)$row['payment_attempt_status']){'creating'=>'Требует сверки','pending'=>'Ссылка создана','paid'=>'Оплачено','failed'=>'Не завершено',default=>'Неизвестное состояние'})?></span>
+              <?php if ($row['payment_attempt_status'] === 'creating'): ?><strong class="admin-payment-reconcile" role="status">Результат у провайдера нужно проверить вручную до повторного создания платежа.</strong><?php endif ?>
+            <?php endif ?>
             <?php if ($row['status'] === 'cancelled' && $row['payment_status'] === 'paid'): ?><strong role="status">Оплата отменённого заказа получена. Проверьте возврат в кабинете FreedomPay.</strong><?php endif ?>
             <?php if (!empty($row['items_summary'])): ?><span>Состав: <?=e($row['items_summary'])?></span><?php endif ?>
             <?php if (!empty($row['comment'])): ?><span>Комментарий: <?=e($row['comment'])?></span><?php endif ?>

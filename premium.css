@@ -509,6 +509,7 @@ body{background:var(--lacquer);color:var(--ivory);font-family:'DM Sans',Manrope,
 .admin-record-contact:hover{color:#fff0c8;text-decoration-color:currentColor}
 .admin-record-contact:focus-visible{border-radius:3px;outline:2px solid #d5aa5c;outline-offset:3px}
 .admin-record-meta p{margin:3px 0;color:#c5b9a8}
+.admin-payment-reconcile{display:block;padding:8px 10px;border-left:3px solid #c68834;background:rgba(120,86,34,.15);color:#f2d18b;font-size:.82rem;font-weight:500}
 .admin-record-meta time{margin-top:3px;color:#9c907d;font-size:.75rem}
 .admin-record-filter{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:-5px 0 15px;padding:10px 12px;border:1px solid rgba(200,164,99,.16);border-radius:8px;background:rgba(0,0,0,.13)}
 .admin-record-filter label{color:#b9ad98;font-size:.78rem}

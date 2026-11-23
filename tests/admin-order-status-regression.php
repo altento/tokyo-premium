@@ -40,6 +40,9 @@ try {
         throw $error;
     }
     $orderId=(int)$order['id'];
+    $pdo->prepare("UPDATE orders SET payment_status='pending',payment_provider='freedompay' WHERE id=?")->execute([$orderId]);
+    $pdo->prepare("INSERT INTO order_payments(order_id,attempt_no,provider,provider_order_id,amount,currency,status,last_error) VALUES(?,1,'freedompay',?,?,'KZT','creating','Payment link result is uncertain; provider reconciliation required.')")
+        ->execute([$orderId,'TP'.$orderId.'A1',(int)$order['total']]);
     $pdo=null;
 
     if(session_status()===PHP_SESSION_ACTIVE)session_write_close();
@@ -70,6 +73,32 @@ try {
         if($exit!==0)throw new RuntimeException('Admin status request failed: '.$stderr.' '.$stdout);
         return $stdout.$stderr;
     };
+
+    $renderAdmin=static function(string $search='') use ($root,$sessionPath,$sessionId): string {
+        $phpCode='session_save_path('.var_export($sessionPath,true).'); session_name("tokyo_session"); session_id('.var_export($sessionId,true).'); session_start(); $_SESSION["admin_search"]='.var_export($search,true).'; session_write_close(); $_SERVER["REQUEST_METHOD"]="GET"; $_GET=[]; $_POST=[]; require '.var_export($root.'/admin.php',true).';';
+        $command=[PHP_BINARY];
+        if(PHP_OS_FAMILY==='Windows'){
+            array_push($command,'-d','extension_dir='.ini_get('extension_dir'),'-d','extension=php_sqlite3.dll','-d','extension=php_pdo_sqlite.dll');
+        }
+        array_push($command,'-r',$phpCode);
+        $pipes=[];
+        $process=proc_open($command,[0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']],$pipes,$root,null);
+        if(!is_resource($process))throw new RuntimeException('Could not start isolated admin payment view.');
+        fclose($pipes[0]);
+        $stdout=(string)stream_get_contents($pipes[1]);
+        $stderr=(string)stream_get_contents($pipes[2]);
+        fclose($pipes[1]);fclose($pipes[2]);
+        $exit=proc_close($process);
+        if($exit!==0)throw new RuntimeException('Admin payment view failed: '.$stderr.' '.$stdout);
+        return $stdout.$stderr;
+    };
+
+    $paymentHtml=$renderAdmin();
+    $assert(str_contains($paymentHtml,'TP'.$orderId.'A1')
+        &&str_contains($paymentHtml,'Результат у провайдера нужно проверить вручную'),
+        'admin order view exposes the latest uncertain payment attempt and its reconciliation warning');
+    $searchHtml=$renderAdmin('TP'.$orderId.'A1');
+    $assert(str_contains($searchHtml,'TP'.$orderId.'A1'),'admin order search finds an order by its FreedomPay provider order ID');
 
     $postStatus('completed');
     $dbCheck=new PDO('sqlite:'.$dbPath,null,null,[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);
