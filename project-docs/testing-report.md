@@ -765,3 +765,7 @@ After commit `c7ffe62` deployed successfully in workflow [45143146646](https://g
 - `node tests/visual-fidelity-regression.cjs` passed for the `contacts` route in static mode. This was one focused visual check; PHP rendering and the full route matrix were not rerun.
 - Screenshots and comparison notes: `visual-qa/contacts-reference-followup-2026-11-23/` and `visual-qa/contacts-reference-followup-2026-11-17/comparison.md`.
 - After commit `56c3bee`, workflow [45186061680](https://github.com/altento/tokyo-premium/actions/runs/45186061680) deployed the change. The same focused Playwright route passed on public Pages at 1440 px and 390 px; public screenshots were inspected and saved in `visual-qa/contacts-reference-followup-2026-11-23/public/`.
+
+## 2026-11-23 — contacts reference order
+
+Moved the transport/status strip before the visit-planning banner in the PHP template and static export to follow reference 09. Local contact-route visual regression passed at 1440 px and 390 px; the full-page captures were inspected and the DOM order is asserted. PHP syntax lint and `git diff --check` passed. PHP browser rendering and public deployment remain pending. Evidence: `visual-qa/contacts-strip-order-2026-11-23/`.

@@ -615,7 +615,7 @@ selected dish photography for a custom-set composition. */
 .contact-visit-copy>.kicker{color:var(--jp-gold,#caa56b);letter-spacing:.16em}
 .contact-visit-copy .contact-section-heading{margin:12px 0}
 .contact-visit-copy>p{max-width:52ch;margin:0 0 22px;color:var(--jp-muted,#b9ae9b);line-height:1.7}
-.contact-visit-facts{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid rgba(202,165,107,.26);border-radius:10px;background:linear-gradient(115deg,rgba(202,165,107,.055),transparent 52%)}
+.contact-visit-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));max-width:1320px;margin:0 auto;border:1px solid rgba(202,165,107,.26);border-radius:10px;background:linear-gradient(115deg,rgba(202,165,107,.055),transparent 52%)}
 .contact-visit-facts article{display:grid;gap:5px;padding:17px 20px;border-right:1px solid rgba(202,165,107,.18)}
 .contact-visit-facts article:last-child{border-right:0}
 .contact-visit-facts span{color:var(--jp-gold,#caa56b);font-size:.76rem;letter-spacing:.08em;text-transform:uppercase}
@@ -638,8 +638,9 @@ selected dish photography for a custom-set composition. */
 .contact-form>.button{min-height:42px;margin:0}
 .contact-form>.form-status{margin:0}
 .contact-interior{align-self:start;height:clamp(280px,24vw,350px);min-height:0}
-.editorial-page>.contact-visit-section{padding-block:clamp(32px,3.2vw,44px)}
-@media(max-width:700px){.editorial-page>.contact-overview{gap:24px;padding-block:28px 20px}.editorial-page>#contact-form{padding-block:26px}.contact-response-grid{gap:24px}.contact-form{gap:12px}.contact-form input,.contact-form select{min-height:46px;padding:11px 13px}.contact-form textarea{min-height:96px}.contact-form>.button{min-height:46px}.contact-interior{height:260px;min-height:260px}.editorial-page>.contact-visit-section{padding-block:24px}}
+.editorial-page>.contact-visit-facts-strip{padding-block:12px;border-block:1px solid rgba(202,165,107,.2)}
+.editorial-page>.contact-visit-section{padding-block:clamp(32px,3.2vw,44px);border-top:0}
+@media(max-width:700px){.editorial-page>.contact-overview{gap:24px;padding-block:28px 20px}.editorial-page>#contact-form{padding-block:26px}.contact-response-grid{gap:24px}.contact-form{gap:12px}.contact-form input,.contact-form select{min-height:46px;padding:11px 13px}.contact-form textarea{min-height:96px}.contact-form>.button{min-height:46px}.contact-interior{height:260px;min-height:260px}.editorial-page>.contact-visit-facts-strip{padding-block:8px}.editorial-page>.contact-visit-section{padding-block:24px}}
 @media(prefers-reduced-motion:reduce){.contact-interior img{transition:none}}
 
 /* Space page: balanced gallery grid and reference-aligned visual principles strip. */

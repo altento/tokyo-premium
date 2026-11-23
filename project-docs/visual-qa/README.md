@@ -327,3 +327,7 @@ Current evidence for the account layout update is under `account-dashboard-layou
 ## 2026-11-19 — gallery recovery
 
 [Gallery loading and visual comparison](gallery-loading-2026-11-19/comparison.md) contains PHP/static full-page desktop/mobile captures and photo/loading/error states. The approved gallery PNG and actual captures were opened; exact reference parity remains unclaimed. Focused browser JSON records failure/retry, stale-response handling, keyboard focus, six widths and zone-preserving booking links.
+
+## 2026-11-23 — contacts transport-strip order
+
+Reference 09 places transport, parking and accessibility between the contact form and the visit banner. The data are now displayed in that order in PHP and the static export, with unknown values kept explicit. The focused contacts Playwright regression passed at 1440 px and 390 px; the fresh full-page captures were inspected. Evidence and comparison: [`contacts-strip-order-2026-11-23`](contacts-strip-order-2026-11-23/comparison.md). Public deployment is pending for this follow-up.

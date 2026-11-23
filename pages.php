@@ -205,10 +205,12 @@ ep_hero('連絡先','TOKYO PREMIUM · УЧЕБНАЯ КОНЦЕПЦИЯ','Кон
     <figure class="contact-interior"><img src="assets/generated/restaurant-interior.webp" alt="Интерьер японского ресторана с мягким светом — оригинальная иллюстрация учебной концепции" loading="lazy" decoding="async"><figcaption><span>Атмосфера Tokyo Premium</span><small>Вымышленный интерьер · учебное изображение</small></figcaption></figure>
   </div>
 </section>
+<section class="section contact-visit-facts-strip" aria-label="Транспорт и доступность в учебной версии">
+  <div class="contact-visit-facts"><article><span>Транспорт</span><strong>Данные не заданы</strong></article><article><span>Парковка</span><strong>Не подтверждена</strong></article><article><span>Доступность</span><strong>Требует проверки</strong></article></div>
+</section>
 <section class="section contact-visit-section" aria-labelledby="contact-visit-title">
   <figure class="contact-visit-image"><img src="assets/generated/contact-landscape-torii-v1.webp" alt="Тории у воды и гора Фудзи на закате — декоративная иллюстрация учебной концепции" loading="lazy" decoding="async"><figcaption>Японский пейзаж · учебная иллюстрация, не место ресторана</figcaption></figure>
   <div class="contact-visit-copy"><div class="kicker">ご来店の前に · перед визитом</div><div class="contact-section-heading"><span aria-hidden="true"></span><h2 id="contact-visit-title">Спланируйте вечер заранее</h2></div><p>Tokyo Premium — учебная концепция с вымышленным адресом. Здесь нет реального маршрута, подтверждённых сведений о парковке или доступности помещения.</p><a class="button secondary" href="pages.php?page=booking">Оставить учебную заявку ↗</a></div>
-  <div class="contact-visit-facts" aria-label="Транспорт и доступность в учебной версии"><article><span>Транспорт</span><strong>Данные не заданы</strong></article><article><span>Парковка</span><strong>Не подтверждена</strong></article><article><span>Доступность</span><strong>Требует проверки</strong></article></div>
 </section>
 <?php elseif($view==='cart'): ?>
 <?php ep_hero('注文','ВАШ ВЫБОР','Корзина','Ваш заказ','Проверьте блюда, способ получения и итог. Демо не списывает оплату и не передаёт заказ ресторану.','assets/generated/cart-hero.webp','Сервировка ужина при свете бумажного фонаря','Продолжить выбор','menu.php','','cart-hero'); ?>

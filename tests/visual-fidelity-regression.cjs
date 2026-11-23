@@ -282,11 +282,12 @@ async function visit(browser, base, route, mode, capture = false) {
     assert.equal(await page.locator('#contact-email').getAttribute('required'), '', `${mode} contact form keeps required email validation`);
     assert.equal(await page.locator('#contact-message').getAttribute('required'), '', `${mode} contact form keeps required message validation`);
     const contactOrder = await page.evaluate(() => {
-      const nodes = ['.contact-overview', '#contact-form', '.contact-visit-section'].map(selector => document.querySelector(selector));
+      const nodes = ['.contact-overview', '#contact-form', '.contact-visit-facts-strip', '.contact-visit-section'].map(selector => document.querySelector(selector));
       return Boolean(nodes.every(Boolean) && (nodes[0].compareDocumentPosition(nodes[1]) & Node.DOCUMENT_POSITION_FOLLOWING)
-        && (nodes[1].compareDocumentPosition(nodes[2]) & Node.DOCUMENT_POSITION_FOLLOWING));
+        && (nodes[1].compareDocumentPosition(nodes[2]) & Node.DOCUMENT_POSITION_FOLLOWING)
+        && (nodes[2].compareDocumentPosition(nodes[3]) & Node.DOCUMENT_POSITION_FOLLOWING));
     });
-    assert.equal(contactOrder, true, `${mode} contact summary, message panel and visit notes follow the reference order`);
+    assert.equal(contactOrder, true, `${mode} contact summary, message form, transport strip and visit section follow the reference order`);
   } else if (route.key === 'omakase') {
     const counts = await page.evaluate(() => ({
       interactiveStages: document.querySelectorAll('[data-tp-course]').length,
