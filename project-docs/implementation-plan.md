@@ -8,11 +8,15 @@ Reduced the desktop booking hero and its three explanatory cards so the reservat
 
 ## Current release checkpoint
 
-The latest verified public release is `3d08759` (GitHub Actions run [45134262257](https://github.com/altento/tokyo-premium/actions/runs/45134262257); build and deploy succeeded). Cache-busted public home/cart routes and their changed assets returned HTTP 200. The focused home visual-fidelity regression passed against the public Pages site at desktop and mobile widths; the curated catalog IDs and space-to-booking flow matched the intended structure. The 37-page static export was also checked for Omakase/set-builder parity, booking floorplan status, and checkout quote consistency. Full browser/visual QA remains opt-in and known visual gaps remain open. The PHP admin was checked locally against an isolated SQLite database with synthetic bookings; production data and live email delivery were not tested.
+The latest verified public release is `a8b07ee` (GitHub Actions run [45136549985](https://github.com/altento/tokyo-premium/actions/runs/45136549985); build and deploy succeeded). The homepage now selects four real, public catalog entries with distinct dish types; the focused home visual-fidelity check passed in PHP, static, and public Pages modes. The public 390 px viewport check confirmed no horizontal overflow or page errors. Cache-busted public home/cart routes and their changed assets returned HTTP 200. The 37-page static export was also checked for Omakase/set-builder parity, booking floorplan status, and checkout quote consistency. Full browser/visual QA remains opt-in and known visual gaps remain open. The PHP admin was checked locally against an isolated SQLite database with synthetic bookings; production data and live email delivery were not tested.
 
 ## 2026-11-23 — mobile cart and home editorial follow-ups
 
 The mobile cart summary from `6d21ef6` and home editorial update from `3d08759` are live. The home curation selects four existing public dishes in a stable order and removes duplicate Omakase/sample-review blocks so the page moves from space directly to booking. Focused visual-fidelity checks passed for static, PHP, and public Pages home routes at desktop and mobile widths. Captures and the comparison with reference 01 are in `visual-qa/home-editorial-curation-2026-11-23/`. Tokyo Premium 2.0 remains in progress.
+
+## 2026-11-23 — varied public homepage recommendations
+
+The homepage recommendation row now uses catalog IDs `6, 1, 12, 19` (tuna nigiri, Philadelphia roll, tuna tartare, matcha tiramisu). A previously considered Hanami set is currently restricted by Secret Menu rules and is intentionally not exposed. Focused PHP/static/public visual-fidelity checks passed; the live 390 px viewport showed the same public IDs with no horizontal overflow or browser errors. Screenshots and the CI deployment record are in `visual-qa/home-editorial-curation-2026-11-23/`. This remains a focused reference comparison, not full 11-page visual acceptance.
 
 ## 2026-11-23 — mobile cart checkout access
 
