@@ -2,6 +2,10 @@
 
 Updated 2026-11-18
 
+## 2026-11-23 — booking page rhythm
+
+Reduced the desktop booking hero and its three explanatory cards so the reservation form starts sooner and the first screen is closer to approved reference 07. The change is scoped to the booking page; mobile hero sizing, table preference behavior, and the explicit no-live-availability notice are unchanged. PHP and static stylesheet copies were updated together. Public browser verification is pending this release; no full regression suite was run for this CSS-only adjustment.
+
 ## Current release checkpoint
 
 The latest verified public release is `d2b41d3` (GitHub Actions run [44324690559](https://github.com/altento/tokyo-premium/actions/runs/44324690559); build and deploy succeeded). A cache-busted Pages request returned HTTP 200. Recent changes compact the desktop home and improve booking operations in the admin. The PHP admin was checked in a real local browser against an isolated SQLite database with synthetic bookings; the queue ordering, cancellation-excluding KPI, confirmation badge, tap-to-call/email, local timestamps and 390 px mobile width were verified. Production data and live email delivery were not tested. Full browser/visual QA remains opt-in and known visual gaps remain open; evidence is in `project-docs/visual-qa/admin-operations-2026-11-18/`.

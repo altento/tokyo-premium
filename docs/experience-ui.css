@@ -279,9 +279,9 @@
 }
 
 /* Keep the booking introduction useful without letting it push the form far below the fold. */
-.editorial-page .editorial-hero.booking-hero { box-sizing: border-box; min-height: clamp(320px, 24vw, 360px); padding-block: 34px; align-items: center; }
+.editorial-page .editorial-hero.booking-hero { box-sizing: border-box; min-height: clamp(250px, 21vw, 320px); padding-block: 26px; align-items: center; }
 .editorial-page .booking-hero .editorial-hero-copy { max-width: min(590px, 62vw); }
-.editorial-page .booking-hero h1 { font-size: clamp(3rem, 5.4vw, 5rem); line-height: 1.02; overflow-wrap: anywhere; }
+.editorial-page .booking-hero h1 { font-size: clamp(2.65rem, 4.2vw, 4rem); line-height: 1.02; overflow-wrap: anywhere; }
 .editorial-page .booking-hero .editorial-hero-copy > p:not(.editorial-sub) { max-width: 500px; font-size: .94rem; line-height: 1.55; margin-block: 8px; }
 .editorial-page .booking-hero .school-note { display: none; }
 @media (max-width: 700px) {
@@ -302,8 +302,8 @@
   align-content: center;
   gap: 3px 12px;
   min-width: 0;
-  min-height: 102px;
-  padding: 16px;
+  min-height: 82px;
+  padding: 12px 14px;
   border: 1px solid var(--jp-line);
   background: linear-gradient(145deg, rgba(201, 164, 103, .07), rgba(16, 14, 12, .2));
 }
