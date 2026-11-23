@@ -647,6 +647,10 @@ Reproduced the blank failed-photo viewer and removed duplicate image ownership. 
 
 Gallery release `88aef6c`: [workflow 44542921835](https://github.com/altento/tokyo-premium/actions/runs/44542921835) passed the fast server/export/deploy checks. The focused loading/retry/navigation/fallback and six-width browser suite then passed on the public Pages site. Evidence: `visual-qa/gallery-loading-2026-11-19/public-verification.json`. Optional full-browser CI remained skipped; local PHP/static browser results are recorded above.
 
+## 2026-11-23 — static export caught up with PHP source
+
+The checked-in Pages export was stale relative to the current PHP templates and bundled scripts, so newly implemented Omakase step controls and set-builder clear/current summary markup were absent from static HTML. Regenerated the 37 static routes using the current PHP renderer and a disposable SQLite database; the export now includes current JS/CSS and route markup. Focused Playwright checks passed for both PHP and Pages Omakase and set-builder at 390 px and 1440 px. Captures and reproduction notes are in [`visual-qa/static-export-parity-2026-11-23/`](visual-qa/static-export-parity-2026-11-23/). This closes the tested static export parity gap only; it does not represent full Tokyo Premium 2.0 acceptance.
+
 ## 2026-11-23 — booking floorplan status parity
 
 Fixed a PHP/Pages mismatch on booking: the static export did not announce its initial selected zone and did not clear the table preference after form reset. The form's duplicate status copy is now hidden; the floorplan owns the single visible live announcement. The focused static browser regression passed on desktop and mobile and captured the selected-table state in `visual-qa/booking-status-2026-11-23/`. PHP browser execution remains unverified locally because PDO SQLite is unavailable; the underlying PHP behavior was preserved. This closes the tested state defect only and does not claim full booking-page visual parity or final Tokyo Premium 2.0 acceptance.

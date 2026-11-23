@@ -8,6 +8,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const more = document.querySelector('#review-more');
   let filter = 'all';
   let limit = 6;
+  const resultStatus = document.createElement('p');
+  resultStatus.className = 'review-results-status';
+  resultStatus.setAttribute('role', 'status');
+  resultStatus.setAttribute('aria-live', 'polite');
+  grid.before(resultStatus);
 
   function render() {
     const cards = [...grid.querySelectorAll('[data-review-card]')];
@@ -23,16 +28,21 @@ document.addEventListener('DOMContentLoaded', () => {
       grid.append(card);
     });
     if (more) more.hidden = filtered.length <= limit;
+    resultStatus.textContent = filtered.length
+      ? `Показано ${Math.min(limit, filtered.length)} из ${filtered.length} отзывов${filter === 'all' ? '' : ` · ${filter}`}.`
+      : 'В этой теме пока нет опубликованных учебных отзывов. Выберите другую тему или оставьте свой отзыв ниже.';
+    resultStatus.classList.toggle('is-empty', filtered.length === 0);
   }
 
   filterButtons.forEach(button => button.addEventListener('click', () => {
     filter = button.dataset.reviewFilter;
     limit = 6;
-    filterButtons.forEach(item => item.classList.toggle('active', item === button));
+    filterButtons.forEach(item => { item.classList.toggle('active', item === button); item.setAttribute('aria-pressed', String(item === button)); });
     render();
   }));
   sort?.addEventListener('change', render);
   more?.addEventListener('click', () => { limit += 6; render(); });
+  filterButtons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.reviewFilter === filter)));
   render();
 
   // Browser-only entries are presented in a separate region and never affect
@@ -42,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
   localHost.className = 'local-review-panel';
   localHost.id = 'local-reviews';
   localHost.setAttribute('aria-labelledby', 'local-reviews-title');
+  localHost.tabIndex = -1;
   const submitBand = document.querySelector('.review-submit-band');
   if (submitBand) submitBand.before(localHost);
 
@@ -54,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderLocalReviews() {
     if (!submitBand) return;
-    const rows = readLocalReviews().filter(row => row && typeof row === 'object');
+    const rows = readLocalReviews().filter(row => row && typeof row === 'object' && !Array.isArray(row));
     localHost.replaceChildren();
     localHost.hidden = rows.length === 0;
     if (!rows.length) return;

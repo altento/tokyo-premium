@@ -203,7 +203,13 @@
 .tp-seat-button { padding: 0 13px; border: 1px solid var(--tp-line); border-radius: 999px; background: var(--tp-panel); color: var(--tp-ivory); cursor: pointer; }
 .tp-seat-button.is-selected { border-color: var(--tp-crimson); background: var(--tp-crimson); }
 
-[data-tp-gallery] dialog { max-width: min(94vw, 1240px); max-height: 90vh; }
+[data-tp-gallery] dialog { box-sizing: border-box; width: min(94vw, 1240px); height: fit-content; max-height: 90dvh; padding: 56px 64px 24px; overflow: auto; }
+.image-lightbox .tp-gallery-stage { display: grid; place-items: center; width: 100%; min-height: min(52vh, 400px); }
+.image-lightbox .tp-gallery-stage > img { width: 100%; max-height: min(70vh, calc(90dvh - 180px)); object-fit: contain; }
+.image-lightbox .tp-gallery-stage [hidden] { display: none !important; }
+.tp-gallery-feedback { max-width: 42ch; padding: 32px 60px; color: var(--tp-ivory); text-align: center; }
+.tp-gallery-feedback p { line-height: 1.55; overflow-wrap: anywhere; }
+.tp-gallery-feedback .button { min-height: 44px; }
 .tp-gallery-control { position: absolute; top: 50%; z-index: 2; width: 48px; border: 1px solid rgba(239, 218, 177, .65); border-radius: 50%; background: rgba(10, 10, 9, .75); color: var(--tp-ivory); font-size: 1.5rem; cursor: pointer; transform: translateY(-50%); }
 .tp-gallery-prev { left: 12px; }
 .tp-gallery-next { right: 12px; }
@@ -240,6 +246,9 @@
 @keyframes tp-dialog-in { from { opacity: 0; transform: translateY(12px) scale(.985); } to { opacity: 1; transform: none; } }
 
 @media (max-width: 760px) {
+  [data-tp-gallery] dialog { padding: 56px 12px 72px; }
+  .image-lightbox .tp-gallery-stage { min-height: min(42vh, 320px); }
+  .tp-gallery-feedback { padding: 24px 12px; }
   [data-tp-course-panel] { grid-template-columns: 1fr; }
   .tp-set-layout { grid-template-columns: 1fr; }
   .tp-set-selection { position: static; }
@@ -286,7 +295,6 @@
 .editorial-page .booking-hero .editorial-sub { margin-bottom: .45em; }
 .editorial-page .booking-hero .button-row { margin-top: 18px; }
 .editorial-page .booking-hero .school-note { display: none; }
-.booking-time-hint { grid-column: 1 / -1; margin: -5px 0 1px; color: var(--tp-muted); font-size: .72rem; line-height: 1.45; overflow-wrap: anywhere; }
 @media (max-width: 700px) {
   .editorial-page .editorial-hero.booking-hero { min-height: clamp(360px, 100vw, 420px); padding: 88px 22px 24px; align-items: flex-end; }
   .editorial-page .booking-hero .editorial-hero-copy { max-width: 100%; }
@@ -455,3 +463,187 @@
   .account-demo-page .account-demo-content { display: contents; }
   /* Keep the visual sequence aligned with the DOM and keyboard focus order. */
 }
+/* Philosophy chapter scale: follow the compact illustrated reference rhythm. */
+.about-page .about-chef .about-copy h2{font-size:clamp(32px,3.1vw,48px);line-height:1.12;margin:14px 0 18px;overflow-wrap:anywhere}
+.about-page .about-chef .about-copy .about-lead{font-size:clamp(16px,1.25vw,19px);line-height:1.5}
+.about-page .about-chef .about-copy p{font-size:13px;line-height:1.75}
+.about-page .about-source .source-copy h2{font-size:clamp(30px,3vw,44px);line-height:1.14;margin:12px 0 18px;overflow-wrap:anywhere}
+.about-page .about-source .source-copy p{font-size:13px;line-height:1.75}
+.about-page .about-principles .editorial-heading h2{font-size:clamp(28px,3vw,42px);line-height:1.2}
+.about-page .about-contact h2{font-size:clamp(28px,3vw,42px);line-height:1.2}
+.about-page .about-quote blockquote{max-width:850px;font-size:clamp(24px,2.5vw,36px);line-height:1.35}
+@media(min-width:1101px){
+ .about-page .about-chef{padding-block:42px;gap:28px;grid-template-columns:minmax(0,.95fr) minmax(0,1.1fr) minmax(0,.65fr)}
+ .about-page .chef-portrait img{height:340px;object-position:50% 35%}
+ .about-page .about-chef .about-copy h2{font-size:clamp(32px,2.7vw,42px);margin:10px 0 14px}
+ .about-page .about-chef .about-copy p{margin-block:10px}
+ .about-page .about-chef .chef-signature{margin:14px 0;font-size:34px}
+ .about-page .about-chef .about-copy>.button{margin-top:10px;min-height:44px;font-size:9px;padding-inline:16px}
+ .about-page .chef-landscape{min-height:0}
+ .about-page .chef-landscape img{max-height:280px}
+ .about-page .about-source{padding-block:38px;gap:46px;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+ .about-page .source-images img{height:240px}
+ .about-page .source-images figure:first-child{margin-top:0}
+ .about-page .about-principles{padding-block:38px}
+ .about-page .principle-grid{margin-top:22px}
+ .about-page .principle-grid article{min-height:170px}
+ .about-page .about-quote{padding-block:36px}
+ .about-page .about-contact{padding-block:34px}
+}
+@media(max-width:760px){
+ .about-page .about-chef{gap:24px;padding-block:36px}
+ .about-page .chef-portrait img{height:clamp(260px,90vw,390px)}
+ .about-page .about-copy h2,.about-page .source-copy h2{overflow-wrap:anywhere}
+ .about-page .about-source{gap:24px;padding-block:36px}
+ .about-page .about-principles{padding-block:36px}
+ .about-page .principle-grid article{min-height:0;padding:20px 12px}
+ .about-page .about-quote{padding:36px 22px}
+}
+/* Cart: compact photographs and generous controls without changing order state. */
+.editorial-page .cart-hero .editorial-kanji{left:24px;font-size:30px;opacity:.65}
+.editorial-page .cart-page{padding-top:28px;padding-bottom:40px}
+.cart-page .cart-page-head{margin-bottom:20px;padding-bottom:14px}
+.cart-page .cart-layout{gap:20px 22px}
+.cart-page .cart-page-item{border-radius:10px}
+.cart-page .cart-page-controls{gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.cart-page .cart-page-controls button{min-width:44px;min-height:44px}
+.cart-page .cart-page-controls [data-cart-remove]{min-width:68px;min-height:44px}
+.cart-page .cart-recommendation-heading{margin:8px 0 0;padding:20px 0 0}
+.cart-page .cart-recommendation-heading h3{font-size:clamp(25px,2.4vw,34px);line-height:1.2;margin:8px 0 0}
+.cart-page .cart-recommendations{align-items:stretch;gap:14px}
+.cart-page .cart-recommendations .dish-card{position:relative;display:flex;flex-direction:column;min-height:0;border-radius:10px;overflow:hidden}
+.cart-page .cart-recommendations .editorial-product-image{aspect-ratio:1.65;flex-shrink:0}
+.cart-page .cart-recommendations .editorial-product-image img{height:100%;width:100%;object-fit:cover}
+.cart-page .cart-recommendations .dish-meta{position:static;display:flex;flex-direction:column;flex:1;min-height:0;padding:14px}
+.cart-page .cart-recommendations .favorite-btn{position:absolute;top:12px;right:12px;width:40px;height:40px;min-height:40px;background:rgba(12,10,8,.85);border-radius:50%}
+.cart-page .cart-recommendations:focus-visible{outline:2px solid var(--gold);outline-offset:4px}
+.cart-page .cart-recommendations .dish-meta h3{font-size:clamp(18px,1.5vw,22px);line-height:1.25;margin:12px 0 8px}
+.cart-page .cart-recommendations .dish-meta p{font-size:12px;line-height:1.6;margin:0 0 14px}
+.cart-page .cart-recommendations .dish-bottom{margin-top:auto;gap:8px;flex-wrap:wrap}
+.cart-page .cart-recommendations .add-to-cart{min-height:44px;padding:8px 12px}
+@media(max-width:760px){
+ .cart-page .cart-page-item{grid-template-columns:82px minmax(0,1fr);gap:12px;padding:12px}
+ .cart-page .cart-page-item>img{width:82px;height:82px;border-radius:6px}
+ .cart-page .cart-page-side{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;gap:12px}
+ .cart-page .cart-page-controls{margin-top:0;justify-content:flex-start}
+ .cart-page .cart-checkout{padding:18px}
+ .cart-page .cart-recommendations .dish-meta{padding:12px}
+ .cart-page .cart-recommendations{grid-template-columns:repeat(4,minmax(240px,78vw));max-width:100%;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;padding-bottom:10px}
+ .cart-page .cart-recommendations .dish-card{scroll-snap-align:start}
+}
+/* Menu-only density and touch targets; the alternate list view keeps its own grid. */
+.menu-page .menu-catalog .dish-card{border-radius:10px;overflow:hidden}
+.menu-page .menu-catalog .dish-card .dish-meta h3{font-size:clamp(19px,1.55vw,23px);line-height:1.22}
+.menu-page .menu-catalog .menu-card-links{display:flex;flex-wrap:wrap;align-items:center;gap:2px 12px}
+.menu-page .menu-catalog .menu-card-links>*{display:inline-flex;align-items:center;min-height:44px;padding-block:6px;font-size:11px}
+.menu-page .menu-catalog .dish-bottom{gap:8px}
+.menu-page .menu-catalog .favorite-btn{min-width:44px;min-height:44px}
+.menu-page .menu-catalog .dish-grid:not([data-view="list"]) .dish-image-wrap{aspect-ratio:1.65}
+.menu-page .menu-catalog .dish-grid:not([data-view="list"]) .dish-image-wrap img{height:100%;object-fit:cover}
+.menu-page .menu-subfilter{min-height:40px;border-radius:7px}
+.menu-page .menu-view-toggle button{min-width:44px;min-height:44px}
+.menu-page .menu-pagination button,.menu-page .menu-pagination a{min-width:44px;min-height:44px}
+@media(max-width:700px){
+ .menu-page .menu-hero{padding:32px 22px;min-height:320px}
+ .menu-page .menu-hero-copy{width:min(430px,100%)}
+ .menu-page .menu-hero-kanji{opacity:.35;pointer-events:none}
+}
+/* Booking and room chapters: align form fields and use the reference's shorter rhythm. */
+.editorial-page .booking-form>.school-note{grid-column:1 / -1;margin:0 0 8px;line-height:1.65}
+.editorial-page>#booking-form>.editorial-heading h2{font-size:clamp(28px,3vw,42px);line-height:1.15;max-width:none}
+.editorial-page .booking-faq-content .editorial-heading h2{font-size:clamp(30px,3.4vw,46px);line-height:1.15}
+.editorial-page #spaces{padding-block:38px}
+.editorial-page #spaces .editorial-heading h2,.editorial-page #gallery .editorial-heading h2{font-size:clamp(28px,3vw,42px);line-height:1.15}
+.editorial-page #spaces .zone-card{border-radius:10px;overflow:hidden}
+.editorial-page #spaces .zone-card h3{font-size:clamp(20px,1.7vw,25px);line-height:1.2}
+.editorial-page #spaces .zone-booking-link{min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.editorial-page #gallery{padding-block:38px}
+.editorial-page #gallery .filter-row{gap:8px;flex-wrap:wrap}
+.editorial-page #gallery .filter-btn{min-height:44px;border-radius:7px}
+.editorial-page .gallery-tile{border-radius:9px;overflow:hidden}
+.editorial-page .gallery-tile>span{overflow-wrap:anywhere;line-height:1.25}
+.editorial-page .gallery-hero{min-height:360px;padding-block:40px}
+@media(max-width:760px){
+ .editorial-page #spaces,.editorial-page #gallery{padding-block:28px}
+ .editorial-page .gallery-hero{min-height:360px;padding-block:32px}
+ .editorial-page .gallery-toolbar{align-items:start;gap:16px}
+ .editorial-page .gallery-tile>span{font-size:clamp(16px,4.6vw,21px);padding-inline:12px}
+ .editorial-page .image-lightbox .tp-gallery-control{min-width:44px;min-height:44px}
+}
+/* Omakase: a browsable sequence with a persistent, readable place marker. */
+.editorial-page:has(.omakase-hero) #omakase-tiers{scroll-margin-top:100px}
+.omakase-philosophy-copy h2::after,.tp20-course-heading h2::after,
+.omakase-reservation-copy h2::after,.editorial-page:has(.omakase-hero) .image-story h2::after{
+ content:"";display:block;width:44px;height:2px;margin-top:14px;background:var(--tp-crimson)
+}
+.tp20-course-navigation{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 14px;padding-block:10px;border-block:1px solid var(--tp-line)}
+.tp20-course-navigation button{flex:0 0 auto;min-height:44px;padding:10px 16px;border:1px solid var(--tp-line);border-radius:6px;background:#16120f;color:var(--tp-ivory);cursor:pointer}
+.tp20-course-navigation button:hover:not(:disabled){border-color:var(--tp-gold);background:#291b17}
+.tp20-course-navigation button:disabled{opacity:.4;cursor:default}
+.tp20-course-navigation p{margin:0;color:var(--tp-gold);text-align:center;font-size:.85rem;line-height:1.45;overflow-wrap:anywhere}
+.editorial-page:has(.omakase-hero) .tier-card-featured .button{background:var(--tp-crimson);border-color:var(--tp-crimson);color:#fff8ec}
+.editorial-page:has(.omakase-hero) .tier-card-featured .button:hover{background:#961420}
+@media(max-width:600px){
+ .editorial-page:has(.omakase-hero) .tp20-course-tabs{display:flex;gap:10px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;padding:3px 3px 12px;scrollbar-width:thin;scrollbar-color:var(--tp-gold) #16120f}
+ .editorial-page:has(.omakase-hero) .tp20-course-tabs [data-tp-course],
+ .editorial-page:has(.omakase-hero) .tp20-course-tabs [data-tp-course]:last-child:nth-child(odd){flex:0 0 44%;width:auto;min-width:136px;scroll-snap-align:start}
+ .editorial-page:has(.omakase-hero) .tp20-course-tabs .tp20-course-tab-copy strong{font-size:.8rem;line-height:1.35;overflow-wrap:anywhere}
+ .tp20-course-navigation{gap:8px}
+ .tp20-course-navigation button{padding:10px;font-size:.75rem}
+ .tp20-course-navigation p{font-size:.75rem;max-width:45%}
+}
+/* Offer codes have a direct checkout path; removing one invalidates its estimate. */
+.tp20-code-list .tp20-code-actions{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:8px}
+.tp20-code-list .tp20-code-actions .button{min-height:44px;font-size:.72rem;padding:10px 12px}
+.tp20-promo-clear{min-height:44px;margin-top:8px;padding:8px 0;border:0;background:none;color:var(--tp-gold);text-decoration:underline;text-underline-offset:4px;cursor:pointer}
+.tp20-promo-clear[hidden]{display:none}
+.tp20-promo-clear:focus-visible{outline:2px solid var(--tp-gold);outline-offset:4px}
+.tp20-offers-page .tp20-code-vault h2::after,.tp20-offers-page .tp20-feature-copy h2::after,
+.tp20-offers-page .tp20-secret-intro h2::after,.tp20-offers-page .tp20-privilege-cta h2::after{
+ content:"";display:block;width:44px;height:2px;margin-top:14px;background:var(--tp-crimson)
+}
+/* The set summary shares one state with its catalog and remains easy to reach. */
+.tp20-builder-page .tp-set-catalog{grid-column:1;grid-row:1}
+.tp20-builder-page .tp-set-selection{grid-column:2;grid-row:1;top:96px;scroll-margin-top:100px}
+.tp20-builder-page .tp20-builder-action .button{width:100%;justify-content:center}
+.tp20-builder-page .tp20-builder-action{gap:8px}
+.tp20-builder-page .tp20-builder-action span{font-size:.75rem;line-height:1.5}
+.tp20-builder-page .tp20-set-card-bottom{flex-wrap:wrap;row-gap:10px}
+.tp20-builder-page .tp20-set-card-bottom>strong{white-space:nowrap;flex-shrink:0}
+.tp20-builder-page .tp-set-dish-controls{flex-shrink:0}
+.tp-set-clear{min-height:44px;padding:10px 0;border:0;background:transparent;color:var(--tp-gold);text-decoration:underline;text-underline-offset:4px;cursor:pointer}
+.tp-set-clear:disabled,.tp-set-dish-controls button:disabled{opacity:.4;cursor:default}
+.tp-set-dish-controls button:disabled:hover{background:#0a0908;transform:none}
+.tp-set-clear:focus-visible,.tp-set-mobile-summary:focus-visible{outline:2px solid var(--tp-gold);outline-offset:4px}
+.tp-set-mobile-summary{display:none}
+@media(max-width:900px){
+ .tp20-builder-page .tp-set-layout{grid-template-columns:1fr}
+ .tp20-builder-page .tp-set-selection{grid-column:1;grid-row:1;position:static}
+ .tp20-builder-page .tp-set-catalog{grid-column:1;grid-row:2}
+ .tp20-builder-page{padding-bottom:80px}
+ .tp-set-mobile-summary{display:flex;position:fixed;inset:auto 12px max(10px,env(safe-area-inset-bottom));z-index:30;min-height:56px;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border:1px solid var(--tp-gold);border-radius:10px;background:#15100f;color:var(--tp-ivory);box-shadow:0 8px 24px #0009;font-size:.8rem}
+ .tp-set-mobile-summary strong{display:block;color:var(--tp-gold);font-size:1rem}
+ .nav-open .tp-set-mobile-summary{display:none}
+}
+[data-tp-evening-edit][hidden],[data-tp-evening-booking][hidden]{display:none!important}
+.tp20-wizard [data-tp-evening-step] h3,.tp20-wizard-result{scroll-margin-top:100px}
+.tp20-wizard [data-tp-evening-step] h3:focus-visible,.tp20-wizard-result:focus-visible{outline:1px solid var(--tp-gold);outline-offset:8px}
+.tp20-wizard .tp-empty-state{padding:20px;border:1px solid var(--tp-line);border-radius:8px;background:#17120f;color:var(--tp-ivory);line-height:1.65}
+.tp20-evening-page .tp-evening-add-plan,.tp20-evening-page .tp-evening-actions>.button{max-width:100%;min-width:0;white-space:normal;overflow-wrap:anywhere;text-align:center;line-height:1.4}
+.tp20-evening-page .tp20-evening-hero h1{max-width:none;font-size:clamp(40px,4.5vw,68px);line-height:1.06}
+.tp20-evening-page .tp-evening-dishes{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:600px){.tp20-evening-page .tp-evening-dishes{grid-template-columns:1fr}}
+.tp20-evening-page .tp20-evening-note p{color:#574532;line-height:1.65}
+.tp20-evening-page .tp20-evening-note>span{color:#8b642e}
+.review-results-status{margin:18px 0;color:var(--tp-muted);line-height:1.6}
+.review-results-status.is-empty{padding:20px;border:1px solid var(--tp-line);border-radius:8px;color:var(--tp-ivory)}
+#local-reviews{scroll-margin-top:100px}
+.form-status [data-local-review-link]{display:inline-flex;align-items:center;min-height:44px;color:var(--tp-gold);text-decoration:underline;text-underline-offset:4px}
+.review-form>.school-note{grid-column:1/-1;margin:0}
+.booking-time-hint{grid-column:1/-1;margin:-5px 0 1px;color:var(--tp-muted);font-size:.72rem;line-height:1.45;overflow-wrap:anywhere}
+.booking-time-hint.is-error{color:#efb2a1}
+.tp20-floorplan-layout [data-tp-zone-photo][hidden]{display:none}
+.tp-floorplan-fallback>.tp-floorplan-note{grid-column:1/-1;margin:0}
+.tp-floorplan-fallback fieldset{min-width:0}
+.tp-floorplan-fallback .tp-seat-button{width:100%;min-height:44px;height:auto;padding:10px 12px;line-height:1.4;border-radius:8px}
+.menu-results-status{margin:0 0 16px;color:var(--tp-muted);font-size:.84rem;line-height:1.5}

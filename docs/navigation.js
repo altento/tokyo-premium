@@ -14,21 +14,71 @@
       max: isoDate(latest.getUTCFullYear(), latest.getUTCMonth() + 1, latest.getUTCDate())
     };
   }
+  const boundBookingInputs = new WeakSet();
+  const originalOptionStates = new WeakMap();
   function updateBookingDateLimits() {
-    const bounds = restaurantDateBounds();
+    const instant = new Date();
+    const bounds = restaurantDateBounds(instant);
+    const timeParts = new Intl.DateTimeFormat('en-GB', { timeZone: restaurantTimeZone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(instant);
+    const clock = Object.fromEntries(timeParts.map(part => [part.type, part.value]));
+    const currentTime = `${clock.hour}:${clock.minute}`;
     document.querySelectorAll('.home-booking-form input[type="date"], .booking-form input[type="date"]').forEach(input => {
       input.min = bounds.min;
       input.max = bounds.max;
       input.dataset.restaurantTimeZone = restaurantTimeZone;
-      input.setCustomValidity(input.value && input.value < bounds.min ? 'Выберите сегодняшнюю или будущую дату.' : '');
-      if (input.value && input.value < bounds.min) input.setAttribute('aria-invalid', 'true');
+      const dateError = input.value && input.value < bounds.min ? 'Выберите сегодняшнюю или будущую дату.' : input.value && input.value > bounds.max ? 'Выберите дату в ближайшие 365 дней.' : '';
+      input.setCustomValidity(dateError);
+      if (dateError) input.setAttribute('aria-invalid', 'true');
       else input.removeAttribute('aria-invalid');
+      const form = input.form;
+      const time = form?.querySelector('select[name="time"]');
+      if (time) {
+        const elapsed = option => input.value && (input.value < bounds.min || (input.value === bounds.min && option.value <= currentTime));
+        [...time.options].forEach(option => {
+          if (!originalOptionStates.has(option)) originalOptionStates.set(option, option.disabled);
+          option.disabled = originalOptionStates.get(option) || Boolean(option.value && elapsed(option));
+        });
+        const selected = time.selectedOptions[0];
+        const timeError = selected?.disabled ? 'Выберите будущее время визита по часовому поясу ресторана.' : '';
+        time.setCustomValidity(timeError);
+        if (timeError) time.setAttribute('aria-invalid', 'true'); else time.removeAttribute('aria-invalid');
+        let hint = form.querySelector('[data-booking-time-hint]');
+        if (!hint) {
+          hint = document.createElement('p'); hint.dataset.bookingTimeHint = ''; hint.className = 'booking-time-hint';
+          hint.id = `${time.id || 'booking-time'}-hint`; hint.setAttribute('role', 'status'); hint.setAttribute('aria-live', 'polite');
+          const timeField = time.closest('.field');
+          if (timeField && form?.classList.contains('booking-form')) timeField.after(hint);
+          else time.after(hint);
+          time.setAttribute('aria-describedby', [time.getAttribute('aria-describedby'), hint.id].filter(Boolean).join(' '));
+        }
+        const futureOptions = [...time.options].some(option => option.value && !option.disabled);
+        hint.textContent = input.value === bounds.min && !futureOptions ? 'На сегодня в расписании не осталось будущего времени. Выберите другую дату.' : timeError || `Местное время ресторана: ${currentTime}. Время визита должно быть в будущем.`;
+        hint.classList.toggle('is-error', Boolean(timeError));
+      }
+      if (!boundBookingInputs.has(input)) {
+        boundBookingInputs.add(input);
+        input.addEventListener('input', updateBookingDateLimits);
+        input.addEventListener('change', updateBookingDateLimits);
+        time?.addEventListener('change', updateBookingDateLimits);
+        form?.addEventListener('focusin', updateBookingDateLimits);
+        form?.addEventListener('reset', () => queueMicrotask(updateBookingDateLimits));
+      }
     });
   }
-  window.TokyoPremiumBookingDates = { bounds: restaurantDateBounds, update: updateBookingDateLimits, timeZone: restaurantTimeZone };
+  window.TokyoPremiumBookingDates = { bounds: restaurantDateBounds, update: updateBookingDateLimits, validate: form => { updateBookingDateLimits(); return form.reportValidity(); }, timeZone: restaurantTimeZone };
   updateBookingDateLimits();
   document.addEventListener('visibilitychange', () => { if (!document.hidden) updateBookingDateLimits(); });
   window.addEventListener('pageshow', updateBookingDateLimits);
+  document.addEventListener('click', event => {
+    const control = event.target.closest('button,input[type="submit"]');
+    if (control?.form?.dataset.api === 'booking') updateBookingDateLimits();
+  }, true);
+  document.addEventListener('submit', event => {
+    if (event.target?.dataset.api !== 'booking') return;
+    updateBookingDateLimits();
+    if (!event.target.reportValidity()) { event.preventDefault(); event.stopImmediatePropagation(); }
+  }, true);
+  if (document.querySelector('form[data-api="booking"]')) window.setInterval(() => { if (!document.hidden) updateBookingDateLimits(); }, 60000);
 
   const header = document.querySelector('.site-header');
   const nav = document.querySelector('#site-navigation');

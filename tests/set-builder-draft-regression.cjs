@@ -6,6 +6,7 @@ const path = require('node:path');
 const phpBase = process.env.TOKYO_BASE_URL || 'http://127.0.0.1:8100';
 const staticBase = process.env.TOKYO_STATIC_BASE_URL || `${phpBase}/docs`;
 const evidence = process.env.TOKYO_EVIDENCE_DIR || path.join(__dirname, '../project-docs/visual-qa/set-builder-2026-11-19');
+const widths = (process.env.TOKYO_SET_BUILDER_WIDTHS || '320,390,768,1024,1440,1920').split(',').map(Number).filter(Number.isFinite);
 
 async function checkMode(browser, mode) {
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
@@ -55,7 +56,7 @@ async function checkMode(browser, mode) {
   for (let index = 0; index < 3; index++) await cards.nth(index).locator('[data-tp-set-step="1"]').click();
   await cards.first().locator('[data-tp-set-step="1"]').click();
 
-  for (const width of [320, 390, 768, 1024, 1440, 1920]) {
+  for (const width of widths) {
     await page.setViewportSize({ width, height: 960 });
     assert.equal(await summaryTotal(), expectedTotal);
     assert.equal(await page.locator('[data-tp-set-add]').count(), 1, 'only one add-set action exists');
@@ -115,9 +116,11 @@ async function checkMode(browser, mode) {
   const browser = await chromium.launch({ headless: true });
   fs.mkdirSync(evidence, { recursive: true });
   try {
-    await checkMode(browser, { name: 'PHP', base: phpBase, route: '/set-builder.php' });
-    await checkMode(browser, { name: 'Pages', base: staticBase, route: '/set-builder.html' });
-    console.log('PASS: PHP/static set draft, live summary, price/progress, limits, clear, transfer and six-width layouts.');
+    const selectedMode = (process.env.TOKYO_SET_BUILDER_MODE || 'both').toLowerCase();
+    assert.ok(['php', 'pages', 'both'].includes(selectedMode), 'TOKYO_SET_BUILDER_MODE must be php, pages, or both');
+    if (selectedMode === 'php' || selectedMode === 'both') await checkMode(browser, { name: 'PHP', base: phpBase, route: '/set-builder.php' });
+    if (selectedMode === 'pages' || selectedMode === 'both') await checkMode(browser, { name: 'Pages', base: staticBase, route: '/set-builder.html' });
+    console.log(`PASS: ${selectedMode} set draft, live summary, price/progress, limits, clear and transfer at widths ${widths.join(', ')}.`);
   } finally {
     await browser.close();
   }

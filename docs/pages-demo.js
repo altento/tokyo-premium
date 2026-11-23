@@ -16,6 +16,7 @@ document.addEventListener('submit', async event => {
   if (!(form instanceof HTMLFormElement) || !form.matches('form[data-api]')) return;
   event.preventDefault();
   event.stopImmediatePropagation();
+  if (form.dataset.api === 'booking' && !(window.TokyoPremiumBookingDates?.validate(form) ?? form.reportValidity())) return;
 
   const status = form.querySelector('.form-status');
   if (form.dataset.submitting === 'true') return;
@@ -91,15 +92,21 @@ document.addEventListener('submit', async event => {
       custom_sets: payload.custom_sets
     });
   } else if (type === 'booking') {
-    rows.unshift({ name: data.name, date: data.date, time: data.time, guests: data.guests, zone: data.zone, table: data.table, format: data.format || '', demo: true });
+    rows.unshift({ demoId: window.crypto?.randomUUID?.() || 'booking-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2), createdAt: new Date().toISOString(), name: data.name, date: data.date, time: data.time, guests: data.guests, zone: data.zone, table: data.table, format: data.format || '', demo: true });
   } else if (type === 'review') {
-    if (String(data.body || '').trim().length < 20) {
-      status.textContent = 'Добавьте отзыв не короче 20 символов.';
+    if (Array.from(String(data.body || '').trim()).length < 20 || Array.from(String(data.body || '').trim()).length > 1000) {
+      status.textContent = 'Введите отзыв от 20 до 1000 символов.';
       status.className = 'form-status error';
       return;
     }
     rows.unshift({ name: data.name, theme: data.theme || '', rating: data.rating, text: data.body, date: new Date().toLocaleDateString('ru-RU') });
   } else {
+    const messageLength = Array.from(String(data.message || '').trim()).length;
+    if (messageLength < 5 || messageLength > 1000) {
+      status.textContent = 'Введите сообщение от 5 до 1000 символов.';
+      status.className = 'form-status error';
+      return;
+    }
     rows.unshift({ name: data.name, email: data.email, subject: data.subject, message: data.message, date: new Date().toLocaleString('ru-RU') });
   }
 
@@ -129,6 +136,11 @@ document.addEventListener('submit', async event => {
   else form.reset();
   status.textContent = successMessage;
   status.className = 'form-status success';
+  if (type === 'review') {
+    const link = document.createElement('a');
+    link.href = '#local-reviews'; link.textContent = 'Посмотреть мой отзыв ↗'; link.dataset.localReviewLink = '';
+    status.append(' ', link);
+  }
   form.dataset.submitting = 'false';
   const submit = form.querySelector('button[type="submit"]');
   if (submit) submit.disabled = type === 'order' && !(cart?.get().length || cart?.getCustomSets().length);

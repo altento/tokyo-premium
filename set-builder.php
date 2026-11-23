@@ -25,7 +25,7 @@ header_html('experience');
             <img src="<?=e($dish['image_url'])?>" alt="<?=e($dish['name'])?>" loading="lazy" decoding="async">
             <div><span class="kicker"><?=e($dish['category_name'])?> · <?=e($dish['weight'])?></span><h3><?=e($dish['name'])?></h3><p><?=e($dish['description'])?></p><div class="tp20-set-card-bottom"><strong><?=number_format((int)$dish['price'],0,'.',' ')?> ₸</strong><div class="tp-set-dish-controls"><button type="button" data-tp-set-step="-1" data-dish-id="<?= (int)$dish['id']?>" aria-label="Уменьшить <?=e($dish['name'])?>">−</button><output data-tp-set-qty data-dish-id="<?= (int)$dish['id']?>">0</output><button type="button" data-tp-set-step="1" data-dish-id="<?= (int)$dish['id']?>" aria-label="Добавить <?=e($dish['name'])?>">+</button></div></div></div>
           </article>
-        <?php endforeach ?>
+<?php endforeach ?>
 
       </div>
       <a class="tp-set-mobile-summary" href="#set-summary"><span>Ваш сет <strong data-tp-set-mobile-total>0 ₸</strong></span><span>Проверить состав ↑</span></a>

@@ -24,14 +24,15 @@
     if (event.target !== form || form.dataset.homeBookingStep !== 'visit') return;
     event.preventDefault();
     event.stopImmediatePropagation();
+    if (!(window.TokyoPremiumBookingDates?.validate(form) ?? form.reportValidity())) return;
     setStep('contacts');
     form.querySelector('#guest-name')?.focus({ preventScroll: true });
   }, true);
 
   form.addEventListener('reset', () => {
-    window.setTimeout(() => {
-      setStep('visit');
-      if (status) status.className = 'form-status';
-    }, 0);
+    // Clear the previous result synchronously. The submit handler writes the new
+    // success message after reset(), and it must survive the deferred step reset.
+    if (status) { status.textContent = ''; status.className = 'form-status'; }
+    queueMicrotask(() => setStep('visit'));
   });
 })();

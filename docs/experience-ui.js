@@ -28,21 +28,16 @@
     if (element) element.textContent = value == null ? '' : String(value);
   }
 
-  function formatHref(link, format) {
-    if (!link || !link.href || !format) return;
-    try {
-      const url = new URL(link.href, doc.baseURI);
-      url.searchParams.set('format', format);
-      link.href = url.pathname + url.search + url.hash;
-    } catch (_) { /* Keep the authored route if the URL cannot be parsed. */ }
-  }
-
   function initOmakase(root) {
     if (started.has(root)) return;
     started.add(root);
     const triggers = many('[data-tp-course]', root);
     const panels = many('[data-tp-course-panel]', root);
     if (!triggers.length || !panels.length) return;
+    const previous = one('[data-tp-course-prev]', root);
+    const next = one('[data-tp-course-next]', root);
+    const position = one('[data-tp-course-current]', root);
+    let selectedIndex = 0;
 
     const activate = (step, focus) => {
       const current = triggers.find(button => String(button.dataset.step) === String(step)) || triggers[0];
@@ -62,6 +57,12 @@
       });
       const progress = one('[data-tp-omakase-progress]', root);
       const index = Math.max(0, triggers.indexOf(current));
+      selectedIndex = index;
+      const stage = one('.tp20-course-tab-stage', current)?.textContent.trim().replace(/^\d+\s*/, '') || '';
+      const positionText = `Подача ${index + 1} из ${triggers.length}${stage ? ` · ${stage}` : ''}`;
+      safeText(position, positionText);
+      if (previous) previous.disabled = index === 0;
+      if (next) next.disabled = index === triggers.length - 1;
       if (progress) {
         progress.setAttribute('role', 'progressbar');
         progress.setAttribute('aria-label', 'Прогресс дегустации Omakase');
@@ -69,10 +70,28 @@
         progress.setAttribute('aria-valuemin', '1');
         progress.setAttribute('aria-valuemax', String(triggers.length));
         progress.setAttribute('aria-valuenow', String(index + 1));
+        progress.setAttribute('aria-valuetext', positionText);
         progress.style.setProperty('--tp-progress', `${percent}%`);
       }
-      if (focus) current.focus();
+      if (focus) current.focus({ preventScroll: true });
+      // Keep the selected thumbnail visible inside the phone's horizontal strip.
+      const strip = current.parentElement;
+      if (strip && strip.scrollWidth > strip.clientWidth) {
+        const itemBox = current.getBoundingClientRect(), stripBox = strip.getBoundingClientRect();
+        const delta = itemBox.left < stripBox.left ? itemBox.left - stripBox.left
+          : itemBox.right > stripBox.right ? itemBox.right - stripBox.right : 0;
+        if (delta) strip.scrollBy({ left: delta, behavior: 'instant' });
+      }
     };
+
+    previous?.addEventListener('click', () => {
+      if (selectedIndex > 0) activate(triggers[selectedIndex - 1].dataset.step, false);
+      if (previous.disabled) next?.focus({ preventScroll: true });
+    });
+    next?.addEventListener('click', () => {
+      if (selectedIndex < triggers.length - 1) activate(triggers[selectedIndex + 1].dataset.step, false);
+      if (next.disabled) previous?.focus({ preventScroll: true });
+    });
 
     triggers[0].parentElement?.setAttribute('role', 'tablist');
     triggers[0].parentElement?.setAttribute('aria-label', 'Этапы дегустации');
@@ -99,13 +118,7 @@
     root.setAttribute('aria-label', root.getAttribute('aria-label') || 'Этапы дегустации Omakase');
     const initial = triggers.find(button => button.getAttribute('aria-selected') === 'true') || triggers[0];
     activate(initial.dataset.step, false);
-    many('[data-tp-omakase-select]', root).forEach(link => {
-      const format = link.dataset.format || link.textContent.trim();
-      if (link instanceof HTMLAnchorElement) formatHref(link, format);
-      link.addEventListener('click', () => {
-        try { global.sessionStorage.setItem('tokyo-selected-omakase', format); } catch (_) { }
-      });
-    });
+    // Format links carry their own booking query; no hidden session choice overrides it.
   }
 
   function initSetBuilder(root) {
@@ -118,8 +131,9 @@
     const minDistinct = Math.max(1, Number(root.dataset.minDistinct) || 3);
     const maxDistinct = Math.max(minDistinct, Number(root.dataset.maxDistinct) || 5);
     const maxQuantity = Math.max(maxDistinct, Number(root.dataset.maxQuantity) || 8);
-    const status = one('[data-tp-status]', root);
-    const composition = one('[data-tp-set-composition]', root.parentElement || doc);
+    const layout = root.closest('.tp-set-layout') || root;
+    const status = one('[data-tp-status]', layout);
+    const composition = one('[data-tp-set-composition]', layout);
 
     const persistDraft = () => {
       try {
@@ -163,10 +177,15 @@
         const qty = selected.get(id) || 0;
         card.classList.toggle('is-selected', qty > 0);
         if (card.matches('button,[role="button"]')) card.setAttribute('aria-pressed', String(qty > 0));
+        many('[data-tp-set-step]', card).forEach(button => {
+          const increases = Number(button.dataset.tpSetStep) > 0;
+          button.disabled = increases ? qty >= 4 || pieces >= maxQuantity || (!qty && selected.size >= maxDistinct) : qty === 0;
+        });
         const addButton = one('[data-tp-set-add-dish]', card);
         if (addButton) addButton.setAttribute('aria-label', qty ? `Добавить ещё ${dishIndex().get(id)?.name || 'блюдо'}; выбрано ${qty}` : `Добавить ${dishIndex().get(id)?.name || 'блюдо'} в сет`);
       });
-      many('[data-tp-set-total]', root).forEach(output => safeText(output, money(estimate)));
+      many('[data-tp-set-total]', layout).forEach(output => safeText(output, money(estimate)));
+      many('[data-tp-set-mobile-total]', layout).forEach(output => safeText(output, money(estimate)));
       if (composition) {
         composition.replaceChildren();
         composition.setAttribute('aria-live', 'polite');
@@ -192,7 +211,7 @@
         }
       }
       const percent = Math.min(100, Math.round((pieces / maxQuantity) * 100));
-      many('[data-tp-set-progress]', root).forEach(progress => {
+      many('[data-tp-set-progress]', layout).forEach(progress => {
         progress.setAttribute('role', 'progressbar');
         progress.setAttribute('aria-label', 'Комплектация сета');
         progress.style.setProperty('--tp-progress', `${percent}%`);
@@ -201,9 +220,11 @@
         progress.setAttribute('aria-valuenow', String(pieces));
         progress.setAttribute('aria-valuetext', `${selected.size} из ${maxDistinct} разных блюд; ${pieces} из ${maxQuantity} порций`);
       });
-      const add = one('[data-tp-set-add]', root);
+      const add = one('[data-tp-set-add]', layout);
       if (add) add.disabled = selected.size < minDistinct || selected.size > maxDistinct || pieces > maxQuantity;
-      many('[data-tp-set-count]', root).forEach(output => safeText(output, `${selected.size} / ${maxDistinct} блюд · ${pieces} / ${maxQuantity} порций`));
+      const clear = one('[data-tp-set-clear]', layout);
+      if (clear) clear.disabled = selected.size === 0;
+      many('[data-tp-set-count]', layout).forEach(output => safeText(output, `${selected.size} / ${maxDistinct} блюд · ${pieces} / ${maxQuantity} порций`));
       if (status && !status.textContent) status.textContent = `Выбрано блюд: ${selected.size} из ${maxDistinct}; порций: ${pieces} из ${maxQuantity}. Цена предварительная.`;
     };
 
@@ -213,8 +234,8 @@
       const current = selected.get(id) || 0;
       const total = Array.from(selected.values()).reduce((sum, qty) => sum + qty, 0);
       const next = Math.max(0, Math.min(4, current + delta));
-      if (delta > 0 && total >= maxQuantity) { setStatus(root, `В этом варианте не больше ${maxQuantity} порций.`); return; }
-      if (delta > 0 && !current && selected.size >= maxDistinct) { setStatus(root, `В этом варианте не больше ${maxDistinct} разных блюд.`); return; }
+      if (delta > 0 && total >= maxQuantity) { setStatus(layout, `В этом варианте не больше ${maxQuantity} порций.`); return; }
+      if (delta > 0 && !current && selected.size >= maxDistinct) { setStatus(layout, `В этом варианте не больше ${maxDistinct} разных блюд.`); return; }
       if (next) selected.set(id, next); else selected.delete(id);
       persistDraft();
       if (status) status.textContent = `${dish.name}: ${next ? `выбрано ${next}` : 'удалено из сета'}. Черновик сохранён в этом браузере; ${staticDemo ? 'стоимость — локальная оценка без серверной проверки.' : 'цена ориентировочная и перепроверяется сервером.'}`;
@@ -235,14 +256,14 @@
       }
     });
 
-    const addSet = one('[data-tp-set-add]', root);
+    const addSet = one('[data-tp-set-add]', layout);
     addSet?.addEventListener('click', event => {
       event.preventDefault();
       const items = Array.from(selected, ([id, qty]) => ({ id, qty }));
       const quantity = items.reduce((sum, row) => sum + row.qty, 0);
       const distinct = items.length;
       if (distinct < minDistinct || distinct > maxDistinct || quantity > maxQuantity) {
-        setStatus(root, `Вариант требует ${minDistinct}–${maxDistinct} разных блюд и не больше ${maxQuantity} порций.`);
+        setStatus(layout, `Вариант требует ${minDistinct}–${maxDistinct} разных блюд и не больше ${maxQuantity} порций.`);
         return;
       }
       if (items.length === 0) return;
@@ -266,20 +287,20 @@
           selected.clear();
           persistDraft();
           render();
-          setStatus(root, staticDemo
+          setStatus(layout, staticDemo
             ? 'Сет добавлен в локальную корзину браузера. Стоимость остаётся демонстрационной и не проверяется сервером.'
             : 'Сет добавлен в общую корзину. Итоговая цена будет подтверждена сервером.');
           return;
         }
         const reason = result && typeof result === 'object' && typeof result.message === 'string' ? result.message : 'Корзина отклонила этот состав. Проверьте ограничения сета и попробуйте ещё раз.';
-        setStatus(root, reason);
+        setStatus(layout, reason);
       };
       detail.respond = respond;
       const customEvent = new CustomEvent('tokyo:custom-set:add', { bubbles: true, cancelable: true, detail });
       doc.dispatchEvent(customEvent);
       if (responded) return;
       if (customEvent.defaultPrevented) {
-        setStatus(root, 'Проверяем добавление набора в корзину…');
+        setStatus(layout, 'Проверяем добавление набора в корзину…');
         timeout = global.setTimeout(() => respond({ ok: false, message: 'Корзина не подтвердила добавление. Проверьте состав и повторите попытку.' }), 8000);
         return;
       }
@@ -288,13 +309,19 @@
         try { result = global.TokyoCart.addCustomSet(detail); }
         catch (error) { respond({ ok: false, message: error?.message || 'Не удалось добавить сет в корзину.' }); return; }
         if (result && typeof result.then === 'function') {
-          setStatus(root, 'Проверяем добавление набора в корзину…');
+          setStatus(layout, 'Проверяем добавление набора в корзину…');
           timeout = global.setTimeout(() => respond({ ok: false, message: 'Корзина не подтвердила добавление. Проверьте состав и повторите попытку.' }), 8000);
           result.then(respond).catch(error => respond({ ok: false, message: error?.message || 'Не удалось добавить сет в корзину.' }));
         } else respond(result);
         return;
       }
-      setStatus(root, 'Состав рассчитан для предпросмотра. Корзина не подтвердила добавление этого варианта.');
+      setStatus(layout, 'Состав рассчитан для предпросмотра. Корзина не подтвердила добавление этого варианта.');
+    });
+
+    const clear = one('[data-tp-set-clear]', layout);
+    clear?.addEventListener('click', () => {
+      selected.clear(); persistDraft(); render();
+      setStatus(layout, 'Состав очищен. Черновик удалён из этого браузера.');
     });
 
     render();
@@ -312,8 +339,11 @@
   const signalText = dish => `${dish.name || ''} ${dish.description || ''} ${dish.category_name || ''} ${dish.category || ''}`.toLocaleLowerCase('ru-RU');
   const productKind = dish => {
     const text = signalText(dish);
-    if (/напит|drink|beverage|чай|матча|лимонад|кофе|саке/.test(text)) return 'drink';
+    const category = String(dish.category_name || dish.category || '').toLocaleLowerCase('ru-RU');
+    if (/десерт|dessert/.test(category)) return 'dessert';
+    if (/напит|drink|beverage/.test(category)) return 'drink';
     if (/десерт|dessert|моти|тирамису|морожен/.test(text)) return 'dessert';
+    if (/напит|drink|beverage|чай|матча|лимонад|кофе|саке/.test(text)) return 'drink';
     if (/(?:^|\W)(?:сет|сэт)|омак|set menu/.test(text)) return 'set';
     return 'dish';
   };
@@ -346,6 +376,9 @@
     const state = Object.create(null);
     const booking = one('[data-tp-evening-booking]', root);
     const initialBookingHref = booking instanceof HTMLAnchorElement ? booking.getAttribute('href') || booking.href : '';
+    const initialBookingLabel = booking?.textContent || '';
+    const edit = one('[data-tp-evening-edit]', root);
+    if (booking) booking.hidden = true;
     let current = 0;
     let recommendedPlan = null;
     const refreshNextButtons = () => {
@@ -356,7 +389,7 @@
         next.disabled = option ? !state[option.dataset.field] : input ? !input.checkValidity() : false;
       });
     };
-    const renderStep = () => {
+    const renderStep = (focus = false) => {
       steps.forEach((step, index) => { step.hidden = index !== current; step.setAttribute('aria-current', index === current ? 'step' : 'false'); });
       const progress = one('[data-tp-evening-progress]', root);
       if (progress) {
@@ -371,6 +404,10 @@
       many('[data-tp-evening-back]', root).forEach(back => { back.disabled = current === 0; });
       many('[data-tp-evening-next]', root).forEach(next => { next.textContent = current >= steps.length - 1 ? 'Показать подбор ↗' : 'Продолжить ↗'; });
       refreshNextButtons();
+      if (focus) {
+        const heading = one('h3', steps[current]);
+        if (heading) { heading.tabIndex = -1; heading.focus(); }
+      }
     };
 
     options.forEach(option => option.addEventListener('click', () => {
@@ -403,18 +440,22 @@
       const guestCount = Math.max(1, Math.min(12, Number(state.guests || 2)));
       const budget = Math.max(0, Number(state.budget || 0));
       const groupBudget = budget * guestCount;
-      const dishes = dishRows().filter(dish => dish && Number(dish.active ?? 1) !== 0 && Number(dish.price) >= 0);
+      const plantPreference = state.preference === 'plant';
+      const animalIngredients = /мяс|рыб|лосос|тун[её]?ц|угор|угр|кревет|сашими|говядин|утк|куриц|цыпл|свинин|бекон|икр|краб|гребеш|кальмар|осьмин|сурими|даси|даши|бонито|желатин|fish|salmon|tuna|eel|shrimp|prawn|scallop|crab|chicken|duck|beef|pork|bonito|dashi|gelatin/;
+      const dishes = dishRows().filter(dish => dish && Number(dish.active ?? 1) !== 0 && Number(dish.price) >= 0
+        && (!plantPreference || !animalIngredients.test(signalText(dish))));
       const byId = new Map(dishes.map(dish => [Number(dish.id), dish]));
       const pairings = Array.isArray(global.TP_DISH_PAIRINGS) ? global.TP_DISH_PAIRINGS : [];
       const setVariants = Array.isArray(global.TP_SET_VARIANTS) ? global.TP_SET_VARIANTS.filter(row => row && row.slug && row.name) : [];
-      const mains = dishes.filter(dish => !['drink', 'dessert'].includes(productKind(dish)))
+      const mains = dishes.filter(dish => !['drink', 'dessert'].includes(productKind(dish))
+        && (!plantPreference || signals.plant.some(word => signalText(dish).includes(word))))
         .sort((a, b) => scoreDish(b, state) - scoreDish(a, state) || Number(a.price) - Number(b.price));
       const pickPaired = (main, pairingType, fallbackKind) => {
         const linked = pairings
           .filter(pair => Number(pair.dish_id) === Number(main.id) && pair.pairing_type === pairingType)
           .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0))
           .map(pair => byId.get(Number(pair.paired_dish_id)))
-          .filter(dish => dish && Number(dish.id) !== Number(main.id));
+          .filter(dish => dish && Number(dish.id) !== Number(main.id) && productKind(dish) === fallbackKind);
         return linked[0] || dishes.filter(dish => productKind(dish) === fallbackKind && Number(dish.id) !== Number(main.id))
           .sort((a, b) => Number(a.price) - Number(b.price))[0] || null;
       };
@@ -488,7 +529,9 @@
       if (!chosen) {
         const empty = doc.createElement('p');
         empty.className = 'tp-empty-state';
-        safeText(empty, 'В каталоге пока нет блюд для подбора.');
+        safeText(empty, plantPreference
+          ? 'В текущем каталоге нет подходящих основных блюд с растительными ингредиентами по описанию. Обсудите состав при бронировании или измените предпочтения.'
+          : 'В каталоге пока нет блюд для подбора.');
         result.append(empty);
       }
       const list = doc.createElement('div');
@@ -545,7 +588,7 @@
       totalNode.className = 'tp-evening-estimate';
       const total = chosen?.total || 0;
       safeText(totalNode, `Ориентир на подбор для ${guestCount} гостей: ${money(total)}. ${staticDemo ? 'Демо-стоимость рассчитана в браузере и не проверяется сервером.' : 'Стоимость учебная; сервер проверяет цены при заказе.'}`);
-      result.append(totalNode);
+      if (chosen) result.append(totalNode);
       if (budget && total > groupBudget) {
         const budgetNote = doc.createElement('p');
         budgetNote.className = 'tp-budget-note';
@@ -558,7 +601,9 @@
         result.append(budgetNote);
       }
       const note = doc.createElement('small');
-      safeText(note, 'Сочетания напитков и дополнений взяты из каталога ресторана. Подбор сформирован по правилам, а не нейросетью.');
+      safeText(note, plantPreference
+        ? 'Фильтр учитывает только описания каталога и не подтверждает вегетарианский состав или отсутствие аллергенов. Состав и основу бульонов уточняйте отдельно.'
+        : 'Сочетания напитков и дополнений взяты из каталога ресторана. Подбор сформирован по правилам, а не нейросетью.');
       result.append(note);
       if (chosen) {
         const addPlan = doc.createElement('button');
@@ -580,8 +625,15 @@
         if (chosen) url.searchParams.set('experience', chosen.lines.map(line => `${line.qty} × ${line.dish.name}`).join(', ').slice(0, 180));
         else url.searchParams.delete('experience');
         booking.href = url.pathname + url.search + url.hash;
+        booking.hidden = false;
+        safeText(booking, chosen ? 'Перенести подбор в бронирование ↗' : 'Обсудить меню при бронировании ↗');
       }
-      setStatus(root, `Подбор готов. Ориентировочная сумма ${money(total)} для ${guestCount} гостей.`);
+      if (edit) edit.hidden = false;
+      result.tabIndex = -1;
+      result.setAttribute('role', 'region');
+      result.setAttribute('aria-label', 'Результат подбора вечера');
+      result.focus();
+      setStatus(root, chosen ? `Подбор готов. Ориентировочная сумма ${money(total)} для ${guestCount} гостей.` : 'Подходящий набор не найден. Можно изменить ответы или обсудить меню при бронировании.');
     };
 
     root.addEventListener('click', event => {
@@ -609,11 +661,21 @@
         if (next.disabled || !steps.length) return;
         if (current >= steps.length - 1) { renderResult(); return; }
         current = Math.min(steps.length - 1, current + 1);
-        renderStep();
+        renderStep(true);
         return;
       }
       const back = event.target.closest('[data-tp-evening-back]');
-      if (back && root.contains(back)) { current = Math.max(0, current - 1); renderStep(); }
+      if (back && root.contains(back)) { current = Math.max(0, current - 1); renderStep(true); }
+    });
+    edit?.addEventListener('click', () => {
+      current = 0;
+      recommendedPlan = null;
+      const result = one('[data-tp-evening-result]', root);
+      if (result) { result.hidden = true; result.replaceChildren(); }
+      if (booking instanceof HTMLAnchorElement) { booking.hidden = true; booking.href = initialBookingHref; safeText(booking, initialBookingLabel); }
+      edit.hidden = true;
+      renderStep(true);
+      setStatus(root, 'Ответы сохранены. Измените нужные параметры и сформируйте новый подбор.');
     });
     one('[data-tp-evening-restart]', root)?.addEventListener('click', () => {
       current = 0;
@@ -626,30 +688,27 @@
       const result = one('[data-tp-evening-result]', root);
       if (result) { result.hidden = true; result.replaceChildren(); }
       recommendedPlan = null;
-      if (booking instanceof HTMLAnchorElement) booking.href = initialBookingHref;
-      renderStep(); setStatus(root, 'Подбор сброшен.');
+      if (booking instanceof HTMLAnchorElement) { booking.href = initialBookingHref; booking.hidden = true; safeText(booking, initialBookingLabel); }
+      if (edit) edit.hidden = true;
+      renderStep(true); setStatus(root, 'Подбор сброшен.');
     });
     renderStep();
   }
 
   function makeFallbackFloorplan(root, message) {
-    const zones = [
-      ['Основной зал', ['1', '2', '3', '4', '5', '6']],
-      ['Суши-бар', ['7', '8', '9']],
-      ['Приватная комната', ['10', '11']],
-      ['Летняя терраса', ['12', '13']]
-    ];
+    const zones = ['Основной зал', 'Суши-бар', 'Приватная комната', 'Летняя терраса'];
+    const preview = one('[data-tp-zone-photo]', root.parentElement || doc);
+    if (preview) preview.hidden = true;
     const wrap = doc.createElement('div'); wrap.className = 'tp-floorplan-fallback';
-    const note = doc.createElement('p'); note.className = 'tp-floorplan-note'; safeText(note, message || 'Выберите предпочтительную зону и стол. Доступность не проверяется.'); wrap.append(note);
-    zones.forEach(([zone, tables]) => {
+    const note = doc.createElement('p'); note.className = 'tp-floorplan-note'; safeText(note, `${message || 'Схема недоступна.'} Выберите предпочтительную зону без номера стола. Доступность не проверяется.`); wrap.append(note);
+    zones.forEach(zone => {
       const group = doc.createElement('fieldset');
+      group.dataset.tpZone = zone;
       const legend = doc.createElement('legend'); safeText(legend, zone); group.append(legend);
-      tables.forEach(table => {
-        const button = doc.createElement('button');
-        button.type = 'button'; button.dataset.tpZone = zone; button.dataset.tpTable = table;
-        button.className = 'tp-seat-button'; button.setAttribute('aria-pressed', 'false');
-        safeText(button, `Стол ${table}`); group.append(button);
-      });
+      const button = doc.createElement('button');
+      button.type = 'button'; button.dataset.tpZoneSelect = zone;
+      button.className = 'tp-seat-button'; button.setAttribute('aria-pressed', 'false');
+      safeText(button, 'Выбрать зону'); group.append(button);
       wrap.append(group);
     });
     root.replaceChildren(wrap);
@@ -657,6 +716,8 @@
   }
 
   function bindFloorplanSelection(root) {
+    const zoneOnly = Boolean(root.querySelector('.tp-floorplan-fallback'));
+    const zoneInstruction = zone => zoneOnly ? `${zone}: зона выбрана как пожелание. Номер стола можно уточнить позже.` : `${zone}: выберите предпочтительный стол. Доступность не проверяется.`;
     const form = root.dataset.form ? one(root.dataset.form) : root.closest('form') || one('.booking-form');
     const zoneInput = form?.querySelector('[name="zone"]');
     const tableInput = form?.querySelector('[name="table"]');
@@ -669,8 +730,8 @@
         item.classList.remove('is-selected');
         item.setAttribute('aria-pressed', 'false');
       });
-      if (message) safeText(message, 'Параметры визита изменились. Выберите столик заново; доступность не проверяется.');
-      if (formTableStatus) safeText(formTableStatus, 'Параметры изменились. Выберите стол заново или оставьте поле пустым.');
+      if (message) safeText(message, zoneOnly ? zoneInstruction(zoneInput?.value || 'Основной зал') : 'Параметры визита изменились. Выберите столик заново; доступность не проверяется.');
+      if (formTableStatus) safeText(formTableStatus, zoneOnly ? 'Схема недоступна: передаётся только предпочтительная зона.' : 'Параметры изменились. Выберите стол заново или оставьте поле пустым.');
     };
     ['date', 'time', 'guests'].forEach(name => {
       form?.querySelector(`[name="${name}"]`)?.addEventListener('change', clearTablePreference);
@@ -717,9 +778,9 @@
         zonePhoto.alt = `${zone} — иллюстративное изображение учебной концепции`;
       }
       const seatCaption = one('[data-tp-seat-caption]', root.parentElement || doc);
-      if (seatCaption) safeText(seatCaption, `${zone}. Выберите предпочтительный стол; вместимость и доступность уточняются отдельно.`);
+      if (seatCaption) safeText(seatCaption, zoneOnly ? `${zone}. Номер стола, вместимость и доступность уточняются отдельно.` : `${zone}. Выберите предпочтительный стол; вместимость и доступность уточняются отдельно.`);
       if (announce) {
-        const zoneMessage = `${zone}: выберите предпочтительный стол. Доступность не проверяется.`;
+        const zoneMessage = zoneInstruction(zone);
         safeText(message, zoneMessage);
         if (formTableStatus) safeText(formTableStatus, zoneMessage);
       }
@@ -763,20 +824,22 @@
         event.preventDefault(); applyZone(zoneHit.closest('[data-tp-zone]')?.dataset.tpZone);
       }
     });
+    const requestedZone = new URL(doc.location.href).searchParams.get('zone');
     form?.addEventListener('reset', event => {
-      // Let the browser restore the select first, then clear the dependent table preference.
+      // Reset restores selects after dispatch; hidden inputs can retain their last value.
       queueMicrotask(() => {
         if (event.defaultPrevented) return;
         const zone = zoneInput?.value || 'Основной зал';
         applyZone(zone, false);
         if (tableInput) { tableInput.value = ''; tableInput.defaultValue = ''; }
-        if (message) safeText(message, `${zone}: выберите предпочтительный стол. Доступность не проверяется.`);
-        if (formTableStatus) safeText(formTableStatus, 'Столик не выбран. Выберите номер на схеме или оставьте поле пустым.');
+        if (message) safeText(message, zoneInstruction(zone));
+        if (formTableStatus) safeText(formTableStatus, zoneOnly ? 'Схема недоступна: передаётся только предпочтительная зона.' : 'Столик не выбран. Выберите номер на схеме или оставьте поле пустым.');
       });
     });
-    const requestedZone = new URL(doc.location.href).searchParams.get('zone');
     const hasRequestedZone = requestedZone && many('[data-tp-zone]', root).some(item => !item.hasAttribute('data-tp-table') && item.dataset.tpZone === requestedZone);
     const initialZone = hasRequestedZone ? requestedZone : (zoneInput?.value || zoneInput?.selectedOptions?.[0]?.textContent?.trim());
+    // The form starts with a selected zone. Keep its map, room image and
+    // accessible status in sync on first render as well as after interaction.
     if (initialZone) applyZone(initialZone, true);
   }
 
@@ -886,7 +949,7 @@
       });
       bindFloorplanSelection(root);
     } catch (_) {
-      makeFallbackFloorplan(root, 'Схема не загрузилась. Используйте доступный список выбора ниже; доступность столов не проверяется.');
+      makeFallbackFloorplan(root, 'Схема не загрузилась.');
     }
   }
 
@@ -897,9 +960,46 @@
     if (!dialog) return;
     const image = one('img', dialog);
     if (!image) return;
-    const items = () => many('[data-lightbox]', root).filter(button => !button.hidden && button.offsetParent !== null);
+    dialog.dataset.tpGalleryReady = 'true';
+    const stage = doc.createElement('div'); stage.className = 'tp-gallery-stage';
+    image.before(stage); stage.append(image);
+    const feedback = doc.createElement('div'); feedback.className = 'tp-gallery-feedback';
+    const status = doc.createElement('p'); status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
+    const retry = doc.createElement('button'); retry.type = 'button'; retry.className = 'button secondary'; retry.dataset.tpGalleryRetry = ''; safeText(retry, 'Повторить загрузку'); retry.hidden = true;
+    feedback.append(status, retry); stage.append(feedback);
+    const scope = root.closest('main') || root;
+    let album = root;
+    const items = () => many('[data-lightbox]', album).filter(button => !button.hidden && button.offsetParent !== null);
     let active = 0;
     let touchStart = null;
+    let loadVersion = 0;
+    const load = (src, alt) => {
+      const version = ++loadVersion;
+      dialog.dataset.tpGalleryState = 'loading';
+      stage.setAttribute('aria-busy', 'true');
+      // Move focus before hiding the retry control; otherwise it falls out of the dialog.
+      if (doc.activeElement === retry) one('.lightbox-close', dialog)?.focus({ preventScroll: true });
+      image.hidden = true; feedback.hidden = false; retry.hidden = true;
+      safeText(status, 'Загружаем фотографию…');
+      const pending = new Image();
+      const failed = () => {
+        if (version !== loadVersion) return;
+        dialog.dataset.tpGalleryState = 'error'; stage.setAttribute('aria-busy', 'false');
+        safeText(status, 'Не удалось загрузить фотографию. Повторите попытку или выберите следующий кадр.');
+        retry.hidden = false;
+      };
+      pending.onerror = failed;
+      pending.onload = async () => {
+        if (version !== loadVersion) return;
+        image.src = src; image.alt = alt;
+        try { await image.decode(); } catch (_) { failed(); return; }
+        if (version !== loadVersion) return;
+        image.hidden = false; feedback.hidden = true;
+        stage.setAttribute('aria-busy', 'false'); dialog.dataset.tpGalleryState = 'ready';
+        safeText(status, '');
+      };
+      pending.src = src;
+    };
     const show = index => {
       const list = items();
       if (!list.length) return;
@@ -907,8 +1007,7 @@
       const trigger = list[active];
       const src = trigger.dataset.lightbox;
       const thumb = one('img', trigger);
-      image.src = src;
-      image.alt = thumb?.alt || trigger.getAttribute('aria-label') || 'Иллюстративная фотография учебной концепции';
+      load(src, thumb?.alt || trigger.getAttribute('aria-label') || 'Иллюстративная фотография учебной концепции');
       const caption = one('[data-tp-gallery-caption]', dialog);
       const tileCaption = trigger.matches('.gallery-tile') ? trigger.querySelector(':scope > span')?.textContent?.trim() : '';
       const zoneCaption = trigger.closest('.zone-card')?.querySelector('h3')?.textContent?.trim();
@@ -918,24 +1017,36 @@
     let next = one('[data-tp-gallery-next]', dialog);
     if (!previous) { previous = doc.createElement('button'); previous.type = 'button'; previous.dataset.tpGalleryPrev = ''; previous.className = 'tp-gallery-control tp-gallery-prev'; previous.setAttribute('aria-label', 'Предыдущее фото'); safeText(previous, '←'); dialog.append(previous); }
     if (!next) { next = doc.createElement('button'); next.type = 'button'; next.dataset.tpGalleryNext = ''; next.className = 'tp-gallery-control tp-gallery-next'; next.setAttribute('aria-label', 'Следующее фото'); safeText(next, '→'); dialog.append(next); }
-    root.addEventListener('click', event => {
+    scope.addEventListener('click', event => {
       const trigger = event.target.closest('[data-lightbox]');
-      if (!trigger || !root.contains(trigger)) return;
+      if (!trigger || !scope.contains(trigger)) return;
+      album = trigger.closest('.zone-grid, #gallery-grid') || root;
       const list = items();
       const index = list.indexOf(trigger);
-      if (index >= 0) show(index);
+      if (index >= 0) {
+        show(index);
+        if (!dialog.open) {
+          if (dialog.showModal) dialog.showModal(); else dialog.setAttribute('open', '');
+        }
+      }
     });
+    retry.addEventListener('click', () => show(active));
+    dialog.addEventListener('close', () => { ++loadVersion; touchStart = null; stage.setAttribute('aria-busy', 'false'); });
     previous.addEventListener('click', () => show(active - 1));
     next.addEventListener('click', () => show(active + 1));
     dialog.addEventListener('keydown', event => {
       if (event.key === 'ArrowLeft') { event.preventDefault(); show(active - 1); }
       if (event.key === 'ArrowRight') { event.preventDefault(); show(active + 1); }
     });
-    dialog.addEventListener('touchstart', event => { touchStart = event.changedTouches[0]?.clientX ?? null; }, { passive: true });
+    dialog.addEventListener('touchstart', event => { const touch = event.changedTouches[0]; touchStart = touch ? {x:touch.clientX,y:touch.clientY} : null; }, { passive: true });
+    dialog.addEventListener('touchcancel', () => { touchStart = null; }, { passive: true });
     dialog.addEventListener('touchend', event => {
-      const end = event.changedTouches[0]?.clientX;
-      if (touchStart == null || end == null || Math.abs(end - touchStart) < 45) return;
-      show(active + (end < touchStart ? 1 : -1)); touchStart = null;
+      const end = event.changedTouches[0];
+      const start = touchStart; touchStart = null;
+      if (!start || !end) return;
+      const dx = end.clientX - start.x, dy = end.clientY - start.y;
+      if (Math.abs(dx) < 45 || Math.abs(dx) <= Math.abs(dy)) return;
+      show(active + (dx < 0 ? 1 : -1));
     }, { passive: true });
   }
 
@@ -955,7 +1066,8 @@
     const actions = doc.createElement('div'); actions.className = 'tp-quick-view-actions';
     const add = doc.createElement('button'); add.type = 'button'; add.className = 'button add-to-cart'; add.dataset.tpQuickViewAdd = ''; add.textContent = 'Добавить в корзину +';
     const detail = doc.createElement('a'); detail.className = 'button secondary'; detail.dataset.tpQuickViewDetail = ''; detail.textContent = 'Подробнее ↗';
-    actions.append(add, detail); copy.append(category, title, description, price, actions); dialog.append(close, image, copy); doc.body.append(dialog);
+    const status = doc.createElement('p'); status.dataset.cartActionStatus = ''; status.className = 'form-status'; status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
+    actions.append(add, detail); copy.append(category, title, description, price, actions, status); dialog.append(close, image, copy); doc.body.append(dialog);
     close.addEventListener('click', () => dialog.close());
     dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
     return dialog;
@@ -971,6 +1083,7 @@
       if (!dish) return;
       event.preventDefault();
       const dialog = buildQuickView();
+      const status = one('[data-cart-action-status]', dialog); status.textContent = ''; status.className = 'form-status';
       const image = one('.tp-quick-view-image', dialog);
       image.src = dish.image_url || ''; image.alt = dish.name || '';
       safeText(one('[data-tp-quick-view-category]', dialog), `${dish.category_name || dish.category || 'Tokyo Premium'} · ${dish.weight || ''}`);
@@ -980,8 +1093,8 @@
       const add = one('[data-tp-quick-view-add]', dialog); add.dataset.id = String(dish.id); add.setAttribute('aria-label', `Добавить ${dish.name} в корзину`);
       const detail = one('[data-tp-quick-view-detail]', dialog);
       const cardLink = trigger.closest('article')?.querySelector('a[href]');
+      detail.hidden = !cardLink;
       if (cardLink) detail.href = cardLink.href;
-      else detail.hidden = true;
       if (dialog.showModal) dialog.showModal(); else dialog.setAttribute('open', '');
     });
   }

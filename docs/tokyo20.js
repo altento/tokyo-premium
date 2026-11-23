@@ -159,6 +159,9 @@
     const giftQuantity = quoteRoot.querySelector('[name="gift_quantity"]');
     let currentGiftOptions = [];
     const promoInput = quoteRoot.querySelector('#checkout-promo-code');
+    const clearPromo = quoteRoot.querySelector('[data-tp-promo-clear]');
+    let quoteRevision = 0;
+    let pendingQuote = null;
     const requestedPromo = new URLSearchParams(window.location.search).get('promo') || '';
     if (promoInput && !promoInput.value && /^[A-Z0-9][A-Z0-9_-]{2,30}$/i.test(requestedPromo)) promoInput.value = requestedPromo.toUpperCase();
     const selectedGiftLimit = option => Math.max(1, Math.min(10, Number(option.max_per_order) || 1, Number(option.remaining_quantity) || 0));
@@ -181,7 +184,18 @@
       if (giftQuantity) giftQuantity.value = '1';
       syncGiftQuantity();
     };
-    const clearQuote = message => { quoteTotal.hidden = true; quoteTotal.textContent = ''; clearGiftOptions(); if (message) quoteStatus.textContent = message; };
+    const clearQuote = (message, resetGifts = true) => { quoteTotal.hidden = true; quoteTotal.textContent = ''; if (resetGifts) clearGiftOptions(); if (message) quoteStatus.textContent = message; };
+    const syncPromoControl = () => { if (clearPromo) clearPromo.hidden = !promoInput?.value.trim(); };
+    const invalidateQuote = (message, resetGifts = true) => {
+      quoteRevision++;
+      pendingQuote?.abort();
+      pendingQuote = null;
+      if (quoteButton) quoteButton.disabled = false;
+      quoteRoot.setAttribute('aria-busy', 'false');
+      clearQuote(message, resetGifts);
+      syncPromoControl();
+    };
+    syncPromoControl();
     const staticQuote = (payload, fields) => {
       const subtotal = Number(window.TokyoCart?.total() || 0);
       const fulfillment = String(fields.get('fulfillment') || 'delivery');
@@ -220,7 +234,12 @@
     };
     quoteButton?.addEventListener('click', async () => {
       if (!form || !window.TokyoCart) return;
+      pendingQuote?.abort();
+      const revision = ++quoteRevision;
+      const controller = new AbortController();
+      pendingQuote = controller;
       quoteButton.disabled = true;
+      quoteRoot.setAttribute('aria-busy', 'true');
       quoteStatus.textContent = 'Проверяем корзину и условия предложения…';
       quoteTotal.hidden = true;
       try {
@@ -233,18 +252,41 @@
         let quote;
         if (staticDemo) quote = staticQuote(cartPayload, fields);
         else {
-          const response = await fetch('api.php', { method: 'POST', body: new URLSearchParams(fields), credentials: 'same-origin', headers: { Accept: 'application/json' } });
+          const response = await fetch('api.php', { method: 'POST', body: new URLSearchParams(fields), credentials: 'same-origin', signal: controller.signal, headers: { Accept: 'application/json' } });
           const body = await response.json();
           if (!response.ok || !body.ok) throw new Error(body.message || 'Не удалось рассчитать предложения.');
           quote = body;
         }
-        renderQuote(quote);
-      } catch (error) { clearQuote(error.message || 'Не удалось рассчитать итог.'); }
-      finally { quoteButton.disabled = false; }
+        if (revision === quoteRevision && !controller.signal.aborted) renderQuote(quote);
+      } catch (error) {
+        if (revision === quoteRevision && !controller.signal.aborted) clearQuote(error.message || 'Не удалось рассчитать итог.');
+      } finally {
+        if (revision === quoteRevision) {
+          pendingQuote = null;
+          quoteButton.disabled = false;
+          quoteRoot.setAttribute('aria-busy', 'false');
+        }
+      }
     });
     giftSelect?.addEventListener('change', syncGiftQuantity);
-    form?.addEventListener('reset', () => { clearQuote('Корзина сброшена. Для нового расчёта проверьте состав и условия ещё раз.'); });
-    document.addEventListener('tokyo-cart-updated', () => clearQuote('Состав корзины изменился. Пересчитайте промокод и итог перед оформлением.'));
+    Array.from(form?.elements || []).filter(field => ['promo_code', 'fulfillment', 'points_to_redeem', 'gift_dish_id', 'gift_quantity'].includes(field.name)).forEach(field => {
+      const changed = () => invalidateQuote('Условия изменились. Пересчитайте предложение перед оформлением.', !field.name.startsWith('gift_'));
+      field.addEventListener('input', changed);
+      field.addEventListener('change', changed);
+    });
+    clearPromo?.addEventListener('click', () => {
+      if (!promoInput) return;
+      promoInput.value = '';
+      promoInput.defaultValue = '';
+      const url = new URL(location.href); url.searchParams.delete('promo');
+      history.replaceState(history.state, '', url);
+      invalidateQuote('Промокод удалён. Рассчитайте итог без него.');
+      promoInput.focus();
+    });
+    form?.addEventListener('reset', event => {
+      queueMicrotask(() => { if (!event.defaultPrevented) invalidateQuote('Корзина сброшена. Для нового расчёта проверьте состав и условия ещё раз.'); });
+    });
+    document.addEventListener('tokyo-cart-updated', () => invalidateQuote('Состав корзины изменился. Пересчитайте промокод и итог перед оформлением.'));
   }
 
 
