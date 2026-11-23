@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — modernization report
 
+## 2026-11-23 — Homepage cadence follow-up
+
+A desktop-only CSS pass preserves all homepage sections while reducing oversized recommendation cards, editorial blocks, room story and booking padding. At 1440 px the full page fell from 2841 to 2617 px; the 390 px layout remained 4708 px. `tests/visual-fidelity-regression.cjs` passed for the static home route at both widths with no browser errors or horizontal overflow. Captures and the honest remaining gap to reference 01 are in [`home-final-cadence-2026-11-23`](visual-qa/home-final-cadence-2026-11-23/comparison.md). Public verification/deployment will be recorded separately.
+
 ## 2026-11-23 · Уточнение ритма страницы «Философия»
 
 Для desktop шире 1100 px уменьшена фотография истории, годы поставлены рядом с событиями, описания сохранены на 12 px; сжаты полоса принципов и CTA бронирования. PHP- и Pages-стили совпадают, мобильные правила не менялись. Узкая Playwright-проверка прошла локально и на опубликованной Pages-версии при 390 и 1440 px; фотографии, границы заголовков, четыре красные линии и горизонтальное переполнение проверены. Высота desktop составила 2543 CSS px локально и 2526 px публично; mobile — 5821 px. Workflow [45191130338](https://github.com/altento/tokyo-premium/actions/runs/45191130338) успешно собрал и опубликовал страницу. Это небольшой структурный шаг: публичная страница остаётся на 366 px выше масштабированного PNG. PHP browser-render локально не запускался. Кадры и сравнение: [`philosophy-density-final-pass-2026-11-23`](visual-qa/philosophy-density-final-pass-2026-11-23/comparison.md).

@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 implementation record
 
+## 2026-11-23 — Homepage cadence follow-up
+
+A desktop-only CSS pass preserves all homepage sections while reducing oversized recommendation cards, editorial blocks, room story and booking padding. At 1440 px the full page fell from 2841 to 2617 px; the 390 px layout remained 4708 px. `tests/visual-fidelity-regression.cjs` passed for the static home route at both widths with no browser errors or horizontal overflow. Captures and the honest remaining gap to reference 01 are in [`home-final-cadence-2026-11-23`](visual-qa/home-final-cadence-2026-11-23/comparison.md). Public verification/deployment will be recorded separately.
+
 Updated 2026-11-23
 
 ## 2026-11-23 — booking page rhythm

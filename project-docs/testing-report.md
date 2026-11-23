@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-23 — Homepage cadence follow-up
+
+A desktop-only CSS pass preserves all homepage sections while reducing oversized recommendation cards, editorial blocks, room story and booking padding. At 1440 px the full page fell from 2841 to 2617 px; the 390 px layout remained 4708 px. `tests/visual-fidelity-regression.cjs` passed for the static home route at both widths with no browser errors or horizontal overflow. Captures and the honest remaining gap to reference 01 are in [`home-final-cadence-2026-11-23`](visual-qa/home-final-cadence-2026-11-23/comparison.md). Public verification/deployment will be recorded separately.
+
 ## 2026-11-23 · Omakase capture correction
 
 The 23 November full-page parity screenshot initially omitted the offscreen lazy-loaded chef photograph because that capture did not scroll or decode it before taking the image. The page itself was not broken. Retook the static export at 390 and 1440 px using `test:omakase-focused`; added an assertion that the backstage image is loaded and visible before capture. The focused run passed five-stage selection, keyboard navigation, all three booking-format handoffs after refresh, reduced motion, and both widths. Corrected screenshots and the retained original capture artifact are in `visual-qa/static-export-parity-2026-11-23/`. No production code changed; PHP and public Pages were not re-tested in this documentation/evidence pass.

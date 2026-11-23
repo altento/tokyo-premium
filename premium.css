@@ -1383,3 +1383,30 @@ body.story-motion-gsap [data-story-reveal].story-visible img{animation:none}
 /* Keep the reservation hero focused on its prepared table. */
 .booking-hero .editorial-hero-photo{object-position:58% 62%}
 @media(max-width:640px){.booking-hero .editorial-hero-photo{object-position:62% 58%}}
+
+/* Final desktop home cadence pass: preserve every section while tightening the long story blocks. */
+@media (min-width: 1240px) {
+  .home-menu-section { padding-top: 26px; padding-bottom: 26px; }
+  .home-section-head { margin-bottom: 18px; }
+  .home-dish-photo { height: clamp(148px, 11.2vw, 162px); }
+  .home-dish-copy { padding: 9px 12px 8px; }
+  .dish-description {
+    min-height: 30px;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+  .home-philosophy, .philosophy-photo-wrap { min-height: 300px; }
+  .philosophy-copy { padding-block: 24px; }
+  .philosophy-copy h2, .space-copy h2 { font-size: clamp(33px, 2.95vw, 42px); line-height: 1; }
+  .japanese-line { margin-block: 9px; }
+  .fictional-chef { margin-top: 9px; }
+  .home-space { grid-template-columns: 1.08fr .92fr; }
+  .home-space, .space-photo { min-height: 270px; }
+  .space-copy { padding: 22px clamp(24px, 4vw, 58px) 22px 12px; }
+  .home-booking { gap: clamp(22px, 4vw, 54px); padding-block: 24px; }
+  .booking-intro h2 { font-size: clamp(32px, 2.9vw, 42px); line-height: 1; }
+  .booking-jp { margin-top: 8px; }
+  .home-booking-form { gap: 8px; padding: 14px; }
+}
