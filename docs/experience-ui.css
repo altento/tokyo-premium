@@ -355,6 +355,12 @@
   }
 }
 
+@media (min-width: 901px) and (max-width: 1200px) {
+  .editorial-page > #booking-form .booking-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 700px) {
   .editorial-page > .booking-benefits-section { padding-block: 12px; }
   .editorial-page .booking-benefits { grid-template-columns: 1fr; gap: 7px; }
