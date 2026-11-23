@@ -1,5 +1,7 @@
 ## Visual QA evidence
 
+Booking field order: [2026-11-23 comparison](booking-form-pairing-2026-11-23/comparison.md), with PHP/Pages desktop and mobile selected-table captures after pairing date/time and guest count/zone.
+
 Catalog ordering and add feedback: [2026-11-19 evidence](menu-pagination-2026-11-19/comparison.md), reproduced wrong cheapest-page membership, silent partial quantity acceptance and inaccessible modal feedback; corrected desktop/mobile catalog and modal states.
 
 Booking clock/table parity: [2026-11-19 evidence](booking-time-2026-11-19/comparison.md), reproduced elapsed-time acceptance, sticky date error and table42 rejection; corrected clock states and honest map-failure fallback in desktop/mobile captures.

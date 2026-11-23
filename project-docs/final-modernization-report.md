@@ -678,3 +678,7 @@ Added direct dashboard navigation to the Tokyo Privilege card, personal offers a
 ## 2026-11-23 — mobile cart checkout access
 
 Added a mobile-only bottom summary for populated carts, sharing its total with `TokyoCart` and opening the existing checkout details with keyboard focus moved to the disclosure. The panel hides on empty carts, while details are expanded, and while mobile navigation is open. Focused cart Playwright checks passed at 390 px and verified fit at 320 px; the PHP cart route returned HTTP 200 with the matching markup. Evidence: [`visual-qa/cart-mobile-summary-2026-11-23/`](visual-qa/cart-mobile-summary-2026-11-23/). This focused improvement does not complete Tokyo Premium 2.0 or assert full reference parity.
+
+## 2026-11-23 — reservation form field order
+
+Paired date with time and guest count with zone on desktop, and gave the reply email a full row. This removes the blank grid cell and follows the visit-parameter order in reference 07 while keeping the contact fields required. The updated PHP template was re-exported to all 37 Pages routes using a disposable SQLite database. The focused floorplan regression passed in PHP and Pages modes; fresh 1440 px and 390 px captures were inspected. Comparison and evidence: [`visual-qa/booking-form-pairing-2026-11-23/`](visual-qa/booking-form-pairing-2026-11-23/). This targeted refinement does not claim full reference parity.

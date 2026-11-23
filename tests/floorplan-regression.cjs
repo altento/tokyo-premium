@@ -41,6 +41,13 @@ async function run() {
       await page.waitForSelector('.tp-seat-plan [data-tp-table="42"]', { timeout: 10000 });
       await page.waitForFunction(() => /выберите предпочтительный стол/i.test(document.querySelector('[data-tp-floorplan-selection]')?.textContent || ''), null, { timeout: 5000 });
 
+      const bookingFields = await page.locator('#full-booking-form .field').evaluateAll(fields => fields.map(field => ({
+        name: field.querySelector('input,select,textarea')?.name || '',
+        full: field.classList.contains('full')
+      })));
+      assert.deepEqual(bookingFields.map(field => field.name), ['name', 'phone', 'date', 'time', 'guests', 'zone', 'email', 'format', 'message'], `${mode.name} groups booking fields in guest/date/time/party order`);
+      assert.equal(bookingFields.find(field => field.name === 'email')?.full, true, `${mode.name} gives the reply email its own full row`);
+
       const initialState = await page.evaluate(() => {
         const zone = document.querySelector('[name="zone"]')?.value;
         const svg = document.querySelector('.tp-seat-plan');

@@ -738,3 +738,7 @@ The focused static booking regression exposed two stale-export gaps: the initial
 ## 2026-11-23 — regenerated static feature parity
 
 The checked-in Pages export lagged behind current PHP templates and frontend sources. Regenerated all 37 public static routes from the current PHP source with a temporary SQLite database, restoring Omakase course navigation and current set-builder controls in the published artifacts. Focused Playwright checks passed for PHP and Pages Omakase and set-builder at 390 px and 1440 px, covering course navigation, booking-format transfer/persistence, draft restore/clear, quantity limits and cart transfer. Captures were visually inspected and saved in [`visual-qa/static-export-parity-2026-11-23/`](visual-qa/static-export-parity-2026-11-23/); this was a feature regression pass, not a full visual acceptance run.
+
+## 2026-11-23 — booking form pairing
+
+The existing `test:floorplan` regression now asserts the reservation form's semantic order and full-width email row. It passed against the local PHP/SQLite server and the regenerated static export, including 42 table markers, form/table synchronization and reset, mobile table selection, viewport fit and no browser errors. Fresh desktop/mobile selected-table screenshots were visually reviewed in [`visual-qa/booking-form-pairing-2026-11-23/`](visual-qa/booking-form-pairing-2026-11-23/). PHP lint and static export succeeded using a disposable database; full-project suites were skipped for this scoped change.
