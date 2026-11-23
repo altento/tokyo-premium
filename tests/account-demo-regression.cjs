@@ -168,6 +168,8 @@ async function run() {
       return badge.left - labelRight >= 6 && badge.right <= button.getBoundingClientRect().right;
     }));
     assert.deepEqual(mobileTabBadges, [true, true, true, true], 'mobile account tab counts remain legible and inside their buttons');
+    const mobileOrderHeight = await page.locator('#demo-orders .account-demo-order').first().evaluate(row => row.getBoundingClientRect().height);
+    assert.ok(mobileOrderHeight <= 190, `mobile order rows retain their details without excessive stacking (actual ${mobileOrderHeight}px)`);
     await page.locator('[data-account-tab="notifications"]').click();
     if (captureScreenshots) await captureFullPage(page, '11-account-notifications-mobile.jpg');
     await page.locator('[data-account-tab="history"]').click();
