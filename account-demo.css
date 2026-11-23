@@ -691,6 +691,15 @@
 .account-demo-page .account-favorites-overview-grid h3{font-size:clamp(17px,1.5vw,22px);line-height:1.2}
 .account-demo-page .account-favorites-overview-grid .dish-bottom{flex-wrap:wrap;gap:8px}
 .account-demo-page .account-favorites-overview-grid .add-to-cart{min-height:44px;padding:8px 12px}
+@media(max-width:520px){
+ .account-demo-page .account-favorites-overview-grid .dish-card:last-child:nth-child(odd){grid-column:1/-1;grid-template-columns:minmax(82px,31%) minmax(0,1fr);align-items:stretch}
+ .account-demo-page .account-favorites-overview-grid .dish-card:last-child:nth-child(odd) .editorial-product-image{height:100%;min-height:112px;aspect-ratio:auto}
+ .account-demo-page .account-favorites-overview-grid .dish-card:last-child:nth-child(odd) .dish-meta{display:grid;align-content:center;gap:4px;padding:8px 10px}
+ .account-demo-page .account-favorites-overview-grid .dish-card:last-child:nth-child(odd) .dish-meta>p{display:none}
+ .account-demo-page .account-favorites-overview-grid .dish-card:last-child:nth-child(odd) .dish-meta h3{margin:2px 0;font-size:1rem}
+ .account-demo-page .account-favorites-overview-grid .dish-card:last-child:nth-child(odd) .dish-bottom{justify-content:flex-start;gap:8px;margin-top:2px}
+ .account-demo-page .account-favorites-overview-grid .dish-card:last-child:nth-child(odd) .add-to-cart{min-height:44px;padding:7px 9px;font-size:.64rem}
+}
 @media(min-width:901px){
  .account-demo-page .account-demo-content>.tp20-static-privilege{margin:0}
  .account-demo-page .account-dashboard .account-demo-nav{align-self:start}

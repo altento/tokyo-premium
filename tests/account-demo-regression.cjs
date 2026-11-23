@@ -180,6 +180,10 @@ async function run() {
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'favorites preview has no overflow at 320 px');
     assert.ok(await page.locator('#demo-favorites-preview .dish-card').evaluateAll(cards => { const box=document.querySelector('#demo-favorites-preview').getBoundingClientRect(); return cards.every(card => { const rect=card.getBoundingClientRect(); return rect.width>0 && rect.left>=box.left && rect.right<=box.right; }); }), 'favorite cards stay within their panel at 320 px');
     await page.setViewportSize({ width: 390, height: 844 });
+    const compactLastFavorite=await page.locator('#demo-favorites-preview .dish-card').last().evaluate(card=>({card:card.getBoundingClientRect(),first:card.parentElement.firstElementChild.getBoundingClientRect(),description:getComputedStyle(card.querySelector('.dish-meta>p')).display,addHeight:card.querySelector('.add-to-cart').getBoundingClientRect().height}));
+    assert.ok(compactLastFavorite.card.width>compactLastFavorite.first.width*1.6, 'odd final favorite uses the wider mobile row instead of a narrow orphan tile');
+    assert.equal(compactLastFavorite.description,'none', 'mobile favorite preview hides secondary copy while its full detail remains in the dedicated tab');
+    assert.ok(compactLastFavorite.addHeight>=44, 'compact favorite preview keeps a comfortable quick-add target');
 
     await page.locator('#demo-favorites-preview .add-to-cart').first().click();
     assert.equal(await page.evaluate(() => window.TokyoCart.get().length), 1, 'quick add works from the dashboard favorite preview');
