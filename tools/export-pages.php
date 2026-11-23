@@ -116,130 +116,19 @@ unset($secretItem);
 $secretDemoJson=json_encode($secretDemoItems,JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP|JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR);
 if(file_put_contents($docs.'/tokyo-secret-demo.js','window.TOKYO_SECRET_DEMO_ITEMS = '.$secretDemoJson.";\n")===false)throw new RuntimeException('Cannot write static Secret Menu preview data');
 
-// Browser-only account: no account, password, payment, or private data is sent to a server.
-$account = <<<'HTML'
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Демо-профиль и локальная история Tokyo Premium в этом браузере."><meta name="theme-color" content="#111310"><meta property="og:title" content="Личный кабинет — Tokyo Premium"><meta property="og:description" content="Демо-профиль Tokyo Premium хранится только в этом браузере."><meta property="og:type" content="website"><meta property="og:image" content="assets/generated/contact-exterior.webp"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="assets/generated/contact-exterior.webp"><title>Личный кабинет — Tokyo Premium</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet"><link rel="stylesheet" href="luxury.css"><link rel="stylesheet" href="editorial.css"><link rel="stylesheet" href="premium.css"><link rel="stylesheet" href="luxury-refinements.css"><link rel="stylesheet" href="tokyo20.css"><link rel="stylesheet" href="experience-ui.css"><link rel="stylesheet" href="account-demo.css"></head><body><header class="site-header"><a class="wordmark" href="index.html"><span class="wordmark-kanji">東京</span><span>TOKYO <i>PREMIUM</i></span></a><nav class="main-nav" aria-label="Основная навигация"><a href="index.html">Главная</a><a href="about.html">Философия</a><a href="menu.html">Меню</a><a href="reviews.html">Гости</a><a href="gallery.html">Пространство</a><a href="omakase.html">Omakase</a><a href="contacts.html">Контакты</a><a class="active" href="account.html">Профиль</a><a href="cart.html">Корзина</a></nav><a href="booking.html" class="header-cta">Забронировать ↗</a><button class="mobile-menu" aria-label="Открыть меню" aria-expanded="false">☰</button></header><main class="editorial-page"><section class="page-hero"><div class="kicker">Tokyo Premium · браузерная демоверсия</div><h1>Ваш профиль</h1><p>Сохранённые позиции, настройки и записи существуют только в локальном хранилище этого браузера. Хранилище браузера не зашифровано: используйте вымышленные данные; не вводите реальные контакты или адрес.</p></section><section class="section"><div class="account-demo-layout"><nav class="account-demo-nav" aria-label="Разделы профиля"><button class="active" data-account-tab="history">Обзор</button><button data-account-tab="favorites">Избранное</button><button data-account-tab="profile">Профиль</button><button data-account-tab="addresses">Адреса</button><button data-account-tab="settings">Настройки</button></nav><div><section class="account-demo-panel" data-account-panel="history"><div class="intro-grid"><div><div class="kicker">Локальные записи</div><h2>Заказы</h2><div id="demo-orders" class="account-list"></div></div><div><div class="kicker">Локальные записи</div><h2>Бронирования</h2><div id="demo-bookings" class="account-list"></div></div></div></section><section class="account-demo-panel" data-account-panel="favorites" hidden><div class="kicker">Избранное</div><h2>Сохранённые блюда</h2><div id="demo-favorites" class="dish-grid"></div><p id="demo-favorites-empty" class="menu-note" hidden>Пока ничего не сохранено. Добавьте сердце на карточке блюда.</p></section><section class="account-demo-panel" data-account-panel="profile" hidden><div class="kicker">Только этот браузер</div><h2>Контактный профиль</h2><form class="account-demo-form" data-local-form="profile"><div class="field"><label for="demo-name">Имя</label><input id="demo-name" name="name" maxlength="80"></div><div class="field"><label for="demo-phone">Телефон</label><input id="demo-phone" name="phone" maxlength="30"></div><button class="button">Сохранить профиль ↗</button><p class="form-status" aria-live="polite"></p></form></section><section class="account-demo-panel" data-account-panel="addresses" hidden><div class="kicker">Адреса · локально</div><h2>Сохранённые адреса</h2><form class="account-demo-form" data-local-form="address"><div class="field full"><label for="demo-address">Адрес</label><input id="demo-address" name="address" required minlength="5" maxlength="180" autocomplete="street-address"></div><button class="button">Добавить адрес ↗</button><p class="form-status" aria-live="polite"></p></form><div id="demo-addresses" class="account-list"></div></section><section class="account-demo-panel" data-account-panel="settings" hidden><div class="kicker">Контроль данных</div><h2>Настройки демо-профиля</h2><p>Сотрите все локальные записи этого сайта с устройства. Это действие нельзя отменить.</p><button id="demo-clear-data" class="button secondary">Очистить данные в этом браузере</button><p class="form-status" id="demo-settings-status" aria-live="polite"></p></section></div></div></section></main><footer class="footer"><div class="footer-top"><a class="wordmark" href="index.html"><span class="wordmark-kanji">東京</span><span>TOKYO <i>PREMIUM</i></span></a><p>Сезонность. Точность. Тишина.</p><a href="booking.html">Ваш вечер начинается здесь ↗</a></div><div class="footer-bottom"><span>© 2026 Tokyo Premium</span><span>Демонстрационная версия</span></div><p class="school-note">Учебный проект: ресторан, адрес, меню, гости и контакты вымышлены.</p></footer><div class="toast" role="status" aria-live="polite"></div><script src="luxury.js" defer></script><script src="pages-extra.js" defer></script><script src="account-demo.js" defer></script></body></html>
-HTML;
-$account = str_replace('<main class="editorial-page">', '<main class="editorial-page account-demo-page">', $account);
-$birthdayProfileFields = <<<'HTML'
-<fieldset class="account-birthday-settings" aria-describedby="demo-birthday-privacy"><legend>Предложение ко дню рождения</legend><p id="demo-birthday-privacy" class="account-section-copy">Укажите только месяц и день — год не нужен. Данные останутся в локальном хранилище этого браузера.</p><div class="account-birthday-controls"><div class="field"><label for="demo-birth-month">Месяц</label><select id="demo-birth-month" name="birth_month"><option value="">Выберите месяц</option><option value="1">Январь</option><option value="2">Февраль</option><option value="3">Март</option><option value="4">Апрель</option><option value="5">Май</option><option value="6">Июнь</option><option value="7">Июль</option><option value="8">Август</option><option value="9">Сентябрь</option><option value="10">Октябрь</option><option value="11">Ноябрь</option><option value="12">Декабрь</option></select></div><div class="field"><label for="demo-birth-day">День</label><select id="demo-birth-day" name="birth_day" disabled><option value="">Сначала выберите месяц</option></select></div></div><label class="account-birthday-consent"><input type="checkbox" name="birthday_offer_consent" value="1"> Отдельно разрешаю использовать эти данные для демонстрации персонального предложения</label><p class="account-local-note">Статическая демоверсия ничего не отправляет, не создаёт купон и не начисляет бонусы. Это только локальная настройка интерфейса.</p></fieldset>
-HTML;
-$birthdayProfileAnchor = '<input id="demo-phone" name="phone" maxlength="30"></div>';
-$birthdayFieldsCount = 0;
-$account = str_replace($birthdayProfileAnchor, $birthdayProfileAnchor . $birthdayProfileFields, $account, $birthdayFieldsCount);
-if ($birthdayFieldsCount !== 1) throw new RuntimeException('Could not add the optional local birthday preference to the static profile.');
-$birthdayConsentBefore = '<label class="account-birthday-consent"><input type="checkbox" name="birthday_offer_consent" value="1"> Отдельно разрешаю использовать эти данные для демонстрации персонального предложения</label>';
-$birthdayConsentAfter = '<label class="account-birthday-consent"><input type="checkbox" name="birthday_offer_consent" value="1"><span>Отдельно разрешаю использовать эти данные для демонстрации персонального предложения</span></label>';
-$birthdayConsentCount = 0;
-$account = str_replace($birthdayConsentBefore, $birthdayConsentAfter, $account, $birthdayConsentCount);
-if ($birthdayConsentCount !== 1) throw new RuntimeException('Could not keep the birthday consent label in the static profile.');
-$accountNotificationsPanel = <<<'HTML'
-<section class="account-demo-panel" data-account-panel="notifications" hidden><div class="account-dashboard-section-heading"><div><span class="kicker">ЛОКАЛЬНЫЕ СОБЫТИЯ</span><h2>Уведомления</h2></div><span class="account-section-count">Только этот браузер</span></div><p class="account-local-note">Это локальные демонстрационные записи. Заказы не оплачиваются и не отправляются ресторану; запрос на бронь не подтверждает и не резервирует стол.</p><div id="demo-notifications" class="account-notification-list" aria-live="polite"></div></section>
-HTML;
-$account = str_replace('<button class="active" data-account-tab="history">История</button>', '<button class="active" data-account-tab="history">История</button><button data-account-tab="notifications">Уведомления</button>', $account);
-$account = str_replace('<section class="account-demo-panel" data-account-panel="history">', $accountNotificationsPanel . '<section class="account-demo-panel" data-account-panel="history">', $account);
-$overview = <<<'HTML'
-<section class="account-overview">
-  <div class="account-overview-art"><img src="assets/generated/contact-exterior.webp" alt="Вход в ресторан Tokyo Premium с цветущей сакурой" loading="eager" fetchpriority="high"><span class="account-demo-seal">東京 · ПАМЯТЬ ВЕЧЕРА</span></div>
-  <div class="account-overview-body"><div class="kicker">Личный кабинет · данные только в этом браузере</div><h1>Личный кабинет</h1><p class="account-overview-lead">Ваше пространство в Tokyo Premium</p><div class="account-demo-contact-strip" aria-label="Контактный профиль в этом браузере"><span class="account-demo-avatar" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="11" r="5"/><path d="M6 27c.7-5.1 4.3-8 10-8s9.3 2.9 10 8"/></svg></span><span class="account-demo-contact-copy"><span class="kicker">ПРОФИЛЬ · ЛОКАЛЬНО</span><strong id="demo-profile-contact-name">Имя не указано</strong><small id="demo-profile-contact-phone">Телефон не указан</small></span><button class="button secondary" type="button" data-account-quick-target="profile">Изменить профиль ↗</button></div><p class="account-overview-greeting" id="demo-display-name">История, избранное и привилегии в одном месте.</p><p class="account-overview-privacy">Заказы и бронирования остаются только в этом браузере; серверной авторизации нет, хранилище браузера не зашифровано. Используйте вымышленные данные.</p></div>
-</section>
-<section class="section account-demo-summary" aria-label="Краткая сводка профиля"><div class="account-metrics"><article><strong data-account-stat="orders">0</strong><span>сохранённых заказов</span></article><article><strong data-account-stat="bookings">0</strong><span>запросов на бронь</span></article><article><strong data-account-stat="favorites">0</strong><span>избранных блюд</span></article><article><strong data-account-stat="notifications">0</strong><span>непрочитанных уведомлений</span></article></div><div class="account-quick-actions"><a href="menu.html">Открыть меню ↗</a><a href="booking.html">Бронирование ↗</a><button type="button" data-account-quick-target="notifications">Уведомления</button><button type="button" data-account-quick-target="favorites">Избранное ♡</button><a href="offers.html">Привилегии ↗</a></div></section>
-<section class="section tp20-static-privilege" data-tp-demo-loyalty aria-label="Демонстрационная программа Tokyo Privilege"><article class="tp20-loyalty-card" data-tp-loyalty-card data-tier="Silver"><span class="kicker">TOKYO PRIVILEGE · ЛОКАЛЬНАЯ ДЕМО</span><h2 data-tp-loyalty-tier>Silver</h2><p>Уровень рассчитан только по учебным заказам, сохранённым в этом браузере. Баллы не имеют денежной стоимости и не передаются ресторану.</p><div class="tp20-loyalty-balance"><strong data-tp-loyalty-points>0</strong><span>демо-баллов</span></div><label>Прогресс к следующему уровню<progress data-tp-loyalty-progress max="100" value="0">0%</progress></label><small data-tp-loyalty-progress-label>Статус появится после сохранённого учебного заказа.</small></article><article class="tp20-referral-card"><span class="kicker">ДЕМО-ПРИГЛАШЕНИЕ · ТОЛЬКО ЭТОТ БРАУЗЕР</span><h3>Пригласить друга</h3><p>Локальный код нужен только для показа интерфейса. Переход по нему не регистрирует гостя и не начисляет вознаграждение.</p><code data-tp-demo-referral>TP-DEMO</code><button class="button secondary" type="button" data-tp-copy-referral>Скопировать код</button></article></section><section class="section account-dashboard"><div class="account-demo-layout">
-HTML;
-$accountHeroMatch = [];
-if (!preg_match('/<section class="account-overview">.*?<\/section>/s', $overview, $accountHeroMatch)) {
-    throw new RuntimeException('Static account masthead was not found.');
+// Browser-only account uses a committed presentation template, not the smaller
+// legacy scaffold or authenticated account.php output. This prevents Pages from
+// silently losing demo tabs and panels during export.
+$accountTemplatePath = $root . '/templates/account-demo.html';
+$account = file_get_contents($accountTemplatePath);
+if ($account === false) throw new RuntimeException('Could not read the browser-only account template.');
+foreach (['data-account-tab="notifications"', 'data-account-panel="notifications"', 'id="demo-notifications"', 'data-account-demo-seed'] as $marker) {
+    if (!str_contains($account, $marker)) throw new RuntimeException('The account template is missing required feature: ' . $marker);
 }
-$accountHero = $accountHeroMatch[0];
-$overview = str_replace($accountHero, '', $overview);
-$privilegeMatch = [];
-if (!preg_match('/<section class="section tp20-static-privilege"[^>]*>.*?<\/section>/s', $overview, $privilegeMatch)) {
-    throw new RuntimeException('Static account privilege section was not found.');
+if (!str_contains($account, 'name="robots"')) {
+    $account = preg_replace('/<head\b[^>]*>/i', '$0<meta name="robots" content="noindex,follow">', $account, 1) ?? $account;
 }
-$privilege = $privilegeMatch[0];
-$overview = str_replace($privilege, '', $overview);
-$privilegeInsertionCount = 0;
-$overview = str_replace('<section class="section account-demo-summary"', $privilege . '<section class="section account-demo-summary"', $overview, $privilegeInsertionCount);
-if ($privilegeInsertionCount !== 1) throw new RuntimeException('Could not place the static loyalty overview before account history.');
-$accountSeedCallout = <<<'HTML'
-<aside class="account-demo-seed"><div><strong>Посмотрите заполненный кабинет</strong><p>Создайте вымышленные учебные заказы, запрос на бронь и избранные блюда. Они останутся только в этом браузере; удалить всё можно в настройках.</p><p class="form-status" data-account-demo-seed-status aria-live="polite"></p></div><button class="button secondary" type="button" data-account-demo-seed>Заполнить учебный пример</button></aside>
-HTML;
-$overview = str_replace('<div class="account-quick-actions">', $accountSeedCallout.'<div class="account-quick-actions">', $overview);
-$accountFavoritesPreview = <<<'HTML'
-<section class="account-favorites-overview" aria-labelledby="account-favorites-overview-title">
-  <div class="account-favorites-overview-heading">
-    <div><span class="kicker">СОХРАНЁННЫЕ ВЫБОРЫ · В ЭТОМ БРАУЗЕРЕ</span><h2 id="account-favorites-overview-title">Избранные блюда</h2></div>
-    <button class="button secondary" type="button" data-account-quick-target="favorites" aria-controls="demo-favorites">Все избранное ↗</button>
-  </div>
-  <div id="demo-favorites-preview" class="account-favorites-overview-grid" data-account-favorites-list data-account-favorites-limit="3" aria-live="polite"></div>
-  <p id="demo-favorites-preview-empty" class="account-favorites-overview-empty" hidden>Пока нет сохранённых блюд. <a class="text-link" href="menu.html">Посмотреть меню ↗</a></p>
-</section>
-<section class="account-favorites-overview account-addresses-preview" aria-labelledby="account-addresses-preview-title">
-  <div class="account-favorites-overview-heading">
-    <div><span class="kicker">АДРЕСА ДОСТАВКИ · В ЭТОМ БРАУЗЕРЕ</span><h2 id="account-addresses-preview-title">Сохранённые адреса</h2></div>
-    <button class="button secondary" type="button" data-account-quick-target="addresses" aria-controls="demo-addresses">Управлять адресами ↗</button>
-  </div>
-  <div id="demo-addresses-preview" class="account-addresses-preview-list" aria-live="polite"></div>
-  <p id="demo-addresses-preview-empty" class="account-favorites-overview-empty" hidden>В этом браузере пока нет адресов. Добавьте учебный адрес в разделе «Адреса».</p>
-</section>
-<section class="account-favorites-overview account-settings-preview" aria-labelledby="account-settings-preview-title">
-  <div class="account-favorites-overview-heading">
-    <div><span class="kicker">ПРОФИЛЬ И ПРИВАТНОСТЬ</span><h2 id="account-settings-preview-title">Настройки</h2></div>
-    <button class="button secondary" type="button" data-account-quick-target="settings" aria-controls="demo-clear-data">Управлять данными ↗</button>
-  </div>
-  <p class="account-section-copy">Имя, телефон, адреса и история хранятся только в локальном хранилище этого браузера.</p>
-</section>
-HTML;
-$accountDashboardStart = '<section class="section account-dashboard"><div class="account-demo-layout">';
-$accountDashboardStartCount = 0;
-$overview = str_replace($accountDashboardStart, '', $overview, $accountDashboardStartCount);
-if ($accountDashboardStartCount !== 1) throw new RuntimeException('Could not separate the static account summary from its history panels.');
-$accountDemoContent = $overview;
-$pageHeroMatch = [];
-if (!preg_match('/<section class="page-hero">.*?<\/section>/s', $account, $pageHeroMatch)) {
-    throw new RuntimeException('Static account page hero was not found.');
-}
-$accountHeroCount = 0;
-$account = str_replace($pageHeroMatch[0], $accountHero, $account, $accountHeroCount);
-if ($accountHeroCount !== 1) throw new RuntimeException('Could not place the static account masthead.');
-$account = str_replace('<section class="section"><div class="account-demo-layout">', $accountDashboardStart, $account, $accountLayoutCount);
-if (($accountLayoutCount ?? 0) !== 1) throw new RuntimeException('Could not place the static account dashboard.');
-$account = str_replace('</nav><div>', '</nav><div class="account-demo-content">' . $accountDemoContent, $account, $accountContentCount);
-if (($accountContentCount ?? 0) !== 1) throw new RuntimeException('Could not align the static account overview with its navigation.');
-$favoritesPanelInsertionCount = 0;
-$account = str_replace(
-    '</div></section><section class="account-demo-panel" data-account-panel="favorites"',
-    '</div>' . $accountFavoritesPreview . '</section><section class="account-demo-panel" data-account-panel="favorites"',
-    $account,
-    $favoritesPanelInsertionCount
-);
-if ($favoritesPanelInsertionCount !== 1) throw new RuntimeException('Could not place account favorites after the order history.');
-$accountPromo = <<<'HTML'
-<section class="account-promo"><div><div class="kicker">Следующий вечер · учебный сценарий</div><h2>Пусть сезон задаст настроение</h2><p>Выберите дату и формат вечера. Бронирование в демоверсии сохраняется только как запрос и не резервирует стол.</p><a class="button" href="booking.html">Перейти к бронированию ↗</a></div><span class="kicker">SEASONAL · TOKYO PREMIUM</span></section>
-HTML;
-$account = str_replace('</section></main><footer class="footer">', '</section>'.$accountPromo.'</main><footer class="footer">', $account);
-$account = preg_replace('/<header class="site-header">.*?<\/header>/s', '', $account, 1) ?? $account;
-ob_start(); header_html('account'); $sharedHeader = (string)ob_get_clean();
-$sharedHeader = str_replace(
-    ['href="index.php"','href="menu.php"','href="pages.php?page=omakase"','href="about.php"','href="pages.php?page=gallery"','href="reviews.php"','href="pages.php?page=contacts"','href="account.php"','href="pages.php?page=booking"','href="pages.php?page=cart"'],
-    ['href="index.html"','href="menu.html"','href="omakase.html"','href="about.html"','href="gallery.html"','href="reviews.html"','href="contacts.html"','href="account.html"','href="booking.html"','href="cart.html"'],
-    $sharedHeader
-);
-$sharedHeader = str_replace(['href="offers.php"','href="perfect-evening.php"','href="set-builder.php"'], ['href="offers.html"','href="perfect-evening.html"','href="set-builder.html"'], $sharedHeader);
-$account = str_replace('<body>', '<body>'.$sharedHeader, $account);
-$account = preg_replace('/<footer class="footer">.*?<\/body><\/html>/s', '', $account, 1) ?? $account;
-ob_start(); footer_html(); $sharedFooter = (string)ob_get_clean();
-$sharedFooter = str_replace(
-    ['href="index.php"','href="menu.php"','href="pages.php?page=omakase"','href="about.php"','href="pages.php?page=gallery"','href="reviews.php"','href="pages.php?page=contacts"','href="account.php"','href="pages.php?page=booking"','href="pages.php?page=cart"'],
-    ['href="index.html"','href="menu.html"','href="omakase.html"','href="about.html"','href="gallery.html"','href="reviews.html"','href="contacts.html"','href="account.html"','href="booking.html"','href="cart.html"'],
-    $sharedFooter
-);
-$sharedFooter = str_replace(['href="offers.php"','href="perfect-evening.php"','href="set-builder.php"'], ['href="offers.html"','href="perfect-evening.html"','href="set-builder.html"'], $sharedFooter);
-$sharedFooter = preg_replace('/<a href="admin\.php">Администрирование<\/a>/', '', $sharedFooter) ?? $sharedFooter;
-$sharedFooter = str_replace('</body>', '<script>window.TOKYO_STATIC_DEMO=true;</script><script src="account-demo.js" defer></script></body>', $sharedFooter);
-$account .= $sharedFooter;
-$account = preg_replace('/<head\b[^>]*>/i', '$0<meta name="robots" content="noindex,follow">', $account, 1) ?? $account;
-file_put_contents($docs . '/account.html', $account);
+if (file_put_contents($docs . '/account.html', $account) === false) throw new RuntimeException('Could not write the browser-only account export.');
 $expected = array_values($routes);
 $expected[] = 'account.html';
 foreach (array_unique($expected) as $filename) {

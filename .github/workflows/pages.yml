@@ -141,6 +141,8 @@ jobs:
           grep -q 'не зашифровано' docs/account.html
           grep -q 'href="luxury-refinements.css"' docs/account.html
           grep -q 'data-account-demo-seed' docs/account.html
+          grep -q 'data-account-tab="notifications"' docs/account.html
+          grep -q 'data-account-panel="notifications"' docs/account.html
       - name: Run browser regression and visual QA
         id: browser_qa
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.full_qa == 'true'
