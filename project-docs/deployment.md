@@ -1,5 +1,5 @@
 # Deployment notes
-Updated 2026-11-19
+Updated 2026-11-23
 
 ## Public preview
 - Repository: https://github.com/altento/tokyo-premium
@@ -33,9 +33,11 @@ Push to `main` and wait for the Pages workflow to finish. Inspect the workflow s
 
 ## 2026-11-23 — latest verified publication
 
-- The philosophy-page desktop density follow-up is published in [`b068994`](https://github.com/altento/tokyo-premium/commit/b0689946df4906b35a8a1970aa640a2d785747f0); [Pages workflow 45180336157](https://github.com/altento/tokyo-premium/actions/runs/45180336157) succeeded. The public `/about.html` route passed the focused browser check at 390, 1440 and 1920 px. Public visual evidence: [`project-docs/visual-qa/philosophy-density-second-pass-2026-11-23/public/`](visual-qa/philosophy-density-second-pass-2026-11-23/public/). This is static Pages verification, not PHP server verification.
+- Current application commit: [`3e0fdce`](https://github.com/altento/tokyo-premium/commit/3e0fdce09f09f4b5c7ff1bef53a0dbd49a3f31a6); Pages workflow [45191130338](https://github.com/altento/tokyo-premium/actions/runs/45191130338) passed build and deployment. The public `/about.html` route passed the focused browser check at 390 px and 1440 px. Public captures and metrics: [`visual-qa/philosophy-density-final-pass-2026-11-23/public/`](visual-qa/philosophy-density-final-pass-2026-11-23/public/). This is static Pages verification, not PHP server verification.
+- Documentation and public captures were pushed in [`795b2a7`](https://github.com/altento/tokyo-premium/commit/795b2a7f0e7bbc413c10fbbffa6ec5e5bd41d139); workflow [45191653120](https://github.com/altento/tokyo-premium/actions/runs/45191653120) passed. This commit does not change application code.
+- Contact strip order was updated in [`062fc3b`](https://github.com/altento/tokyo-premium/commit/062fc3bf58a290874cd45db682bfd3817457d92c); Pages workflow [45187820484](https://github.com/altento/tokyo-premium/actions/runs/45187820484) succeeded. The public `/contacts.html` route passed the focused browser check at 390 px and 1440 px; captures are in [`visual-qa/contacts-strip-order-2026-11-23/public/`](visual-qa/contacts-strip-order-2026-11-23/public/).
 
-- Latest application commit: [`1329fa7`](https://github.com/altento/tokyo-premium/commit/1329fa7dcb3ed4cd23f9fe15a7ed3e2c0ac63f40); GitHub Actions [run 45168512393](https://github.com/altento/tokyo-premium/actions/runs/45168512393) completed build and Pages deployment successfully. It adds latest FreedomPay-attempt visibility to the PHP admin; its isolated PHP/SQLite regression passed locally. The PHP admin itself is not hosted by GitHub Pages. The public static root returned HTTP 200 after this deployment.
+- Earlier application commit [`1329fa7`](https://github.com/altento/tokyo-premium/commit/1329fa7dcb3ed4cd23f9fe15a7ed3e2c0ac63f40) adds latest FreedomPay-attempt visibility to the PHP admin; its isolated PHP/SQLite regression passed locally. The PHP admin itself is not hosted by GitHub Pages.
 - Latest visual Pages change: [`749dddc`](https://github.com/altento/tokyo-premium/commit/749dddc13656256e33b7ad68bdeb7f4fcac4c35c), workflow [run 45165291772](https://github.com/altento/tokyo-premium/actions/runs/45165291772). The zone-photo preload regression passed locally and on the published site; desktop/mobile captures are in [`visual-qa/booking-photo-transition-2026-11-23/public/`](visual-qa/booking-photo-transition-2026-11-23/public/).
 - Earlier focused checks below remain valid for their respective pages: philosophy workflow [run 45157250560](https://github.com/altento/tokyo-premium/actions/runs/45157250560) and evidence follow-up [run 45157729562](https://github.com/altento/tokyo-premium/actions/runs/45157729562).
 - The public philosophy route passed focused Playwright checks at 390 px and 1440 px, including all four red rules, loaded imagery, visible headings and no horizontal overflow. Screenshots and measurements: [`visual-qa/philosophy-compact-2026-11-23-static/public/`](visual-qa/philosophy-compact-2026-11-23-static/public/). This does not replace a full-site visual review.
