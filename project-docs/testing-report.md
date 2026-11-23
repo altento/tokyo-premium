@@ -757,3 +757,10 @@ After commit `c7ffe62` deployed successfully in workflow [45143146646](https://g
 - `php -l admin.php` passed; `tests/admin-order-status-regression.php` passed 8 isolated assertions with PHP 8.5.11 and SQLite 3.53.4. The fixture verifies the latest uncertain FreedomPay attempt is visible and searchable by provider order ID.
 - `python tests/payment-home-http.py` passed 27 isolated HTTP checks; `php tests/freedompay-signature-test.php` passed 5 signature/amount checks. These are targeted checks, not a consolidated security audit or live-provider transaction.
 - Gemini's read-only review bridge could not start (`spawn powershell.exe ENOENT`). No payment credentials or external requests were used.
+
+## 2026-11-23 — contact-page density
+
+- Compared the current `/docs/contacts.html` static route with `design-references/09-contacts.png` and inspected fresh 1440 px and 390 px full-page screenshots.
+- Reduced the measured desktop contact response section from 694 px to 542 px and the map-note-to-form gap from 88 px to 55 px. The mobile form retains 46 px touch controls; the static route has no horizontal overflow or browser-console errors.
+- `node tests/visual-fidelity-regression.cjs` passed for the `contacts` route in static mode. This was one focused visual check; PHP rendering and the full route matrix were not rerun.
+- Screenshots and comparison notes: `visual-qa/contacts-reference-followup-2026-11-23/` and `visual-qa/contacts-reference-followup-2026-11-17/comparison.md`.

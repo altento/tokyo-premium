@@ -21,3 +21,9 @@ The implementation follows the reference's dark/gold/red palette and the contact
 ## Verification scope
 
 The focused static visual-fidelity Playwright run passed for `menu` and `contacts` at the tested desktop/tablet/mobile widths. It checked the contact hero and map geometry and the 1024/1023 px menu breakpoint. Hosted run #181 verified the changes across PHP/SQLite and responsive jobs but exposed a timing race in the same test's immediate `inert` read after a viewport resize. A bounded wait for the documented `matchMedia` handler has been added and awaits hosted rerun. These are local static-demo results only; public Pages deployment has not occurred.
+
+## Follow-up · 23 November 2026
+
+The current static export was recaptured at 1440 px and 390 px in `../contacts-reference-followup-2026-11-23/`. The contact form section was still taller than the compact reference: its desktop height measured 694 px, with 88 px between the map note and form content. Contact-only spacing now reduces those values to 542 px and 55 px. The form keeps labeled fields and its clear demo-storage disclosure; mobile controls remain 46 px high. The visit-planning section also uses a smaller vertical inset.
+
+The focused visual regression passed after the change. It checks the new gap/height bounds, image loading, demo disclosures, form fields, heading fit and mobile overflow. Both fresh full-page screenshots were visually inspected. Remaining differences are intentional or still visible: this is a local educational address with a schematic rather than real routing, and the reference's social row, transport strip and exact image crops are not reproduced. No claim of full-page pixel parity is made.

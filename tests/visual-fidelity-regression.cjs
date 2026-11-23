@@ -255,11 +255,17 @@ async function visit(browser, base, route, mode, capture = false) {
       hero: document.querySelector('.contact-hero').getBoundingClientRect().height,
       map: document.querySelector('.fictional-map').getBoundingClientRect().height,
       summaryWidth: document.querySelector('.contact-summary').getBoundingClientRect().width,
-      mapWidth: document.querySelector('.fictional-map').getBoundingClientRect().width
+      mapWidth: document.querySelector('.fictional-map').getBoundingClientRect().width,
+      mapToFormGap: document.querySelector('.contact-response-grid').getBoundingClientRect().top - document.querySelector('.contact-map-note').getBoundingClientRect().bottom,
+      responseHeight: document.querySelector('.contact-response-section').getBoundingClientRect().height,
+      visitSectionPadding: getComputedStyle(document.querySelector('.contact-visit-section')).paddingBlockStart
     }));
     assert.ok(contactGeometry.hero <= 380, `${mode} contact hero stays close to reference proportions (${contactGeometry.hero}px)`);
     assert.ok(contactGeometry.map <= 350, `${mode} fictional map stays in the reference-led overview (${contactGeometry.map}px)`);
     assert.ok(contactGeometry.mapWidth >= contactGeometry.summaryWidth * 1.8, `${mode} map receives the dominant overview width from reference 09 (${contactGeometry.mapWidth}px vs ${contactGeometry.summaryWidth}px)`);
+    assert.ok(contactGeometry.mapToFormGap <= 64, `${mode} contact form begins near the schematic rather than after a large blank interval (${Math.round(contactGeometry.mapToFormGap)}px)`);
+    assert.ok(contactGeometry.responseHeight <= 560, `${mode} contact response section keeps a compact desktop rhythm (${Math.round(contactGeometry.responseHeight)}px)`);
+    assert.ok(parseFloat(contactGeometry.visitSectionPadding) <= 48, `${mode} visit planning section does not add excessive vertical padding`);
     assert.equal(await page.locator('.fictional-map[role="img"]').count(), 1, `${mode} contact map is labelled as a decorative schematic`);
     assert.equal(await page.locator('.fictional-map svg.contact-map-art').count(), 1, `${mode} contact map has its own vector illustration`);
     assert.match(await page.locator('.fictional-map').getAttribute('aria-label'), /не является реальной картой/i, `${mode} map clearly disclaims real navigation`);
