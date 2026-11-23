@@ -743,3 +743,7 @@ Commit [`1329fa7`](https://github.com/altento/tokyo-premium/commit/1329fa7dcb3ed
 ## 2026-11-23 — contacts reference order
 
 Moved the transport and accessibility status strip to the position shown in reference 09: after the contact form and before the visit-planning banner. The strip retains explicit unknown/unconfirmed values. Both the PHP template and checked-in static export follow the same order; the focused Pages visual regression passed locally and publicly at 1440 px and 390 px. Pages workflow [45187820484](https://github.com/altento/tokyo-premium/actions/runs/45187820484) succeeded. PHP browser rendering was not run locally. Evidence: `visual-qa/contacts-strip-order-2026-11-23/`, including public captures.
+
+## 2026-11-23 — booking floorplan legibility
+
+Raised the rendered size and contrast of SVG zone notes/table numbers and spaced the private-room label away from its supporting note. Added a regression assertion for overlapping floorplan text. The Pages-only floorplan browser regression passed and desktop/mobile screenshots were inspected against reference 07. The diagram still represents a table preference rather than live availability; full-page composition differences remain open. PHP browser rendering was not part of this pass. Evidence: [`floorplan visual comparison`](visual-qa/booking-floorplan-legibility-2026-11-23/comparison.md).

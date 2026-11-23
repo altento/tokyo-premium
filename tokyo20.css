@@ -334,11 +334,11 @@
 .tp-zone-fill { fill:#211b14; fill-opacity:.62; stroke:#c9a66c; stroke-opacity:.32; stroke-width:2; transition:fill .2s ease,stroke-opacity .2s ease; }
 .tp-seat-plan [data-tp-zone],.tp-seat-plan [data-tp-table] { cursor:pointer; outline:none; }
 .tp-seat-plan [data-tp-zone]:hover .tp-zone-fill,.tp-seat-plan [data-tp-zone].is-active .tp-zone-fill,.tp-seat-plan [data-tp-zone]:focus-visible .tp-zone-fill { fill:#3a2b1c; fill-opacity:.9; stroke-opacity:.9; }
-.tp-floor-label { fill:#f1dbb4; font:500 17px Georgia,serif; }
-.tp-floor-note { fill:#aa9c88; font:11px sans-serif; }
+.tp-floor-label { fill:#f1dbb4; font:500 22px Georgia,serif; }
+.tp-floor-note { fill:#c1b299; font:14px sans-serif; }
 .tp-seat-shape { fill:#231b12; stroke:#c7a36b; stroke-width:2; transition:fill .18s ease,stroke .18s ease,filter .18s ease; }
-.tp-seat-number { fill:#f2dfbe; text-anchor:middle; dominant-baseline:middle; font:600 14px sans-serif; pointer-events:none; }
-.tp-seat-number--small { font-size:10px; }
+.tp-seat-number { fill:#f2dfbe; text-anchor:middle; dominant-baseline:middle; font:600 17px sans-serif; pointer-events:none; }
+.tp-seat-number--small { font-size:13px; }
 .tp-seat-chair { fill:#3b3021; stroke:#a9854f; stroke-width:1.2; stroke-opacity:.7; pointer-events:none; }
 .tp-seat-plan [data-tp-table]:hover .tp-seat-shape,.tp-seat-plan [data-tp-table]:focus-visible .tp-seat-shape,.tp-seat-plan [data-tp-table].is-selected .tp-seat-shape { fill:#9f1724; stroke:#f1cf88; filter:drop-shadow(0 0 7px rgba(201,166,108,.55)); }
 .tp-floorplan-mobile-picker { display:none; }

@@ -82,6 +82,16 @@ async function run() {
       assert.equal(layout.total, 42, `${mode.name} SVG has 42 preference markers`);
       assert.equal(layout.zones, 4, `${mode.name} SVG exposes four selectable zones`);
 
+      const floorTextGaps = await page.locator('.tp-seat-plan [data-tp-zone]').evaluateAll(zones => zones.flatMap(zone => {
+        const title = zone.querySelector('.tp-floor-label');
+        const note = zone.querySelector('.tp-floor-note');
+        if (!title || !note) return [];
+        const titleBox = title.getBBox();
+        const noteBox = note.getBBox();
+        return [{ zone: zone.dataset.tpZone, gap: noteBox.y - (titleBox.y + titleBox.height) }];
+      }));
+      assert.ok(floorTextGaps.length >= 3 && floorTextGaps.every(item => item.gap >= 0), `${mode.name} floorplan labels and notes do not overlap: ${JSON.stringify(floorTextGaps)}`);
+
       await page.locator('.tp-seat-plan [data-tp-table="42"]').click();
 await page.waitForFunction(() => { const image = document.querySelector('[data-tp-zone-photo]'); return image && image.getAttribute('src')?.endsWith('room-garden-terrace.webp') && image.complete && image.naturalWidth > 0 && !image.hasAttribute('data-tp-photo-loading'); }, null, { timeout: 10000 });
       assert.equal(await page.locator('[name="table"]').inputValue(), '42', `${mode.name} SVG table choice reaches the form`);

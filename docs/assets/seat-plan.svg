@@ -60,7 +60,7 @@
       <path d="M531 320h370m-370 72h370" stroke-opacity=".16" stroke-dasharray="7 6"/>
       <path d="M520 319h11m-11 74h11m382-74h11m-11 74h11" stroke-width="4"/>
     </g>
-    <text class="tp-floor-label" x="535" y="301">Приватная комната</text>
+    <text class="tp-floor-label" x="535" y="294">Приватная комната</text>
     <path d="M528 322h376" stroke="#e0c187" stroke-opacity=".1"/><text class="tp-floor-note" x="535" y="317">4 варианта · предпочтительная зона</text>
     <rect x="826" y="280" width="62" height="9" rx="4" fill="#8e2530" fill-opacity=".7"/>
   </g>

@@ -773,3 +773,7 @@ Moved the transport/status strip before the visit-planning banner in the PHP tem
 ## 2026-11-23 — philosophy desktop rhythm follow-up
 
 The focused philosophy visual test passed at 390 px and 1440 px locally and publicly after aligning the desktop timeline years beside events, keeping descriptions at 12 px, and reducing the story image and principles/CTA spacing. Images loaded, headings and four red rules stayed visible, and neither viewport overflowed. Mobile document height remained 5821 px; local/public desktop measurements were 2543/2526 px. Pages workflow [45191130338](https://github.com/altento/tokyo-premium/actions/runs/45191130338) passed build and deploy. The page-density gap remains. PHP rendering was not run locally. Evidence: `visual-qa/philosophy-density-final-pass-2026-11-23/`.
+
+## 2026-11-23 — booking floorplan legibility
+
+Increased map-zone labels, explanatory notes and table numbers in both source and static CSS; moved the private-room title to avoid collision with its note. Added an SVG text-overlap assertion to the focused floorplan regression. The Pages-only Playwright run passed all 42 preference markers, zone/photo synchronization, reset and mobile-picker checks. Desktop/mobile captures were reviewed against reference 07; map text is clearer, but the whole-page composition remains a known visual gap. PHP browser rendering was not run. Evidence and comparison: `visual-qa/booking-floorplan-legibility-2026-11-23/`.
