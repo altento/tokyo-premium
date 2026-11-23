@@ -142,7 +142,7 @@ if ($action === 'start') {
         if ($config['test_mode']) $fields['pg_testing_mode']='1';
         $fields['pg_sig'] = freedompay_signature('payment_page', $fields, $config['secret']);
         $raw = freedompay_post_form('https://api.freedompay.kz/g2g/payment_page', $fields);
-        $gateway = freedompay_parse_signed_xml($raw, 'payment_page', $config['secret']);
+        $gateway = freedompay_parse_payment_page_response($raw, $config['secret']);
         if (($gateway['pg_status'] ?? '') !== 'ok') {
             $pdo->prepare("UPDATE order_payments SET status='failed',last_error='Gateway rejected payment request.',updated_at=CURRENT_TIMESTAMP WHERE id=? AND status='creating'")->execute([$paymentId]);
             $pdo->prepare("UPDATE orders SET payment_status='failed' WHERE id=? AND payment_status<>'paid'")->execute([(int)$order['id']]);

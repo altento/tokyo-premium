@@ -45,4 +45,6 @@ php -l lib/freedompay.php
 ```
 
 The signature test uses FreedomPay's published test vector and no live credentials.
-The HTTP check uses a temporary local server and SQLite database with synthetic records; it does not contact FreedomPay. It covers callbacks, repeated notifications, amount/ID mismatch, uncertain-attempt locking, signed status rendering, private-file blocking and active navigation markers. Merchant transactions and provider reconciliation remain prerequisites for live activation.
+The payment-page parser accepts the provider's documented unsigned `pg_status=error` response only when it includes a numeric `pg_error_code`; successful responses still require a valid signature. This lets a definitive provider rejection mark the attempt failed so the guest can retry, instead of leaving it locked as an uncertain network result. [FreedomPay documents that payment-page errors are unsigned](https://docs.freedompay.kz/create-payment-9890787e0) and that successful responses carry a signature ([Merchant API response rules](https://docs.freedompay.kz/overview-741636m0)).
+
+The HTTP check uses a temporary local server and SQLite database with synthetic records; it does not contact FreedomPay. It covers callbacks, repeated notifications, amount/ID mismatch, uncertain-attempt locking, signed status rendering, private-file blocking and active navigation markers. Merchant credentials and provider reconciliation remain prerequisites for real payment activation.

@@ -100,21 +100,54 @@ function freedompay_post_form(string $url, array $fields): string
     return $response;
 }
 
-function freedompay_parse_signed_xml(string $body, string $script, string $secret): array
+function freedompay_parse_xml_fields(string $body): array
 {
     if (!function_exists('simplexml_load_string')) throw new RuntimeException('PHP SimpleXML is required for FreedomPay.');
+    if (strlen($body) > 65536) throw new RuntimeException('FreedomPay response is too large.');
     $previous = libxml_use_internal_errors(true);
     try {
         $xml = simplexml_load_string($body, SimpleXMLElement::class, LIBXML_NONET | LIBXML_NOBLANKS);
         if (!$xml || $xml->getName() !== 'response') throw new RuntimeException('FreedomPay returned an unreadable response.');
         $fields = [];
-        foreach ($xml->children() as $key => $value) $fields[(string)$key] = (string)$value;
-        if (!freedompay_signature_is_valid($script, $fields, $secret)) throw new RuntimeException('FreedomPay response signature is invalid.');
+        foreach ($xml->children() as $key => $value) {
+            $key = (string)$key;
+            if (array_key_exists($key, $fields)) throw new RuntimeException('FreedomPay returned a duplicate response field.');
+            $fields[$key] = (string)$value;
+        }
         return $fields;
     } finally {
         libxml_clear_errors();
         libxml_use_internal_errors($previous);
     }
+}
+
+function freedompay_parse_signed_xml(string $body, string $script, string $secret): array
+{
+    $fields = freedompay_parse_xml_fields($body);
+    if (!freedompay_signature_is_valid($script, $fields, $secret)) throw new RuntimeException('FreedomPay response signature is invalid.');
+    return $fields;
+}
+
+/** The payment-page API signs successful responses; documented error responses are unsigned. */
+function freedompay_parse_payment_page_response(string $body, string $secret): array
+{
+    $fields = freedompay_parse_xml_fields($body);
+    $status = (string)($fields['pg_status'] ?? '');
+    if ($status === 'error') {
+        $errorCode = (string)($fields['pg_error_code'] ?? '');
+        $description = (string)($fields['pg_error_description'] ?? '');
+        if (!preg_match('/^[0-9]{1,12}$/', $errorCode) || strlen($description) > 2048) {
+            throw new RuntimeException('FreedomPay returned a malformed error response.');
+        }
+        if (array_key_exists('pg_sig', $fields) && !freedompay_signature_is_valid('payment_page', $fields, $secret)) {
+            throw new RuntimeException('FreedomPay error response contains an invalid signature.');
+        }
+        return $fields;
+    }
+    if ($status !== 'ok' || !freedompay_signature_is_valid('payment_page', $fields, $secret)) {
+        throw new RuntimeException('FreedomPay success response signature is invalid.');
+    }
+    return $fields;
 }
 
 function freedompay_callback_fields(): array
