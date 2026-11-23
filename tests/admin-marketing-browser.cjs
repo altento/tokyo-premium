@@ -41,6 +41,16 @@ file_put_contents($argv[2],json_encode(['email'=>$email,'password'=>$password,'g
     await page.goto(base + '/admin-marketing.php');
     let campaign = page.locator(`form:has(input[name="action"][value="campaign-save"]):has(input[name="id"][value="${fixture.gift.id}"])`);
     await campaign.evaluate(form => { const details = form.closest('details'); if (details) details.open = true; });
+    const keyboardSearch = page.locator('#marketing-admin-search');
+    await page.keyboard.press('/');
+    assert.ok(await keyboardSearch.evaluate(input => document.activeElement === input), 'slash focuses marketing search outside editing controls');
+    await keyboardSearch.fill('Tokyo Premium');
+    await page.keyboard.press('Escape');
+    assert.equal(await keyboardSearch.inputValue(), '', 'Escape clears the active marketing search');
+    const campaignTitle = campaign.locator('[name="title"]');
+    await campaignTitle.focus();
+    await page.keyboard.press('/');
+    assert.ok(await campaignTitle.evaluate(input => document.activeElement === input), 'slash does not steal focus from an editor field');
     assert.equal(await campaign.locator('[name="gift_quantity"]').getAttribute('readonly'), '');
     assert.equal(await campaign.locator('[name="gift_max_per_order"]').getAttribute('readonly'), '');
     // An order consumes stock after the administrator opened the metadata editor.
