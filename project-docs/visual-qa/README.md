@@ -27,6 +27,8 @@ Offers/quote consistency: [2026-11-19 evidence](offers-checkout-2026-11-19/compa
 
 Omakase browsing update: [2026-11-19 comparison](omakase-2026-11-19/comparison.md), complete 1440/390 px captures with course 2 selected, baseline capture and paired approved-reference comparison.
 
+Omakase static-export parity: [2026-11-23 corrected captures](static-export-parity-2026-11-23/README.md), with an explicit lazy-image decode assertion so backstage photography is present in full-page screenshots.
+
 Latest booking/gallery follow-up: [2026-11-19 comparison](booking-gallery-2026-11-19/comparison.md), including complete 1440/390 px captures, selected-table and modal states, baseline reproduction and paired reference images.
 
 Browser captures come from the locally served PHP preview and its generated static Pages export. `npm run test:browser` checks the 11 page types, all 20 dish details, and cart, booking, account, navigation, and menu flows. `npm run test:responsive` checks 320, 360, 375, 390, 430, 768, 1024, 1440, and 1920 px and checks text range rectangles for clipping.

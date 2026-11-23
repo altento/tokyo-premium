@@ -14,6 +14,11 @@ async function capture(page, filename) {
     await Promise.all([...document.images].filter(i => i.getAttribute('src')).map(i => { i.loading = 'eager'; return i.decode(); }));
     await document.fonts.ready;
   });
+  const backstageImage = await page.locator('.image-story img').evaluate(image => ({
+    loaded: image.complete && image.naturalWidth > 0,
+    visible: getComputedStyle(image).display !== 'none' && getComputedStyle(image).visibility !== 'hidden' && image.getBoundingClientRect().width > 0
+  }));
+  assert.deepEqual(backstageImage, { loaded: true, visible: true }, 'Omakase backstage photo is present in the full-page capture');
   const style = await page.addStyleTag({ content: '.site-header{position:relative!important;top:auto!important}' });
   await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
   await page.screenshot({ path: path.join(evidence, filename), fullPage: true, type: 'jpeg', quality: 80 });

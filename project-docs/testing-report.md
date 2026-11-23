@@ -1,5 +1,9 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-23 · Omakase capture correction
+
+The 23 November full-page parity screenshot initially omitted the offscreen lazy-loaded chef photograph because that capture did not scroll or decode it before taking the image. The page itself was not broken. Retook the static export at 390 and 1440 px using `test:omakase-focused`; added an assertion that the backstage image is loaded and visible before capture. The focused run passed five-stage selection, keyboard navigation, all three booking-format handoffs after refresh, reduced motion, and both widths. Corrected screenshots and the retained original capture artifact are in `visual-qa/static-export-parity-2026-11-23/`. No production code changed; PHP and public Pages were not re-tested in this documentation/evidence pass.
+
 ## 2026-11-23 · Philosophy desktop spacing
 
 Focused `tests/philosophy-visual.cjs` passed on the checked-in Pages export and the cache-busted public route at 390 px and 1440 px. All page images decoded; headings remain within bounds; all four crimson rules are visible; there is no horizontal overflow or page error. Fresh metrics show 2864 px desktop height versus the previous saved 3065 px baseline; mobile remained unchanged at 5821 px. Commit `0d6988e` deployed successfully in [Actions run 45171370418](https://github.com/altento/tokyo-premium/actions/runs/45171370418). Captures and reference notes: [`philosophy-density-2026-11-23`](visual-qa/philosophy-density-2026-11-23/comparison.md). PHP rendering was not tested in this pass.
