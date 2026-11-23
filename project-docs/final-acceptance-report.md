@@ -194,3 +194,7 @@ Status: **Implemented locally; visual check passed; SQLite verification pending 
 ## Current checkpoint — 2026-11-17
 
 PHP account navigation and order-state presentation have been polished and locally verified. Local static export is refreshed; Playwright browser and Tokyo 2.0 PHP/static regressions passed. Evidence: project-docs/visual-qa/account-dashboard-polish-2026-11-17/. Hosted CI and public Pages verification have not yet run for this checkpoint. The overall Tokyo Premium 2.0 goal remains in progress.
+
+## 2026-11-23 — contacts reference-order follow-up
+
+The transport/accessibility strip now follows the contact form and precedes the visit-planning section, matching the reading order in reference 09. The local focused regression and the deployed public-route regression passed at 1440 px and 390 px. GitHub Pages workflow [45187820484](https://github.com/altento/tokyo-premium/actions/runs/45187820484) succeeded; public captures and the route comparison are in `project-docs/visual-qa/contacts-strip-order-2026-11-23/`. Local PHP browser rendering was not run. The correction is verified for the static Pages route; the broader Tokyo Premium 2.0 acceptance remains in progress.

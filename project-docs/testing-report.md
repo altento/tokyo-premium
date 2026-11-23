@@ -768,4 +768,4 @@ After commit `c7ffe62` deployed successfully in workflow [45143146646](https://g
 
 ## 2026-11-23 — contacts reference order
 
-Moved the transport/status strip before the visit-planning banner in the PHP template and static export to follow reference 09. Local contact-route visual regression passed at 1440 px and 390 px; the full-page captures were inspected and the DOM order is asserted. PHP syntax lint and `git diff --check` passed. PHP browser rendering and public deployment remain pending. Evidence: `visual-qa/contacts-strip-order-2026-11-23/`.
+Moved the transport/status strip before the visit-planning banner in the PHP template and static export to follow reference 09. Local contact-route visual regression passed at 1440 px and 390 px; the full-page captures were inspected and the DOM order is asserted. The Pages workflow [45187820484](https://github.com/altento/tokyo-premium/actions/runs/45187820484) passed, and the public route passed the focused browser regression at 1440 px and 390 px. PHP browser rendering was not run locally. Evidence: `visual-qa/contacts-strip-order-2026-11-23/`.
