@@ -58,7 +58,7 @@ function db(): PDO
         // are present.
         $ready = false;
         try {
-            $ready = (bool)$connection->query("SELECT 1 FROM app_migrations WHERE version=21")->fetchColumn()
+            $ready = (bool)$connection->query("SELECT 1 FROM app_migrations WHERE version=22")->fetchColumn()
                 && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='api_order_requests'")->fetchColumn()
                 && (bool)$connection->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='api_booking_requests'")->fetchColumn()
                 && in_array('request_hash',$connection->query('PRAGMA table_info(api_order_requests)')->fetchAll(PDO::FETCH_COLUMN,1),true)
@@ -130,6 +130,14 @@ function db(): PDO
     return $pdo;
 }
 function e(?string $v): string { return htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8'); }
+function guest_count_noun(int $count): string {
+    $lastTwo = abs($count) % 100;
+    if ($lastTwo >= 11 && $lastTwo <= 14) return 'гостей';
+    return match (abs($count) % 10) { 1 => 'гость', 2, 3, 4 => 'гостя', default => 'гостей' };
+}
+function guest_capacity_phrase(int $count): string {
+    return 'до ' . $count . ' ' . ($count === 1 ? 'гостя' : 'гостей');
+}
 function image_srcset(string $url): string { $parts=parse_url($url); if(!$parts||empty($parts['host'])||!in_array($parts['host'],['images.unsplash.com','plus.unsplash.com'],true)) return ''; parse_str($parts['query']??'', $query); $items=[]; foreach([480,768,1080,1440,2000] as $width){$query['w']=$width;$src=($parts['scheme']??'https').'://'.$parts['host'].($parts['path']??'').'?'.http_build_query($query,'','&',PHP_QUERY_RFC3986);$items[]=$src.' '.$width.'w';} return implode(', ',$items); }
 function setting(string $key,string $fallback=''): string { $q=db()->prepare('SELECT value FROM settings WHERE key=?'); $q->execute([$key]); $v=$q->fetchColumn(); return $v===false?$fallback:(string)$v; }
 function csrf(): string { if(empty($_SESSION['csrf'])) $_SESSION['csrf']=bin2hex(random_bytes(32)); return $_SESSION['csrf']; }

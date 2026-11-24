@@ -276,6 +276,9 @@
 }
 
 /* Loaded after the base and editorial styles so the basket keeps the compact reference hierarchy in PHP and Pages. */
+.account-dashboard-auth{align-items:stretch}
+.editorial-hero.omakase-hero .editorial-kanji{display:none}
+
 .editorial-hero.cart-hero { box-sizing: border-box; min-height: clamp(220px, 16vw, 260px); padding-block: 24px; align-items: center; }
 .editorial-hero.cart-hero .editorial-hero-copy { max-width: min(470px, 62vw); }
 .editorial-hero.cart-hero h1 { font-size: clamp(2.65rem, 4.3vw, 4rem); line-height: 1; margin-block: 6px 10px; }
@@ -744,6 +747,7 @@
 .editorial-page [data-tp-zone-photo][data-tp-photo-loading]{opacity:.55}
 @media(prefers-reduced-motion:reduce){.editorial-page [data-tp-zone-photo]{transition:none}}
 
+
 /* Homepage opening: give the first story the full viewport and keep its
    editorial controls clear of both the scroll cue and the scene note. */
 @media (min-width: 901px) {
@@ -904,11 +908,11 @@
 
 /* Menu catalogue: give the introduction and the 50-item grid one clear rhythm. */
 .menu-page .menu-hero {
-  min-height: clamp(390px, 30vw, 500px);
-  padding: clamp(52px, 6vw, 88px) max(22px, calc((100% - 1440px) / 2));
+  min-height: clamp(290px, 16vw, 330px);
+  padding: 30px max(22px, calc((100% - 1440px) / 2));
 }
 .menu-page .menu-hero-copy { width: min(560px, 100%); max-width: 560px; }
-.menu-page .menu-hero h1 { margin-block: .16em; font-size: clamp(4.1rem, 7vw, 7.5rem); line-height: .94; letter-spacing: -.035em; }
+.menu-page .menu-hero h1 { margin-block: .16em; font-size: clamp(3.4rem, 5.2vw, 5rem); line-height: .94; letter-spacing: -.035em; }
 .menu-page .menu-hero-sub { font-size: clamp(1.2rem, 2vw, 1.65rem); }
 .menu-page .menu-category-list { gap: 8px; }
 .menu-page .menu-category-list .filter-btn {
@@ -1022,4 +1026,95 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .tp20-omakase-experience .tp20-course-tabs button { transition: none; }
+}
+
+/* Final cascade overrides for the homepage and reservation flow. */
+@media (min-width: 901px) {
+  .home-premium .home-hero-copy { width: min(860px, 58vw); padding-block: clamp(76px, 8vh, 112px) 128px; }
+  .home-premium .home-hero[data-home-hero-scene="0"] h1 { font-size: clamp(88px, 7.2vw, 140px); line-height: .94; letter-spacing: -.035em; }
+  .home-premium .home-hero .eyebrow { font-size: 13px; }
+  .home-premium .home-hero-lead { max-width: 590px; font-size: clamp(17px, 1.15vw, 20px); }
+  .home-premium .home-hero .button { min-height: 56px; font-size: 13px; }
+}
+.home-premium .hero-scroll {
+  left: max(24px, calc((100vw - var(--page-width)) / 2)); bottom: clamp(24px, 3.2vh, 40px);
+  transform: none; flex-direction: row; align-items: center; gap: 12px;
+  max-width: min(390px, calc(100vw - 300px)); color: #f0dfbd; font-size: 13px;
+  line-height: 1.4; letter-spacing: .09em; text-align: left; white-space: normal;
+  text-shadow: 0 2px 14px rgba(0,0,0,.85);
+}
+.home-premium .hero-scroll span { flex: 0 0 34px; width: 34px; height: 1px; background: linear-gradient(90deg,#e6c588,rgba(230,197,136,.3)); }
+.home-premium .hero-scroll::after { flex: 0 0 auto; font-size: 23px; }
+.home-premium .home-values { position: relative; border-bottom: 0; background: linear-gradient(180deg,rgba(16,14,12,.82),#100e0c 38%); }
+.home-premium .home-menu-section { border-top: 0; background: linear-gradient(180deg,#100e0c,#0d0c0b 78%); }
+.home-premium .home-booking {
+  padding-block: clamp(58px,6.5vw,96px);
+  background: radial-gradient(ellipse at 6% 100%,rgba(145,43,32,.22),transparent 48%),linear-gradient(135deg,#17110d,#0c0b0a 72%);
+}
+.home-premium .home-booking-form { border-radius: 20px 5px 20px 5px; border-color: rgba(198,153,91,.52); }
+.home-premium .home-booking-form label,.home-premium .home-booking-form .field small { font-size: 12px; }
+.home-premium .home-booking-form input,.home-premium .home-booking-form select { border-radius: 7px; font-size: 15px; }
+.home-premium .booking-intro>p:not(.kicker) { font-size: 15px; line-height: 1.7; }
+.editorial-page > #booking-form {
+  position: relative; isolation: isolate;
+  background: radial-gradient(ellipse at 4% 82%,rgba(120,34,29,.12),transparent 38%),linear-gradient(180deg,#100e0c,#0c0b0a 88%);
+}
+.editorial-page > #booking-form::before {
+  position: absolute; z-index: -1; inset: 0; content: ""; pointer-events: none;
+  background: linear-gradient(90deg,rgba(202,165,107,.035),transparent 44%,rgba(202,165,107,.018));
+}
+.editorial-page .booking-layout { align-items: start; }
+.editorial-page .booking-layout > .booking-form {
+  gap: 14px; padding: clamp(18px,2vw,28px); border: 1px solid rgba(202,165,107,.24);
+  border-radius: 16px 4px 16px 4px;
+  background: linear-gradient(145deg,rgba(28,22,17,.78),rgba(15,13,11,.62));
+  box-shadow: 0 18px 48px rgba(0,0,0,.18),inset 0 1px rgba(255,244,220,.035);
+}
+.editorial-page .booking-layout > .booking-form .school-note { border-inline-start: 2px solid rgba(202,165,107,.55); color: #d6c6ad; font-size: .82rem; line-height: 1.55; }
+.editorial-page .booking-layout > .booking-form label { font-size: .84rem; }
+.editorial-page .booking-layout > .booking-form input,
+.editorial-page .booking-layout > .booking-form select,
+.editorial-page .booking-layout > .booking-form textarea { border-radius: 7px; background-color: rgba(12,11,10,.82); font-size: .96rem; transition: border-color .18s ease,box-shadow .18s ease,background-color .18s ease; }
+.editorial-page .booking-layout > .booking-form input:focus-visible,
+.editorial-page .booking-layout > .booking-form select:focus-visible,
+.editorial-page .booking-layout > .booking-form textarea:focus-visible { border-color: #d7b273; outline: 0; box-shadow: 0 0 0 3px rgba(215,178,115,.16); }
+.editorial-page .booking-layout > .table-map-wrap {
+  padding: clamp(14px,1.8vw,22px); border-radius: 16px 4px 16px 4px;
+  background: radial-gradient(ellipse at 100% 0,rgba(119,34,30,.12),transparent 46%),linear-gradient(145deg,#17130f,#100e0c);
+  box-shadow: 0 18px 48px rgba(0,0,0,.2);
+}
+.editorial-page .booking-layout > .table-map-wrap > .booking-submit { min-height: 52px; border-radius: 5px; font-size: .92rem; letter-spacing: .035em; }
+@media (max-width: 900px) {
+  .home-premium .hero-scroll { max-width: calc(100vw - 210px); }
+  .editorial-page .booking-layout > .booking-form { padding: clamp(16px,3vw,24px); }
+}
+@media (max-width: 700px) {
+  .home-premium .home-hero-copy { max-width: 100%; }
+  .home-premium .home-hero[data-home-hero-scene="0"] h1 { font-size: clamp(52px,13vw,72px); }
+  .home-premium .home-hero .eyebrow { font-size: 10px; }
+  .home-premium .home-hero-lead { max-width: 38ch; font-size: 15px; line-height: 1.6; }
+  .home-premium .home-hero .button-row { flex-wrap: wrap; }
+  .home-premium .home-hero .button { min-height: 48px; font-size: 12px; }
+  .home-premium .hero-scroll { left: 20px; bottom: 22px; max-width: calc(100vw - 185px); gap: 8px; font-size: 12px; letter-spacing: .035em; }
+  .home-premium .hero-scroll span { flex-basis: 22px; width: 22px; }
+  .home-premium .hero-scroll::after { font-size: 19px; }
+  .home-premium .home-hero-controls { bottom: 22px; right: 16px; gap: 7px; }
+  .home-premium .home-hero-arrow { min-width: 36px; min-height: 36px; }
+  .home-premium .home-booking-form { border-radius: 16px 4px 16px 4px; padding: 16px; }
+  .home-premium .home-booking-form label,.home-premium .home-booking-form .field small { font-size: 11px; }
+  .editorial-page .booking-layout > .booking-form { border-radius: 13px 4px 13px 4px; }
+  .editorial-page .booking-layout > .booking-form input,
+  .editorial-page .booking-layout > .booking-form select,
+  .editorial-page .booking-layout > .booking-form textarea { min-height: 48px; font-size: 16px; }
+  .editorial-page .booking-layout > .table-map-wrap { border-radius: 13px 4px 13px 4px; }
+}
+@media (max-width: 420px) {
+  .home-premium .hero-scroll { max-width: calc(100vw - 168px); font-size: 11px; }
+  .home-premium .home-hero-controls { bottom: 68px; }
+  .home-premium .home-booking-form { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .editorial-page .booking-layout > .booking-form input,
+  .editorial-page .booking-layout > .booking-form select,
+  .editorial-page .booking-layout > .booking-form textarea { transition: none; }
 }

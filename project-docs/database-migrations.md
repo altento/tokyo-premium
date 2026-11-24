@@ -30,10 +30,15 @@ The app runs `schema.sql` with `CREATE TABLE/INDEX IF NOT EXISTS`, then records 
 | 18 | Add nullable, session-keyed request fingerprints to order and booking idempotency rows. Existing rows are retained; an old replay with no fingerprint returns a conflict instead of claiming changed data was submitted. |
 | 19 | Add 29 fictional public menu items when absent, plus normalized ingredient, tag and pairing links. Existing administrator-edited dish rows are preserved; additions are transactional and idempotent. |
 | 20 | Add two additional public items to round the menu out to 50 visible dishes on databases that already contain two hidden Secret Menu entries; preserve existing products and related catalog links. |
+| 22 | Add the active fictional `Hanami in Kyoto` seasonal collection and five existing public dish links when absent. Existing collection edits and membership are preserved; the transaction is repeat-safe. |
 
 For migration v18, the fingerprint is an HMAC of canonical request fields excluding the CSRF token, with the current PHP session ID as the key. Exact retries replay the stored response; reusing a key with changed contact or order data returns HTTP 409. Raw personal data is not added to the idempotency tables. New reservations store the fingerprint in the same `BEGIN IMMEDIATE` transaction as the order/booking and replay result.
 
 Migrations v19–20 extend the fictional catalogue to 50 publicly visible items on the current database. The additional copycat image paths point to existing local WebP assets so every card loads offline; 29 new products still need their own dedicated photographs before the catalogue can be described as having unique dish photography.
+
+Migration v22 adds a second seasonal collection, `Hanami in Kyoto`, alongside `Autumn in Kyoto`. Together the collections have ten dish links. The second collection uses the existing public dishes and a generated local collection cover; it does not duplicate or alter dish records. The current schema version is 22.
+
+`tools/seed-demo-data.php --apply` is an optional CLI fixture step, not a schema migration. It requires an explicit `RESTAURANT_DB` outside the repository/web root, inserts one random-password fictional account with example order, booking, message and pending-review history in a single transaction, and records an idempotency marker. Without `--apply` it prints usage and makes no changes. It never sends mail or starts payment. The SQLite database and generated password stay outside source control.
 
 The account notification helpers are `commerce_account_notifications($pdo, $userId, $limit)` and `commerce_mark_account_notification_read($pdo, $userId, $notificationId)`. The mark-read helper only updates rows owned by the supplied user and is safe to retry. The authenticated `account.php` page exposes the `notification-read` POST action and checks CSRF before invoking the helper.
 

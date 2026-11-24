@@ -276,6 +276,9 @@
 }
 
 /* Loaded after the base and editorial styles so the basket keeps the compact reference hierarchy in PHP and Pages. */
+.account-dashboard-auth{align-items:stretch}
+.editorial-hero.omakase-hero .editorial-kanji{display:none}
+
 .editorial-hero.cart-hero { box-sizing: border-box; min-height: clamp(220px, 16vw, 260px); padding-block: 24px; align-items: center; }
 .editorial-hero.cart-hero .editorial-hero-copy { max-width: min(470px, 62vw); }
 .editorial-hero.cart-hero h1 { font-size: clamp(2.65rem, 4.3vw, 4rem); line-height: 1; margin-block: 6px 10px; }
@@ -905,11 +908,11 @@
 
 /* Menu catalogue: give the introduction and the 50-item grid one clear rhythm. */
 .menu-page .menu-hero {
-  min-height: clamp(390px, 30vw, 500px);
-  padding: clamp(52px, 6vw, 88px) max(22px, calc((100% - 1440px) / 2));
+  min-height: clamp(290px, 16vw, 330px);
+  padding: 30px max(22px, calc((100% - 1440px) / 2));
 }
 .menu-page .menu-hero-copy { width: min(560px, 100%); max-width: 560px; }
-.menu-page .menu-hero h1 { margin-block: .16em; font-size: clamp(4.1rem, 7vw, 7.5rem); line-height: .94; letter-spacing: -.035em; }
+.menu-page .menu-hero h1 { margin-block: .16em; font-size: clamp(3.4rem, 5.2vw, 5rem); line-height: .94; letter-spacing: -.035em; }
 .menu-page .menu-hero-sub { font-size: clamp(1.2rem, 2vw, 1.65rem); }
 .menu-page .menu-category-list { gap: 8px; }
 .menu-page .menu-category-list .filter-btn {
@@ -1108,7 +1111,7 @@
 @media (max-width: 420px) {
   .home-premium .hero-scroll { max-width: calc(100vw - 168px); font-size: 11px; }
   .home-premium .home-hero-controls { bottom: 68px; }
-  .home-premium .home-booking-form { grid-template-columns: minmax(0,1fr); }
+  .home-premium .home-booking-form { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
 @media (prefers-reduced-motion: reduce) {
   .editorial-page .booking-layout > .booking-form input,

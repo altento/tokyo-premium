@@ -52,7 +52,7 @@ async function main() {
     const builder = page.locator('[data-tp-set-builder]');
     assert.match(await page.locator('body').innerText(), /локальная оценка без серверной проверки/, 'static set builder explains price limitations');
     await builder.locator('[data-tp-set-dish]').first().locator('[data-tp-set-step="1"]').click();
-    assert.match(await builder.locator('[data-tp-status]').innerText(), /стоимость — локальная оценка без серверной проверки/, 'set-builder interaction keeps static pricing disclosure');
+    assert.match(await page.locator('[data-tp-status]').innerText(), /стоимость — локальная оценка без серверной проверки/, 'set-builder interaction keeps static pricing disclosure');
 
     const eveningResponse = await page.goto(`${staticBase}/perfect-evening.html`, { waitUntil: 'domcontentloaded' });
     assert.equal(eveningResponse.status(), 200, 'static recommendation route loads');

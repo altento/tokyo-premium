@@ -90,7 +90,7 @@ async function runMode(browser, name, base, route, capture) {
   const galleryHref = await page.locator('[data-home-hero-secondary]').getAttribute('href');
   assert.match(galleryHref, name === 'static' ? /gallery\.html$/ : /page=gallery$/, `${name} secondary action follows the selected story and static route map`);
   await page.waitForTimeout(1400);
-  assert.equal(await dots.nth(2).getAttribute('aria-pressed'), 'true', `${name} carousel does not autoplay`);
+  assert.equal(await dots.nth(2).getAttribute('aria-pressed'), 'true', `${name} carousel does not switch before its relaxed autoplay interval`);
   await dots.nth(0).click();
   await waitForScene(page, 'TOKYO');
 
@@ -156,6 +156,7 @@ async function runReducedMotion(browser, name, base, route) {
   await page.goto(`${base}${route}`, { waitUntil: 'domcontentloaded' });
   assert.equal(await page.locator('.site-header .brand-emblem').evaluate(node => getComputedStyle(node).animationName), 'none', `${name} skips the logo reveal when reduced motion is requested`);
   await page.waitForFunction(() => !document.querySelector('[data-home-hero-controls]')?.hidden);
+  assert.equal(await page.locator('[data-home-hero-autoplay]').isHidden(), true, `${name} hides automatic slideshow control when reduced motion is requested`);
   assert.equal(await page.evaluate(() => matchMedia('(prefers-reduced-motion: no-preference)').matches), false, `${name} reduced-motion mode disables the page-transition opt-in media query`);
   assert.equal(await page.evaluate(() => window.ScrollTrigger?.getAll().length || 0), 0, `${name} creates no scroll animations when reduced motion is requested`);
   const duration = await page.locator('#home-hero-photo').evaluate(image => getComputedStyle(image).transitionDuration);
@@ -165,6 +166,25 @@ async function runReducedMotion(browser, name, base, route) {
   assert.equal(await hero.getAttribute('data-home-hero-scene'), '1', `${name} updates art direction when changing scenes`);
   assert.equal(await page.locator('#home-hero-photo').evaluate(image => image.naturalWidth > 0), true, `${name} reduced-motion scene still works`);
   await context.close();
+}
+
+async function runAutoplay(browser, name, base, route) {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, reducedMotion: 'no-preference' });
+  await page.goto(`${base}${route}`, { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => !document.querySelector('[data-home-hero-controls]')?.hidden);
+  const pause = page.locator('[data-home-hero-autoplay]');
+  assert.equal(await pause.getAttribute('aria-pressed'), 'true', `${name} starts the hero slideshow automatically`);
+  await page.mouse.move(0, 0);
+  await page.waitForFunction(() => document.querySelector('[data-home-hero]')?.dataset.homeHeroScene === '1', undefined, { timeout: 11000 });
+  assert.equal(await page.locator('[data-home-hero-index="1"]').getAttribute('aria-pressed'), 'true', `${name} advances to the next story without input`);
+  await pause.click();
+  assert.equal(await pause.getAttribute('aria-pressed'), 'false', `${name} exposes a working pause control`);
+  assert.match(await pause.getAttribute('aria-label'), /возобновить/i, `${name} pause control announces how to resume`);
+  const pausedScene = await page.locator('[data-home-hero]').getAttribute('data-home-hero-scene');
+  await page.mouse.move(0, 0);
+  await page.waitForTimeout(8000);
+  assert.equal(await page.locator('[data-home-hero]').getAttribute('data-home-hero-scene'), pausedScene, `${name} keeps the selected story still while paused`);
+  await page.close();
 }
 
 async function runFailedSceneImage(browser, name, base, route, reduceMotion) {
@@ -206,13 +226,15 @@ async function runFailedSceneImage(browser, name, base, route, reduceMotion) {
     if (!staticOnly) {
       await runMode(browser, 'php', phpBase, '/', true);
       await runReducedMotion(browser, 'php', phpBase, '/');
+      await runAutoplay(browser, 'php', phpBase, '/');
       await runFailedSceneImage(browser, 'php', phpBase, '/', false);
       await runFailedSceneImage(browser, 'php', phpBase, '/', true);
     }
     await runMode(browser, 'static', staticBase, '/index.html', true);
     await runReducedMotion(browser, 'static', staticBase, '/index.html');
+    await runAutoplay(browser, 'static', staticBase, '/index.html');
     await runFailedSceneImage(browser, 'static', staticBase, '/index.html', false);
     await runFailedSceneImage(browser, 'static', staticBase, '/index.html', true);
-    console.log(`PASS: cinematic hero and scroll story, scene controls, keyboard, reduced motion, no autoplay, and eight responsive widths${staticOnly ? ' in static mode' : ' in PHP and static modes'}; screenshots saved to ${evidenceDir}`);
+    console.log(`PASS: cinematic hero and scroll story, manual and automatic scene controls, pause, keyboard, reduced motion, and eight responsive widths${staticOnly ? ' in static mode' : ' in PHP and static modes'}; screenshots saved to ${evidenceDir}`);
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

@@ -13,6 +13,7 @@
   const many = (selector, root) => Array.from((root || doc).querySelectorAll(selector));
   const matches = (root, selector) => root instanceof Element && root.matches(selector) ? [root, ...many(selector, root)] : many(selector, root);
   const money = value => `${Math.max(0, Math.round(Number(value) || 0)).toLocaleString('ru-RU')} ₸`;
+  const guestCapacityPhrase = count => `до ${count} ${Number(count) === 1 ? 'гостя' : 'гостей'}`;
   const reduceMotion = () => global.matchMedia && global.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   function setStatus(root, message) {
@@ -824,7 +825,7 @@
       });
       if (tableInput) tableInput.value = table;
       const seatCaption = one('[data-tp-seat-caption]', root.parentElement || doc);
-      const capacity = target.dataset.capacity ? ` · до ${target.dataset.capacity} гостей по учебной схеме` : '';
+      const capacity = target.dataset.capacity ? ` · ${guestCapacityPhrase(target.dataset.capacity)} по учебной схеме` : '';
       if (seatCaption) safeText(seatCaption, `${zone} · стол ${table}${capacity}. Предпочтение не подтверждает доступность.`);
       const selectedMessage = `Предпочтение сохранено: ${zone}, стол ${table}. Фактическая доступность подтверждается отдельно.`;
       safeText(message, selectedMessage);
@@ -924,7 +925,7 @@
         button.dataset.tpZone = zone;
         if (capacity) button.dataset.capacity = capacity;
         button.setAttribute('aria-pressed', 'false');
-        button.setAttribute('aria-label', `Выбрать предпочтительный стол ${number}, ${zone}${capacity ? `, до ${capacity} гостей по учебной схеме` : ''}`);
+        button.setAttribute('aria-label', `Выбрать предпочтительный стол ${number}, ${zone}${capacity ? `, ${guestCapacityPhrase(capacity)} по учебной схеме` : ''}`);
         safeText(button, `Стол ${number}`);
         buttons.append(button);
       });
@@ -970,7 +971,7 @@
         seat.setAttribute('role', 'button');
         seat.setAttribute('tabindex', '0');
         seat.setAttribute('aria-pressed', 'false');
-        const capacity = seat.dataset.capacity ? `, вместимость по учебной схеме до ${seat.dataset.capacity} гостей` : '';
+        const capacity = seat.dataset.capacity ? `, вместимость по учебной схеме: ${guestCapacityPhrase(seat.dataset.capacity)}` : '';
         seat.setAttribute('aria-label', `Выбрать предпочтительный стол ${seat.dataset.tpTable}, ${seat.dataset.tpZone || 'зона'}${capacity}`);
         if (!seat.id) seat.id = `tp-seat-${index + 1}`;
       });

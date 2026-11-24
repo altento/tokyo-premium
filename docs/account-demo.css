@@ -809,3 +809,102 @@
     padding: 6px 10px;
   }
 }
+
+/* Account readability pass: the dashboard was using editorial microcopy sizes
+   for information guests need to scan (status, balances, and actions). */
+.account-dashboard .account-dashboard-member-email,
+.account-dashboard .account-dashboard-member-copy > small,
+.account-dashboard .account-dashboard-metrics article > span,
+.account-dashboard .account-dashboard-metrics article > small,
+.account-dashboard .account-dashboard-nav a,
+.account-dashboard .account-dashboard-nav .account-nav-label,
+.account-dashboard .account-dashboard-nav a > small,
+.account-dashboard .account-dashboard-actions a,
+.account-dashboard .account-dashboard-section-heading .kicker,
+.account-dashboard .account-section-count,
+.account-dashboard .account-notification-copy p,
+.account-dashboard .account-notification-copy time,
+.account-dashboard .account-empty-state p,
+.account-dashboard .account-empty-copy,
+.account-dashboard .account-section-copy,
+.account-dashboard .account-order-meta,
+.account-dashboard .order-item-details,
+.account-dashboard .order-item-details summary,
+.account-dashboard .order-item-details ul,
+.account-dashboard .account-dashboard-note,
+.account-dashboard .tp20-account-form label,
+.account-dashboard .tp20-referral-history > p {
+  font-size: clamp(12px, .78rem, 14px);
+  line-height: 1.55;
+}
+
+.account-dashboard .account-dashboard-member-copy > strong,
+.account-dashboard .account-dashboard-loyalty > small,
+.account-dashboard .account-inline-link,
+.account-dashboard .account-order-repeat-note,
+.account-dashboard .account-order-repeat-actions small {
+  font-size: clamp(12px, .8rem, 14px);
+}
+
+.account-dashboard .account-dashboard-section-heading .kicker,
+.account-dashboard .account-ledger-details > summary .kicker {
+  letter-spacing: .12em;
+}
+
+.account-dashboard .account-dashboard-nav a {
+  min-height: 48px;
+}
+
+.account-dashboard .account-notification-actions .button,
+.account-dashboard .account-order-repeat-actions .button,
+.account-dashboard .tp20-account-form .button,
+.account-dashboard .tp20-address-actions .button,
+.account-dashboard .tp20-address-actions .text-button,
+.account-dashboard .tp20-referral-code .button,
+.account-dashboard .tp20-referral-actions .button {
+  min-height: 44px;
+  font-size: clamp(12px, .78rem, 14px);
+}
+
+.account-dashboard .account-dashboard-note {
+  max-width: 100ch;
+}
+
+@media (max-width: 760px) {
+  .account-dashboard .account-dashboard-hero {
+    gap: 12px;
+  }
+
+  .account-dashboard .account-dashboard-member-copy > small {
+    font-size: 12px;
+  }
+
+  .account-dashboard .account-dashboard-metrics article {
+    min-height: 82px;
+    padding: 10px 12px;
+  }
+
+  .account-dashboard .account-dashboard-nav a,
+  .account-dashboard .account-dashboard-nav .account-nav-label,
+  .account-dashboard .account-dashboard-actions a {
+    font-size: 13px;
+  }
+
+  .account-dashboard .account-dashboard-section-heading .kicker {
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .account-dashboard .account-notification-actions {
+    align-items: stretch;
+  }
+
+  .account-dashboard .account-notification-actions .button {
+    min-height: 44px;
+    padding-inline: 12px;
+  }
+
+  .account-dashboard .account-dashboard-panel {
+    padding: 16px;
+  }
+}

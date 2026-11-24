@@ -1,7 +1,11 @@
 # Deployment notes
-Updated 2026-11-23
+Updated 2026-11-25
 
 Для переноса репозитория и запуска PHP-версии на другом Windows-компьютере см. [подробную инструкцию продолжения](continue-on-another-computer.md). Она отдельно объясняет, почему SQLite и секреты не входят в Git.
+
+## 2026-11-25 — candidate verification
+
+The candidate was built from `main` at `102750d` in an isolated worktree. Local PHP/SQLite integration passed 236 assertions. The visual-fidelity suite passed for 11 routes in PHP and static Pages modes; focused checks covered the 50 public dish details, menu interactions, booking, Omakase, account demo and motion behavior. These checks do not verify a SprintHost upload. The current public Pages release remains the last successful `main` build until the candidate is pushed and its Actions workflow finishes.
 
 ## Public preview
 - Repository: https://github.com/altento/tokyo-premium
@@ -22,6 +26,17 @@ python -m http.server 8937 --bind 127.0.0.1 --directory docs
 Open `http://127.0.0.1:8937/`. This is the browser-only Pages build; it does not run PHP or SQLite. Stop the server with Ctrl+C.
 
 The workflow installs PHP CLI + SQLite, starts the existing PHP app, runs `tools/export-pages.php`, uploads `docs/`, and deploys it. The export writes an HTTPS `sitemap.xml` from public routes and a matching `robots.txt`; the local-only account and cart pages are marked `noindex` and omitted from the sitemap. The workflow does not package the SQLite database.
+
+### Local admin and account fixtures
+
+The repository intentionally does not contain a populated SQLite file or reusable login password. For a local, disposable copy outside the web root, select its path before running the fixture seeder:
+
+```powershell
+$env:RESTAURANT_DB = Join-Path $env:TEMP 'tokyo-demo-fixture.sqlite'
+php tools/seed-demo-data.php --apply
+```
+
+This creates one fictional account, 12 sample orders, 8 bookings, 10 contact messages, and 6 pending reviews, together with account notifications and loyalty examples. The password is generated randomly and printed once by the local command; store it only in a local password manager. The operation is atomic and idempotent. It does not send mail or charge a payment method. Do not run it against a production database unless you intentionally want these demonstration records there.
 
 ## Tokyo Premium 2.0 export
 

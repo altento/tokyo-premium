@@ -585,6 +585,7 @@ function commerce_migrate(PDO $pdo): void
             $ingredientLabels = [
                 'salmon'=>'Лосось','avocado'=>'Авокадо','cucumber'=>'Огурец','rice'=>'Рис','nori'=>'Нори','tuna'=>'Тунец','chili'=>'Перец чили','eel'=>'Угорь','sesame'=>'Кунжут','shrimp'=>'Креветка','ponzu'=>'Соус понзу','hamachi'=>'Хамачи','daikon'=>'Дайкон','yuzu'=>'Юдзу','roe'=>'Икра тобико','crab'=>'Краб','soy'=>'Соя','lime'=>'Лайм','sea-salt'=>'Морская соль','octopus'=>'Осьминог','ginger'=>'Имбирь','bonito'=>'Стружка бонито','wheat'=>'Пшеница','eggplant'=>'Баклажан','miso'=>'Паста мисо','green-onion'=>'Зелёный лук','wakame'=>'Вакаме','rice-vinegar'=>'Рисовый уксус','pork'=>'Свинина','egg'=>'Яйцо','tofu'=>'Тофу','beef'=>'Говядина','shiitake'=>'Грибы шиитаке','chicken'=>'Курица','lemon'=>'Лимон','onion'=>'Лук','scallop'=>'Морской гребешок','matcha'=>'Матча','milk'=>'Молоко','kinako'=>'Кинако','sugar'=>'Сахар','hojicha'=>'Ходзича'
             ];
+            $activeDishCount = (int)$pdo->query('SELECT COUNT(*) FROM dishes WHERE active=1')->fetchColumn();
             $findDish = $pdo->prepare('SELECT id FROM dishes WHERE name=? ORDER BY id LIMIT 1');
             $insertDish = $pdo->prepare('INSERT INTO dishes(category,name,description,weight,price,image_url,featured,active,sort_order) VALUES(?,?,?,?,?,?,?,?,?)');
             $findIngredient = $pdo->prepare('SELECT slug FROM ingredients WHERE slug=? OR name=? ORDER BY CASE WHEN slug=? THEN 0 ELSE 1 END LIMIT 1');
@@ -595,10 +596,12 @@ function commerce_migrate(PDO $pdo): void
             foreach ($catalog as [$category,$name,$description,$weight,$price,$image,$featured,$sortOrder,$ingredients,$tags,$pairings]) {
                 $findDish->execute([$name]);
                 $dishId = (int)($findDish->fetchColumn() ?: 0);
-                if (!$dishId) {
+                if (!$dishId && $activeDishCount < 50) {
                     $insertDish->execute([$category,$name,$description,$weight,$price,'assets/food/'.$image.'.webp',$featured,1,100+$sortOrder]);
                     $dishId = (int)$pdo->lastInsertId();
+                    $activeDishCount++;
                 }
+                if (!$dishId) continue;
                 foreach (array_values(array_unique($ingredients)) as $index=>$slug) {
                     $label = $ingredientLabels[$slug] ?? ucfirst(str_replace('-',' ',$slug));
                     $findIngredient->execute([$slug,$label,$slug]);
@@ -628,6 +631,7 @@ function commerce_migrate(PDO $pdo): void
                 ['drinks','Холодная сенча с юдзу','Зелёный чай сенча, юдзу и лёгкая сладость; подаём охлаждённым.','300 мл',2600,'52-cold-sencha-yuzu',0,180,['sencha','yuzu'],['сенча','юдзу','чай','холодный напиток'],[[19,'dessert'],[8,'dessert']]],
             ];
             $labels=['chicken'=>'Курица','egg'=>'Яйцо','rice'=>'Рис','onion'=>'Лук','soy'=>'Соя','sencha'=>'Сенча','yuzu'=>'Юдзу'];
+            $activeDishCount=(int)$pdo->query('SELECT COUNT(*) FROM dishes WHERE active=1')->fetchColumn();
             $findDish=$pdo->prepare('SELECT id FROM dishes WHERE name=? ORDER BY id LIMIT 1');
             $insertDish=$pdo->prepare('INSERT INTO dishes(category,name,description,weight,price,image_url,featured,active,sort_order) VALUES(?,?,?,?,?,?,?,?,?)');
             $findIngredient=$pdo->prepare('SELECT slug FROM ingredients WHERE slug=? OR name=? ORDER BY CASE WHEN slug=? THEN 0 ELSE 1 END LIMIT 1');
@@ -637,7 +641,8 @@ function commerce_migrate(PDO $pdo): void
             $insertPairing=$pdo->prepare('INSERT OR IGNORE INTO dish_pairings(dish_id,paired_dish_id,pairing_type,sort_order) VALUES(?,?,?,?)');
             foreach($catalog as [$category,$name,$description,$weight,$price,$image,$featured,$sortOrder,$ingredients,$tags,$pairings]){
                 $findDish->execute([$name]);$dishId=(int)($findDish->fetchColumn()?:0);
-                if(!$dishId){$insertDish->execute([$category,$name,$description,$weight,$price,'assets/food/'.$image.'.webp',$featured,1,100+$sortOrder]);$dishId=(int)$pdo->lastInsertId();}
+                if(!$dishId && $activeDishCount<52){$insertDish->execute([$category,$name,$description,$weight,$price,'assets/food/'.$image.'.webp',$featured,1,100+$sortOrder]);$dishId=(int)$pdo->lastInsertId();$activeDishCount++;}
+                if(!$dishId)continue;
                 foreach(array_values(array_unique($ingredients)) as $index=>$slug){$label=$labels[$slug]??ucfirst(str_replace('-',' ',$slug));$findIngredient->execute([$slug,$label,$slug]);$actualSlug=$findIngredient->fetchColumn();if($actualSlug===false){$insertIngredient->execute([$slug,$label]);$actualSlug=$slug;}$insertComposition->execute([$dishId,(string)$actualSlug,($index+1)*10]);}
                 foreach(array_values(array_unique($tags)) as $tag)$insertTag->execute([$dishId,$tag]);
                 foreach($pairings as $index=>[$pairedId,$type])if($dishId!==(int)$pairedId)$insertPairing->execute([$dishId,(int)$pairedId,$type,($index+1)*10]);
@@ -659,6 +664,39 @@ function commerce_migrate(PDO $pdo): void
             $replaceImage->execute(['assets/food/51-oyakodon.webp','Оякодон с курицей','assets/food/16-eel-donburi.webp']);
             $replaceImage->execute(['assets/food/52-cold-sencha-yuzu.webp','Холодная сенча с юдзу','assets/food/20-yuzu-lemonade.webp']);
             $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(21)');
+            sqlite_commit($pdo);
+        } catch (Throwable $error) {
+            sqlite_rollback($pdo);
+            throw $error;
+        }
+    }
+
+    // v22 adds a second fictional seasonal collection without replacing
+    // collections that an administrator may already have created.
+    if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=22')->fetchColumn()) {
+        sqlite_begin_immediate($pdo);
+        try {
+            $insertCollection = $pdo->prepare("INSERT OR IGNORE INTO seasonal_collections(slug,name,description,image_url,theme_key,active,demo_only,sort_order) VALUES(?,?,?,?,?,1,1,20)");
+            $insertCollection->execute([
+                'hanami-in-kyoto',
+                'Hanami in Kyoto',
+                'Пять вымышленных подач для сезона цветения: нигири, гёдза, темпура и чайный финал с матча.',
+                'assets/generated/collection-spring-in-tokyo-v1.jpg',
+                'sakura'
+            ]);
+            $collectionIdQuery = $pdo->prepare('SELECT id FROM seasonal_collections WHERE slug=? LIMIT 1');
+            $collectionIdQuery->execute(['hanami-in-kyoto']);
+            $collectionId = (int)$collectionIdQuery->fetchColumn();
+            if ($collectionId > 0) {
+                $findActiveDish = $pdo->prepare('SELECT id FROM dishes WHERE name=? AND active=1 ORDER BY id LIMIT 1');
+                $insertItem = $pdo->prepare('INSERT OR IGNORE INTO seasonal_collection_items(collection_id,dish_id,sort_order) VALUES(?,?,?)');
+                foreach (['Нигири с лососем','Гёдза с уткой','Эби темпура','Моти','Матча латте'] as $position => $dishName) {
+                    $findActiveDish->execute([$dishName]);
+                    $dishId = (int)$findActiveDish->fetchColumn();
+                    if ($dishId > 0) $insertItem->execute([$collectionId,$dishId,($position+1)*10]);
+                }
+            }
+            $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(22)');
             sqlite_commit($pdo);
         } catch (Throwable $error) {
             sqlite_rollback($pdo);

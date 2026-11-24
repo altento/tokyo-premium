@@ -343,6 +343,12 @@ document.addEventListener('DOMContentLoaded', () => {
       status.textContent = `Найдено блюд: ${visible}${visible ? ` · Страница ${menuPage} из ${pages}` : ''}.`;
     }
   }
+  const filterMenuInPlace = () => {
+    const left = window.scrollX;
+    const top = window.scrollY;
+    filterMenu();
+    requestAnimationFrame(() => window.scrollTo(left, top));
+  };
   const menuPageBreakpoint = window.matchMedia('(max-width: 700px)');
   menuPageBreakpoint.addEventListener?.('change', event => {
     menuPageSize = event.matches ? 6 : 12;
@@ -350,11 +356,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   categoryButtons.forEach(button => button.addEventListener('click', () => {
     categoryButtons.forEach(item => { item.classList.toggle('active', item === button); item.setAttribute('aria-pressed', String(item === button)); });
-    filterMenu();
+    filterMenuInPlace();
   }));
   menuIngredientButtons.forEach(button => button.addEventListener('click', () => {
     menuIngredientButtons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
-    filterMenu();
+    filterMenuInPlace();
   }));
   menuPagination?.addEventListener('click', event => {
     const button = event.target.closest('[data-page-go]');

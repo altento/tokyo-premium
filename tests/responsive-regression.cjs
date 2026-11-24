@@ -24,7 +24,7 @@ async function run(options = {}) {
     page.setDefaultTimeout(7000);
     const navigateReady = async url => {
       const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
-      await page.waitForFunction(() => [...document.styleSheets].some(sheet => sheet.href?.endsWith('/premium.css')));
+      await page.waitForFunction(() => [...document.styleSheets].some(sheet => sheet.href && new URL(sheet.href).pathname.endsWith('/premium.css')));
       await page.evaluate(() => document.fonts.ready);
       return response;
     };
@@ -187,7 +187,7 @@ async function run(options = {}) {
       const expectedMax=fixed.startsWith('2027-01')?'2028-02-01':'2028-03-01';
       for (const route of ['/', '/pages.php?page=booking', '/docs/index.html', '/docs/booking.html']) {
         await futurePage.goto(base+route,{waitUntil:'domcontentloaded'});
-        await futurePage.waitForFunction(() => [...document.styleSheets].some(sheet => sheet.href?.endsWith('/premium.css')));
+        await futurePage.waitForFunction(() => [...document.styleSheets].some(sheet => sheet.href && new URL(sheet.href).pathname.endsWith('/premium.css')));
         await futurePage.evaluate(() => document.fonts.ready);
         for (const input of await futurePage.locator('.home-booking-form input[type="date"], .booking-form input[type="date"]').all()) {
           // Home booking fields are revealed on scroll. Trigger the reveal before

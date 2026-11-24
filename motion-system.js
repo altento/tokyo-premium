@@ -14,6 +14,7 @@
     const primary = hero.querySelector('[data-home-hero-primary]');
     const secondary = hero.querySelector('[data-home-hero-secondary]');
     const status = hero.querySelector('[data-home-hero-status]');
+    const autoplayButton = hero.querySelector('[data-home-hero-autoplay]');
     if (!data || !controls || !image || !nextImage || !title || !accent || !eyebrow || !lead || !primary || !secondary) return;
 
     let scenes;
@@ -35,6 +36,11 @@
     let activeIndex = 0;
     let changing = false;
     let queuedIndex = null;
+    let queuedAnnouncement = true;
+    let autoplayTimer = 0;
+    let autoplayEnabled = !reducedMotion.matches;
+    let pointerPaused = false;
+    let focusPaused = false;
     let pointerFrame = 0;
     let progressFrame = 0;
     const gsapMotion = !reducedMotion.matches && window.gsap && window.ScrollTrigger;
@@ -148,9 +154,26 @@
     };
     const syncControls = () => dots.forEach((dot, index) => dot.setAttribute('aria-pressed', String(index === activeIndex)));
     const delay = ms => new Promise(resolve => window.setTimeout(resolve, ms));
+    const syncAutoplayControl = () => {
+      if (!autoplayButton) return;
+      autoplayButton.hidden = reducedMotion.matches;
+      autoplayButton.setAttribute('aria-pressed', String(autoplayEnabled && !reducedMotion.matches));
+      autoplayButton.setAttribute('aria-label', autoplayEnabled ? 'Приостановить автоматическую смену слайдов' : 'Возобновить автоматическую смену слайдов');
+      autoplayButton.textContent = autoplayEnabled ? 'Ⅱ' : '▶';
+    };
+    const scheduleAutoplay = () => {
+      window.clearTimeout(autoplayTimer);
+      autoplayTimer = 0;
+      syncAutoplayControl();
+      if (!autoplayButton || !autoplayEnabled || reducedMotion.matches || document.hidden || pointerPaused || focusPaused) return;
+      autoplayTimer = window.setTimeout(() => {
+        autoplayTimer = 0;
+        void showScene(activeIndex + 1, false);
+      }, 7800);
+    };
 
-    const showScene = async index => {
-      if (changing) { queuedIndex = index; return; }
+    const showScene = async (index, announce = true) => {
+      if (changing) { queuedIndex = index; queuedAnnouncement = announce; return; }
       const target = (index + scenes.length) % scenes.length;
       if (target === activeIndex) return;
       const scene = scenes[target];
@@ -171,10 +194,12 @@
         hero.classList.remove('is-crossfading', 'is-text-changing');
         hero.removeAttribute('aria-busy');
         changing = false;
-        if (status) status.textContent = 'Не удалось загрузить фотографию. Оставлена текущая сцена.';
+        if (status && announce) status.textContent = 'Не удалось загрузить фотографию. Оставлена текущая сцена.';
         const queued = queuedIndex;
+        const queuedAnnounce = queuedAnnouncement;
         queuedIndex = null;
-        if (queued !== null && queued !== target && queued !== activeIndex) showScene(queued);
+        if (queued !== null && queued !== target && queued !== activeIndex) void showScene(queued, queuedAnnounce);
+        else scheduleAutoplay();
         return;
       }
 
@@ -194,7 +219,7 @@
       activeIndex = target;
       hero.dataset.homeHeroScene = String(activeIndex);
       syncControls();
-      if (status) status.textContent = `Сцена ${activeIndex + 1} из ${scenes.length}: ${scene.eyebrow}.`;
+      if (status && announce) status.textContent = `Сцена ${activeIndex + 1} из ${scenes.length}: ${scene.eyebrow}.`;
       requestAnimationFrame(() => hero.classList.remove('is-text-changing'));
 
       if (!reducedMotion.matches && hero.classList.contains('is-crossfading')) {
@@ -209,16 +234,21 @@
       changing = false;
       if (queuedIndex !== null) {
         const queued = queuedIndex;
+        const queuedAnnounce = queuedAnnouncement;
         queuedIndex = null;
-        if (queued !== activeIndex) showScene(queued);
-      }
+        if (queued !== activeIndex) void showScene(queued, queuedAnnounce);
+        else scheduleAutoplay();
+      } else scheduleAutoplay();
     };
 
     controls.addEventListener('click', event => {
       const button = event.target.closest('button');
       if (!button) return;
-      if (button.hasAttribute('data-home-hero-index')) showScene(Number(button.dataset.homeHeroIndex));
-      else if (button.hasAttribute('data-home-hero-step')) showScene(activeIndex + Number(button.dataset.homeHeroStep));
+      if (button === autoplayButton) {
+        autoplayEnabled = !autoplayEnabled;
+        scheduleAutoplay();
+      } else if (button.hasAttribute('data-home-hero-index')) void showScene(Number(button.dataset.homeHeroIndex));
+      else if (button.hasAttribute('data-home-hero-step')) void showScene(activeIndex + Number(button.dataset.homeHeroStep));
     });
     controls.addEventListener('keydown', event => {
       if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
@@ -228,9 +258,22 @@
       const step = event.key === 'ArrowRight' ? 1 : -1;
       const nextIndex = (Number(currentDot.dataset.homeHeroIndex) + step + scenes.length) % scenes.length;
       dots[nextIndex]?.focus();
-      showScene(nextIndex);
+      void showScene(nextIndex);
     });
     controls.hidden = false;
+    syncAutoplayControl();
+    hero.addEventListener('pointerenter', () => { pointerPaused = true; scheduleAutoplay(); }, { passive: true });
+    hero.addEventListener('pointerleave', () => { pointerPaused = false; scheduleAutoplay(); }, { passive: true });
+    hero.addEventListener('focusin', () => { focusPaused = true; scheduleAutoplay(); });
+    hero.addEventListener('focusout', event => {
+      if (!hero.contains(event.relatedTarget)) { focusPaused = false; scheduleAutoplay(); }
+    });
+    document.addEventListener('visibilitychange', scheduleAutoplay);
+    reducedMotion.addEventListener?.('change', event => {
+      autoplayEnabled = !event.matches;
+      scheduleAutoplay();
+    });
+    scheduleAutoplay();
 
     if (!reducedMotion.matches) {
       requestAnimationFrame(() => hero.classList.add('is-ready'));

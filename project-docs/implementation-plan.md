@@ -1,5 +1,11 @@
 # Tokyo Premium 2.0 implementation record
 
+## 2026-11-25 — site finish pass
+
+Completed the fixes consolidated from the latest browser annotations: Russian guest-count declension, home autoplay/pause and reduced-motion behavior, menu list/grid button alignment and filter scroll stability, Omakase hero overlap, and account/auth-panel alignment. Added migration v22 for a second seasonal collection and a CLI-only, transactional, repeat-safe fixture seeder for account/admin review. Regenerated the checked-in Pages export from the current PHP source.
+
+Verification for this candidate: 11 route types in both PHP and Pages modes; menu interaction/visual checks at 320–1920 px; 50 PHP and 50 Pages dish-detail routes; booking, floorplan, Omakase, account-demo, motion, philosophy and SQLite integrity checks. The consolidated PHP/SQLite integration run passed 236 assertions. Publishing this candidate and PHP hosting at SprintHost are separate deployment steps; a real host-side PHP/SQLite check still requires a signed-in panel.
+
 ## 2026-11-23 — Homepage cadence follow-up
 
 A desktop-only CSS pass preserves all homepage sections while reducing oversized recommendation cards, editorial blocks, room story and booking padding. At 1440 px the full page fell from 2841 to 2617 px; the 390 px layout remained 4708 px. `tests/visual-fidelity-regression.cjs` passed locally and on public Pages at both widths; no overflow, failed requests or page errors were found. The test now uses `DOMContentLoaded` and explicitly scrolls/reveals before capture, avoiding the public `networkidle` timeout. Captures, public evidence and the measured remaining gap to reference 01 are in [`home-final-cadence-2026-11-23`](visual-qa/home-final-cadence-2026-11-23/comparison.md).

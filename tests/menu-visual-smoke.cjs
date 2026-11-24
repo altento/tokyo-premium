@@ -185,7 +185,7 @@ const viewports = [
         assert.equal(metrics.breadcrumb, 'Меню', `${route.mode} ${viewport.name} shows the current breadcrumb`);
         assert.equal(metrics.menuGridColumns, viewport.width > 900 ? 3 : (viewport.width <= 360 ? 1 : 2), `${route.mode} ${viewport.name} keeps the catalog at its intended responsive column count`);
         assert.ok(metrics.catalogHeadingDivider && metrics.catalogHeadingDivider.content !== 'none' && metrics.catalogHeadingDivider.width >= 40 && metrics.catalogHeadingDivider.height === 2, `${route.mode} ${viewport.name} preserves the Japanese-red rule under the catalog section title`);
-        assert.equal(metrics.firstPageCards, 6, `${route.mode} ${viewport.name} renders the first six catalog cards`);
+        assert.equal(metrics.firstPageCards, viewport.width <= 700 ? 6 : 12, `${route.mode} ${viewport.name} renders the responsive catalog page size`);
         assert.equal(metrics.emptyCategoryButtons, 0, `${route.mode} ${viewport.name} does not present an empty catalog filter`);
         assert.match(metrics.setBuilderShortcut || '', /set-builder/, `${route.mode} ${viewport.name} links directly to the set builder from categories`);
         assert.equal(metrics.menuViewButtons, 2, `${route.mode} ${viewport.name} exposes grid and list view controls`);
@@ -204,8 +204,10 @@ const viewports = [
         }));
         assert.deepEqual(listState, { view: 'list', pressed: 'true', cardDisplay: 'grid' }, `${route.mode} ${viewport.name} switches to a real card list`);
         await page.locator('[data-menu-ingredient="scallop"]').click();
-        assert.equal(await page.locator('.menu-page .dish-card:not([hidden])').count(), 1, `${route.mode} ${viewport.name} scallop filter returns its catalog dish`);
-        assert.match(await page.locator('.menu-page .dish-card:not([hidden])').innerText(), /Нигири с морским гребешком/u, `${route.mode} ${viewport.name} filter shows the correct dish`);
+        const scallopCards = page.locator('.menu-page .dish-card:not([hidden])');
+        const expectedScallopCount = await page.locator('.menu-page .dish-card').evaluateAll(cards => Math.min(cards.filter(card => /гребеш/u.test(card.dataset.search || '')).length, matchMedia('(max-width: 700px)').matches ? 6 : 12));
+        assert.equal(await scallopCards.count(), expectedScallopCount, `${route.mode} ${viewport.name} scallop filter returns all matching catalog dishes`);
+        assert.ok((await scallopCards.allInnerTexts()).every(text => /гребеш/u.test(text)), `${route.mode} ${viewport.name} filter shows only scallop dishes`);
         await page.locator('[data-menu-ingredient="all"]').click();
         await page.locator('.menu-search').fill('Рамен с говядиной');
         const filteredList = await page.locator('.menu-page .dish-grid').evaluate(grid => ({

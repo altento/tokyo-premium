@@ -1,5 +1,13 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-25 — site finish candidate
+
+Built from `main` at `102750d` in an isolated worktree. `node tests/visual-fidelity-regression.cjs` passed all 11 route types in PHP and static Pages modes. Focused checks passed for menu state in both modes; menu visual behavior in both modes at 320, 390, 768/900, 1023/1024, 1440 and 1920 px; the progressive home-booking flow at desktop/mobile; five Omakase courses in PHP/Pages; browser-only account data; autoplay/manual pause/reduced-motion behavior in PHP/Pages; PHP/Pages booking map; philosophy at six widths; and all 50 public dish details in PHP and Pages at six widths.
+
+`tests/php_integrity_integration.php` passed 236 assertions using a temporary PHP config that loaded the installed PDO SQLite extension; its temporary database was isolated. The CLI demo seeder was separately checked on a fresh throwaway SQLite file: it created 1 user, 12 orders, 8 bookings, 10 contact messages and 6 total reviews, returned zero foreign-key errors, and a second run left counts unchanged. The test file and captured one-time password were removed. The local review database independently has schema v22, 52 dish rows (50 returned by the public `dishes()` helper), two active demo collections with ten dish links, 12 orders, 8 bookings, 10 messages and 10 reviews; `PRAGMA foreign_key_check` returned no rows.
+
+Changed PHP files passed `php -l`; changed JS files passed `node --check`; `git diff --check` passed. One early menu-state run reported a 320 px overflow assertion immediately after navigation; an isolated state run, a full PHP+Pages rerun, and separate seven-width visual runs passed, with the measured document width equal to the 320 px viewport. No persistent overflow was reproduced. PHP syntax/integration and local rendered routes were checked; this candidate has not yet been pushed, so GitHub Actions, the public Pages release, and SprintHost are not verified by this record.
+
 ## 2026-11-24 — продолжение с GitHub main, фото каталога и Pages
 
 Исходная точка — чистый `origin/main` на `8e745b31bf59524b5d5e9f25647b4d7bd896db74`; три последних CSS-файла уже были в Git. Добавлена миграция v21 для исправления старых путей фото оякодона и холодной сенчи. На копии базы проверено, что миграция сохраняет пользовательское фото, если путь уже меняли в админке. Два новых WebP — отдельные оригинальные изображения, 145–185 КБ каждый.
