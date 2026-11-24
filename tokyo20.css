@@ -688,3 +688,100 @@ selected dish photography for a custom-set composition. */
 @media(max-width:600px){.tp20-admin-ledger-filters .tp20-admin-fields{grid-template-columns:minmax(0,1fr)}.tp20-admin-ledger-actions{align-items:stretch;flex-direction:column}.tp20-admin-ledger-actions .button{justify-content:center}.tp20-admin-ledger-pagination{justify-content:space-between}.tp20-admin-ledger-table{min-width:900px;font-size:.72rem}.tp20-admin-ledger-table th,.tp20-admin-ledger-table td{padding:10px}.tp20-admin-ledger-scroll-hint{display:block;margin:0 0 10px;padding:10px 12px;border-left:2px solid #b50f1b;background:rgba(202,165,107,.06);font-size:.75rem}}
 .tp20-admin-search-help{display:block;margin:-12px 0 18px;color:var(--tp20-muted,#a99c88);font-size:.78rem;line-height:1.5}
 .tp20-admin-search-help kbd{display:inline-grid;min-width:1.6em;min-height:1.6em;place-items:center;margin-inline:2px;padding:0 4px;border:1px solid rgba(202,165,107,.36);border-radius:4px;background:#17130f;color:#ead7b5;font:inherit}
+
+/* Guest-facing clarity pass: make the large catalogue and tasting controls
+   readable at normal zoom while keeping the restrained Tokyo Premium palette. */
+.menu-page .menu-category-list .filter-btn {
+  min-height: 48px;
+  font-size: .9rem;
+  line-height: 1.35;
+}
+.menu-page .menu-subfilters .menu-subfilter {
+  min-height: 42px;
+  padding-inline: 16px;
+  font-size: .84rem;
+  line-height: 1.25;
+}
+.menu-page .menu-catalog .dish-card .dish-meta > small {
+  font-size: .75rem;
+  line-height: 1.4;
+}
+.menu-page .menu-catalog .dish-card .dish-meta > p {
+  font-size: .94rem;
+  line-height: 1.55;
+}
+.menu-page .menu-catalog .dish-card .dish-price {
+  font-size: 1.08rem;
+  font-variant-numeric: tabular-nums;
+}
+.menu-page .menu-catalog .dish-card .add-to-cart {
+  min-width: 100px;
+  min-height: 44px;
+  padding: 8px 12px;
+  font-size: .76rem;
+  letter-spacing: .08em;
+}
+.menu-page .menu-category-list .filter-btn:focus-visible,
+.menu-page .menu-subfilters .menu-subfilter:focus-visible,
+.menu-page .menu-catalog .dish-card a:focus-visible,
+.menu-page .menu-catalog .dish-card button:focus-visible,
+.tp20-omakase-experience .tp20-course-tabs button:focus-visible,
+.tp-set-dish-controls button:focus-visible {
+  outline: 2px solid #f0cf8b;
+  outline-offset: 3px;
+}
+.editorial-page .tp20-omakase-experience .tp20-course-tabs .tp20-course-tab-stage {
+  font-size: .78rem;
+  line-height: 1.4;
+  letter-spacing: .025em;
+}
+.editorial-page .tp20-omakase-experience .tp20-course-tabs .tp20-course-tab-copy strong {
+  font-size: .9rem;
+  line-height: 1.4;
+}
+.editorial-page .tp20-omakase-experience .tp20-course-tabs button {
+  min-height: 112px;
+  border-radius: 12px;
+}
+.editorial-page .tp20-omakase-experience .tp20-course-tabs button > img {
+  min-height: 78px;
+  border-radius: 9px;
+}
+.tp-set-dish-card .kicker { font-size: .76rem; line-height: 1.45; }
+.tp-set-dish-card p { font-size: .92rem; line-height: 1.55; }
+.tp-set-dish-controls button { width: 44px; height: 44px; flex: 0 0 44px; }
+
+@media (max-width: 900px) {
+  .editorial-page .tp20-omakase-experience .tp20-course-tabs { gap: 10px; }
+  .editorial-page .tp20-omakase-experience .tp20-course-tabs button { min-height: 104px; }
+  .editorial-page .tp20-omakase-experience .tp20-course-tabs button > img { min-height: 68px; }
+}
+@media (max-width: 600px) {
+  .menu-page .menu-catalog .dish-card .dish-meta > p { font-size: .9rem; }
+  .menu-page .menu-catalog .dish-card .add-to-cart { min-width: 0; }
+  .editorial-page .tp20-omakase-experience .tp20-course-tabs { gap: 8px; }
+  .editorial-page .tp20-omakase-experience .tp20-course-tabs button {
+    min-height: 96px;
+    grid-template-columns: 56px minmax(0,1fr);
+  }
+  .editorial-page .tp20-omakase-experience .tp20-course-tabs button > img {
+    min-height: 56px;
+    height: 56px;
+    border-radius: 8px;
+  }
+  .editorial-page .tp20-omakase-experience .tp20-course-tabs .tp20-course-tab-copy {
+    padding: 7px 8px;
+  }
+  .editorial-page .tp20-omakase-experience .tp20-course-tabs .tp20-course-tab-stage {
+    font-size: .72rem;
+  }
+  .editorial-page .tp20-omakase-experience .tp20-course-tabs .tp20-course-tab-copy strong {
+    font-size: .82rem;
+  }
+  .tp-set-dish-card { grid-template-columns: 96px minmax(0,1fr); }
+  .tp-set-dish-card > div { padding: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .editorial-page .tp20-omakase-experience .tp20-course-tabs button,
+  .tp-set-dish-controls button { transition: none; }
+}
