@@ -545,6 +545,7 @@ function commerce_migrate(PDO $pdo): void
     // Existing rows and administrator edits are left untouched.
     if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=19')->fetchColumn()) {
         sqlite_begin_immediate($pdo);
+        $pdo->exec('PRAGMA defer_foreign_keys=ON');
         try {
             $pdo->exec("INSERT OR IGNORE INTO categories(slug,name,sort_order) VALUES
                 ('starters','Закуски',1),('rolls','Роллы',2),('sushi','Суши и сашими',3),('soups','Супы',4),
@@ -620,6 +621,7 @@ function commerce_migrate(PDO $pdo): void
     // databases that already had two Secret Menu entries are filtered.
     if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=20')->fetchColumn()) {
         sqlite_begin_immediate($pdo);
+        $pdo->exec('PRAGMA defer_foreign_keys=ON');
         try {
             $catalog = [
                 ['hot','Оякодон с курицей','Нежная курица и яйцо на рисе косихикари с луком и соусом на основе сои.','400 г',4600,'16-eel-donburi',0,170,['chicken','egg','rice','onion','soy'],['оякодон','курица','яйцо','донбури'],[[20,'drink'],[19,'dessert']]],
