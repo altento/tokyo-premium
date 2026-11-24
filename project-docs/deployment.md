@@ -3,9 +3,13 @@ Updated 2026-11-25
 
 Для переноса репозитория и запуска PHP-версии на другом Windows-компьютере см. [подробную инструкцию продолжения](continue-on-another-computer.md). Она отдельно объясняет, почему SQLite и секреты не входят в Git.
 
-## 2026-11-25 — candidate verification
+## 2026-11-25 — current release and host status
 
-The candidate was built from `main` at `102750d` in an isolated worktree. Local PHP/SQLite integration passed 236 assertions. The visual-fidelity suite passed for 11 routes in PHP and static Pages modes; focused checks covered the 50 public dish details, menu interactions, booking, Omakase, account demo and motion behavior. These checks do not verify a SprintHost upload. The current public Pages release remains the last successful `main` build until the candidate is pushed and its Actions workflow finishes.
+- The current `main` release is `d846618c014ef7bbb8b1495e8cecbe674f911b22` (`Finish Tokyo Premium site pass`). GitHub Pages workflow [45505847357](https://github.com/altento/tokyo-premium/actions/runs/45505847357) completed successfully. The published menu shows 50 public dishes: [open the static demo](https://altento.github.io/tokyo-premium/menu.html?audit=20261125).
+- Before publication, the PHP/SQLite integration passed 236 assertions. The visual-fidelity suite covered 11 route types in PHP and Pages modes; focused checks covered menu interactions, booking, Omakase, account demo, motion behavior and all 50 public dish details. See [testing-report.md](testing-report.md) for the recorded scope. These local checks do not verify the SprintHost PHP runtime.
+- SprintHost already has an older PHP version and an active SQLite database outside `public_html`. The active file is `tokyo-restaurant-public50.sqlite`; the host database is at migration 21, while the published code expects migration 22. The file and directory permissions are restricted, and `.htaccess` blocks direct database downloads. No database file was modified in this audit.
+- The SprintHost test domain currently serves HTTP only. The panel reports HTTPS unavailable on the current tariff; its balance is 0 ₽. No upgrade or purchase was made. Do not use real passwords, personal data or payment details on that HTTP site. The PHP release remains pending HTTPS, a pre-deploy database backup and a controlled migration check.
+- GitHub Pages is the current public preview. It is static and cannot provide PHP sessions, server authentication, durable SQLite records, real booking submission or payment processing.
 
 ## Public preview
 - Repository: https://github.com/altento/tokyo-premium
