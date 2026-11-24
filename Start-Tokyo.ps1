@@ -2,6 +2,7 @@
 param(
     [ValidateRange(1024, 65535)][int]$Port = 8080,
     [string]$PhpPath = 'php',
+    [ValidateSet('127.0.0.1', '0.0.0.0')][string]$ListenAddress = '127.0.0.1',
     [switch]$CheckOnly,
     [switch]$SetupAdmin
 )
@@ -32,9 +33,10 @@ try {
     if ($SetupAdmin) {
         & $phpExecutable @phpFlags (Join-Path $tokyoRoot 'setup_admin.php')
     } else {
-        Write-Host "Tokyo Premium: http://127.0.0.1:$Port"
+        Write-Host "Tokyo Premium listener: ${ListenAddress}:$Port"
+        if ($ListenAddress -eq '127.0.0.1') { Write-Host "Tokyo Premium: http://127.0.0.1:$Port" }
         Write-Host 'Keep this window open. Ctrl+C stops the server. Admin: /admin.php'
-        & $phpExecutable @phpFlags -d display_errors=0 -d log_errors=1 -S "127.0.0.1:$Port" -t $tokyoRoot (Join-Path $tokyoRoot 'tools\home-router.php')
+        & $phpExecutable @phpFlags -d display_errors=0 -d log_errors=1 -S "${ListenAddress}:$Port" -t $tokyoRoot (Join-Path $tokyoRoot 'tools\home-router.php')
     }
     if ($LASTEXITCODE -ne 0) { throw "PHP exited with code $LASTEXITCODE" }
 } finally { Pop-Location }
