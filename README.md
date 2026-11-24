@@ -4,6 +4,8 @@
 
 Перенос разработки на другой компьютер, запуск локальной версии и безопасная работа с Git: [`project-docs/continue-on-another-computer.md`](project-docs/continue-on-another-computer.md).
 
+Актуальный список завершённых работ и оставшихся задач сайта, включая фактическое состояние SprintHost и базы: [`project-docs/site-finish-checklist.md`](project-docs/site-finish-checklist.md).
+
 Проверка бронирования и галереи: `npm run test:floorplan`, `npm run test:gallery-caption`, `npm run test:booking-gallery-layout`. Задайте `TOKYO_BASE_URL` и `TOKYO_STATIC_BASE_URL` адресами запущенных PHP и статической версий. Сброс бронирования очищает предпочтительный стол; фотографии залов и отфильтрованная галерея листаются отдельными группами. [Скриншоты и сравнение](project-docs/visual-qa/booking-gallery-2026-11-19/comparison.md).
 
 ## Запуск PHP-версии
