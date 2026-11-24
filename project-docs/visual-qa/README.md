@@ -1,5 +1,7 @@
 ## Visual QA evidence
 
+**2026-11-25 philosophy timeline fix:** [desktop/mobile PHP and static captures with six-width measurements](philosophy-timeline-spacing-2026-11-25/README.md). The year column no longer collides with the nested title/description; PHP and exported Pages output passed at 320, 390, 768, 1024, 1440 and 1920 px.
+
 **2026-11-24 GitHub-main audit:** [11 страниц, исправления каталога и статического экспорта, функциональные результаты и desktop/mobile кадры](resume-audit-2026-11-24/comparison.md).
 
 Booking field order: [2026-11-23 comparison](booking-form-pairing-2026-11-23/comparison.md), with PHP/Pages desktop and mobile selected-table captures after pairing date/time and guest count/zone.

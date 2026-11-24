@@ -1,0 +1,488 @@
+[
+  {
+    "width": 320,
+    "scrollWidth": 320,
+    "height": 6138,
+    "chefHeight": 1186.734375,
+    "chapters": {
+      "story": {
+        "height": 1563,
+        "paddingTop": 58
+      },
+      "chef": {
+        "height": 1187,
+        "paddingTop": 36
+      },
+      "principles": {
+        "height": 813,
+        "paddingTop": 36
+      },
+      "source": {
+        "height": 723,
+        "paddingTop": 36
+      },
+      "quote": {
+        "height": 340,
+        "paddingTop": 36
+      },
+      "contact": {
+        "height": 334,
+        "paddingTop": 44
+      }
+    },
+    "headings": [
+      {
+        "text": "Философия",
+        "clipped": false
+      },
+      {
+        "text": "Наша история",
+        "clipped": false
+      },
+      {
+        "text": "Этапы развития",
+        "clipped": false
+      },
+      {
+        "text": "Точностьбез лишнего шума",
+        "clipped": false
+      },
+      {
+        "text": "Невидимая работа вкуса",
+        "clipped": false
+      },
+      {
+        "text": "Сначала — сам продукт",
+        "clipped": false
+      },
+      {
+        "text": "Найдите собственный ритм",
+        "clipped": false
+      }
+    ],
+    "sectionRules": [
+      {
+        "heading": "Наша история",
+        "visible": true
+      },
+      {
+        "heading": "Точностьбез лишнего шума",
+        "visible": true
+      },
+      {
+        "heading": "Сначала — сам продукт",
+        "visible": true
+      },
+      {
+        "heading": "Найдите собственный ритм",
+        "visible": true
+      }
+    ],
+    "images": true
+  },
+  {
+    "width": 390,
+    "scrollWidth": 390,
+    "height": 5846,
+    "chefHeight": 1191.15625,
+    "chapters": {
+      "story": {
+        "height": 1534,
+        "paddingTop": 58
+      },
+      "chef": {
+        "height": 1191,
+        "paddingTop": 36
+      },
+      "principles": {
+        "height": 720,
+        "paddingTop": 36
+      },
+      "source": {
+        "height": 643,
+        "paddingTop": 36
+      },
+      "quote": {
+        "height": 293,
+        "paddingTop": 36
+      },
+      "contact": {
+        "height": 334,
+        "paddingTop": 44
+      }
+    },
+    "headings": [
+      {
+        "text": "Философия",
+        "clipped": false
+      },
+      {
+        "text": "Наша история",
+        "clipped": false
+      },
+      {
+        "text": "Этапы развития",
+        "clipped": false
+      },
+      {
+        "text": "Точностьбез лишнего шума",
+        "clipped": false
+      },
+      {
+        "text": "Невидимая работа вкуса",
+        "clipped": false
+      },
+      {
+        "text": "Сначала — сам продукт",
+        "clipped": false
+      },
+      {
+        "text": "Найдите собственный ритм",
+        "clipped": false
+      }
+    ],
+    "sectionRules": [
+      {
+        "heading": "Наша история",
+        "visible": true
+      },
+      {
+        "heading": "Точностьбез лишнего шума",
+        "visible": true
+      },
+      {
+        "heading": "Сначала — сам продукт",
+        "visible": true
+      },
+      {
+        "heading": "Найдите собственный ритм",
+        "visible": true
+      }
+    ],
+    "images": true
+  },
+  {
+    "width": 768,
+    "scrollWidth": 768,
+    "height": 3979,
+    "chefHeight": 580.15625,
+    "chapters": {
+      "story": {
+        "height": 932,
+        "paddingTop": 61.44
+      },
+      "chef": {
+        "height": 580,
+        "paddingTop": 58
+      },
+      "principles": {
+        "height": 525,
+        "paddingTop": 54
+      },
+      "source": {
+        "height": 474,
+        "paddingTop": 52
+      },
+      "quote": {
+        "height": 292,
+        "paddingTop": 52
+      },
+      "contact": {
+        "height": 225,
+        "paddingTop": 54
+      }
+    },
+    "headings": [
+      {
+        "text": "Философия",
+        "clipped": false
+      },
+      {
+        "text": "Наша история",
+        "clipped": false
+      },
+      {
+        "text": "Этапы развития",
+        "clipped": false
+      },
+      {
+        "text": "Точностьбез лишнего шума",
+        "clipped": false
+      },
+      {
+        "text": "Невидимая работа вкуса",
+        "clipped": false
+      },
+      {
+        "text": "Сначала — сам продукт",
+        "clipped": false
+      },
+      {
+        "text": "Найдите собственный ритм",
+        "clipped": false
+      }
+    ],
+    "sectionRules": [
+      {
+        "heading": "Наша история",
+        "visible": true
+      },
+      {
+        "heading": "Точностьбез лишнего шума",
+        "visible": true
+      },
+      {
+        "heading": "Сначала — сам продукт",
+        "visible": true
+      },
+      {
+        "heading": "Найдите собственный ритм",
+        "visible": true
+      }
+    ],
+    "images": true
+  },
+  {
+    "width": 1024,
+    "scrollWidth": 1024,
+    "height": 3871,
+    "chefHeight": 564.28125,
+    "chapters": {
+      "story": {
+        "height": 925,
+        "paddingTop": 81.92
+      },
+      "chef": {
+        "height": 564,
+        "paddingTop": 61.44
+      },
+      "principles": {
+        "height": 506,
+        "paddingTop": 61.44
+      },
+      "source": {
+        "height": 495,
+        "paddingTop": 61.44
+      },
+      "quote": {
+        "height": 305,
+        "paddingTop": 56.32
+      },
+      "contact": {
+        "height": 228,
+        "paddingTop": 54
+      }
+    },
+    "headings": [
+      {
+        "text": "Философия",
+        "clipped": false
+      },
+      {
+        "text": "Наша история",
+        "clipped": false
+      },
+      {
+        "text": "Этапы развития",
+        "clipped": false
+      },
+      {
+        "text": "Точностьбез лишнего шума",
+        "clipped": false
+      },
+      {
+        "text": "Невидимая работа вкуса",
+        "clipped": false
+      },
+      {
+        "text": "Сначала — сам продукт",
+        "clipped": false
+      },
+      {
+        "text": "Найдите собственный ритм",
+        "clipped": false
+      }
+    ],
+    "sectionRules": [
+      {
+        "heading": "Наша история",
+        "visible": true
+      },
+      {
+        "heading": "Точностьбез лишнего шума",
+        "visible": true
+      },
+      {
+        "heading": "Сначала — сам продукт",
+        "visible": true
+      },
+      {
+        "heading": "Найдите собственный ритм",
+        "visible": true
+      }
+    ],
+    "images": true
+  },
+  {
+    "width": 1440,
+    "scrollWidth": 1440,
+    "height": 2526,
+    "chefHeight": 374.875,
+    "chapters": {
+      "story": {
+        "height": 429,
+        "paddingTop": 34.56
+      },
+      "chef": {
+        "height": 375,
+        "paddingTop": 24.48
+      },
+      "principles": {
+        "height": 312,
+        "paddingTop": 17.28
+      },
+      "source": {
+        "height": 254,
+        "paddingTop": 23
+      },
+      "quote": {
+        "height": 174,
+        "paddingTop": 23
+      },
+      "contact": {
+        "height": 107,
+        "paddingTop": 11.52
+      }
+    },
+    "headings": [
+      {
+        "text": "Философия",
+        "clipped": false
+      },
+      {
+        "text": "Наша история",
+        "clipped": false
+      },
+      {
+        "text": "Этапы развития",
+        "clipped": false
+      },
+      {
+        "text": "Точностьбез лишнего шума",
+        "clipped": false
+      },
+      {
+        "text": "Невидимая работа вкуса",
+        "clipped": false
+      },
+      {
+        "text": "Сначала — сам продукт",
+        "clipped": false
+      },
+      {
+        "text": "Найдите собственный ритм",
+        "clipped": false
+      }
+    ],
+    "sectionRules": [
+      {
+        "heading": "Наша история",
+        "visible": true
+      },
+      {
+        "heading": "Точностьбез лишнего шума",
+        "visible": true
+      },
+      {
+        "heading": "Сначала — сам продукт",
+        "visible": true
+      },
+      {
+        "heading": "Найдите собственный ритм",
+        "visible": true
+      }
+    ],
+    "images": true
+  },
+  {
+    "width": 1920,
+    "scrollWidth": 1920,
+    "height": 2522,
+    "chefHeight": 376.71875,
+    "chapters": {
+      "story": {
+        "height": 413,
+        "paddingTop": 36
+      },
+      "chef": {
+        "height": 377,
+        "paddingTop": 25
+      },
+      "principles": {
+        "height": 314,
+        "paddingTop": 18
+      },
+      "source": {
+        "height": 261,
+        "paddingTop": 23
+      },
+      "quote": {
+        "height": 176,
+        "paddingTop": 23
+      },
+      "contact": {
+        "height": 108,
+        "paddingTop": 12
+      }
+    },
+    "headings": [
+      {
+        "text": "Философия",
+        "clipped": false
+      },
+      {
+        "text": "Наша история",
+        "clipped": false
+      },
+      {
+        "text": "Этапы развития",
+        "clipped": false
+      },
+      {
+        "text": "Точностьбез лишнего шума",
+        "clipped": false
+      },
+      {
+        "text": "Невидимая работа вкуса",
+        "clipped": false
+      },
+      {
+        "text": "Сначала — сам продукт",
+        "clipped": false
+      },
+      {
+        "text": "Найдите собственный ритм",
+        "clipped": false
+      }
+    ],
+    "sectionRules": [
+      {
+        "heading": "Наша история",
+        "visible": true
+      },
+      {
+        "heading": "Точностьбез лишнего шума",
+        "visible": true
+      },
+      {
+        "heading": "Сначала — сам продукт",
+        "visible": true
+      },
+      {
+        "heading": "Найдите собственный ритм",
+        "visible": true
+      }
+    ],
+    "images": true
+  }
+]

@@ -1,5 +1,13 @@
 # Tokyo Premium 2.0 — verification record
 
+## 2026-11-25 — philosophy timeline and final static/PHP pass
+
+Corrected the philosophy timeline grid: the year and text now occupy separate columns, and title/description styles target the nested `div > h3/p` markup. Focused Playwright checks passed for the PHP page and exported static page at 320, 390, 768, 1024, 1440 and 1920 px. Evidence: [timeline spacing pass](visual-qa/philosophy-timeline-spacing-2026-11-25/).
+
+The full `npm run test:visual-fidelity` pass validated all 11 route types in PHP and static modes. `npm run test:tokyo20` passed for 52 PHP dish routes, 50 public static dish routes, add-to-cart, offers, Omakase, set builder, preference wizard, floorplan, gift preview, quick view, profile and mobile overflow. `php tests/php_integrity_integration.php` passed 236 assertions using an isolated temporary SQLite database with PDO SQLite enabled. `tools/export-pages.php` completed and emitted 69 static pages from the current PHP preview. These are local verification results, not a PHP-host deployment.
+
+The SprintHost test route returned HTTP 200 over HTTP. HTTPS verification failed, and SprintHost documents that `.xsph.ru` technical domains work only over HTTP ([technical-domain docs](https://help.sprinthost.ru/how-hosting-work/techdomain)). No login, booking or payment was submitted; no host files or host database were modified. The active host database remains at migration 21 while current code requires 22.
+
 ## 2026-11-25 — published site and deployment audit
 
 The released application source is `d846618c014ef7bbb8b1495e8cecbe674f911b22`; its code-release workflow [45505847357](https://github.com/altento/tokyo-premium/actions/runs/45505847357) completed successfully. Subsequent commits only update documentation, and a Pages workflow completed successfully after those updates. The published menu was opened with all 50 public dishes present. This verifies the static Pages preview, not the PHP service on SprintHost.

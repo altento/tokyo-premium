@@ -717,10 +717,11 @@
 @media(min-width:1101px){
   .about-page .about-story{gap:clamp(18px,2vw,28px);padding-top:clamp(30px,2.4vw,36px);padding-bottom:clamp(30px,2.4vw,36px)}
   .about-page .about-story .about-intro-image img{height:clamp(230px,17vw,250px)}
-  .about-page .about-story .timeline-list li{display:grid;grid-template-columns:46px minmax(0,1fr);grid-template-rows:auto auto;column-gap:8px;align-items:start}
-  .about-page .about-story .timeline-list li>span{grid-column:1;grid-row:1 / span 2;font-size:17px}
-  .about-page .about-story .timeline-list li>h3{grid-column:2;grid-row:1;margin:0 0 2px;font-size:15px;line-height:1.2}
-  .about-page .about-story .timeline-list li>p{grid-column:2;grid-row:2;max-width:none;margin:0;font-size:12px;line-height:1.35}
+  .about-page .about-story .timeline-list li{display:grid;grid-template-columns:60px minmax(0,1fr);grid-template-rows:auto;column-gap:12px;align-items:start;padding-bottom:11px}
+  .about-page .about-story .timeline-list li>span{grid-column:1;grid-row:1;font-size:17px;line-height:1.25}
+  .about-page .about-story .timeline-list li>div{grid-column:2;grid-row:1;min-width:0}
+  .about-page .about-story .timeline-list li>div>h3{margin:0 0 3px;font-size:clamp(15px,1vw,17px);line-height:1.2}
+  .about-page .about-story .timeline-list li>div>p{max-width:38ch;margin:0;font-size:12px;line-height:1.4}
   .about-page .about-principles{padding-block:clamp(16px,1.2vw,18px)}
   .about-page .about-principles .principle-grid{margin-top:18px}
   .about-page .about-principles .principle-grid article{min-height:104px;padding-block:6px}
