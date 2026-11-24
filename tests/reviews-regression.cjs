@@ -12,7 +12,7 @@ async function run(options = {}) {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
-    await page.goto(`${base}/docs/reviews.html`, { waitUntil: 'domcontentloaded' });
+    await page.goto(process.env.TOKYO_REVIEWS_URL || `${base}/docs/reviews.html`, { waitUntil: 'domcontentloaded' });
     await page.evaluate(() => localStorage.removeItem('tokyo-demo-reviews'));
     await page.reload();
     const publicAverage = await page.locator('.review-score-band strong').innerText();

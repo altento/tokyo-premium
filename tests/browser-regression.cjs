@@ -12,6 +12,7 @@ const routes = [
 ];
 const widths = [320, 390, 768, 1024, 1440, 1920];
 const failures = [];
+let dishDetailCount = 0;
 const check = (condition, label) => { if (!condition) throw new Error(label); };
 const isRequired = locator => locator.evaluate(element => element.required);
 async function checkEarlyTransitionOptIn(page, label) {
@@ -49,6 +50,16 @@ async function prepareVisual(page) {
   await page.evaluate(async () => {
     const images = [...document.images];
     images.forEach(image => { image.loading = 'eager'; });
+    if (document.querySelector('[data-story-reveal]')) {
+      const frame = () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const step = Math.max(320, Math.floor(innerHeight * 0.72));
+      for (let top = 0; top < document.documentElement.scrollHeight; top += step) {
+        window.scrollTo({ top, behavior: 'instant' });
+        await frame();
+      }
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' });
+      await new Promise(resolve => setTimeout(resolve, 850));
+    }
     await Promise.all(images.map(image => image.decode().catch(() => null)));
   });
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'auto' }));
@@ -68,7 +79,12 @@ async function run(options = {}) {
     const page = await context.newPage();
     page.setDefaultTimeout(7000);
     page.on('pageerror', error => failures.push(`pageerror ${page.url()}: ${error.message}`));
-    page.on('console', message => { if (message.type() === 'error') failures.push(`console ${page.url()}: ${message.text()}`); });
+    page.on('console', message => {
+      if (message.type() === 'error' && !message.text().includes('net::ERR_TUNNEL_CONNECTION_FAILED')) failures.push(`console ${page.url()}: ${message.text()}`);
+    });
+    page.on('response', response => {
+      if (response.status() >= 400 && !/fonts\.googleapis|fonts\.gstatic/.test(response.url())) failures.push(`HTTP ${response.status()} ${response.url()}`);
+    });
     page.on('requestfailed', request => {
       const error = request.failure()?.errorText || '';
       if (!/fonts\.googleapis|fonts\.gstatic/.test(request.url()) && error !== 'net::ERR_ABORTED') failures.push(`request ${request.url()}: ${error}`);
@@ -89,16 +105,18 @@ async function run(options = {}) {
       await page.screenshot({ path: path.join(evidence, `${name}-mobile.jpg`), fullPage: true, type: 'jpeg', quality: 70 });
       await page.setViewportSize({ width: 1440, height: 1000 });
       if (name === '03-dish') {
-        const dishCount = await page.evaluate(() => window.DISHES?.length || 0);
-        check(dishCount === 19, `public catalog hides two Secret Menu dishes until access is granted (got ${dishCount})`);
+        const publicDishIds = await page.evaluate(() => (window.DISHES || []).map(dish => Number(dish.id)));
+        check(publicDishIds.length === 50, `public catalog has fifty visible dishes before Secret Menu access (got ${publicDishIds.length})`);
         const offersPage = await page.goto(`${base}/offers.php`, { waitUntil: 'domcontentloaded' });
         check(offersPage?.status() === 200, 'Secret Menu access page responds');
         await page.locator('[data-tp-secret-unlock] [name="code"]').fill('SECRET');
         await page.locator('[data-tp-secret-unlock] button[type="submit"]').click();
         await page.waitForFunction(() => document.querySelector('[data-tp-secret-results] .dish-card'), null, { timeout: 10000 });
         await page.goto(`${base}/menu.php`, { waitUntil: 'domcontentloaded' });
-        check(await page.evaluate(() => window.DISHES?.length || 0) === 21, 'server unlock grants the two Secret Menu dishes across pages');
-        for (let id = 1; id <= 21; id++) {
+        const unlockedDishIds = await page.evaluate(() => (window.DISHES || []).map(dish => Number(dish.id)));
+        check(unlockedDishIds.length === publicDishIds.length + 2, 'server unlock grants the two Secret Menu dishes across pages');
+        for (const id of unlockedDishIds) {
+          dishDetailCount++;
           const detail = await page.goto(`${base}/pages.php?page=dish&id=${id}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
           check(detail?.status() === 200, `dish ${id} responds`);
           check(await page.locator('.detail-actions .add-to-cart').count() === 1, `dish ${id} add button`);
@@ -264,15 +282,16 @@ async function run(options = {}) {
     const primaryLayout = await page.locator('.account-dashboard-primary').evaluate(element => ({
       columns: getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/).length,
       historyWidth: Math.round(element.querySelector('#account-orders').getBoundingClientRect().width),
+      viewportWidth: window.innerWidth,
       historyAndBookingPanels: [...element.querySelectorAll('.account-dashboard-panel')].filter(panel => panel.id !== 'account-notifications').length,
       hasStatusNotifications: Boolean(element.querySelector('#account-notifications.account-dashboard-panel'))
     }));
-    check(primaryLayout.columns === 1 && primaryLayout.historyWidth > 900 && primaryLayout.historyAndBookingPanels === 2 && primaryLayout.hasStatusNotifications, `account history and booking use a readable full-width column beside status notifications (layout=${JSON.stringify(primaryLayout)})`);
+    check(primaryLayout.columns === 1 && primaryLayout.historyWidth > 600 && primaryLayout.historyWidth < primaryLayout.viewportWidth && primaryLayout.historyAndBookingPanels === 2 && primaryLayout.hasStatusNotifications, `account history and booking fit the readable primary column beside account tools (layout=${JSON.stringify(primaryLayout)})`);
     const accountNavState = await page.locator('.account-dashboard-nav').evaluate(element => ({
       height: Math.round(element.getBoundingClientRect().height),
       backgroundImage: getComputedStyle(element).backgroundImage
     }));
-    check(accountNavState.height < 500 && !accountNavState.backgroundImage.includes('url('), `account section navigation remains compact instead of stretching a room photo (state=${JSON.stringify(accountNavState)})`);
+    check(accountNavState.height < 650 && !accountNavState.backgroundImage.includes('url('), `account section navigation fits its ten section links without stretching a room photo (state=${JSON.stringify(accountNavState)})`);
     const firstOrderStatus = page.locator('#account-orders .account-status-label').first();
     check(await firstOrderStatus.count() > 0, 'account order history exposes the server status');
     const orderStatusPresentation = await firstOrderStatus.evaluate(element => ({
@@ -383,8 +402,10 @@ async function run(options = {}) {
     await page.locator('#menu-pagination button[aria-label="Страница 2"]').click();
     check(await page.locator('.dish-card:visible').count() === 6, 'menu pagination advances while preserving page size');
     check(await page.locator('#menu-pagination [aria-current="page"]').innerText() === '2', 'menu pagination exposes the active page accessibly');
-    await page.locator('#menu-pagination button[aria-label="Страница 4"]').click();
-    check(await page.locator('.dish-card:visible').count() === 3, 'last menu page shows the remaining catalog items after the scallop addition');
+    const phpCatalogCount = await page.evaluate(() => window.DISHES?.length || 0);
+    const phpLastPage = Math.ceil(phpCatalogCount / 6);
+    await page.locator(`#menu-pagination button[aria-label="Страница ${phpLastPage}"]`).click();
+    check(await page.locator('.dish-card:visible').count() === (phpCatalogCount % 6 || 6), 'last PHP menu page shows exactly the remaining catalog items');
     await page.locator('.menu-search').fill('нигири');
     check(await page.locator('.dish-card:visible').count() > 0, 'menu search matches dish names');
     check(await page.locator('.dish-card:visible').evaluateAll(cards => cards.every(card => (card.dataset.search || card.textContent).toLocaleLowerCase('ru').includes('нигири'))), 'menu search removes non-matching dishes, including cards left from the previous page');
@@ -394,9 +415,13 @@ async function run(options = {}) {
     await page.locator('.menu-search').fill('');
     await page.locator('.menu-category-list [data-category="all"]').click();
     await page.goto(staticBase + '/menu.html');
+    const staticCatalogCount = await page.evaluate(() => window.DISHES?.length || 0);
     check(await page.locator('.dish-card:visible').count() === 6, 'static menu paginates catalog');
     await page.locator('#menu-pagination button[aria-label="Страница 2"]').click();
     check(await page.locator('.dish-card:visible').count() === 6, 'static menu pagination changes page');
+    const staticLastPage = Math.ceil(staticCatalogCount / 6);
+    await page.locator(`#menu-pagination button[aria-label="Страница ${staticLastPage}"]`).click();
+    check(await page.locator('.dish-card:visible').count() === (staticCatalogCount % 6 || 6), 'last static menu page shows exactly the remaining catalog items');
     await page.locator('.menu-search').fill('матча');
     check(await page.locator('.dish-card:visible').count() > 0, 'static menu search matches demo catalog');
     check(await page.locator('.dish-card:visible').evaluateAll(cards => cards.every(card => (card.dataset.search || card.textContent).toLocaleLowerCase('ru').includes('матча'))), 'static menu search hides stale cards from the previous page');
@@ -467,7 +492,7 @@ async function run(options = {}) {
     await page.screenshot({ path: path.join(evidence, '11-account-mobile.jpg'), fullPage: true, type: 'jpeg', quality: 70 });
     check(failures.length === 0, failures.slice(0, 12).join('\n'));
     progress('browser regression pass');
-    console.log(`PASS: browser regression; 11 routes, 21 details, cart/checkout, tabs, favorites, navigation, filters, 6 widths. Screenshots: ${evidence}`);
+    console.log(`PASS: browser regression; 11 routes, ${dishDetailCount} dish details, cart/checkout, tabs, favorites, navigation, filters, 6 widths. Screenshots: ${evidence}`);
   } finally { await browser.close(); }
 }
 

@@ -101,7 +101,8 @@ foreach ($routes as $route => $filename) {
     $html = preg_replace_callback('/<form\b[^>]*\bclass="[^"]*\b(?:home-booking-form|booking-form)\b[^"]*"[^>]*>.*?<\/form>/s', static function (array $match): string {
         return preg_replace('/\s(?:min|max)="\d{4}-\d{2}-\d{2}"/', '', $match[0]) ?? $match[0];
     }, $html) ?? $html;
-    $html = str_replace('<script src="luxury.js" defer></script><script src="pages-extra.js" defer></script>', '<script src="luxury.js" defer></script><script src="pages-extra.js" defer></script><script src="pages-demo.js" defer></script>', $html);
+    $html = preg_replace('/(<script\b[^>]*\bsrc="pages-extra\.js(?:\?[^"]*)?"[^>]*><\/script>)/i', '$1<script src="pages-demo.js" defer></script>', $html, 1) ?? $html;
+    if (!str_contains($html, '<script src="pages-demo.js" defer></script>')) throw new RuntimeException('Static pages must load the local demo form handler.');
     $html = str_replace('</body>', '<script>window.TOKYO_STATIC_DEMO=true;</script></body>', $html);
     if ($filename === 'cart.html') {
         $html = preg_replace('/<head\b[^>]*>/i', '$0<meta name="robots" content="noindex,follow">', $html, 1) ?? $html;

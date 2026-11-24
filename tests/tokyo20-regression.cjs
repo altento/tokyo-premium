@@ -147,7 +147,9 @@ async function run() {
       const page = await context.newPage();
       page.setDefaultTimeout(7000);
       page.on('pageerror', error => failures.push(`${mode.name} pageerror ${page.url()}: ${error.message}`));
-      page.on('console', message => { if (message.type() === 'error' && !/fonts\.googleapis|fonts\.gstatic/.test(message.text())) failures.push(`${mode.name} console ${page.url()}: ${message.text()}`); });
+      page.on('console', message => {
+        if (message.type() === 'error' && !/fonts\.googleapis|fonts\.gstatic/.test(message.location().url)) failures.push(`${mode.name} console ${page.url()}: ${message.text()}`);
+      });
 
       for (const name of ['offers', 'collection', 'builder', 'evening', 'gift', 'omakase', 'booking', 'menu', 'cart', 'account']) {
         const response = await page.goto(mode.base + mode.routes[name], { waitUntil: 'domcontentloaded' });

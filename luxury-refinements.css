@@ -426,3 +426,7 @@
   .editorial-page:has(.omakase-hero) > .omakase-quote { padding-block:20px; }
 }
 @media(prefers-reduced-motion:reduce){.editorial-page:has(.omakase-hero) .omakase-course-card,.editorial-page:has(.omakase-hero) .omakase-course-card img{transition:none}}
+
+@media(max-width:700px){
+  .menu-page .menu-pagination{flex-wrap:wrap;max-width:100%}
+}

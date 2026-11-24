@@ -624,8 +624,8 @@ function commerce_migrate(PDO $pdo): void
         $pdo->exec('PRAGMA defer_foreign_keys=ON');
         try {
             $catalog = [
-                ['hot','Оякодон с курицей','Нежная курица и яйцо на рисе косихикари с луком и соусом на основе сои.','400 г',4600,'16-eel-donburi',0,170,['chicken','egg','rice','onion','soy'],['оякодон','курица','яйцо','донбури'],[[20,'drink'],[19,'dessert']]],
-                ['drinks','Холодная сенча с юдзу','Зелёный чай сенча, юдзу и лёгкая сладость; подаём охлаждённым.','300 мл',2600,'20-yuzu-lemonade',0,180,['sencha','yuzu'],['сенча','юдзу','чай','холодный напиток'],[[19,'dessert'],[8,'dessert']]],
+                ['hot','Оякодон с курицей','Нежная курица и яйцо на рисе косихикари с луком и соусом на основе сои.','400 г',4600,'51-oyakodon',0,170,['chicken','egg','rice','onion','soy'],['оякодон','курица','яйцо','донбури'],[[20,'drink'],[19,'dessert']]],
+                ['drinks','Холодная сенча с юдзу','Зелёный чай сенча, юдзу и лёгкая сладость; подаём охлаждённым.','300 мл',2600,'52-cold-sencha-yuzu',0,180,['sencha','yuzu'],['сенча','юдзу','чай','холодный напиток'],[[19,'dessert'],[8,'dessert']]],
             ];
             $labels=['chicken'=>'Курица','egg'=>'Яйцо','rice'=>'Рис','onion'=>'Лук','soy'=>'Соя','sencha'=>'Сенча','yuzu'=>'Юдзу'];
             $findDish=$pdo->prepare('SELECT id FROM dishes WHERE name=? ORDER BY id LIMIT 1');
@@ -645,6 +645,22 @@ function commerce_migrate(PDO $pdo): void
             $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(20)');
             sqlite_commit($pdo);
         } catch(Throwable $error) {
+            sqlite_rollback($pdo);
+            throw $error;
+        }
+    }
+
+    // v21 replaces only the two known seed-image mistakes. Keep an admin's
+    // later custom image intact by matching the old path as part of the update.
+    if (!$pdo->query('SELECT 1 FROM app_migrations WHERE version=21')->fetchColumn()) {
+        sqlite_begin_immediate($pdo);
+        try {
+            $replaceImage = $pdo->prepare('UPDATE dishes SET image_url=? WHERE name=? AND image_url=?');
+            $replaceImage->execute(['assets/food/51-oyakodon.webp','Оякодон с курицей','assets/food/16-eel-donburi.webp']);
+            $replaceImage->execute(['assets/food/52-cold-sencha-yuzu.webp','Холодная сенча с юдзу','assets/food/20-yuzu-lemonade.webp']);
+            $pdo->exec('INSERT OR IGNORE INTO app_migrations(version) VALUES(21)');
+            sqlite_commit($pdo);
+        } catch (Throwable $error) {
             sqlite_rollback($pdo);
             throw $error;
         }
