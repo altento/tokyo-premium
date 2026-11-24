@@ -2,7 +2,9 @@
 
 Проверено: 25 ноября 2026 г.
 
-Актуальный опубликованный код: `d846618c014ef7bbb8b1495e8cecbe674f911b22` (`main`).
+Код приложения: `d846618c014ef7bbb8b1495e8cecbe674f911b22`. Последний коммит `main` `62c0db88cba35b24837b12a5f42facd93a1c90d7` содержит только документационные обновления.
+
+Последняя сборка Pages: [45509721695](https://github.com/altento/tokyo-premium/actions/runs/45509721695), успешно завершена.
 
 Публичная статическая версия: [altento.github.io/tokyo-premium](https://altento.github.io/tokyo-premium/).
 

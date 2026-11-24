@@ -2,7 +2,7 @@
 
 ## 2026-11-25 — published site and deployment audit
 
-The released source is `d846618c014ef7bbb8b1495e8cecbe674f911b22`. GitHub Pages workflow [45505847357](https://github.com/altento/tokyo-premium/actions/runs/45505847357) completed successfully, and the published menu was opened with all 50 public dishes present. This verifies the static Pages preview, not the PHP service on SprintHost.
+The released application source is `d846618c014ef7bbb8b1495e8cecbe674f911b22`. The latest `main` commit `62c0db88cba35b24837b12a5f42facd93a1c90d7` only updates documentation; Pages workflow [45509721695](https://github.com/altento/tokyo-premium/actions/runs/45509721695) completed successfully for it. The published menu was opened with all 50 public dishes present. This verifies the static Pages preview, not the PHP service on SprintHost.
 
 Before publication, `node tests/visual-fidelity-regression.cjs` passed all 11 route types in PHP and static Pages modes. Focused checks passed for menu state and visual behavior at 320, 390, 768/900, 1023/1024, 1440 and 1920 px; the home-booking flow at desktop/mobile; five Omakase courses; browser-only account data; autoplay/manual pause/reduced-motion behavior; the booking map; philosophy at six widths; and all 50 public dish details in PHP and Pages at six widths.
 
