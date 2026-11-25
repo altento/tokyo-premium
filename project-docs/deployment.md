@@ -3,16 +3,19 @@ Updated 2026-11-25
 
 Для переноса репозитория и запуска PHP-версии на другом Windows-компьютере см. [подробную инструкцию продолжения](continue-on-another-computer.md). Она отдельно объясняет, почему SQLite и секреты не входят в Git.
 
-## Latest verified state — 2026-11-25 (after mobile pagination fix)
+## Latest verified state — 2026-11-25 (after SprintHost sync)
 
-- GitHub Pages serves the refreshed static export commit [`d39368d`](https://github.com/altento/tokyo-premium/commit/d39368da325690b3b2b03e66de25512f31dad3f2), with mobile pagination CSS from [`e95296c`](https://github.com/altento/tokyo-premium/commit/e95296c159a504e070c1dad9b31de8a0c2465a16); workflow [45523840607](https://github.com/altento/tokyo-premium/actions/runs/45523840607) succeeded. A browser smoke check covered 13 routes at 320/1280 px with no horizontal page overflow; menu count is 50 and Omakase shows five servings. Details: [responsive smoke record](responsive-smoke-2026-11-25.md).
-- SprintHost PHP is still deployed from `bc700eeb525bdb32a48558429fa79b82caadab61`. The live menu shows 50 cards, but the PHP Omakase page still says six servings; the current source fix has not been uploaded there.
-- Direct HTTP checks: 16 linked PHP routes returned 200 without PHP fatal/warning/exception/SQLSTATE; menu contains 50 dish cards. `/.env` and `/schema.sql` return 403, but `/seed.sql` still returns 200 (11,351 bytes). Live Omakase still says “6 подач”; highest-priority live issue is blocking SQL downloads before updating PHP.
-- PHP uses SQLite at `private-data/` outside `public_html`; the current application expects schema migration 22. The last read-only audit of the SprintHost database recorded migration 21 and 6 seasonal collections (along with 52 dishes, 8 categories, 36 accounts, 104 orders, 305 order lines, 52 bookings, 34 reviews, 76 loyalty rows, and 39 collection links). A separate local/test database at v22 has 7 seasonal collections. Verify `PRAGMA user_version` after safe rollout; these snapshots are synthetic. SQLite files and credentials remain outside Git.
-- No hosted DbaaS instance has been provisioned. Admin setup and external email/payment integrations are not configured. The technical host is HTTP-only; do not enter real credentials there.
-- The SprintHost panel currently requires owner sign-in. After manual sign-in, merge the SQL deny rule into the existing host `.htaccess`, preserving `SetEnv RESTAURANT_DB`, verify `/seed.sql` is blocked, then upload current PHP files without overwriting `.htaccess`, `.env`, or the active database.
+- GitHub main is at [7a3ff69](https://github.com/altento/tokyo-premium/commit/7a3ff694322e1c7b7941960717fded25a563c701). Pages workflow [45568555431](https://github.com/altento/tokyo-premium/actions/runs/45568555431) succeeded; the static demo shows 50 menu dishes and five Omakase courses.
+- The current PHP version was uploaded to SprintHost public_html: account.php, admin.php, bootstrap.php, experience-ui.js, premium.css. The host .htaccess and data files were preserved.
+- Live browser checks: menu = 50 dishes, booking guest grammar 1–12 is correct, account forms stack cleanly on a narrow viewport, Omakase = 5 courses, home page renders.
+- /.env, /schema.sql, /seed.sql return HTTP 403. The active SQLite path under private-data/ returns 404 from the public web root.
+- PHP keeps SQLite at private-data/tokyo-restaurant-public50.sqlite, outside public_html. Before rollout, a read-only audit recorded app_migrations version 21 and a detailed synthetic data snapshot: 52 dishes, 8 categories, 36 accounts, 104 orders, 305 order lines, 52 bookings, 34 reviews, 76 loyalty entries, six collections, 39 collection links. The bootstrap applies migrations during requests; after deployment, main PHP routes loaded successfully and v22 adds Hanami, for seven collections. The counts above are the last full snapshot before v22. The backup remains at private-data/tokyo-restaurant-public50.pre-v22-2026-11-25.tar.gz; no SQLite or secret file is in Git.
+- The site is reachable over HTTP. A direct HTTPS check of f1338748.xsph.ru fails certificate validation with SEC_E_UNTRUSTED_ROOT. Do not use this technical domain for real credentials, personal data or payments; no admin account is created yet.
+- No separate DbaaS was provisioned; this PHP app uses SQLite. No domain, hosting plan or paid service was purchased.
 
 ## 2026-11-25 — PHP release deployed to SprintHost — deployment record
+
+> Историческая запись первой выкладки bc700ee; актуальное состояние после более поздней синхронизации описано выше.
 
 - Application release: bc700eeb525bdb32a48558429fa79b82caadab61 (Fix philosophy timeline and refresh static export). GitHub Pages workflow [45513178464](https://github.com/altento/tokyo-premium/actions/runs/45513178464) completed successfully. The export contains 69 static pages; the published menu shows 50 public dishes: [open the static demo](https://altento.github.io/tokyo-premium/menu.html?audit=bc700ee).
 - The PHP release archive tokyo-premium-release-bc700ee-2026-11-25.zip was uploaded and extracted into SprintHost public_html. It excludes SQLite, .env, and .htaccess; the existing .htaccess was retained. The release source is the same bc700ee application commit.
