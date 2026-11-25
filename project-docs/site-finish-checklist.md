@@ -2,7 +2,7 @@
 
 Актуализировано: 25 ноября 2026 г. после прямой проверки GitHub Pages и SprintHost.
 
-GitHub main: `2eebe4fa96c1ad66e190500e60a540fb2c533762`; Pages workflow [45521465121](https://github.com/altento/tokyo-premium/actions/runs/45521465121) завершился успешно. SprintHost PHP пока на `bc700eeb525bdb32a48558429fa79b82caadab61` и отстаёт от актуальной правки Omakase.
+Кодовый коммит приложения: `2eebe4fa96c1ad66e190500e60a540fb2c533762`; Pages workflow [45521465121](https://github.com/altento/tokyo-premium/actions/runs/45521465121) завершился успешно. SprintHost PHP пока на `bc700eeb525bdb32a48558429fa79b82caadab61` и отстаёт от актуальной правки Omakase.
 
 Публичная статическая версия: [altento.github.io/tokyo-premium](https://altento.github.io/tokyo-premium/).
 
