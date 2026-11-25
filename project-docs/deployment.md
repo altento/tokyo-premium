@@ -3,9 +3,9 @@ Updated 2026-11-25
 
 Для переноса репозитория и запуска PHP-версии на другом Windows-компьютере см. [подробную инструкцию продолжения](continue-on-another-computer.md). Она отдельно объясняет, почему SQLite и секреты не входят в Git.
 
-## Latest verified state — 2026-11-25
+## Latest verified state — 2026-11-25 (after mobile pagination fix)
 
-- GitHub Pages currently serves application code commit `2eebe4fa96c1ad66e190500e60a540fb2c533762`; GitHub Pages workflow [45521465121](https://github.com/altento/tokyo-premium/actions/runs/45521465121) succeeded. The static menu shows 50 dishes and its Omakase format label shows five servings.
+- GitHub Pages serves the refreshed static export commit [`d39368d`](https://github.com/altento/tokyo-premium/commit/d39368da325690b3b2b03e66de25512f31dad3f2), with mobile pagination CSS from [`e95296c`](https://github.com/altento/tokyo-premium/commit/e95296c159a504e070c1dad9b31de8a0c2465a16); workflow [45523840607](https://github.com/altento/tokyo-premium/actions/runs/45523840607) succeeded. A browser smoke check covered 13 routes at 320/1280 px with no horizontal page overflow; menu count is 50 and Omakase shows five servings. Details: [responsive smoke record](responsive-smoke-2026-11-25.md).
 - SprintHost PHP is still deployed from `bc700eeb525bdb32a48558429fa79b82caadab61`. The live menu shows 50 cards, but the PHP Omakase page still says six servings; the current source fix has not been uploaded there.
 - Direct HTTP checks: home, menu, and Omakase return 200. `/.env` and `/schema.sql` return 403; `/seed.sql` still returns 200 (11,351 bytes). This is the highest-priority live issue.
 - PHP uses SQLite at `private-data/` outside `public_html`; the active schema is at migration 22. Last audited synthetic snapshot: 52 dishes (50 public, 2 Secret Menu), 8 categories, 36 accounts, 104 orders, 305 order lines, 52 bookings, 34 reviews, 76 loyalty rows, and 7 seasonal collections. SQLite files and credentials remain outside Git.
