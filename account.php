@@ -455,7 +455,7 @@ header_html();
                         <strong><?=e($booking['booking_date'])?> · <?=e($booking['booking_time'])?></strong>
                         <span class="booking-status-pill <?=$confirmed ? 'is-confirmed' : ''?>" <?=$confirmed ? 'role="status"' : ''?>><?=$confirmed ? '✓ ' : ''?><?=e($bookingStatusLabels[$bookingStatus] ?? $bookingStatus)?></span>
                       </div>
-                      <p class="account-order-meta"><?= (int)$booking['guest_count']?> гостей<?= !empty($booking['format'])?' · Omakase «'.e($booking['format']).'»':'' ?>
+                      <p class="account-order-meta"><?= (int)$booking['guest_count']?> <?=e(guest_count_noun((int)$booking['guest_count']))?><?= !empty($booking['format'])?' · Omakase «'.e($booking['format']).'»':'' ?>
                         <?php if ($bookingStatus === 'new'): ?> · Заявка ожидает подтверждения
                         <?php elseif ($confirmed): ?> · До встречи в Tokyo Premium
                         <?php elseif ($bookingStatus === 'cancelled'): ?> · Свяжитесь с рестораном, если хотите выбрать другое время

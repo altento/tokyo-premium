@@ -439,6 +439,10 @@
       if (!result) return;
       result.replaceChildren();
       const guestCount = Math.max(1, Math.min(12, Number(state.guests || 2)));
+      const guestCountGenitive = count => {
+        const normalized = Math.max(1, Math.trunc(Number(count) || 1));
+        return `${normalized} ${normalized % 10 === 1 && normalized % 100 !== 11 ? 'гостя' : 'гостей'}`;
+      };
       const budget = Math.max(0, Number(state.budget || 0));
       const groupBudget = budget * guestCount;
       const plantPreference = state.preference === 'plant';
@@ -519,7 +523,7 @@
       headline.className = 'tp-evening-summary';
       const zoneByAtmosphere = { sushi: 'Суши-бар', main: 'Основной зал', private: 'Приватная комната', omakase: 'Суши-бар' };
       const zone = zoneByAtmosphere[state.atmosphere] || zoneByAtmosphere.main;
-      safeText(headline, `Подбор для ${guestCount} гостей · предпочтительная зона: ${zone}.`);
+      safeText(headline, `Подбор для ${guestCountGenitive(guestCount)} · предпочтительная зона: ${zone}.`);
       result.append(headline);
       if (budget > 0) {
         const budgetNode = doc.createElement('p');
@@ -544,7 +548,7 @@
         article.dataset.variant = chosen.customSetPayload.setType;
         article.dataset.qty = String(chosen.customSetPayload.qty);
         const copy = doc.createElement('div');
-        const role = doc.createElement('span'); role.className = 'tp-evening-plan-role'; safeText(role, `Сет для ${guestCount} гостей`);
+        const role = doc.createElement('span'); role.className = 'tp-evening-plan-role'; safeText(role, `Сет для ${guestCountGenitive(guestCount)}`);
         const title = doc.createElement('h4'); safeText(title, chosen.setVariant.name);
         const description = doc.createElement('p'); safeText(description, `${chosen.lines.length} позиций из доступного меню · ${chosen.customSetPayload.qty} ${chosen.customSetPayload.qty === 1 ? 'сет' : 'сета'}.`);
         const components = doc.createElement('ul'); components.className = 'tp-evening-set-components';
@@ -588,7 +592,7 @@
       const totalNode = doc.createElement('p');
       totalNode.className = 'tp-evening-estimate';
       const total = chosen?.total || 0;
-      safeText(totalNode, `Ориентир на подбор для ${guestCount} гостей: ${money(total)}. ${staticDemo ? 'Демо-стоимость рассчитана в браузере и не проверяется сервером.' : 'Стоимость учебная; сервер проверяет цены при заказе.'}`);
+      safeText(totalNode, `Ориентир на подбор для ${guestCountGenitive(guestCount)}: ${money(total)}. ${staticDemo ? 'Демо-стоимость рассчитана в браузере и не проверяется сервером.' : 'Стоимость учебная; сервер проверяет цены при заказе.'}`);
       if (chosen) result.append(totalNode);
       if (budget && total > groupBudget) {
         const budgetNote = doc.createElement('p');
@@ -634,7 +638,7 @@
       result.setAttribute('role', 'region');
       result.setAttribute('aria-label', 'Результат подбора вечера');
       result.focus();
-      setStatus(root, chosen ? `Подбор готов. Ориентировочная сумма ${money(total)} для ${guestCount} гостей.` : 'Подходящий набор не найден. Можно изменить ответы или обсудить меню при бронировании.');
+      setStatus(root, chosen ? `Подбор готов. Ориентировочная сумма ${money(total)} для ${guestCountGenitive(guestCount)}.` : 'Подходящий набор не найден. Можно изменить ответы или обсудить меню при бронировании.');
     };
 
     root.addEventListener('click', event => {

@@ -936,7 +936,7 @@ if ($exportTable !== '') {
             <?php if (!empty($row['items_summary'])): ?><span>Состав: <?=e($row['items_summary'])?></span><?php endif ?>
             <?php if (!empty($row['comment'])): ?><span>Комментарий: <?=e($row['comment'])?></span><?php endif ?>
           <?php elseif ($table === 'bookings'): ?>
-            <span><?=e($row['booking_date'])?> · <?=e($row['booking_time'])?> · <?=(int)$row['guest_count']?> гостей</span>
+            <span><?=e($row['booking_date'])?> · <?=e($row['booking_time'])?> · <?=(int)$row['guest_count']?> <?=e(guest_count_noun((int)$row['guest_count']))?></span>
             <?php if ($row['guest_email'] !== ''): ?><span>Email гостя: <?php if (filter_var($row['guest_email'], FILTER_VALIDATE_EMAIL)): ?><a class="admin-record-contact" href="mailto:<?=e($row['guest_email'])?>"><?=e($row['guest_email'])?></a><?php else: ?><?=e($row['guest_email'])?><?php endif ?></span><?php endif ?>
             <?php if ($row['zone'] !== ''): ?><span>Зона: <?=e($row['zone'])?></span><?php endif ?>
             <?php if ($row['preferred_table'] !== ''): ?><span>Стол: <?=e($row['preferred_table'])?></span><?php endif ?>
