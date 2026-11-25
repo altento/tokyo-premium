@@ -5,7 +5,7 @@ Updated 2026-11-25
 
 ## Latest verified state — 2026-11-25
 
-- GitHub main is at `2eebe4fa96c1ad66e190500e60a540fb2c533762`; GitHub Pages workflow [45521465121](https://github.com/altento/tokyo-premium/actions/runs/45521465121) succeeded. The static menu shows 50 dishes and its Omakase format label shows five servings.
+- GitHub Pages currently serves application code commit `2eebe4fa96c1ad66e190500e60a540fb2c533762`; GitHub Pages workflow [45521465121](https://github.com/altento/tokyo-premium/actions/runs/45521465121) succeeded. The static menu shows 50 dishes and its Omakase format label shows five servings.
 - SprintHost PHP is still deployed from `bc700eeb525bdb32a48558429fa79b82caadab61`. The live menu shows 50 cards, but the PHP Omakase page still says six servings; the current source fix has not been uploaded there.
 - Direct HTTP checks: home, menu, and Omakase return 200. `/.env` and `/schema.sql` return 403; `/seed.sql` still returns 200 (11,351 bytes). This is the highest-priority live issue.
 - PHP uses SQLite at `private-data/` outside `public_html`; the active schema is at migration 22. Last audited synthetic snapshot: 52 dishes (50 public, 2 Secret Menu), 8 categories, 36 accounts, 104 orders, 305 order lines, 52 bookings, 34 reviews, 76 loyalty rows, and 7 seasonal collections. SQLite files and credentials remain outside Git.
