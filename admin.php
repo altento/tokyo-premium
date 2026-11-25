@@ -128,6 +128,37 @@ function admin_export_url(string $table, string $notificationTarget, string $rec
     return 'admin.php?' . http_build_query($query);
 }
 
+function admin_filter_and(array ...$filters): array
+{
+    $clauses = [];
+    $values = [];
+    foreach ($filters as [$where, $filterValues]) {
+        $where = trim((string)$where);
+        if ($where === '') continue;
+        if (str_starts_with($where, 'WHERE ')) $where = substr($where, 6);
+        $clauses[] = '(' . $where . ')';
+        array_push($values, ...$filterValues);
+    }
+    return [$clauses === [] ? '' : ' WHERE ' . implode(' AND ', $clauses), $values];
+}
+
+function admin_menu_sort_key(string $sort): string
+{
+    return in_array($sort, ['name', 'price_asc', 'price_desc', 'category', 'recent'], true) ? $sort : 'menu';
+}
+
+function admin_menu_sort_sql(string $sort): string
+{
+    return match (admin_menu_sort_key($sort)) {
+        'name' => 'tp_unicode_lower(d.name) COLLATE NOCASE ASC,d.id DESC',
+        'price_asc' => 'd.price ASC,tp_unicode_lower(d.name) COLLATE NOCASE ASC,d.id DESC',
+        'price_desc' => 'd.price DESC,tp_unicode_lower(d.name) COLLATE NOCASE ASC,d.id DESC',
+        'category' => 'c.sort_order ASC,tp_unicode_lower(d.name) COLLATE NOCASE ASC,d.id DESC',
+        'recent' => 'd.id DESC',
+        default => 'd.sort_order ASC,d.id DESC',
+    };
+}
+
 function admin_post_section(string $action, array $post): string
 {
     $section = match ($action) {
@@ -171,6 +202,19 @@ function admin_post_return_url(string $action, array $query, array $post): strin
         $page = filter_var($query[$pageKey] ?? null, FILTER_VALIDATE_INT);
         if ($page !== false && $page !== null && $page > 1) {
             $safeQuery[$pageKey] = $page;
+        }
+    }
+
+    if ($section === 'menu') {
+        $menuSearch = $post['menu_q'] ?? $query['menu_q'] ?? '';
+        if (is_string($menuSearch)) {
+            $menuSearch = trim(admin_unicode_slice(trim($menuSearch), 120));
+            if ($menuSearch !== '') $safeQuery['menu_q'] = $menuSearch;
+        }
+        $menuSort = $post['menu_sort'] ?? $query['menu_sort'] ?? 'menu';
+        if (is_string($menuSort)) {
+            $menuSort = admin_menu_sort_key($menuSort);
+            if ($menuSort !== 'menu') $safeQuery['menu_sort'] = $menuSort;
         }
     }
 
@@ -515,6 +559,12 @@ $noticeSection = (string)($_SESSION['admin_flash_section'] ?? '');
 unset($_SESSION['admin_flash']);
 unset($_SESSION['admin_flash_section']);
 $search = $logged ? trim((string)($_SESSION['admin_search'] ?? '')) : '';
+$menuSearchValue = $_GET['menu_q'] ?? '';
+$menuSearch = $logged && is_string($menuSearchValue)
+    ? trim(admin_unicode_slice(trim($menuSearchValue), 120))
+    : '';
+$menuSortValue = $_GET['menu_sort'] ?? 'menu';
+$menuSort = $logged && is_string($menuSortValue) ? admin_menu_sort_key($menuSortValue) : 'menu';
 
 page_start('Управление сайтом — Tokyo Premium', 'Защищённая панель управления сайтом.');
 header_html();
@@ -536,10 +586,19 @@ if (!$logged):
 <?php
 else:
 $cats = $pdo->query('SELECT slug,name FROM categories ORDER BY sort_order')->fetchAll(PDO::FETCH_ASSOC);
-$dishFilter = admin_search_where(['d.name','d.category','c.name','d.description','d.weight','CAST(d.id AS TEXT)'], $search);
+$dishSearchColumns = ['d.name','d.category','c.name','d.description','d.weight','CAST(d.id AS TEXT)'];
+$dishFilter = admin_filter_and(
+    admin_search_where($dishSearchColumns, $search),
+    admin_search_where($dishSearchColumns, $menuSearch)
+);
+$dishCount = admin_count(
+    $pdo,
+    'SELECT COUNT(*) FROM dishes d LEFT JOIN categories c ON c.slug=d.category' . $dishFilter[0],
+    $dishFilter[1]
+);
 $items = admin_rows($pdo,
     'SELECT d.*,c.name AS category_name FROM dishes d LEFT JOIN categories c ON c.slug=d.category'
-    . $dishFilter[0] . ' ORDER BY d.sort_order,d.id DESC LIMIT 100',
+    . $dishFilter[0] . ' ORDER BY ' . admin_menu_sort_sql($menuSort) . ' LIMIT 100',
     $dishFilter[1]);
 $pairingWhere = admin_search_where([
     'CAST(source.id AS TEXT)','source.name','CAST(paired.id AS TEXT)','paired.name',
@@ -778,10 +837,30 @@ if ($exportTable !== '') {
 
   <section class="admin-card" id="menu" aria-labelledby="admin-menu-title">
     <?php if ($notice !== '' && $noticeSection === 'menu'): ?><p class="form-status success admin-notice" role="status"><?=e($notice)?></p><?php endif ?>
-    <h2 id="admin-menu-title">Позиции меню <span class="admin-result-count"><?=$search !== '' ? count($items) . ' найдено' : count($items) . ' показано'?></span></h2>
+    <h2 id="admin-menu-title">Позиции меню <span class="admin-result-count"><?=$menuSearch !== '' || $search !== '' ? $dishCount . ' найдено' : $dishCount . ' блюд'?></span></h2>
+    <form method="get" action="admin.php#menu" class="admin-menu-toolbar" role="search" aria-label="Поиск и сортировка блюд">
+      <label class="admin-menu-search">Найти блюдо
+        <input type="search" name="menu_q" value="<?=e($menuSearch)?>" maxlength="120" placeholder="Название, категория или описание" autocomplete="off">
+      </label>
+      <label class="admin-menu-sort">Сортировка
+        <select name="menu_sort">
+          <option value="menu" <?=$menuSort === 'menu' ? 'selected' : ''?>>Порядок меню</option>
+          <option value="name" <?=$menuSort === 'name' ? 'selected' : ''?>>Название: А–Я</option>
+          <option value="price_asc" <?=$menuSort === 'price_asc' ? 'selected' : ''?>>Сначала дешевле</option>
+          <option value="price_desc" <?=$menuSort === 'price_desc' ? 'selected' : ''?>>Сначала дороже</option>
+          <option value="category" <?=$menuSort === 'category' ? 'selected' : ''?>>По категории</option>
+          <option value="recent" <?=$menuSort === 'recent' ? 'selected' : ''?>>Сначала новые</option>
+        </select>
+      </label>
+      <button class="button admin-menu-submit" type="submit">Показать блюда</button>
+      <?php if ($menuSearch !== '' || $menuSort !== 'menu'): ?><a class="admin-menu-reset" href="admin.php#menu">Сбросить</a><?php endif ?>
+    </form>
+    <?php if ($search !== '' && $menuSearch !== ''): ?><p class="admin-menu-filter-note">Учитывается также общий поиск по панели: «<?=e($search)?>».</p><?php endif ?>
     <form method="post" class="admin-form admin-create-form">
       <input type="hidden" name="csrf" value="<?=e(csrf())?>">
       <input type="hidden" name="action" value="dish-save">
+      <input type="hidden" name="menu_q" value="<?=e($menuSearch)?>">
+      <input type="hidden" name="menu_sort" value="<?=e($menuSort)?>">
       <label>Название<input name="name" required maxlength="120"></label>
       <label>Категория<select name="category" required><?php foreach ($cats as $category): ?><option value="<?=e($category['slug'])?>"><?=e($category['name'])?></option><?php endforeach ?></select></label>
       <label>Цена, ₸<input name="price" type="number" min="1" max="500000" required></label>
@@ -810,6 +889,8 @@ if ($exportTable !== '') {
             <form method="post" class="admin-form admin-edit-form">
               <input type="hidden" name="csrf" value="<?=e(csrf())?>">
               <input type="hidden" name="action" value="dish-save">
+              <input type="hidden" name="menu_q" value="<?=e($menuSearch)?>">
+              <input type="hidden" name="menu_sort" value="<?=e($menuSort)?>">
               <input type="hidden" name="id" value="<?=(int)$dish['id']?>">
               <label>Название<input name="name" value="<?=e($dish['name'])?>" required maxlength="120"></label>
               <label>Категория<select name="category"><?php foreach ($cats as $category): ?><option value="<?=e($category['slug'])?>" <?=$dish['category'] === $category['slug'] ? 'selected' : ''?>><?=e($category['name'])?></option><?php endforeach ?></select></label>
@@ -830,6 +911,8 @@ if ($exportTable !== '') {
             <input type="hidden" name="csrf" value="<?=e(csrf())?>">
             <input type="hidden" name="action" value="dish-delete">
             <input type="hidden" name="id" value="<?=(int)$dish['id']?>">
+            <input type="hidden" name="menu_q" value="<?=e($menuSearch)?>">
+            <input type="hidden" name="menu_sort" value="<?=e($menuSort)?>">
             <button class="admin-danger" type="submit">Удалить</button>
           </form>
         </article>
