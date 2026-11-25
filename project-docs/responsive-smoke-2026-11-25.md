@@ -24,3 +24,10 @@ Additional focused checks:
 ## Limits and outstanding work
 
 These checks target GitHub Pages, which is a static demonstration and does not run PHP, persist to the server database, or exercise server-side admin/authentication. SprintHost remains on the older PHP release and still exposes `/seed.sql`; safe PHP synchronization must wait until the SQL download is blocked. A full paired visual review of all page sections and live PHP admin workflows is still open; see [site-finish-checklist.md](site-finish-checklist.md).
+
+
+## Current SprintHost PHP routes — 2026-11-25
+
+A fresh read-only HTTP smoke check used the routes linked from the deployed site: `/index.php`, `/menu.php`, `/pages.php?page=omakase`, `/offers.php`, `/about.php`, `/pages.php?page=gallery`, `/reviews.php`, `/pages.php?page=contacts`, `/pages.php?page=booking`, `/pages.php?page=cart`, `/account.php`, `/set-builder.php`, `/perfect-evening.php`, `/collection.php?slug=autumn-in-kyoto`, `/gift-certificates.php`, and `/admin.php`. All 16 returned HTTP 200 with no PHP fatal, warning, uncaught exception, or SQLSTATE in the response. The live menu returned 50 dish cards.
+
+Security and release checks remain open: `/seed.sql` returns HTTP 200 (11,351 bytes), while `/.env` and `/schema.sql` return 403. The live PHP Omakase route still contains the old “6 подач” text; current GitHub Pages shows five. The last read-only database audit recorded SprintHost at schema migration 21, while the current application source expects migration 22. Do not infer the database version from the visible seasonal collection; check `PRAGMA user_version` after the code update. The technical domain is HTTP-only. No login, booking, payment, or write operation was performed.
