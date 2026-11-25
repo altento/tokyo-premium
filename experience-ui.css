@@ -1119,3 +1119,15 @@
   .editorial-page .booking-layout > .booking-form select,
   .editorial-page .booking-layout > .booking-form textarea { transition: none; }
 }
+
+
+/* Keep the long page selector inside the mobile catalogue instead of widening the document. */
+@media (max-width: 700px) {
+  .menu-page .menu-pagination {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    flex-wrap: wrap;
+    padding-inline: 4px;
+  }
+}
