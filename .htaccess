@@ -1,4 +1,5 @@
 Options -Indexes
-<FilesMatch "(?i)^(schema\.sql|seed\.sql|\.env.*|.*\.(sqlite|db))$">
+<FilesMatch "(?i)^(\.env.*|.*\.(sql|sqlite|db))$">
 Require all denied
 </FilesMatch>
+
